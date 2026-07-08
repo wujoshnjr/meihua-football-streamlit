@@ -1,12 +1,15 @@
 import os
 import re
+import io
+import base64
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+import requests
 import streamlit as st
 
-APP_TITLE = "梅花易數足球自動預測系統 v1"
+APP_TITLE = "梅花易數足球自動預測系統：GitHub 後台版 v1"
 DATA_DIR = Path("data")
 REPORT_DIR = Path("reports")
 DATA_DIR.mkdir(exist_ok=True)
@@ -14,6 +17,74 @@ REPORT_DIR.mkdir(exist_ok=True)
 
 CASES_CSV = DATA_DIR / "meihua_cases.csv"
 CASES_XLSX = DATA_DIR / "meihua_cases.xlsx"
+
+# GitHub 後台設定：部署到 Streamlit Cloud 後，請在 App settings → Secrets 填入：
+# GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH, GITHUB_CASES_PATH, GITHUB_REPORTS_DIR
+
+def get_secret(name: str, default: str = "") -> str:
+    try:
+        return str(st.secrets.get(name, default)).strip()
+    except Exception:
+        return default
+
+GITHUB_TOKEN = get_secret("GITHUB_TOKEN")
+GITHUB_REPO = get_secret("GITHUB_REPO")
+GITHUB_BRANCH = get_secret("GITHUB_BRANCH", "main")
+GITHUB_CASES_PATH = get_secret("GITHUB_CASES_PATH", "data/meihua_cases.csv")
+GITHUB_REPORTS_DIR = get_secret("GITHUB_REPORTS_DIR", "reports")
+USE_GITHUB_BACKEND = bool(GITHUB_TOKEN and GITHUB_REPO)
+
+
+def github_headers():
+    return {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+
+
+def github_content_url(path: str) -> str:
+    clean_path = path.strip("/")
+    return f"https://api.github.com/repos/{GITHUB_REPO}/contents/{clean_path}"
+
+
+def github_get_file(path: str):
+    if not USE_GITHUB_BACKEND:
+        return None, None
+    response = requests.get(
+        github_content_url(path),
+        headers=github_headers(),
+        params={"ref": GITHUB_BRANCH},
+        timeout=30,
+    )
+    if response.status_code == 404:
+        return None, None
+    response.raise_for_status()
+    payload = response.json()
+    content = base64.b64decode(payload["content"]).decode("utf-8-sig")
+    return content, payload.get("sha")
+
+
+def github_put_file(path: str, text: str, message: str):
+    if not USE_GITHUB_BACKEND:
+        return None
+    _, sha = github_get_file(path)
+    body = {
+        "message": message,
+        "content": base64.b64encode(text.encode("utf-8-sig")).decode("ascii"),
+        "branch": GITHUB_BRANCH,
+    }
+    if sha:
+        body["sha"] = sha
+    response = requests.put(
+        github_content_url(path),
+        headers=github_headers(),
+        json=body,
+        timeout=30,
+    )
+    response.raise_for_status()
+    return response.json()
+
 
 BAGUA_BY_REMAINDER = {1: "乾", 2: "兌", 3: "離", 4: "震", 5: "巽", 6: "坎", 7: "艮", 0: "坤"}
 BAGUA_NUMBER = {"乾": 1, "兌": 2, "離": 3, "震": 4, "巽": 5, "坎": 6, "艮": 7, "坤": 8}
@@ -188,6 +259,7 @@ CALIBRATED_PATTERNS = {
     ("兌", "兌", "兌為澤", "風火家人", 4, "用方", "水澤節"): {"scores": [(3, 0), (2, 0), (3, 1)], "reason": "兌為開口，家人使強方組織連線擴大破口；用方兌變坎時，常是自身防線坎險，水澤節收住比分。"},
     ("坤", "坤", "坤為地", "坤為地", 5, "用方", "水地比"): {"scores": [(4, 0), (3, 0), (4, 1)], "reason": "雙坤不一定低分；強方體坤可形成整體厚勢，用方坤變坎可能是防守核心位反覆坎險。"},
     ("坎", "坤", "地水師", "地雷復", 2, "體方", "坤為地"): {"scores": [(0, 2), (0, 1), (1, 2)], "reason": "用方坤土剋體坎，地水師代表軍陣壓制，體方坎變坤常被用方厚土吸收。"},
+    ("震", "震", "震為雷", "水山蹇", 4, "用方", "地雷復"): {"scores": [(3, 0), (2, 0), (3, 1)], "reason": "校準案例提示：雙震本卦雖有雙方啟動，但互卦水山蹇阻住用方完成度；四爻動在用方，震變坤，表示用方主動衝擊後段轉成承受；變卦地雷復保留體方下卦震雷復起，優先看體方3球、用方0球。"},
 }
 
 OPEN_HEXAGRAMS = {"乾為天", "離為火", "震為雷", "兌為澤", "雷火豐", "火天大有", "澤天夬", "雷天大壯", "火雷噬嗑", "雷水解", "風水渙", "澤地萃", "風雷益", "火地晉", "地天泰"}
@@ -422,19 +494,60 @@ def build_markdown_report(result, prediction, actual_score="", review=""):
 
 
 def save_report(result, report):
-    safe_name = re.sub(r"[\\/:*?\"<>|]", "_", result["match_name"]).strip() or "match"
-    path = REPORT_DIR / f"{safe_name}.md"
-    path.write_text(report, encoding="utf-8")
-    return str(path)
+    safe_name = re.sub(r'[\\/:*?"<>|]', "_", result["match_name"]).strip() or "match"
+    local_path = REPORT_DIR / f"{safe_name}.md"
+    local_path.write_text(report, encoding="utf-8")
+
+    if USE_GITHUB_BACKEND:
+        remote_path = f"{GITHUB_REPORTS_DIR.strip('/')}/{safe_name}.md"
+        github_put_file(remote_path, report, f"Update report: {result['match_name']}")
+        return remote_path
+
+    return str(local_path)
 
 
 def load_cases():
-    return pd.read_csv(CASES_CSV) if CASES_CSV.exists() else pd.DataFrame()
+    """
+    讀取案例庫。
+
+    重要：
+    全部用 object / 字串友善方式讀取，避免 pandas 自動把欄位推成 bool、int、float，
+    造成後續更新舊案例時出現 TypeError。
+    """
+    if USE_GITHUB_BACKEND:
+        text, _ = github_get_file(GITHUB_CASES_PATH)
+        if not text:
+            return pd.DataFrame()
+        return pd.read_csv(
+            io.StringIO(text),
+            dtype="object",
+            keep_default_na=False,
+        )
+
+    if CASES_CSV.exists():
+        return pd.read_csv(
+            CASES_CSV,
+            dtype="object",
+            keep_default_na=False,
+        )
+
+    return pd.DataFrame()
+
+
+def dataframe_to_excel_bytes(df: pd.DataFrame) -> bytes:
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="cases")
+    return output.getvalue()
 
 
 def save_cases(df):
-    df.to_csv(CASES_CSV, index=False, encoding="utf-8-sig")
-    df.to_excel(CASES_XLSX, index=False)
+    csv_text = df.to_csv(index=False, encoding="utf-8-sig")
+    CASES_CSV.parent.mkdir(exist_ok=True)
+    CASES_CSV.write_text(csv_text, encoding="utf-8-sig")
+    CASES_XLSX.write_bytes(dataframe_to_excel_bytes(df))
+    if USE_GITHUB_BACKEND:
+        github_put_file(GITHUB_CASES_PATH, csv_text, "Update meihua casebook")
 
 
 def make_case_row(result, prediction, actual_score, review, report_path):
@@ -454,24 +567,63 @@ def make_case_row(result, prediction, actual_score, review, report_path):
 
 
 def upsert_case(row, mode):
+    """
+    新增或更新案例。
+
+    修正重點：
+    1. 先把 df 轉成 object，避免 pandas dtype 鎖死。
+    2. row 裡的 None 統一轉成空字串。
+    3. 更新舊列時使用 loc，並確保所有欄位存在。
+    """
     df = load_cases()
+
+    # 避免 pandas 自動推 dtype 後，更新時出現 TypeError
+    if not df.empty:
+        df = df.astype("object")
+
+    safe_row = {}
+    for k, v in row.items():
+        safe_row[k] = "" if v is None else v
+
     if df.empty:
-        df = pd.DataFrame([row]); save_cases(df); return df, "新增"
+        df = pd.DataFrame([safe_row]).astype("object")
+        save_cases(df)
+        return df, "新增"
+
     key_cols = ["比賽", "體方", "用方", "本卦", "互卦", "動爻", "動爻位置", "變卦"]
+
+    # 確保 key 欄位存在
     for c in key_cols:
         if c not in df.columns:
             df[c] = ""
-    mask = pd.Series([True] * len(df))
+
+    # 確保 row 裡所有欄位在 df 都存在
+    for c in safe_row.keys():
+        if c not in df.columns:
+            df[c] = ""
+
+    mask = pd.Series([True] * len(df), index=df.index)
+
     for c in key_cols:
-        mask = mask & (df[c].astype(str).str.strip() == str(row[c]).strip())
+        mask = mask & (
+            df[c].astype(str).str.strip()
+            == str(safe_row.get(c, "")).strip()
+        )
+
     idxs = list(df[mask].index)
+
     if mode == "強制新增" or not idxs:
-        df = pd.concat([df, pd.DataFrame([row])], ignore_index=True); action = "新增"
+        df = pd.concat(
+            [df, pd.DataFrame([safe_row])],
+            ignore_index=True,
+        ).astype("object")
+        action = "新增"
     else:
         idx = idxs[-1]
-        for k, v in row.items():
-            df.at[idx, k] = v
+        for k, v in safe_row.items():
+            df.loc[idx, k] = v
         action = "更新"
+
     save_cases(df)
     return df, action
 
@@ -487,6 +639,10 @@ with st.sidebar:
     body_team = st.text_input("體方", value="剛果民主共和國")
     use_team = st.text_input("用方", value="烏茲別克")
     st.info("無特定支持：先寫隊伍為體，後寫隊伍為用。若你賽前支持某隊，支持隊為體。")
+    if USE_GITHUB_BACKEND:
+        st.success(f"GitHub 後台已啟用：{GITHUB_REPO} / {GITHUB_BRANCH}")
+    else:
+        st.warning("目前使用本機暫存。部署後請設定 Streamlit Secrets 才會寫回 GitHub。")
     save_mode = st.radio("案例儲存模式", ["自動更新", "強制新增"], index=0)
     actual_score = st.text_input("實際比分，賽前可空白", value="")
     review = st.text_area("校準原因，賽後再填", value="", height=120)
@@ -551,10 +707,19 @@ if "last_result" in st.session_state:
         df, action = upsert_case(row, save_mode)
         st.success(f"案例庫已{action}。目前共 {len(df)} 筆。")
 
-if CASES_CSV.exists():
+casebook_df = load_cases()
+if not casebook_df.empty:
     st.subheader("案例庫")
-    df = load_cases()
-    st.dataframe(df.tail(20), use_container_width=True)
-    st.download_button("下載 CSV 案例庫", data=CASES_CSV.read_bytes(), file_name="meihua_cases.csv", mime="text/csv")
-    if CASES_XLSX.exists():
-        st.download_button("下載 Excel 案例庫", data=CASES_XLSX.read_bytes(), file_name="meihua_cases.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    st.dataframe(casebook_df.tail(20), use_container_width=True)
+    st.download_button(
+        "下載 CSV 案例庫",
+        data=casebook_df.to_csv(index=False, encoding="utf-8-sig"),
+        file_name="meihua_cases.csv",
+        mime="text/csv",
+    )
+    st.download_button(
+        "下載 Excel 案例庫",
+        data=dataframe_to_excel_bytes(casebook_df),
+        file_name="meihua_cases.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
