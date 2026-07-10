@@ -1,0 +1,259 @@
+[
+  {
+    "id": "CAL-001",
+    "name": "剝坤艮土重收束",
+    "status": "verified",
+    "source_case": "哥倫比亞 vs 瑞士，90分鐘0-0",
+    "conditions": {
+      "main_hexagram": "山地剝",
+      "mutual_hexagram": "坤為地",
+      "body_element": "土",
+      "use_element": "土",
+      "use_gua": "艮"
+    },
+    "effects": {
+      "body_delta": -0.55,
+      "use_delta": -0.45,
+      "total_delta": -0.45,
+      "boost_scores": {"0-0": 3.2, "1-0": 1.35, "1-1": 1.2},
+      "penalize_scores": {"2-0": 0.55, "2-1": 0.5, "2-2": 0.35}
+    },
+    "lesson": "剝、坤、艮形成強收束鏈時，紙面進攻優勢不能硬轉一球；0-0必須進前三，甚至可作首選。"
+  },
+  {
+    "id": "CAL-002",
+    "name": "鼎夬恆與用方火轉雷",
+    "status": "verified",
+    "source_case": "阿根廷 vs 埃及，實際3-2",
+    "conditions": {
+      "main_hexagram": "火風鼎",
+      "mutual_hexagram": "澤天夬",
+      "relation_code": "body_generates_use",
+      "moving_side": "用方",
+      "moving_line": 6,
+      "use_transition": "離->震",
+      "changed_hexagram": "雷風恆"
+    },
+    "effects": {
+      "body_delta": 0.45,
+      "use_delta": 0.75,
+      "total_delta": 0.5,
+      "boost_scores": {"3-2": 3.0, "2-2": 1.75, "2-1": 1.4, "3-1": 1.2}
+    },
+    "lesson": "體巽生用離時，用方火點可能被餵大；六爻離變震代表用方後段爆發，不應只給一球。"
+  },
+  {
+    "id": "CAL-003",
+    "name": "雙震受蹇與用方轉坤",
+    "status": "verified",
+    "source_case": "巴西 vs 蘇格蘭，實際3-0",
+    "conditions": {
+      "main_hexagram": "震為雷",
+      "mutual_hexagram": "水山蹇",
+      "moving_side": "用方",
+      "use_transition": "震->坤",
+      "changed_hexagram": "地雷復"
+    },
+    "effects": {
+      "body_delta": 0.5,
+      "use_delta": -0.8,
+      "boost_scores": {"3-0": 3.0, "2-0": 1.8, "3-1": 1.15},
+      "penalize_scores": {"2-1": 0.55, "1-1": 0.45}
+    },
+    "lesson": "雙震不等於雙方都有球。蹇阻用方完成度，用方震變坤是主動轉承受，復卦保留體方再起。"
+  },
+  {
+    "id": "CAL-004",
+    "name": "訟局乾生坎與乾極變兌",
+    "status": "verified",
+    "source_case": "剛果民主共和國 vs 烏茲別克，實際3-1",
+    "conditions": {
+      "main_hexagram": "天水訟",
+      "body_gua": "坎",
+      "use_gua": "乾",
+      "moving_side": "用方",
+      "moving_line": 6,
+      "use_transition": "乾->兌",
+      "changed_hexagram": "澤水困"
+    },
+    "effects": {
+      "body_delta": 0.7,
+      "use_delta": 0.1,
+      "boost_scores": {"3-1": 2.7, "2-1": 1.45, "3-0": 1.15}
+    },
+    "lesson": "訟卦遇乾金生體坎水，且乾到六爻極點變兌時，要防硬守裂口；體方坎水可上修至三球。"
+  },
+  {
+    "id": "CAL-005",
+    "name": "困局體坎轉巽不宜過度放大",
+    "status": "verified",
+    "source_case": "埃及 vs 伊朗，實際1-1",
+    "conditions": {
+      "main_hexagram": "澤水困",
+      "body_gua": "坎",
+      "body_transition": "坎->巽",
+      "changed_hexagram": "澤風大過"
+    },
+    "effects": {
+      "body_delta": -0.25,
+      "total_delta": -0.2,
+      "boost_scores": {"1-1": 2.3, "1-0": 1.2},
+      "penalize_scores": {"2-0": 0.55, "2-1": 0.65}
+    },
+    "lesson": "困作主局時，體坎變巽多是解出一球，不是必然打穿兩球；除非另有夬、渙、震、離強破局。"
+  },
+  {
+    "id": "CAL-006",
+    "name": "兌口得家人組織後由節收住",
+    "status": "verified",
+    "source_case": "巴西 vs 海地，實際3-0",
+    "conditions": {
+      "main_hexagram": "兌為澤",
+      "mutual_hexagram": "風火家人",
+      "use_transition": "兌->坎",
+      "changed_hexagram": "水澤節"
+    },
+    "effects": {
+      "body_delta": 0.65,
+      "use_delta": -0.55,
+      "boost_scores": {"3-0": 2.8, "2-0": 1.45, "3-1": 1.1}
+    },
+    "lesson": "兌口獲家人組織放大，可形成三個有效破口；用方兌變坎進入險，節卦把後段收住。"
+  },
+  {
+    "id": "CAL-007",
+    "name": "睽既濟後用方火止於艮與損",
+    "status": "verified",
+    "source_case": "迦納 vs 巴拿馬，實際1-0",
+    "conditions": {
+      "main_hexagram": "火澤睽",
+      "mutual_hexagram": "水火既濟",
+      "use_transition": "離->艮",
+      "changed_hexagram": "山澤損"
+    },
+    "effects": {
+      "body_delta": -0.05,
+      "use_delta": -0.55,
+      "total_delta": -0.35,
+      "boost_scores": {"1-0": 2.6, "1-1": 1.2, "0-0": 1.15}
+    },
+    "lesson": "睽主不順，既濟多為一個關鍵完成；用方離變艮且終至損，需優先低比分與用方零球。"
+  },
+  {
+    "id": "CAL-008",
+    "name": "益被剝削薄後中孚留下雙方一球",
+    "status": "verified",
+    "source_case": "捷克 vs 南非，實際1-1",
+    "conditions": {
+      "main_hexagram": "風雷益",
+      "mutual_hexagram": "山地剝",
+      "body_transition": "震->兌",
+      "changed_hexagram": "風澤中孚"
+    },
+    "effects": {
+      "body_delta": -0.25,
+      "use_delta": 0.05,
+      "boost_scores": {"1-1": 2.8, "1-0": 1.15, "2-1": 0.9}
+    },
+    "lesson": "益可帶動雙方，但剝削薄完成度，中孚最後只留下少數可信破口，1-1需提前。"
+  },
+  {
+    "id": "CAL-009",
+    "name": "師局土吸水與體坎轉坤",
+    "status": "verified",
+    "source_case": "澳洲 vs 土耳其，實際2-0（體方澳洲）",
+    "conditions": {
+      "main_hexagram": "地水師",
+      "mutual_hexagram": "地雷復",
+      "body_transition": "坎->坤",
+      "changed_hexagram": "坤為地"
+    },
+    "effects": {
+      "body_delta": -0.55,
+      "use_delta": 0.45,
+      "boost_scores": {"0-2": 2.3, "0-1": 1.55, "1-2": 1.2}
+    },
+    "lesson": "師卦軍陣與坤土可吸收體坎，體坎變坤是流動轉承受；需防體方零球。"
+  },
+  {
+    "id": "CAL-010",
+    "name": "渙局體水生用風且用風轉山",
+    "status": "verified",
+    "source_case": "美國 vs 波赫，實際用方美國2-0",
+    "conditions": {
+      "main_hexagram": "風水渙",
+      "body_gua": "坎",
+      "use_gua": "巽",
+      "relation_code": "body_generates_use",
+      "mutual_hexagram": "山雷頤",
+      "use_transition": "巽->艮",
+      "changed_hexagram": "山水蒙"
+    },
+    "effects": {
+      "body_delta": -0.45,
+      "use_delta": 0.55,
+      "boost_scores": {"0-2": 2.5, "0-1": 1.3, "1-2": 1.15}
+    },
+    "lesson": "體坎生用巽使風勢吹散體方水局；用方巽轉艮可解作先打開後收住，0-2應優先。"
+  },
+  {
+    "id": "CAL-011",
+    "name": "雙坤不可機械判小",
+    "status": "reviewed",
+    "source_case": "日本 vs 突尼西亞，實際4-0",
+    "conditions": {
+      "body_gua": "坤",
+      "use_gua": "坤"
+    },
+    "effects": {
+      "body_delta": 0.1,
+      "use_delta": -0.05,
+      "boost_scores": {"1-0": 1.05, "2-0": 1.05, "3-0": 1.05}
+    },
+    "lesson": "雙坤只表示厚勢與承受，不等於必然小比分；若體方是整體厚勢、用方坤轉坎承壓，強方可放大。"
+  },
+  {
+    "id": "CAL-012",
+    "name": "一般體生用反擊上修",
+    "status": "general",
+    "source_case": "多案例歸納",
+    "conditions": {
+      "relation_code": "body_generates_use"
+    },
+    "effects": {
+      "body_delta": -0.1,
+      "use_delta": 0.22,
+      "boost_scores": {"2-1": 1.08, "1-1": 1.08, "3-2": 1.08}
+    },
+    "lesson": "體生用不是體方必敗，但代表體方能量外洩；用方至少一球與反擊放大風險需提高。"
+  },
+  {
+    "id": "CAL-013",
+    "name": "一般用生體助力上修",
+    "status": "general",
+    "source_case": "五行體用通則",
+    "conditions": {
+      "relation_code": "use_generates_body"
+    },
+    "effects": {
+      "body_delta": 0.2,
+      "use_delta": -0.05,
+      "boost_scores": {"2-0": 1.08, "2-1": 1.08, "1-0": 1.05}
+    },
+    "lesson": "用生體代表體方較易獲得助力，但仍須由本互變判斷是否真正完成。"
+  },
+  {
+    "id": "CAL-014",
+    "name": "一般土重收束",
+    "status": "general",
+    "source_case": "剝、坤、艮、損、節等多案例歸納",
+    "conditions": {
+      "main_tags_any": ["土重", "收束", "封鎖", "低位", "削弱"]
+    },
+    "effects": {
+      "total_delta": -0.18,
+      "boost_scores": {"0-0": 1.12, "1-0": 1.08, "0-1": 1.08}
+    },
+    "lesson": "收束象只要在主局占主導，總進球應先下修，再由動爻與變卦判斷能否解開。"
+  }
+]
