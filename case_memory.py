@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import re
+from collections import Counter
 from difflib import SequenceMatcher
 from typing import Any
 
@@ -9,14 +10,6 @@ import pandas as pd
 
 from knowledge_loader import load_hexagrams
 from models import HexagramResult, SimilarCase
-
-try:
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.metrics.pairwise import cosine_similarity
-except Exception:  # pragma: no cover - 部署缺少 sklearn 時仍可退回字串相似度
-    TfidfVectorizer = None
-    cosine_similarity = None
-
 
 COLUMN_ALIASES: dict[str, list[str]] = {
     "case_id": ["案例ID", "case_id"],
@@ -189,19 +182,66 @@ def _structural_similarity(result: HexagramResult, row: pd.Series) -> tuple[floa
     return (score / weight if weight else 0.0), common[:8], differences[:6]
 
 
+def _char_ngrams(text: str, min_n: int = 2, max_n: int = 4) -> Counter[str]:
+    """建立中文友善的字元 n-gram 詞頻，不依賴任何原生擴充套件。"""
+    normalized = re.sub(r"\s+", " ", (text or "").strip().lower())[:8000]
+    counts: Counter[str] = Counter()
+    for n in range(min_n, max_n + 1):
+        if len(normalized) < n:
+            continue
+        counts.update(normalized[index : index + n] for index in range(len(normalized) - n + 1))
+    return counts
+
+
+def _pure_python_tfidf_scores(current_doc: str, docs: list[str]) -> list[float]:
+    """以純 Python 計算 TF-IDF 餘弦相似度，避免 SciPy/NumPy 原生層崩潰。"""
+    all_counts = [_char_ngrams(current_doc)] + [_char_ngrams(doc) for doc in docs]
+    if not all_counts[0]:
+        return [0.0 for _ in docs]
+
+    document_count = len(all_counts)
+    document_frequency: Counter[str] = Counter()
+    for counts in all_counts:
+        document_frequency.update(counts.keys())
+
+    def vectorize(counts: Counter[str]) -> tuple[dict[str, float], float]:
+        vector: dict[str, float] = {}
+        squared_norm = 0.0
+        for term, frequency in counts.items():
+            tf = 1.0 + math.log(float(frequency))
+            idf = math.log((1.0 + document_count) / (1.0 + document_frequency[term])) + 1.0
+            value = tf * idf
+            vector[term] = value
+            squared_norm += value * value
+        return vector, math.sqrt(squared_norm)
+
+    current_vector, current_norm = vectorize(all_counts[0])
+    if current_norm == 0.0:
+        return [0.0 for _ in docs]
+
+    scores: list[float] = []
+    for counts in all_counts[1:]:
+        candidate_vector, candidate_norm = vectorize(counts)
+        if candidate_norm == 0.0:
+            scores.append(0.0)
+            continue
+        # 只遍歷較小向量，降低 Streamlit Cloud 的記憶體與 CPU 負擔。
+        if len(current_vector) <= len(candidate_vector):
+            dot = sum(value * candidate_vector.get(term, 0.0) for term, value in current_vector.items())
+        else:
+            dot = sum(value * current_vector.get(term, 0.0) for term, value in candidate_vector.items())
+        scores.append(max(0.0, min(1.0, dot / (current_norm * candidate_norm))))
+    return scores
+
+
 def _text_similarities(current_doc: str, docs: list[str]) -> list[float]:
     if not docs:
         return []
-    if TfidfVectorizer is not None and cosine_similarity is not None:
-        try:
-            # 字元 n-gram 對中文與卦名較穩，不依賴空格切詞。
-            vectorizer = TfidfVectorizer(analyzer="char", ngram_range=(2, 4), min_df=1, sublinear_tf=True)
-            matrix = vectorizer.fit_transform([current_doc] + docs)
-            values = cosine_similarity(matrix[0:1], matrix[1:]).flatten()
-            return [float(x) for x in values]
-        except ValueError:
-            pass
-    return [SequenceMatcher(None, current_doc, doc).ratio() for doc in docs]
+    try:
+        return _pure_python_tfidf_scores(current_doc, docs)
+    except Exception:
+        # 極端輸入仍保留純 Python 字串比對作最後退路。
+        return [SequenceMatcher(None, current_doc, doc).ratio() for doc in docs]
 
 
 def retrieve_similar_cases(
