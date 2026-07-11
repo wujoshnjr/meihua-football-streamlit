@@ -102,18 +102,48 @@ def evaluate_predictions(scores: list[tuple[int, int]], actual_score: str) -> di
     }
 
 
-def candidate_scores(rule_prediction: RulePrediction, limit: int = 12) -> list[tuple[int, int]]:
-    candidates: list[tuple[int, int]] = []
-    for row in rule_prediction.score_grid[: max(3, limit)]:
+def candidate_scores(rule_prediction: RulePrediction, limit: int = 15) -> list[tuple[int, int]]:
+    """建立勝、平、負都有代表的候選池，避免錯誤規則把AI鎖死在單一方向。"""
+    ranked: list[tuple[int, int]] = []
+    buckets: dict[str, list[tuple[int, int]]] = {"體方勝": [], "平局": [], "用方勝": []}
+
+    for row in rule_prediction.score_grid:
         if not isinstance(row, Mapping):
             continue
         parsed = score_tuple(str(row.get("score", "")))
-        if parsed is not None and parsed not in candidates:
-            candidates.append(parsed)
+        if parsed is None or parsed in ranked:
+            continue
+        ranked.append(parsed)
+        buckets[outcome(_score_text(parsed))].append(parsed)
+
     for score in rule_prediction.scores:
-        if score not in candidates:
-            candidates.append(score)
-    return candidates[: max(3, limit)]
+        if score not in ranked:
+            ranked.append(score)
+            buckets[outcome(_score_text(score))].append(score)
+
+    # 每個方向至少保留4個候選；其餘按原始規則順位補滿。
+    selected: list[tuple[int, int]] = []
+    for label in ["體方勝", "平局", "用方勝"]:
+        for score in buckets[label][:4]:
+            if score not in selected:
+                selected.append(score)
+
+    selected.sort(key=lambda score: ranked.index(score) if score in ranked else 999)
+    for score in ranked:
+        if score not in selected:
+            selected.append(score)
+        if len(selected) >= max(12, limit):
+            break
+    return selected[: max(12, limit)]
+
+
+def _strong_ai_evidence(ai_analysis: AIAnalysis) -> bool:
+    strength_gap = abs(float(ai_analysis.body_strength_score) - float(ai_analysis.use_strength_score))
+    return (
+        float(ai_analysis.evidence_quality) >= 0.65
+        and float(ai_analysis.direction_confidence) >= 0.65
+        and strength_gap >= 12.0
+    )
 
 
 def controlled_final_scores(
@@ -121,17 +151,21 @@ def controlled_final_scores(
     ai_analysis: AIAnalysis | None,
     similar_case_count: int = 0,
 ) -> tuple[list[tuple[int, int]], dict[str, Any]]:
-    """以規則候選池限制 AI，只允許有限重排，不准任意創造比分。"""
+    """規則、足球先驗、卦象證據與案例共同決策；AI不能憑一句話任意翻盤。"""
     if similar_case_count <= 0 and ai_analysis and ai_analysis.used_case_ids:
         similar_case_count = len(ai_analysis.used_case_ids)
+
     rule_scores = list(rule_prediction.scores[:3])
-    pool = candidate_scores(rule_prediction, 12)
+    pool = candidate_scores(rule_prediction, 15)
     metadata: dict[str, Any] = {
         "mode": "rule_only",
         "ai_weight": 0.0,
         "similar_case_count": int(similar_case_count),
         "direction_guard": False,
         "allowed_pool": [_score_text(score) for score in pool],
+        "evidence_quality": 0.0,
+        "direction_confidence": 0.0,
+        "strength_gap": 0.0,
         "note": "未使用AI，採固定規則排序。",
     }
     if not ai_analysis or not ai_analysis.ok:
@@ -139,54 +173,79 @@ def controlled_final_scores(
 
     ai_scores = [score for score in _parse_scores(ai_analysis.scores) if score in pool]
     if not ai_scores:
-        metadata["note"] = "AI沒有提供規則候選池內的有效比分，保留固定規則排序。"
+        metadata["note"] = "AI沒有提供平衡候選池內的有效比分，保留固定規則排序。"
         return rule_scores, metadata
+
+    evidence_quality = max(0.0, min(1.0, float(ai_analysis.evidence_quality)))
+    direction_confidence = max(0.0, min(1.0, float(ai_analysis.direction_confidence)))
+    strength_gap_signed = float(ai_analysis.body_strength_score) - float(ai_analysis.use_strength_score)
+    strong_evidence = _strong_ai_evidence(ai_analysis)
 
     rule_first_outcome = outcome(_score_text(rule_scores[0])) if rule_scores else ""
     ai_first_outcome = outcome(_score_text(ai_scores[0]))
-    if similar_case_count < 3 and ai_first_outcome != rule_first_outcome:
+    direction_conflict = ai_first_outcome != rule_first_outcome
+
+    # 案例少時仍可糾正規則，但必須同時有高品質足球證據、方向信心與明顯實力差。
+    if direction_conflict and similar_case_count < 3 and not strong_evidence:
         metadata.update(
             {
                 "mode": "direction_guard",
                 "direction_guard": True,
-                "note": "已確認相似案例少於3場，AI不得推翻固定規則的勝平負方向。",
+                "evidence_quality": evidence_quality,
+                "direction_confidence": direction_confidence,
+                "strength_gap": round(strength_gap_signed, 2),
+                "note": "AI想改變勝平負方向，但案例與足球證據不足；保留規則首選並只顯示矛盾提醒。",
             }
         )
         return rule_scores, metadata
 
-    if similar_case_count < 3:
-        ai_weight = 0.20
-    elif similar_case_count <= 10:
-        ai_weight = 0.35
-    else:
-        ai_weight = 0.45
+    case_component = min(0.16, max(0, similar_case_count) * 0.02)
+    evidence_component = 0.16 * evidence_quality
+    direction_component = 0.10 * direction_confidence
+    ai_weight = min(0.48, 0.12 + case_component + evidence_component + direction_component)
+    if direction_conflict and not strong_evidence:
+        ai_weight = min(ai_weight, 0.28)
 
     rule_rank = {score: index for index, score in enumerate(pool)}
     ai_rank = {score: index for index, score in enumerate(ai_scores)}
+    max_shift = 6 if strong_evidence else 3
+    preferred_outcome = "體方勝" if strength_gap_signed >= 12 else ("用方勝" if strength_gap_signed <= -12 else "")
+
     blended: list[tuple[tuple[int, int], float]] = []
     for score in pool:
         base_rank = rule_rank[score]
         requested_rank = ai_rank.get(score, base_rank)
-        bounded_rank = max(base_rank - 3, min(base_rank + 3, requested_rank))
+        bounded_rank = max(base_rank - max_shift, min(base_rank + max_shift, requested_rank))
         blended_rank = (1.0 - ai_weight) * base_rank + ai_weight * bounded_rank
+        if preferred_outcome and evidence_quality >= 0.60 and outcome(_score_text(score)) == preferred_outcome:
+            blended_rank -= 0.55 * direction_confidence
         blended.append((score, blended_rank))
+
     blended.sort(key=lambda item: (item[1], rule_rank[item[0]]))
     final = [score for score, _ in blended[:3]]
 
-    if similar_case_count < 3 and rule_scores:
-        final = [rule_scores[0]] + [score for score in final if score != rule_scores[0]]
-        for score in rule_scores[1:]:
-            if len(final) >= 3:
-                break
-            if score not in final:
-                final.append(score)
-        final = final[:3]
+    # 若整體證據不強，前三選至少保留兩種方向，避免再次出現三個比分全押同一邊。
+    final_outcomes = {outcome(_score_text(score)) for score in final}
+    if len(final_outcomes) == 1 and max(evidence_quality, direction_confidence) < 0.72:
+        alternative = next(
+            (score for score, _ in blended[3:] if outcome(_score_text(score)) not in final_outcomes),
+            None,
+        )
+        if alternative is not None:
+            final[-1] = alternative
 
     metadata.update(
         {
-            "mode": "controlled_ai_reorder",
-            "ai_weight": ai_weight,
-            "note": "AI只在規則前12名候選內有限重排，單一比分最多移動3個順位。",
+            "mode": "evidence_ensemble_v3.3",
+            "ai_weight": round(ai_weight, 4),
+            "direction_guard": False,
+            "evidence_quality": round(evidence_quality, 3),
+            "direction_confidence": round(direction_confidence, 3),
+            "strength_gap": round(strength_gap_signed, 2),
+            "note": (
+                "AI只在勝平負平衡候選池內重排；一般最多移動3位，"
+                "只有高品質足球證據、方向信心與明顯實力差同時成立時才可移動6位並糾正規則方向。"
+            ),
         }
     )
     return final, metadata
@@ -220,7 +279,7 @@ def local_calibration_summary(
     elif direction_hit:
         status = "勝平負方向命中，但精確比分未命中。"
     else:
-        status = "首選的勝平負方向與實際結果不同，需重新檢查體用與本互變權重。"
+        status = "首選的勝平負方向與實際結果不同，需重新檢查體用、足球先驗與本互變權重。"
 
     body_error = first[0] - actual[0]
     use_error = first[1] - actual[1]
@@ -239,8 +298,8 @@ def local_calibration_summary(
     return (
         f"原判{first_text}，實際{actual_text}。{status}偏差：{'、'.join(errors)}。"
         f"本卦{result.main_hexagram}、互卦{result.mutual_hexagram}、{result.moving_line}爻在{result.moving_side}、"
-        f"變卦{result.changed_hexagram}。下次應優先檢查『{result.relation}』是否讓某方進球被錯誤放大或壓低，"
-        "並把校準寫成可泛化的結構教訓，而不是固定某卦等於某比分。"
+        f"變卦{result.changed_hexagram}。下次應分開檢查足球先驗、體用風險、前中後段轉象與比分候選池，"
+        "不可把任何單一生剋關係直接寫成固定勝負。"
     )
 
 
