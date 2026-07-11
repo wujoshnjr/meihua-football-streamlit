@@ -11,6 +11,7 @@ import pandas as pd
 from knowledge_loader import load_hexagrams
 from models import HexagramResult, SimilarCase
 
+
 COLUMN_ALIASES: dict[str, list[str]] = {
     "case_id": ["案例ID", "case_id"],
     "match_name": ["比賽", "match_name"],
@@ -30,13 +31,15 @@ COLUMN_ALIASES: dict[str, list[str]] = {
     "body_transition": ["體方轉卦", "body_transition"],
     "use_transition": ["用方轉卦", "use_transition"],
     "structural_tags": ["結構標籤", "structural_tags"],
-    "predicted_first": ["首選比分", "predicted_first"],
-    "predicted_second": ["第二選比分", "predicted_second"],
-    "predicted_third": ["第三選比分", "predicted_third"],
+    "predicted_first": ["最終首選比分", "AI首選比分", "規則首選比分", "首選比分", "predicted_first"],
+    "predicted_second": ["最終第二選比分", "AI第二選比分", "規則第二選比分", "第二選比分", "predicted_second"],
+    "predicted_third": ["最終第三選比分", "AI第三選比分", "規則第三選比分", "第三選比分", "predicted_third"],
     "actual_score": ["實際比分", "actual_score"],
     "calibration_reason": ["校準原因", "calibration_reason"],
     "lesson_summary": ["校準摘要", "lesson_summary"],
     "prediction_reason": ["自動預測理由", "prediction_reason"],
+    "calibration_status": ["校準狀態", "calibration_status"],
+    "case_quality": ["案例品質", "case_quality"],
 }
 
 
@@ -183,22 +186,18 @@ def _structural_similarity(result: HexagramResult, row: pd.Series) -> tuple[floa
 
 
 def _char_ngrams(text: str, min_n: int = 2, max_n: int = 4) -> Counter[str]:
-    """建立中文友善的字元 n-gram 詞頻，不依賴任何原生擴充套件。"""
     normalized = re.sub(r"\s+", " ", (text or "").strip().lower())[:8000]
     counts: Counter[str] = Counter()
     for n in range(min_n, max_n + 1):
-        if len(normalized) < n:
-            continue
-        counts.update(normalized[index : index + n] for index in range(len(normalized) - n + 1))
+        if len(normalized) >= n:
+            counts.update(normalized[index : index + n] for index in range(len(normalized) - n + 1))
     return counts
 
 
 def _pure_python_tfidf_scores(current_doc: str, docs: list[str]) -> list[float]:
-    """以純 Python 計算 TF-IDF 餘弦相似度，避免 SciPy/NumPy 原生層崩潰。"""
     all_counts = [_char_ngrams(current_doc)] + [_char_ngrams(doc) for doc in docs]
     if not all_counts[0]:
         return [0.0 for _ in docs]
-
     document_count = len(all_counts)
     document_frequency: Counter[str] = Counter()
     for counts in all_counts:
@@ -218,14 +217,12 @@ def _pure_python_tfidf_scores(current_doc: str, docs: list[str]) -> list[float]:
     current_vector, current_norm = vectorize(all_counts[0])
     if current_norm == 0.0:
         return [0.0 for _ in docs]
-
     scores: list[float] = []
     for counts in all_counts[1:]:
         candidate_vector, candidate_norm = vectorize(counts)
         if candidate_norm == 0.0:
             scores.append(0.0)
             continue
-        # 只遍歷較小向量，降低 Streamlit Cloud 的記憶體與 CPU 負擔。
         if len(current_vector) <= len(candidate_vector):
             dot = sum(value * candidate_vector.get(term, 0.0) for term, value in current_vector.items())
         else:
@@ -240,8 +237,23 @@ def _text_similarities(current_doc: str, docs: list[str]) -> list[float]:
     try:
         return _pure_python_tfidf_scores(current_doc, docs)
     except Exception:
-        # 極端輸入仍保留純 Python 字串比對作最後退路。
         return [SequenceMatcher(None, current_doc, doc).ratio() for doc in docs]
+
+
+def _case_is_usable(row: pd.Series) -> bool:
+    actual = _first(row, "actual_score")
+    calibration = _first(row, "calibration_reason") or _first(row, "lesson_summary")
+    if not actual or not calibration:
+        return False
+    status = _first(row, "calibration_status")
+    if status and status not in {"已確認", "verified", "reviewed"}:
+        return False
+    return True
+
+
+def _quality_multiplier(row: pd.Series) -> float:
+    quality = _first(row, "case_quality")
+    return {"高": 1.05, "中": 1.0, "低": 0.85}.get(quality, 1.0)
 
 
 def retrieve_similar_cases(
@@ -255,20 +267,15 @@ def retrieve_similar_cases(
 
     current_name = normalize_match_name(result.match_name)
     candidates: list[tuple[pd.Series, float, list[str], list[str], str]] = []
-
-    # 優先使用最近資料；同一場比賽一律排除，避免賽後結果洩漏回賽前預測。
     subset = casebook.tail(max_rows).copy()
     for _, row in subset.iterrows():
         match_name = _first(row, "match_name")
         if not match_name or normalize_match_name(match_name) == current_name:
             continue
-        actual = _first(row, "actual_score")
-        calibration = _first(row, "calibration_reason") or _first(row, "lesson_summary")
-        if not actual and not calibration:
+        if not _case_is_usable(row):
             continue
         structural, common, differences = _structural_similarity(result, row)
-        doc = case_document(row)
-        candidates.append((row, structural, common, differences, doc))
+        candidates.append((row, structural, common, differences, case_document(row)))
 
     if not candidates:
         return []
@@ -278,8 +285,7 @@ def retrieve_similar_cases(
     output: list[SimilarCase] = []
     for index, (row, structural, common, differences, _) in enumerate(candidates):
         text_score = text_scores[index] if index < len(text_scores) else 0.0
-        # 結構比文字更重要；文字主要幫助理解校準原因與象意描述。
-        combined = 0.68 * structural + 0.32 * text_score
+        combined = (0.68 * structural + 0.32 * text_score) * _quality_multiplier(row)
         case_id = _first(row, "case_id") or f"legacy-{index + 1:04d}"
         predictions = "/".join(
             x for x in [
@@ -304,6 +310,5 @@ def retrieve_similar_cases(
                 raw={str(k): _clean(v) for k, v in row.to_dict().items()},
             )
         )
-
     output.sort(key=lambda item: item.similarity, reverse=True)
     return output[: max(1, top_k)]
