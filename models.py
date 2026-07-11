@@ -16,6 +16,11 @@ class MatchInput:
     scope: str = "90分鐘，不含延長賽與PK"
     prematch_leaning: str = ""
     context_notes: str = ""
+    # 純賽前足球先驗，不參與起卦字數。50/50 表示完全中性。
+    body_strength_rating: float = 50.0
+    use_strength_rating: float = 50.0
+    prior_confidence: float = 0.50
+    venue: str = "中立場"
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -66,7 +71,10 @@ class RulePrediction:
     reasons: list[str]
     matched_rules: list[dict[str, Any]] = field(default_factory=list)
     score_grid: list[dict[str, Any]] = field(default_factory=list)
-    method: str = "hybrid-rule-engine-v3.1"
+    outcome_probabilities: dict[str, float] = field(default_factory=dict)
+    diagnostics: list[str] = field(default_factory=list)
+    football_prior: dict[str, Any] = field(default_factory=dict)
+    method: str = "hybrid-rule-engine-v3.3"
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -109,6 +117,14 @@ class AIAnalysis:
     used_case_ids: list[str] = field(default_factory=list)
     raw_response: dict[str, Any] = field(default_factory=dict)
     error: str = ""
+    # v3.3：把足球先驗、卦象判斷與矛盾證據分開，避免單一體用關係直接決勝。
+    body_strength_score: float = 50.0
+    use_strength_score: float = 50.0
+    evidence_quality: float = 0.0
+    direction_confidence: float = 0.0
+    football_evidence: list[str] = field(default_factory=list)
+    hexagram_evidence: list[str] = field(default_factory=list)
+    contradiction_warning: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
