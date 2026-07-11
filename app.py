@@ -33,6 +33,7 @@ for _module_name in [
     "report_builder_v33",
     "calibration_center",
     "metrics_dashboard",
+    "quick_save_v33",
 ]:
     _reload_local(_module_name)
 
@@ -42,4 +43,7 @@ _evaluation.controlled_final_scores = _decision.controlled_final_scores
 _evaluation.final_scores = _decision.final_scores
 
 _app = _reload_local("app_v33")
+_quick_save = _reload_local("quick_save_v33")
+
 _app.run_app()
+_quick_save.render_quick_save()
