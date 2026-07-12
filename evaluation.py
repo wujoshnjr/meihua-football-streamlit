@@ -249,7 +249,7 @@ def controlled_final_scores(
         similar_case_count = len(ai_analysis.used_case_ids)
 
     rule_scores = list(rule_prediction.scores[:3])
-    pool = candidate_scores(rule_prediction, 15)
+    pool = candidate_scores(rule_prediction, 18)
     metadata: dict[str, Any] = {
         "mode": "rule_only",
         "ai_weight": 0.0,

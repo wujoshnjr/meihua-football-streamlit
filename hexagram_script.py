@@ -97,6 +97,226 @@ def _phase_label(line: int) -> str:
     }.get(line, "比賽中段")
 
 
+def _text(record: Mapping[str, Any], key: str, fallback: str = "") -> str:
+    return str(record.get(key, fallback) or fallback).strip().rstrip("。；; ")
+
+
+def _build_semantic_layer(
+    result: HexagramResult,
+    trigrams: Mapping[str, Mapping[str, Any]],
+    main: Mapping[str, Any],
+    mutual: Mapping[str, Any],
+    changed: Mapping[str, Any],
+    changed_relation: str,
+    environment: str,
+    trajectory: str,
+    mirror_mode: str,
+    zero_goal_gate: bool,
+    high_score_gate: bool,
+    btts_signal: bool,
+    rout_side: str,
+    one_sided_side: str,
+) -> dict[str, Any]:
+    """Compose a qualitative reading before any numeric score allocation.
+
+    This scaffold remains useful when GitHub Models is unavailable. It preserves
+    source meanings, ambiguity and timing instead of presenting dimension scores
+    as if the numbers themselves were the divination.
+    """
+    body_name = result.body_team or "體方"
+    use_name = result.use_team or "用方"
+    body = trigrams[result.body_gua]
+    use = trigrams[result.use_gua]
+    changed_body = trigrams[result.changed_body_gua]
+    changed_use = trigrams[result.changed_use_gua]
+    moving_before = body if result.moving_side == "體方" else use
+    moving_after = changed_body if result.moving_side == "體方" else changed_use
+    moving_team = body_name if result.moving_side == "體方" else use_name
+    moving_transition = result.body_transition if result.moving_side == "體方" else result.use_transition
+
+    relation_shift = (
+        f"五行關係由「{result.relation}」轉為「{changed_relation}」"
+        if result.relation_code != result.changed_relation_code
+        else f"五行關係前後維持「{result.relation}」"
+    )
+    timing_explanation = (
+        "變化發生得早，後續有較長時間被放大或被對手修正。"
+        if result.moving_line <= 2
+        else (
+            "變化落在中段，是主局轉成終局的主要樞紐。"
+            if result.moving_line <= 4
+            else "變化發生在後段，能造成追平或決勝，但剩餘時間限制其擴張幅度。"
+        )
+    )
+
+    body_scoring_path = (
+        f"{body_name}以{result.body_gua}的「{_text(body, 'nature')}」進入比賽；"
+        f"可用的進攻語言是{_text(body, 'attack', _text(body, 'football'))}。"
+        f"其轉象為{result.body_transition}，轉後應觀察{_text(changed_body, 'attack', _text(changed_body, 'football'))}。"
+        "這只描述破門方式與持續性，不直接宣告一定進球。"
+    )
+    use_scoring_path = (
+        f"{use_name}以{result.use_gua}的「{_text(use, 'nature')}」回應；"
+        f"其威脅主要來自{_text(use, 'attack', _text(use, 'football'))}。"
+        f"其轉象為{result.use_transition}，轉後要看{_text(changed_use, 'attack', _text(changed_use, 'football'))}。"
+        "動能屬於用方時，也必須檢查它是否轉成用方自己的射門成果。"
+    )
+    turning_point = (
+        f"第{result.moving_line}爻在{result.moving_side}，{moving_team}由{moving_transition}。"
+        f"這是從「{_text(moving_before, 'nature')}」轉向「{_text(moving_after, 'nature')}」的事件；"
+        f"{timing_explanation}"
+    )
+    ending_logic = (
+        f"變卦{result.changed_hexagram}的核心是「{_text(changed, 'core')}」，足球語境為「{_text(changed, 'football')}」。"
+        f"{relation_shift}。因此終局要判斷的是已形成的優勢能否守成、被追近，或在關係反轉後易手；"
+        f"風險是{_text(changed, 'risk', '終局訊號仍可能只有局部生效')}。"
+    )
+
+    if zero_goal_gate:
+        primary_interpretation = (
+            "主線偏向封閉消耗：場面可以有強度，但有效破口不足，進攻更可能被阻擋、拖慢或彼此抵消。"
+        )
+        counter_interpretation = (
+            "反向分支是某一方把定位球、失誤或動爻轉象變成唯一破口；若賽前強弱差很大，封閉更可能表現為單向壓制，而不是完全沒有成果。"
+        )
+        primary_name, primary_shape = "封閉消耗", "極少成果或只有一方完成一次"
+        counter_name, counter_shape = "單點破口", "低總量但不排除單方決勝"
+    elif rout_side:
+        primary_interpretation = (
+            f"主線是能量向{rout_side}集中：足球強弱、體用制約與完成通道同向，弱方防守可能由局部缺口演變成連續崩解。"
+        )
+        counter_interpretation = (
+            "反向分支是領先方在優勢後轉入控制，或弱方只靠一次轉換取得成果；大勝尾部存在，但不能把每次高動能都當成無限擴張。"
+        )
+        primary_name, primary_shape = "優勢擴大", "多次單向成果並保留零封"
+        counter_name, counter_shape = "領先後守成", "優勢方取勝但總量受後段收束限制"
+    elif high_score_gate and btts_signal:
+        primary_interpretation = (
+            "主線偏向開放交換：雙方都有可辨識的破門方式，動爻又讓中後段保持追擊、反轉或再次拉開的可能。"
+        )
+        counter_interpretation = (
+            "反向分支是動能只停留在來回與射門，沒有足夠完成品質；若變卦收束真正落地，開放場面也可能只留下有限成果。"
+        )
+        primary_name, primary_shape = "雙向交換", "雙方皆可能多次完成"
+        counter_name, counter_shape = "高動能低轉化", "場面開放但實際成果受限"
+    elif high_score_gate:
+        primary_interpretation = (
+            "主線有擴張空間，但能量與完成能力並不平均；應先找出哪一方擁有可重複的破門通道，再判斷另一方是否只能零星回應。"
+        )
+        counter_interpretation = (
+            "反向分支是高比分閘門雖開，實際破口只出現一次後便被收住；因此仍需用終局與足球先驗限制尾部。"
+        )
+        primary_name, primary_shape = "單向擴張", "一方持續完成、另一方有限回應"
+        counter_name, counter_shape = "破口後收住", "中等總量與明顯方向"
+    else:
+        primary_interpretation = (
+            "主線是受控拉鋸：本卦建立的力量差沒有被完全推翻，動爻只改變局部節奏，終局更重視誰能完成有限機會。"
+        )
+        counter_interpretation = (
+            "反向分支是動方的轉象真正打穿原有秩序，令比賽從受控變成追分；此分支必須有破門通道或關係反轉支持。"
+        )
+        primary_name, primary_shape = "受控拉鋸", "有限成果與一球差／平衡方向"
+        counter_name, counter_shape = "動爻打開局面", "後段增加成果或改變方向"
+
+    mirror_sentence = (
+        "體用同卦在本場判為鏡像對消，代表相似強度彼此抵消，而非自動高比分。"
+        if mirror_mode == "鏡像對消"
+        else (
+            "體用同卦在本場判為同數共振，原因是破門通道與轉象同時打開；共振不是由同數本身自動成立。"
+            if mirror_mode == "同數共振"
+            else "體用不同卦，重點是兩種力量如何生、剋、轉化，不使用同數捷徑。"
+        )
+    )
+
+    semantic_evidence = [
+        {
+            "stage": "主局",
+            "source": result.main_hexagram,
+            "observation": f"{_text(main, 'core')}；{_text(main, 'football')}",
+            "interpretation": f"本卦先建立整場基本矛盾；初始關係為{result.relation}。",
+        },
+        {
+            "stage": "體方角色",
+            "source": result.body_gua,
+            "observation": f"{_text(body, 'nature')}；{_text(body, 'football')}",
+            "interpretation": body_scoring_path,
+        },
+        {
+            "stage": "用方角色",
+            "source": result.use_gua,
+            "observation": f"{_text(use, 'nature')}；{_text(use, 'football')}",
+            "interpretation": use_scoring_path,
+        },
+        {
+            "stage": "中段",
+            "source": result.mutual_hexagram,
+            "observation": f"{_text(mutual, 'core')}；{_text(mutual, 'football')}",
+            "interpretation": "互卦描述主局內部如何發展，不取代本卦，也不單獨決定比分。",
+        },
+        {
+            "stage": "轉折",
+            "source": f"第{result.moving_line}爻／{result.moving_side}",
+            "observation": moving_transition,
+            "interpretation": turning_point,
+        },
+        {
+            "stage": "終局",
+            "source": result.changed_hexagram,
+            "observation": f"{_text(changed, 'core')}；{_text(changed, 'football')}",
+            "interpretation": ending_logic,
+        },
+        {
+            "stage": "同異結構",
+            "source": mirror_mode,
+            "observation": mirror_sentence,
+            "interpretation": "只有破口、時間與完成條件成立後，才允許數字參與總量判斷。",
+        },
+    ]
+    scenario_hypotheses = [
+        {
+            "name": primary_name,
+            "narrative": primary_interpretation,
+            "requires": ["主局與終局沒有互相推翻", "破門通道判斷成立", "足球先驗未出現重大反證"],
+            "failure_condition": counter_interpretation,
+            "goal_shape": primary_shape,
+        },
+        {
+            "name": counter_name,
+            "narrative": counter_interpretation,
+            "requires": ["主線的完成條件失效", "替代破口或收束訊號真正落地"],
+            "failure_condition": "若主線的能量歸屬與完成通道持續成立，反向分支只保留為風險。",
+            "goal_shape": counter_shape,
+        },
+        {
+            "name": "動爻時間分支",
+            "narrative": turning_point,
+            "requires": [f"變化首先落在{result.moving_side}", timing_explanation],
+            "failure_condition": "若動方沒有把轉象變成實際戰術或機會，變卦只描述潛在終局。",
+            "goal_shape": "早爻可擴張整場，晚爻偏向追近、決勝或守成",
+        },
+    ]
+    semantic_story = (
+        f"主局｜{result.main_hexagram}以「{_text(main, 'core')}」定調：{_text(main, 'football')}"
+        f"。{body_name}在下卦以{result.body_gua}承擔主體，{use_name}在上卦以{result.use_gua}形成外部條件；{result.relation_detail}\n\n"
+        f"中段｜互卦{result.mutual_hexagram}顯示「{_text(mutual, 'core')}」：{_text(mutual, 'football')}。"
+        "它說明主局內部如何推進，而不是另起一場比賽。\n\n"
+        f"轉折｜{turning_point}\n\n"
+        f"終局｜{ending_logic}\n\n"
+        f"綜合判讀｜{trajectory}。{primary_interpretation}{mirror_sentence}"
+    )
+    return {
+        "semantic_story": semantic_story,
+        "primary_interpretation": primary_interpretation,
+        "counter_interpretation": counter_interpretation,
+        "body_scoring_path": body_scoring_path,
+        "use_scoring_path": use_scoring_path,
+        "turning_point": turning_point,
+        "ending_logic": ending_logic,
+        "semantic_evidence": semantic_evidence,
+        "scenario_hypotheses": scenario_hypotheses,
+    }
+
+
 def _unique_ints(values: list[int], low: int = 0, high: int = 8) -> list[int]:
     output: list[int] = []
     for value in values:
@@ -563,6 +783,23 @@ def interpret_hexagram_script(
         reasons.append(f"雙方完成通道不對稱且能量集中，{one_sided_side}具單向破門、對手零球的主要分支。")
     reasons.extend(str(signal["reason"]) for signal in numeric_signals)
 
+    semantic = _build_semantic_layer(
+        result=result,
+        trigrams=trigrams,
+        main=main,
+        mutual=mutual,
+        changed=changed,
+        changed_relation=changed_relation,
+        environment=environment,
+        trajectory=trajectory,
+        mirror_mode=mirror_mode,
+        zero_goal_gate=zero_goal_gate,
+        high_score_gate=high_score_gate,
+        btts_signal=btts_signal,
+        rout_side=rout_side,
+        one_sided_side=one_sided_side,
+    )
+
     return HexagramScript(
         environment=environment,
         trajectory=trajectory,
@@ -585,6 +822,15 @@ def interpret_hexagram_script(
         rout_side=rout_side,
         one_sided_side=one_sided_side,
         total_goal_targets=total_targets,
+        semantic_story=semantic["semantic_story"],
+        primary_interpretation=semantic["primary_interpretation"],
+        counter_interpretation=semantic["counter_interpretation"],
+        body_scoring_path=semantic["body_scoring_path"],
+        use_scoring_path=semantic["use_scoring_path"],
+        turning_point=semantic["turning_point"],
+        ending_logic=semantic["ending_logic"],
+        semantic_evidence=semantic["semantic_evidence"],
+        scenario_hypotheses=semantic["scenario_hypotheses"],
         numeric_signals=numeric_signals,
         candidate_scores=candidates,
         reasons=reasons,

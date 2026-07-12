@@ -60,6 +60,11 @@ def _current_ai_model(config: Any) -> str:
     return str(st.session_state.get("ai_model_override", config.ai_model)).strip() or config.ai_model
 
 
+def _current_deliberation_model(config: Any) -> str:
+    fallback = getattr(config, "ai_deliberation_model", config.ai_model) or config.ai_model
+    return str(st.session_state.get("ai_deliberation_model_override", fallback)).strip() or fallback
+
+
 def _render_sidebar(config: Any, store: CaseStore) -> None:
     with st.sidebar:
         st.header("系統與後台")
@@ -69,8 +74,15 @@ def _render_sidebar(config: Any, store: CaseStore) -> None:
             st.warning("GitHub案例後台未啟用，目前只寫入Streamlit暫存空間。")
 
         if config.use_ai:
-            st.success("GitHub Models AI：已啟用（證據融合）")
-            st.text_input("AI模型ID", value=config.ai_model, key="ai_model_override")
+            st.success("GitHub Models AI：已啟用（盲解卦 → 足球決策）")
+            st.text_input(
+                "第一階段盲解模型ID",
+                value=config.ai_deliberation_model,
+                key="ai_deliberation_model_override",
+            )
+            st.text_input("第二階段決策模型ID", value=config.ai_model, key="ai_model_override")
+            if "mini" in _current_deliberation_model(config).lower():
+                st.caption("目前盲解使用 mini 模型，速度與額度較省，但語義深度可能較模板化；可在 catalog 確認後改用較強模型。")
             if st.button("測試AI連線與模型", width="stretch"):
                 try:
                     client = GitHubModelsClient(
@@ -81,19 +93,21 @@ def _render_sidebar(config: Any, store: CaseStore) -> None:
                         temperature=0.0,
                     )
                     ids = {str(item.get("id", "")) for item in client.list_models()}
-                    if _current_ai_model(config) in ids:
-                        st.success(f"連線成功：{_current_ai_model(config)}")
+                    requested = {_current_ai_model(config), _current_deliberation_model(config)}
+                    missing = sorted(requested - ids)
+                    if not missing:
+                        st.success("連線成功：兩階段模型都在 catalog 中。")
                     else:
-                        st.warning(f"連線成功，但catalog未找到目前模型；共讀到{len(ids)}個模型。")
+                        st.warning(f"連線成功，但catalog未找到：{'、'.join(missing)}；共讀到{len(ids)}個模型。")
                 except Exception as exc:
                     st.error(str(exc))
         else:
-            st.info("GitHub Models AI尚未啟用；v4.1足球先驗×連續卦象劇本引擎與相似案例仍可運作。")
+            st.info("GitHub Models AI尚未啟用；v4.2本地語義卦線仍會完整顯示，但不會有AI盲解與反證。")
 
         if st.button("重新讀取GitHub案例庫", width="stretch"):
             _load_casebook(store, force=True)
             st.rerun()
-        st.caption("v4.1：足球先驗先建λ＋連續卦象劇本＋情境比分重排＋不可覆寫的賽前鎖定。")
+        st.caption("v4.2：先做不看比分的語義解卦，再用足球先驗決策；數值只作後段校驗。")
 
 
 def _render_prior_help() -> None:
@@ -134,7 +148,7 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
         use_text = st.text_area("用方段落", height=170)
         full_text = st.text_area("完整賽前中性介紹段落（用來算動爻）", height=230)
         context_notes = st.text_area("賽前補充資料（只輔助解卦，不參與字數）", height=120)
-        submitted = st.form_submit_button("固定起卦並建立v4.1預測", type="primary", width="stretch")
+        submitted = st.form_submit_button("固定起卦並建立v4.2語義預測", type="primary", width="stretch")
 
     match = MatchInput(
         match_name=match_name,
@@ -173,7 +187,7 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
                 st.session_state["similar_cases"] = similar_cases
                 st.session_state["save_mode"] = save_mode
                 st.session_state.pop("ai_analysis", None)
-                st.success("足球基線λ、固定起卦、連續卦象劇本與已確認案例搜尋完成。")
+                st.success("固定起卦、本地語義卦線、足球基線與已確認案例搜尋完成。")
             except Exception as exc:
                 st.exception(exc)
 
@@ -187,7 +201,30 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
     similar_cases = st.session_state.get("similar_cases", [])
     ai_analysis: AIAnalysis | None = st.session_state.get("ai_analysis")
 
-    st.markdown("### 一、純足球先驗基線")
+    script = rule_prediction.hexagram_script or {}
+    st.markdown("### 一、先讀整條卦線（此段不由比分倒推）")
+    st.info(str(script.get("semantic_story", "尚無語義卦線。")))
+    semantic_left, semantic_right = st.columns(2)
+    with semantic_left:
+        st.write("**主解**")
+        st.write(script.get("primary_interpretation", ""))
+    with semantic_right:
+        st.write("**反解／失效條件**")
+        st.write(script.get("counter_interpretation", ""))
+    with st.expander("查看體方、用方破門路徑與動爻轉折", expanded=False):
+        st.write(f"**體方路徑**：{script.get('body_scoring_path', '')}")
+        st.write(f"**用方路徑**：{script.get('use_scoring_path', '')}")
+        st.write(f"**轉折事件**：{script.get('turning_point', '')}")
+        st.write(f"**終局邏輯**：{script.get('ending_logic', '')}")
+    if config.use_ai:
+        st.caption("目前先顯示可離線重現的語義骨架；按下兩階段AI按鈕後，第一階段會在看不到比分的情況下重新審查主解與反解。")
+    else:
+        st.warning(
+            "目前未啟用GitHub Models，因此顯示的是本地語義骨架，不是大型語言模型的深度盲解。"
+            "若要接近對話式思考，請在Secrets啟用AI後使用兩階段解卦按鈕。"
+        )
+
+    st.markdown("### 二、獨立足球先驗基線")
     baseline_scores = rule_prediction.football_only_scores
     b1, b2, b3, b4 = st.columns(4)
     b1.metric("基線首選", _score_text(baseline_scores[0]) if baseline_scores else "—")
@@ -202,7 +239,7 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
         f"用勝{baseline_probabilities.get('用方勝', 0):.1%}；此層完全不使用卦象。"
     )
 
-    st.markdown("### 二、連續卦象劇本後的固定規則")
+    st.markdown("### 三、語義劇本經量化校驗後的比分候選")
     r1, r2, r3, r4 = st.columns(4)
     r1.metric("首選", _score_text(rule_prediction.scores[0]))
     r2.metric("第二選", _score_text(rule_prediction.scores[1]))
@@ -226,8 +263,8 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
     ai_col, note_col = st.columns([1, 2])
     with ai_col:
         can_call = config.use_ai and st.session_state.get("ai_call_count", 0) < 20
-        if st.button("讓GitHub Models AI做證據融合", disabled=not can_call, width="stretch"):
-            with st.spinner("AI正在分開審查足球證據與卦象證據……"):
+        if st.button("讓AI先盲解卦，再做足球比分決策", disabled=not can_call, width="stretch"):
+            with st.spinner("第一階段盲解卦、第二階段校準足球與比分；會呼叫模型兩次……"):
                 client = GitHubModelsClient(
                     token=config.github_models_token,
                     model=_current_ai_model(config),
@@ -235,19 +272,33 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
                     max_tokens=config.ai_max_output_tokens,
                     temperature=min(config.ai_temperature, 0.20),
                 )
-                ai_analysis = run_ai_prediction(client, saved_match, result, rule_prediction, similar_cases)
+                deliberation_client = GitHubModelsClient(
+                    token=config.github_models_token,
+                    model=_current_deliberation_model(config),
+                    timeout=config.request_timeout_seconds,
+                    max_tokens=config.ai_max_output_tokens,
+                    temperature=min(config.ai_temperature, 0.20),
+                )
+                ai_analysis = run_ai_prediction(
+                    client,
+                    saved_match,
+                    result,
+                    rule_prediction,
+                    similar_cases,
+                    deliberation_client=deliberation_client,
+                )
                 st.session_state["ai_analysis"] = ai_analysis
                 st.session_state["ai_call_count"] = st.session_state.get("ai_call_count", 0) + 1
-                st.success("AI連續劇本審查完成。" if ai_analysis.ok else "AI不可用，已退回v4.1固定引擎。")
+                st.success("AI兩階段語義推理完成。" if ai_analysis.ok else "AI不可用，已退回v4.2本地語義引擎。")
     with note_col:
         st.caption(
-            "AI候選池固定包含體勝、平局與用勝。普通證據最多移動3位；只有證據品質、方向信心與實力差同時達標，"
-            "才能跨方向糾正規則並最多移動6位。"
+            "第一階段完全看不到比分池、機率、λ與實力分，只負責本→互→動→變的主解、反解與劇本。"
+            "第二階段才看到足球先驗與中性排序候選池；一次按鈕會使用兩次模型請求。"
         )
 
     ai_analysis = st.session_state.get("ai_analysis")
     chosen_scores, control = controlled_final_scores(rule_prediction, ai_analysis, len(similar_cases))
-    st.markdown("### 三、證據融合最終排序")
+    st.markdown("### 四、兩階段證據融合最終排序")
     f1, f2, f3 = st.columns(3)
     f1.metric("最終首選", _score_text(chosen_scores[0]))
     f2.metric("最終第二選", _score_text(chosen_scores[1]))
@@ -291,9 +342,37 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
                 st.write(hexagrams[name])
 
     with tabs[1]:
-        script = rule_prediction.hexagram_script or {}
-        st.subheader(str(script.get("environment", "連續卦象劇本")))
-        st.info(str(script.get("energy_flow_summary", "尚無劇本摘要。")))
+        st.subheader("語義卦線：先理解，再量化")
+        st.info(str(script.get("semantic_story", "尚無語義劇本摘要。")))
+        st.write("#### 主解")
+        st.write(script.get("primary_interpretation", ""))
+        st.write("#### 反解與失效條件")
+        st.write(script.get("counter_interpretation", ""))
+        path_left, path_right = st.columns(2)
+        with path_left:
+            st.write("**體方破門路徑**")
+            st.write(script.get("body_scoring_path", ""))
+        with path_right:
+            st.write("**用方破門路徑**")
+            st.write(script.get("use_scoring_path", ""))
+        st.write(f"**轉折**：{script.get('turning_point', '')}")
+        st.write(f"**終局**：{script.get('ending_logic', '')}")
+        st.write("#### 語義證據鏈")
+        for evidence in script.get("semantic_evidence", []):
+            with st.expander(f"{evidence.get('stage', '')}｜{evidence.get('source', '')}"):
+                st.write(evidence.get("observation", ""))
+                st.write(evidence.get("interpretation", ""))
+        st.write("#### 預先保留的劇本分支")
+        for scenario in script.get("scenario_hypotheses", []):
+            with st.expander(str(scenario.get("name", "劇本"))):
+                st.write(scenario.get("narrative", ""))
+                st.write("成立條件：" + "；".join(scenario.get("requires", [])))
+                st.write("失效條件：" + str(scenario.get("failure_condition", "")))
+                st.write("成果形狀：" + str(scenario.get("goal_shape", "")))
+
+        st.write("#### 量化審計（不是解卦本身）")
+        st.caption("以下分數只用來檢查語義劇本是否越界，不應反過來取代上面的卦線推演。")
+        st.info(str(script.get("energy_flow_summary", "尚無量化摘要。")))
         d1, d2, d3, d4 = st.columns(4)
         d1.metric("比賽動能", f"{float(script.get('dynamics_score', 0)):.0f}/100")
         d2.metric("破門通道", f"{float(script.get('scoring_channel_score', 0)):.0f}/100")
@@ -384,7 +463,37 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
         elif not ai_analysis.ok:
             st.error(ai_analysis.error)
         else:
-            st.success(f"AI模型：{ai_analysis.model}｜證據融合")
+            st.success(f"AI模型：{ai_analysis.model}｜兩階段盲解卦與足球決策")
+            deliberation = ai_analysis.hexagram_deliberation or {}
+            st.write("### 第一階段：盲解卦")
+            st.caption(
+                f"盲解模型：{deliberation.get('model', '未記錄')}。"
+                "這一階段的模型輸入不含比分候選、機率、λ、實力分或相似案例實際比分。"
+            )
+            st.info(str(deliberation.get("thesis", "未取得AI盲解，使用本地語義劇本。")))
+            st.write(f"**核心矛盾**：{deliberation.get('primary_conflict', '')}")
+            st.write(f"**開局**：{deliberation.get('opening_phase', '')}")
+            st.write(f"**中段**：{deliberation.get('middle_phase', '')}")
+            st.write(f"**動爻轉折**：{deliberation.get('turning_point', '')}")
+            st.write(f"**終局**：{deliberation.get('ending_phase', '')}")
+            st.write(f"**能量流**：{deliberation.get('energy_flow', '')}")
+            st.write(f"**體方破門方式**：{deliberation.get('body_scoring_path', '')}")
+            st.write(f"**用方破門方式**：{deliberation.get('use_scoring_path', '')}")
+            first_scenario = deliberation.get("primary_scenario", {})
+            alternative_scenario = deliberation.get("alternative_scenario", {})
+            dleft, dright = st.columns(2)
+            with dleft:
+                st.write(f"**主劇本：{first_scenario.get('name', '')}**")
+                st.write(first_scenario.get("narrative", ""))
+                st.write("成立：" + "；".join(first_scenario.get("requires", [])))
+            with dright:
+                st.write(f"**替代劇本：{alternative_scenario.get('name', '')}**")
+                st.write(alternative_scenario.get("narrative", ""))
+                st.write("成立：" + "；".join(alternative_scenario.get("requires", [])))
+            st.warning("反解：" + str(deliberation.get("counter_reading", "")))
+            st.write("### 第二階段：足球校準與比分決策")
+            if ai_analysis.selected_scenario_names:
+                st.write("採用劇本：" + "、".join(ai_analysis.selected_scenario_names))
             a1, a2, a3, a4 = st.columns(4)
             a1.metric("體方實力分", f"{ai_analysis.body_strength_score:.1f}")
             a2.metric("用方實力分", f"{ai_analysis.use_strength_score:.1f}")
@@ -487,8 +596,8 @@ def run_app() -> None:
 
     st.title(APP_TITLE)
     st.caption(
-        f"v{APP_VERSION}：純足球先驗先建立λ，整條卦線依動能、破門通道、歸屬與收束形成可稽核劇本；"
-        "比分情境有界混合且賽前版本不可被賽後資料覆寫。僅供研究，不提供投注或真實資金功能。"
+        f"v{APP_VERSION}：本地先保存完整語義卦線；AI第一階段盲解時看不到比分與機率，第二階段才用足球先驗決策；"
+        "數值只作校驗，賽前版本不可被賽後資料覆寫。僅供研究，不提供投注或真實資金功能。"
     )
 
     prematch_tab, calibration_tab, metrics_tab, knowledge_tab = st.tabs(["賽前預測", "賽後校準中心", "模型成績", "知識庫"])
