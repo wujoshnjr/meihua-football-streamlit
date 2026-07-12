@@ -88,12 +88,12 @@ def _render_sidebar(config: Any, store: CaseStore) -> None:
                 except Exception as exc:
                     st.error(str(exc))
         else:
-            st.info("GitHub Models AI尚未啟用；v4足球先驗×有界卦象引擎與相似案例仍可運作。")
+            st.info("GitHub Models AI尚未啟用；v4.1足球先驗×連續卦象劇本引擎與相似案例仍可運作。")
 
         if st.button("重新讀取GitHub案例庫", width="stretch"):
             _load_casebook(store, force=True)
             st.rerun()
-        st.caption("v4：足球先驗先建λ＋卦象單方±25%修正＋不可覆寫的賽前鎖定＋盲測。")
+        st.caption("v4.1：足球先驗先建λ＋連續卦象劇本＋情境比分重排＋不可覆寫的賽前鎖定。")
 
 
 def _render_prior_help() -> None:
@@ -134,7 +134,7 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
         use_text = st.text_area("用方段落", height=170)
         full_text = st.text_area("完整賽前中性介紹段落（用來算動爻）", height=230)
         context_notes = st.text_area("賽前補充資料（只輔助解卦，不參與字數）", height=120)
-        submitted = st.form_submit_button("固定起卦並建立v4預測", type="primary", width="stretch")
+        submitted = st.form_submit_button("固定起卦並建立v4.1預測", type="primary", width="stretch")
 
     match = MatchInput(
         match_name=match_name,
@@ -173,7 +173,7 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
                 st.session_state["similar_cases"] = similar_cases
                 st.session_state["save_mode"] = save_mode
                 st.session_state.pop("ai_analysis", None)
-                st.success("足球基線λ、固定起卦、卦象有界修正與已確認案例搜尋完成。")
+                st.success("足球基線λ、固定起卦、連續卦象劇本與已確認案例搜尋完成。")
             except Exception as exc:
                 st.exception(exc)
 
@@ -202,7 +202,7 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
         f"用勝{baseline_probabilities.get('用方勝', 0):.1%}；此層完全不使用卦象。"
     )
 
-    st.markdown("### 二、卦象有界修正後的固定規則")
+    st.markdown("### 二、連續卦象劇本後的固定規則")
     r1, r2, r3, r4 = st.columns(4)
     r1.metric("首選", _score_text(rule_prediction.scores[0]))
     r2.metric("第二選", _score_text(rule_prediction.scores[1]))
@@ -210,10 +210,11 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
     r4.metric("方向", rule_prediction.direction)
     probabilities = rule_prediction.outcome_probabilities or {}
     st.caption(
-        f"期望進球：{result.body_team}{rule_prediction.expected_body_goals:.2f}｜"
-        f"{result.use_team}{rule_prediction.expected_use_goals:.2f}｜規則信心{rule_prediction.confidence:.3f}｜"
+        f"劇本期望進球：{result.body_team}{rule_prediction.scenario_expected_body_goals:.2f}｜"
+        f"{result.use_team}{rule_prediction.scenario_expected_use_goals:.2f}｜規則信心{rule_prediction.confidence:.3f}｜"
         f"體勝{probabilities.get('體方勝', 0):.1%}／平{probabilities.get('平局', 0):.1%}／用勝{probabilities.get('用方勝', 0):.1%}｜"
-        f"卦象倍率：體×{rule_prediction.hexagram_body_multiplier:.3f}、用×{rule_prediction.hexagram_use_multiplier:.3f}"
+        f"有界λ倍率：體×{rule_prediction.hexagram_body_multiplier:.3f}、用×{rule_prediction.hexagram_use_multiplier:.3f}｜"
+        f"劇本權重{rule_prediction.scenario_weight:.0%}"
     )
 
     for diagnostic in rule_prediction.diagnostics:
@@ -237,7 +238,7 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
                 ai_analysis = run_ai_prediction(client, saved_match, result, rule_prediction, similar_cases)
                 st.session_state["ai_analysis"] = ai_analysis
                 st.session_state["ai_call_count"] = st.session_state.get("ai_call_count", 0) + 1
-                st.success("AI證據融合完成。" if ai_analysis.ok else "AI不可用，已退回v4固定引擎。")
+                st.success("AI連續劇本審查完成。" if ai_analysis.ok else "AI不可用，已退回v4.1固定引擎。")
     with note_col:
         st.caption(
             "AI候選池固定包含體勝、平局與用勝。普通證據最多移動3位；只有證據品質、方向信心與實力差同時達標，"
@@ -256,7 +257,7 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
         f"證據品質{control.get('evidence_quality', 0):.0%}｜方向信心{control.get('direction_confidence', 0):.0%}｜{control['note']}"
     )
 
-    tabs = st.tabs(["起卦全解", "規則與校準", "方向審計", "相似案例", "AI證據", "報告與鎖定"])
+    tabs = st.tabs(["起卦全解", "卦線劇本", "規則與校準", "方向審計", "相似案例", "AI證據", "報告與鎖定"])
     with tabs[0]:
         st.markdown(
             "\n".join(
@@ -290,6 +291,55 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
                 st.write(hexagrams[name])
 
     with tabs[1]:
+        script = rule_prediction.hexagram_script or {}
+        st.subheader(str(script.get("environment", "連續卦象劇本")))
+        st.info(str(script.get("energy_flow_summary", "尚無劇本摘要。")))
+        d1, d2, d3, d4 = st.columns(4)
+        d1.metric("比賽動能", f"{float(script.get('dynamics_score', 0)):.0f}/100")
+        d2.metric("破門通道", f"{float(script.get('scoring_channel_score', 0)):.0f}/100")
+        d3.metric("終局收束", f"{float(script.get('closure_score', 0)):.0f}/100")
+        d4.metric("反轉波動", f"{float(script.get('volatility_score', 0)):.0f}/100")
+        st.markdown(
+            "\n".join(
+                [
+                    "| 時段 | 連續解讀 |",
+                    "|---|---|",
+                    f"| 開局／本卦 | {script.get('opening_reading', '')} |",
+                    f"| 中段／互卦 | {script.get('middle_reading', '')} |",
+                    f"| 動爻至終局 | {script.get('ending_reading', '')} |",
+                ]
+            )
+        )
+        o1, o2, o3, o4 = st.columns(4)
+        o1.metric("體方能量歸屬", f"{float(script.get('body_ownership', 0)):.0f}")
+        o2.metric("用方能量歸屬", f"{float(script.get('use_ownership', 0)):.0f}")
+        o3.metric("體方完成通道", f"{float(script.get('body_finishing', 0)):.0f}")
+        o4.metric("用方完成通道", f"{float(script.get('use_finishing', 0)):.0f}")
+        st.write(
+            f"走勢：{script.get('trajectory', '')}｜鏡像：{script.get('mirror_mode', '無')}｜"
+            f"總球錨點：{script.get('total_goal_targets', [])}"
+        )
+        st.write(
+            f"零球閘門：{'開' if script.get('zero_goal_gate') else '關'}｜"
+            f"高比分閘門：{'開' if script.get('high_score_gate') else '關'}｜"
+            f"雙方進球：{'是' if script.get('btts_signal') else '否'}｜"
+            f"大勝方：{script.get('rout_side') or '無'}｜單向破門：{script.get('one_sided_side') or '無'}"
+        )
+        numeric_signals = script.get("numeric_signals", [])
+        if numeric_signals:
+            st.write("#### 卦數次級錨點")
+            for signal in numeric_signals:
+                st.write(f"- {signal.get('formula', '')} → {signal.get('value', '')}：{signal.get('reason', '')}")
+        st.write("#### 劇本比分候選")
+        candidate_rows = ["| 比分 | 劇本 | 強度 | 觸發理由 |", "|---:|---|---:|---|"]
+        for candidate in script.get("candidate_scores", []):
+            candidate_rows.append(
+                f"| {candidate.get('score', '')} | {candidate.get('archetype', '')} | "
+                f"{float(candidate.get('script_strength', 0)):.2f} | {candidate.get('reason', '')} |"
+            )
+        st.markdown("\n".join(candidate_rows))
+
+    with tabs[2]:
         for reason in rule_prediction.reasons:
             st.write("- " + reason)
         if rule_prediction.matched_rules:
@@ -306,7 +356,7 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
             )
         st.markdown("\n".join(score_rows))
 
-    with tabs[2]:
+    with tabs[3]:
         st.write("#### 人工賽前先驗")
         st.json(rule_prediction.football_prior, expanded=True)
         st.write("#### 規則勝平負機率")
@@ -317,7 +367,7 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
         st.write("#### AI控制紀錄")
         st.json(control, expanded=True)
 
-    with tabs[3]:
+    with tabs[4]:
         st.caption("只有實際比分、校準原因完整，且校準狀態為已確認的案例才會影響下一場。")
         if not similar_cases:
             st.warning("目前沒有可用的已確認相似案例。")
@@ -328,7 +378,7 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
                 st.write("差異：" + "；".join(case.differences))
                 st.write("校準：" + (case.calibration_reason or case.lesson_summary or "未記錄"))
 
-    with tabs[4]:
+    with tabs[5]:
         if ai_analysis is None:
             st.info("尚未呼叫AI。")
         elif not ai_analysis.ok:
@@ -348,13 +398,23 @@ def _render_prematch(config: Any, store: CaseStore, casebook_df: pd.DataFrame) -
                 st.write("- " + item)
             if ai_analysis.contradiction_warning:
                 st.warning(ai_analysis.contradiction_warning)
+            if ai_analysis.match_script_summary:
+                st.write("**AI連續比賽劇本**")
+                st.info(ai_analysis.match_script_summary)
+                st.write(f"開局：{ai_analysis.opening_phase}")
+                st.write(f"中段：{ai_analysis.middle_phase}")
+                st.write(f"終局：{ai_analysis.ending_phase}")
+                st.write(f"破門通道：{ai_analysis.scoring_channel_analysis}")
+                st.write(f"能量歸屬：{ai_analysis.energy_ownership_analysis}")
+                st.write(f"總球判斷：{ai_analysis.total_goals_reasoning}")
+                st.write(f"比分分配：{ai_analysis.score_allocation_reasoning}")
             for index, score in enumerate(ai_analysis.scores, 1):
                 reason = ai_analysis.score_reasons[index - 1] if index - 1 < len(ai_analysis.score_reasons) else ""
                 st.write(f"第{index}選{_score_text(score)}：{reason}")
             st.write(ai_analysis.overall_reasoning)
             st.warning(ai_analysis.risk_warning or "無額外風險提醒")
 
-    with tabs[5]:
+    with tabs[6]:
         report = build_markdown_report(saved_match, result, rule_prediction, similar_cases, ai_analysis=ai_analysis)
         st.download_button(
             "下載賽前Markdown報告",
@@ -427,8 +487,8 @@ def run_app() -> None:
 
     st.title(APP_TITLE)
     st.caption(
-        f"v{APP_VERSION}：純足球先驗先建立λ，整條卦線只作單方±25%有界修正；"
-        "賽前版本不可被賽後資料覆寫，並分開盲測足球、卦象與AI增益。僅供研究，不提供投注或真實資金功能。"
+        f"v{APP_VERSION}：純足球先驗先建立λ，整條卦線依動能、破門通道、歸屬與收束形成可稽核劇本；"
+        "比分情境有界混合且賽前版本不可被賽後資料覆寫。僅供研究，不提供投注或真實資金功能。"
     )
 
     prematch_tab, calibration_tab, metrics_tab, knowledge_tab = st.tabs(["賽前預測", "賽後校準中心", "模型成績", "知識庫"])

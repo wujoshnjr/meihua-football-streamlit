@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import Any, Mapping
 
 from football_prior import build_football_prior, clamp, outcome_probabilities, poisson_grid, safe_float
+from hexagram_script import interpret_hexagram_script
 from knowledge_loader import load_calibration_rules, load_hexagrams, load_trigrams
-from models import HexagramResult, MatchInput, RulePrediction
+from models import HexagramResult, HexagramScript, MatchInput, RulePrediction
 from version import RULE_VERSION
 
 
@@ -172,6 +173,58 @@ def _apply_score_patterns(
     return adjusted
 
 
+def _apply_script_mixture(
+    grid: list[dict[str, Any]],
+    script: HexagramScript,
+) -> list[dict[str, Any]]:
+    """Blend the continuous hexagram script into the bounded Poisson grid.
+
+    The script never invents an unbounded probability surface. It contributes a
+    transparent, capped scenario distribution over precomputed score archetypes;
+    the football-first Poisson grid retains the remaining mass.
+    """
+    candidate_weights: dict[str, float] = {}
+    candidate_reasons: dict[str, str] = {}
+    for candidate in script.candidate_scores:
+        score = str(candidate.get("score", "")).strip()
+        if not score:
+            continue
+        candidate_weights[score] = max(
+            candidate_weights.get(score, 0.0),
+            safe_float(candidate.get("script_strength"), 0.0),
+        )
+        candidate_reasons[score] = str(candidate.get("reason", "")).strip()
+
+    total_candidate_weight = sum(candidate_weights.values())
+    if total_candidate_weight <= 0.0:
+        return grid
+
+    script_weight = clamp(safe_float(script.script_weight, 0.0), 0.0, 0.46)
+    adjusted: list[dict[str, Any]] = []
+    for source in grid:
+        row = dict(source)
+        score = str(row.get("score", ""))
+        scenario_probability = candidate_weights.get(score, 0.0) / total_candidate_weight
+        base_probability = safe_float(row.get("probability"), 0.0)
+        row["base_probability"] = base_probability
+        row["script_probability"] = scenario_probability
+        row["script_support"] = bool(scenario_probability > 0.0)
+        row["script_strength"] = round(candidate_weights.get(score, 0.0), 6)
+        row["script_reason"] = candidate_reasons.get(score, "")
+        row["probability"] = (1.0 - script_weight) * base_probability + script_weight * scenario_probability
+        row["weight"] = row["probability"]
+        adjusted.append(row)
+
+    total = sum(safe_float(row.get("probability"), 0.0) for row in adjusted) or 1.0
+    for row in adjusted:
+        row["probability"] = safe_float(row.get("probability"), 0.0) / total
+        row["weight"] = row["probability"]
+    adjusted.sort(key=lambda row: safe_float(row.get("probability"), 0.0), reverse=True)
+    for index, row in enumerate(adjusted, 1):
+        row["rank"] = index
+    return adjusted
+
+
 def _parse_grid_score(row: Mapping[str, Any]) -> tuple[int, int] | None:
     try:
         return int(row["body_goals"]), int(row["use_goals"])
@@ -295,7 +348,7 @@ def predict_scores(result: HexagramResult, match: MatchInput | None = None) -> R
         diagnostics.append("兩方卦象修正均在±25%研究上限內。")
 
     raw_grid, tail_mass = poisson_grid(body_lambda, use_lambda)
-    grid = _apply_score_patterns(
+    pattern_grid = _apply_score_patterns(
         raw_grid,
         set(main.get("score_patterns", [])),
         set(mutual.get("score_patterns", [])),
@@ -303,6 +356,8 @@ def predict_scores(result: HexagramResult, match: MatchInput | None = None) -> R
         score_boosts,
         score_penalties,
     )
+    script = interpret_hexagram_script(result, match, football_prior)
+    grid = _apply_script_mixture(pattern_grid, script)
     probabilities = outcome_probabilities(grid)
     top_scores = _select_top_scores(grid, probabilities, football_prior)
 
@@ -319,7 +374,19 @@ def predict_scores(result: HexagramResult, match: MatchInput | None = None) -> R
         for row in grid
         if safe_float(row.get("body_goals"), 0.0) + safe_float(row.get("use_goals"), 0.0) >= 5
     )
+    scenario_expected_body_goals = sum(
+        safe_float(row.get("probability"), 0.0) * safe_float(row.get("body_goals"), 0.0)
+        for row in grid
+    )
+    scenario_expected_use_goals = sum(
+        safe_float(row.get("probability"), 0.0) * safe_float(row.get("use_goals"), 0.0)
+        for row in grid
+    )
     diagnostics.append(f"五球以上機率尾部保留為{high_total_probability:.1%}，比分網格擴至單方0–10球。")
+    diagnostics.append(
+        f"連續卦象劇本以{script.script_weight:.0%}情境權重重排比分；"
+        f"環境為「{script.environment}」，劇本期望進球{scenario_expected_body_goals:.2f}／{scenario_expected_use_goals:.2f}。"
+    )
     if any(not rule.get("applied") for rule in audited_rules):
         diagnostics.append("命中的單場賽後規則仍屬假說，不參與本場排序；需通過留出樣本後才能升級。")
     if len({_outcome(score) for score in top_scores}) == 1 and best_probability < 0.68:
@@ -335,6 +402,11 @@ def predict_scores(result: HexagramResult, match: MatchInput | None = None) -> R
             "body_goals": int(row.get("body_goals", 0)),
             "use_goals": int(row.get("use_goals", 0)),
             "pattern_multiplier": round(safe_float(row.get("pattern_multiplier"), 1.0), 6),
+            "base_probability": round(safe_float(row.get("base_probability"), 0.0), 8),
+            "script_probability": round(safe_float(row.get("script_probability"), 0.0), 8),
+            "script_support": bool(row.get("script_support", False)),
+            "script_strength": round(safe_float(row.get("script_strength"), 0.0), 6),
+            "script_reason": str(row.get("script_reason", "")),
         }
         for row in grid
     ]
@@ -345,6 +417,8 @@ def predict_scores(result: HexagramResult, match: MatchInput | None = None) -> R
         f"最終機率：體勝{probabilities['體方勝']:.1%}／平{probabilities['平局']:.1%}／用勝{probabilities['用方勝']:.1%}；"
         f"網格外尾端質量{tail_mass:.4%}。"
     )
+    reasons.append(script.energy_flow_summary)
+    reasons.extend(script.reasons)
     enriched_prior = dict(football_prior)
     enriched_prior.update(
         {
@@ -356,6 +430,10 @@ def predict_scores(result: HexagramResult, match: MatchInput | None = None) -> R
             "adjusted_body_lambda": round(body_lambda, 4),
             "adjusted_use_lambda": round(use_lambda, 4),
             "five_plus_probability": round(high_total_probability, 6),
+            "script_environment": script.environment,
+            "script_weight": script.script_weight,
+            "scenario_expected_body_goals": round(scenario_expected_body_goals, 4),
+            "scenario_expected_use_goals": round(scenario_expected_use_goals, 4),
         }
     )
 
@@ -378,6 +456,10 @@ def predict_scores(result: HexagramResult, match: MatchInput | None = None) -> R
         hexagram_body_multiplier=round(body_multiplier, 6),
         hexagram_use_multiplier=round(use_multiplier, 6),
         hexagram_adjustment_cap=HEXAGRAM_ADJUSTMENT_CAP,
+        hexagram_script=script.to_dict(),
+        scenario_weight=script.script_weight,
+        scenario_expected_body_goals=round(scenario_expected_body_goals, 3),
+        scenario_expected_use_goals=round(scenario_expected_use_goals, 3),
         method=RULE_VERSION,
     )
 

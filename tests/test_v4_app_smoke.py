@@ -4,7 +4,7 @@ from streamlit.testing.v1 import AppTest
 def test_streamlit_app_loads_without_runtime_exception() -> None:
     app = AppTest.from_file("app.py", default_timeout=30).run()
     assert not app.exception
-    assert app.title[0].value == "梅花易數足球AI自主推理系統 v4.0.0"
+    assert app.title[0].value == "梅花易數足球AI自主推理系統 v4.1.0"
 
 
 def test_streamlit_prediction_form_renders_results_without_arrow_crash() -> None:

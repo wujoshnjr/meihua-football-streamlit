@@ -167,6 +167,7 @@ def candidate_scores(rule_prediction: RulePrediction, limit: int = 15) -> list[t
     """建立勝、平、負都有代表的候選池，避免錯誤規則把AI鎖死在單一方向。"""
     ranked: list[tuple[int, int]] = []
     buckets: dict[str, list[tuple[int, int]]] = {"體方勝": [], "平局": [], "用方勝": []}
+    script_ranked: list[tuple[int, int]] = []
 
     for row in rule_prediction.score_grid:
         if not isinstance(row, Mapping):
@@ -182,6 +183,21 @@ def candidate_scores(rule_prediction: RulePrediction, limit: int = 15) -> list[t
             ranked.append(score)
             buckets[outcome(_score_text(score))].append(score)
 
+    script = rule_prediction.hexagram_script if isinstance(rule_prediction.hexagram_script, Mapping) else {}
+    raw_script_candidates = script.get("candidate_scores", [])
+    if isinstance(raw_script_candidates, list):
+        for item in raw_script_candidates:
+            if not isinstance(item, Mapping):
+                continue
+            parsed = score_tuple(str(item.get("score", "")))
+            if parsed is None:
+                continue
+            if parsed not in script_ranked:
+                script_ranked.append(parsed)
+            if parsed not in ranked:
+                ranked.append(parsed)
+                buckets[outcome(_score_text(parsed))].append(parsed)
+
     # 每個方向至少保留4個候選；其餘按原始規則順位補滿。
     selected: list[tuple[int, int]] = []
     for label in ["體方勝", "平局", "用方勝"]:
@@ -190,6 +206,12 @@ def candidate_scores(rule_prediction: RulePrediction, limit: int = 15) -> list[t
                 selected.append(score)
 
     selected.sort(key=lambda score: ranked.index(score) if score in ranked else 999)
+    # Script archetypes are the auditable bridge between continuous interpretation
+    # and the AI. Keep them selectable even when a rare 4+ goal score is outside
+    # the first Poisson rows.
+    for score in script_ranked[:6]:
+        if score not in selected:
+            selected.append(score)
     for score in ranked:
         if score not in selected:
             selected.append(score)

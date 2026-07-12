@@ -79,3 +79,13 @@ def test_changed_prediction_becomes_linked_version(tmp_path: Path) -> None:
     assert str(second.iloc[1]["取代案例ID"]) == first_id
     assert int(second.iloc[1]["版本序號"]) == 2
     assert second.iloc[0]["預測內容雜湊"] != second.iloc[1]["預測內容雜湊"]
+
+
+def test_v41_row_persists_continuous_script_audit() -> None:
+    row = make_row(make_match())
+
+    assert row["卦線劇本版本"] == "hexagram-script-v1.0.0"
+    assert row["劇本環境"]
+    assert 0.18 <= float(row["劇本混合權重"]) <= 0.46
+    assert row["劇本候選比分"].startswith("[")
+    assert row["劇本觸發理由"]

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-from version import CALCULATION_VERSION, RULE_VERSION
+from version import CALCULATION_VERSION, RULE_VERSION, SCRIPT_VERSION
 
 
 @dataclass(slots=True)
@@ -58,6 +58,46 @@ class HexagramResult:
     moving_detail: str
     structural_tags: list[str] = field(default_factory=list)
     calculation_version: str = CALCULATION_VERSION
+    changed_body_number: int = 0
+    changed_use_number: int = 0
+    changed_body_element: str = ""
+    changed_use_element: str = ""
+    changed_relation_code: str = ""
+    changed_relation: str = ""
+    changed_relation_detail: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class HexagramScript:
+    environment: str
+    trajectory: str
+    opening_reading: str
+    middle_reading: str
+    ending_reading: str
+    energy_flow_summary: str
+    dynamics_score: float
+    scoring_channel_score: float
+    closure_score: float
+    volatility_score: float
+    body_ownership: float
+    use_ownership: float
+    body_finishing: float
+    use_finishing: float
+    mirror_mode: str
+    high_score_gate: bool
+    zero_goal_gate: bool
+    btts_signal: bool
+    rout_side: str
+    one_sided_side: str
+    total_goal_targets: list[int]
+    numeric_signals: list[dict[str, Any]] = field(default_factory=list)
+    candidate_scores: list[dict[str, Any]] = field(default_factory=list)
+    reasons: list[str] = field(default_factory=list)
+    script_weight: float = 0.0
+    version: str = SCRIPT_VERSION
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -83,6 +123,10 @@ class RulePrediction:
     hexagram_body_multiplier: float = 1.0
     hexagram_use_multiplier: float = 1.0
     hexagram_adjustment_cap: float = 0.25
+    hexagram_script: dict[str, Any] = field(default_factory=dict)
+    scenario_weight: float = 0.0
+    scenario_expected_body_goals: float = 0.0
+    scenario_expected_use_goals: float = 0.0
     method: str = RULE_VERSION
 
     def to_dict(self) -> dict[str, Any]:
@@ -127,7 +171,7 @@ class AIAnalysis:
     used_case_ids: list[str] = field(default_factory=list)
     raw_response: dict[str, Any] = field(default_factory=dict)
     error: str = ""
-    # v4：把足球先驗、卦象判斷與矛盾證據分開，避免單一體用關係直接決勝。
+    # v4.1：把足球先驗、連續卦象劇本與矛盾證據分開，避免單一體用關係直接決勝。
     body_strength_score: float = 50.0
     use_strength_score: float = 50.0
     evidence_quality: float = 0.0
@@ -135,6 +179,14 @@ class AIAnalysis:
     football_evidence: list[str] = field(default_factory=list)
     hexagram_evidence: list[str] = field(default_factory=list)
     contradiction_warning: str = ""
+    match_script_summary: str = ""
+    opening_phase: str = ""
+    middle_phase: str = ""
+    ending_phase: str = ""
+    scoring_channel_analysis: str = ""
+    energy_ownership_analysis: str = ""
+    total_goals_reasoning: str = ""
+    score_allocation_reasoning: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)

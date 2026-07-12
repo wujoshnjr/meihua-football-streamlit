@@ -25,7 +25,7 @@ class AppConfig:
     ai_provider: str = "github_models"
     ai_model: str = "openai/gpt-4.1-mini"
     ai_top_k_cases: int = 5
-    ai_max_output_tokens: int = 1600
+    ai_max_output_tokens: int = 2400
     ai_temperature: float = 0.2
     ai_require_confirmation: bool = True
 
@@ -83,7 +83,7 @@ def load_config(secrets: Mapping[str, Any]) -> AppConfig:
         ai_provider=_string(secrets, "AI_PROVIDER", "github_models"),
         ai_model=_string(secrets, "AI_MODEL", "openai/gpt-4.1-mini"),
         ai_top_k_cases=max(1, min(10, _integer(secrets, "AI_TOP_K_CASES", 5))),
-        ai_max_output_tokens=max(400, min(4000, _integer(secrets, "AI_MAX_OUTPUT_TOKENS", 1600))),
+        ai_max_output_tokens=max(400, min(4000, _integer(secrets, "AI_MAX_OUTPUT_TOKENS", 2400))),
         ai_temperature=max(0.0, min(1.0, _float(secrets, "AI_TEMPERATURE", 0.2))),
         ai_require_confirmation=_boolean(secrets, "AI_REQUIRE_CONFIRMATION", True),
         max_casebook_rows_for_ai=max(50, min(5000, _integer(secrets, "MAX_CASEBOOK_ROWS_FOR_AI", 500))),

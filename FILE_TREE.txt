@@ -27,6 +27,7 @@
 ./docs/V3_3_DIRECTION_ENSEMBLE.md
 ./evaluation.py
 ./football_prior.py
+./hexagram_script.py
 ./knowledge/SOURCES.md
 ./knowledge/calibration_rules.json
 ./knowledge/hexagrams.json
@@ -49,6 +50,7 @@
 ./tests/conftest.py
 ./tests/test_ai_parser.py
 ./tests/test_engine.py
+./tests/test_hexagram_script.py
 ./tests/test_memory.py
 ./tests/test_rule_governance.py
 ./tests/test_v32_calibration_loop.py

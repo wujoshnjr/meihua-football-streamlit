@@ -133,6 +133,12 @@ def calculate_match_hexagram(match: MatchInput) -> HexagramResult:
     body_element = ELEMENTS[body_gua]
     use_element = ELEMENTS[use_gua]
     relation_code, relation, relation_detail = five_element_relation(body_element, use_element)
+    changed_body_element = ELEMENTS[changed_body_gua]
+    changed_use_element = ELEMENTS[changed_use_gua]
+    changed_relation_code, changed_relation, changed_relation_detail = five_element_relation(
+        changed_body_element,
+        changed_use_element,
+    )
 
     moving_side = "體方" if moving_line <= 3 else "用方"
     moving_layer = "下卦" if moving_line <= 3 else "上卦"
@@ -191,4 +197,11 @@ def calculate_match_hexagram(match: MatchInput) -> HexagramResult:
         relation_detail=relation_detail,
         moving_detail=moving_detail,
         structural_tags=structural_tags,
+        changed_body_number=BAGUA_NUMBER[changed_body_gua],
+        changed_use_number=BAGUA_NUMBER[changed_use_gua],
+        changed_body_element=changed_body_element,
+        changed_use_element=changed_use_element,
+        changed_relation_code=changed_relation_code,
+        changed_relation=changed_relation,
+        changed_relation_detail=changed_relation_detail,
     )

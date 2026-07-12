@@ -18,7 +18,7 @@ GITHUB_MODELS_ENDPOINT = "https://models.github.ai/inference/chat/completions"
 GITHUB_MODELS_CATALOG = "https://models.github.ai/catalog/models"
 GITHUB_MODELS_API_VERSION = "2026-03-10"
 PREDICTION_SCHEMA: dict[str, Any] = {
-    "name": "meihua_football_prediction_v40",
+    "name": "meihua_football_prediction_v41",
     "strict": True,
     "schema": {
         "type": "object",
@@ -32,6 +32,14 @@ PREDICTION_SCHEMA: dict[str, Any] = {
             "football_evidence": {"type": "array", "items": {"type": "string"}, "maxItems": 8},
             "hexagram_evidence": {"type": "array", "items": {"type": "string"}, "maxItems": 8},
             "contradiction_warning": {"type": "string"},
+            "match_script_summary": {"type": "string"},
+            "opening_phase": {"type": "string"},
+            "middle_phase": {"type": "string"},
+            "ending_phase": {"type": "string"},
+            "scoring_channel_analysis": {"type": "string"},
+            "energy_ownership_analysis": {"type": "string"},
+            "total_goals_reasoning": {"type": "string"},
+            "score_allocation_reasoning": {"type": "string"},
             "score_candidates": {
                 "type": "array",
                 "minItems": 3,
@@ -75,6 +83,14 @@ PREDICTION_SCHEMA: dict[str, Any] = {
             "football_evidence",
             "hexagram_evidence",
             "contradiction_warning",
+            "match_script_summary",
+            "opening_phase",
+            "middle_phase",
+            "ending_phase",
+            "scoring_channel_analysis",
+            "energy_ownership_analysis",
+            "total_goals_reasoning",
+            "score_allocation_reasoning",
             "score_candidates",
             "overall_reasoning",
             "risk_warning",
@@ -95,7 +111,7 @@ class GitHubModelsClient:
     token: str
     model: str
     timeout: int = 45
-    max_tokens: int = 1800
+    max_tokens: int = 2400
     temperature: float = 0.1
 
     def _headers(self) -> dict[str, str]:
@@ -316,6 +332,14 @@ def _validate_ai_analysis(
         football_evidence=[str(x).strip() for x in football_evidence if str(x).strip()][:8],
         hexagram_evidence=[str(x).strip() for x in hexagram_evidence if str(x).strip()][:8],
         contradiction_warning=str(data.get("contradiction_warning", "")).strip(),
+        match_script_summary=str(data.get("match_script_summary", "")).strip(),
+        opening_phase=str(data.get("opening_phase", "")).strip(),
+        middle_phase=str(data.get("middle_phase", "")).strip(),
+        ending_phase=str(data.get("ending_phase", "")).strip(),
+        scoring_channel_analysis=str(data.get("scoring_channel_analysis", "")).strip(),
+        energy_ownership_analysis=str(data.get("energy_ownership_analysis", "")).strip(),
+        total_goals_reasoning=str(data.get("total_goals_reasoning", "")).strip(),
+        score_allocation_reasoning=str(data.get("score_allocation_reasoning", "")).strip(),
     )
 
 
@@ -376,20 +400,24 @@ def build_prediction_prompt(
         )
 
     system_prompt = f"""
-你是「梅花易數足球證據融合AI」，版本{PROMPT_VERSION}。你不是重新建立足球基線，也不是照抄規則；你的任務是審查有限卦象修正與歷史證據。
+你是「梅花易數足球連續卦象推理AI」，版本{PROMPT_VERSION}。你要像解讀一場正在展開的比賽那樣，審查足球先驗、整條卦線劇本與歷史證據，而不是把單一卦名機械映射成比分。
 
 不可違反：
 1. 只使用提供的賽前資料，只判90分鐘，不含延長賽與PK；不得使用或猜測本場賽後結果。
 2. Python算出的字數、體卦、用卦、本卦、互卦、動爻、變卦不可更改。
 3. 支持隊只決定體方，不代表體方強或必勝。
 4. 「體生用、用剋體」只能是風險訊號，禁止單獨推出勝負。
-5. 必須把本卦視為主局、互卦視為中段、動爻與變卦視為時段轉折；後段收束不等於前段不能進球。
+5. 必須把體、用、本卦、互卦、動爻、體用轉象、變卦與五行生剋串成同一條時間線：本卦為主局、互卦為中段、動爻是明確時窗、變卦為終局。初爻影響早而久，上爻影響晚且剩餘時間短。
 6. Python已先用純足球先驗建立λ，再把卦象修正限制在單方±25%。你必須先審查足球基線，再審查卦象修正，最後處理兩者矛盾；不得要求卦象突破上限。
 7. 足球實力分只能根據提供文字，不可憑模型記憶補充未提供事實。
-8. 只能從allowed_score_candidates選3個比分，但候選池已包含體勝、平局、用勝，不能以規則原排序當成真理。
-9. 證據不足時evidence_quality與direction_confidence必須降低；不得假裝高信心。
-10. 歷史案例只提供可泛化教訓；單場產生且未通過留出驗證的假說不可當成固定規則，也不可直接複製舊比分。
-11. 只輸出符合JSON Schema的物件。
+8. 必須分開判斷四件事：match dynamics（比賽動能）、scoring channel（破門通道）、energy ownership（能量歸屬）、ending closure（終局收束）。動能高而破門通道不足，可以是0-0；收束高也只能加權，不能一票否決前段已開啟的進球。
+9. 同卦同數不可固定判平或固定判大球：通道不足是鏡像對消；通道充足且動方轉入高動能卦才是同數共振。卦數只能在至少一個已定義的數路成立時作次級總球錨點，不可直接當進球數。
+10. 必須先判總球環境與閘門，再分配體用進球。高比分或大勝只有在足球強弱差、能量集中、破門通道、反覆攻擊或防線崩解等訊號同向時才可提前；同時不得把所有場次收斂到1-1或2-1。
+11. 只能從allowed_score_candidates選3個比分，但候選池已包含體勝、平局、用勝與經過閘門的劇本尾部，不能以規則原排序當成真理，也不可自創池外比分。
+12. 證據不足時evidence_quality與direction_confidence必須降低；不得假裝高信心。
+13. 歷史案例只提供可泛化教訓；單場產生且未通過留出驗證的假說不可當成固定規則，也不可直接複製舊比分。
+14. match_script_summary必須用一段連續敘事總結比賽；四個階段／通道／歸屬／總球／分配欄位必須各自回答，不可用同一句套話重複。
+15. 只輸出符合JSON Schema的物件。
 """.strip()
 
     user_payload = {
@@ -420,11 +448,14 @@ def build_prediction_prompt(
         "retrieved_historical_cases": case_payload,
         "decision_protocol": [
             "先確認football_prior中的足球基線λ與資料品質",
-            "列出本互動變各自支持的節奏與方向",
+            "沿本卦→互卦→動爻時窗→變卦寫出連續比賽劇本",
+            "分別評估比賽動能、破門通道、能量歸屬、終局收束與波動",
+            "先決定零球／高比分／大勝／雙方進球閘門是否打開",
+            "檢查同卦是鏡像對消或同數共振，數字是否有兩條合理路徑",
             "確認卦象倍率沒有突破單方±25%上限",
-            "檢查規則是否把體生用或轉艮過度放大",
+            "先選總球劇本，再按兩方完成通道和能量歸屬分配比分",
             "若足球證據與卦象矛盾，明確寫入contradiction_warning",
-            "從平衡候選池排序三個比分",
+            "從平衡候選池排序三個彼此有區別、且能逐一說明觸發原因的比分",
         ],
     }
     return system_prompt, json.dumps(user_payload, ensure_ascii=False, separators=(",", ":"))
@@ -449,7 +480,7 @@ def run_ai_prediction(
             direction=rule_prediction.direction,
             scores=list(rule_prediction.scores),
             confidences=[0.0, 0.0, 0.0],
-            score_reasons=["AI不可用，沿用v4足球先驗×有界卦象規則引擎。"] * 3,
+            score_reasons=["AI不可用，沿用v4.1足球先驗×連續卦象劇本引擎。"] * 3,
             overall_reasoning="",
             risk_warning="",
             error=str(exc),
