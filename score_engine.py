@@ -1,28 +1,15 @@
 from __future__ import annotations
 
-import math
-from typing import Any
+from typing import Any, Mapping
 
+from football_prior import build_football_prior, clamp, outcome_probabilities, poisson_grid, safe_float
+from hexagram_script import interpret_hexagram_script
 from knowledge_loader import load_calibration_rules, load_hexagrams, load_trigrams
-from models import HexagramResult, MatchInput, RulePrediction
+from models import HexagramResult, HexagramScript, MatchInput, RulePrediction
+from version import RULE_VERSION
 
 
-RULE_VERSION = "score-engine-v3.3.0"
-
-
-def _clamp(value: float, low: float, high: float) -> float:
-    return max(low, min(high, value))
-
-
-def _safe_float(value: Any, default: float) -> float:
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return default
-
-
-def _poisson(k: int, lam: float) -> float:
-    return math.exp(-lam) * (lam**k) / math.factorial(k)
+HEXAGRAM_ADJUSTMENT_CAP = 0.25
 
 
 def _score_text(score: tuple[int, int]) -> str:
@@ -77,145 +64,194 @@ def match_calibration_rules(result: HexagramResult) -> list[dict[str, Any]]:
             _condition_match(result, key, expected, main_tags, mutual_tags, changed_tags)
             for key, expected in conditions.items()
         ):
-            matched.append(rule)
+            matched.append(dict(rule))
     return matched
+
+
+def _rule_scale(rule: Mapping[str, Any]) -> float:
+    """Only promoted rules may materially affect a future prediction.
+
+    A rule created from one post-match example remains a hypothesis and receives
+    zero predictive weight. This prevents a known score from being encoded back
+    into the next prediction before it survives a holdout review.
+    """
+    status = str(rule.get("status", "hypothesis")).strip().lower()
+    if status == "verified":
+        evidence_count = int(safe_float(rule.get("evidence_count"), 0.0))
+        holdout_count = int(safe_float(rule.get("holdout_count"), 0.0))
+        validation_status = str(rule.get("validation_status", "")).strip().lower()
+        return 1.0 if evidence_count >= 3 and holdout_count >= 10 and validation_status == "passed" else 0.0
+    if status == "reviewed":
+        return 0.35 if int(safe_float(rule.get("evidence_count"), 0.0)) >= 3 else 0.0
+    if status == "general":
+        return 0.20
+    return 0.0
 
 
 def _apply_relation(
     result: HexagramResult,
-    body_xg: float,
-    use_xg: float,
+    body_delta: float,
+    use_delta: float,
     reasons: list[str],
 ) -> tuple[float, float]:
-    """體用只作方向風險修正，不能單獨決定勝負。"""
-    relation_effects = {
-        "body_controls_use": (0.10, -0.16, "體剋用：體方具制約，但剋制耗力；只作中等修正。"),
-        "use_controls_body": (-0.16, 0.10, "用剋體：體方效率受阻，但不等於用方必勝。"),
-        "use_generates_body": (0.14, -0.03, "用生體：體方獲助力，但仍需本互變支持完成。"),
-        "body_generates_use": (-0.04, 0.10, "體生用：視為能量外洩與反擊風險，不再直接等同用方勝。"),
-        "equal": (0.0, 0.0, "體用比和：交由本卦、互卦、變卦、足球先驗與動爻共同判斷。"),
+    effects = {
+        "body_controls_use": (0.08, -0.10, "體剋用只作制約風險修正，不直接等同體方勝。"),
+        "use_controls_body": (-0.10, 0.08, "用剋體只作受阻風險修正，不直接等同用方勝。"),
+        "use_generates_body": (0.10, -0.02, "用生體提高體方轉化條件，但用方自身仍可得分。"),
+        "body_generates_use": (-0.03, 0.07, "體生用視為外洩與反擊風險，不直接改判用方勝。"),
+        "equal": (0.0, 0.0, "體用比和不決勝，交由整條卦線與足球先驗整合。"),
     }
-    body_delta, use_delta, note = relation_effects.get(
-        result.relation_code,
-        (0.0, 0.0, "體用關係不明，維持中性。"),
-    )
+    body_shift, use_shift, note = effects.get(result.relation_code, (0.0, 0.0, "體用關係不明，維持中性。"))
     reasons.append(note)
-    return body_xg + body_delta, use_xg + use_delta
+    return body_delta + body_shift, use_delta + use_shift
 
 
-def _apply_phase_aware_transition(
+def _apply_phase_transition(
     result: HexagramResult,
-    body_xg: float,
-    use_xg: float,
+    body_delta: float,
+    use_delta: float,
     reasons: list[str],
 ) -> tuple[float, float]:
-    """動爻只改變比賽的一個時段，不把變卦當成整場完全替換。"""
     trigrams = load_trigrams()
     phase_weight = {1: 0.24, 2: 0.22, 3: 0.20, 4: 0.18, 5: 0.16, 6: 0.14}.get(result.moving_line, 0.18)
-
     if result.moving_side == "體方":
-        before = trigrams[result.body_gua]
-        after = trigrams[result.changed_body_gua]
-        attack_shift = float(after["attack_rating"]) - float(before["attack_rating"])
-        defense_shift = float(after["defense_rating"]) - float(before["defense_rating"])
-        body_xg += phase_weight * attack_shift
-        use_xg -= phase_weight * 0.55 * defense_shift
-        reasons.append(
-            f"動爻在體方：{result.body_transition}只按時段權重{phase_weight:.2f}修正；"
-            "原卦前段能力仍保留，避免把『先得勢後收住』誤判成整場無進球。"
-        )
+        before, after = trigrams[result.body_gua], trigrams[result.changed_body_gua]
+        attack_shift = safe_float(after.get("attack_rating"), 1.0) - safe_float(before.get("attack_rating"), 1.0)
+        defense_shift = safe_float(after.get("defense_rating"), 1.0) - safe_float(before.get("defense_rating"), 1.0)
+        body_delta += 0.60 * phase_weight * attack_shift
+        use_delta -= 0.32 * phase_weight * defense_shift
+        reasons.append(f"動爻在體方：{result.body_transition}按時段權重{phase_weight:.2f}修正，原卦前段能力仍保留。")
     else:
-        before = trigrams[result.use_gua]
-        after = trigrams[result.changed_use_gua]
-        attack_shift = float(after["attack_rating"]) - float(before["attack_rating"])
-        defense_shift = float(after["defense_rating"]) - float(before["defense_rating"])
-        use_xg += phase_weight * attack_shift
-        body_xg -= phase_weight * 0.55 * defense_shift
-        reasons.append(
-            f"動爻在用方：{result.use_transition}只按時段權重{phase_weight:.2f}修正；"
-            "不把後段轉象機械套成整場方向。"
+        before, after = trigrams[result.use_gua], trigrams[result.changed_use_gua]
+        attack_shift = safe_float(after.get("attack_rating"), 1.0) - safe_float(before.get("attack_rating"), 1.0)
+        defense_shift = safe_float(after.get("defense_rating"), 1.0) - safe_float(before.get("defense_rating"), 1.0)
+        use_delta += 0.60 * phase_weight * attack_shift
+        body_delta -= 0.32 * phase_weight * defense_shift
+        reasons.append(f"動爻在用方：{result.use_transition}按時段權重{phase_weight:.2f}修正，不把後段轉象替代整場。")
+    return body_delta, use_delta
+
+
+def _bounded_multiplier(base_lambda: float, delta: float) -> tuple[float, float]:
+    raw = 1.0 + delta / max(0.35, base_lambda)
+    bounded = clamp(raw, 1.0 - HEXAGRAM_ADJUSTMENT_CAP, 1.0 + HEXAGRAM_ADJUSTMENT_CAP)
+    return raw, bounded
+
+
+def _apply_score_patterns(
+    grid: list[dict[str, Any]],
+    main_patterns: set[str],
+    mutual_patterns: set[str],
+    changed_patterns: set[str],
+    rule_boosts: Mapping[str, float],
+    rule_penalties: Mapping[str, float],
+) -> list[dict[str, Any]]:
+    adjusted: list[dict[str, Any]] = []
+    for source in grid:
+        row = dict(source)
+        score = str(row.get("score", ""))
+        modifier = 1.0
+        if score in main_patterns:
+            modifier *= 1.08
+        if score in mutual_patterns:
+            modifier *= 1.03
+        if score in changed_patterns:
+            modifier *= 1.04
+        modifier *= safe_float(rule_boosts.get(score), 1.0)
+        modifier *= safe_float(rule_penalties.get(score), 1.0)
+        modifier = clamp(modifier, 0.75, 1.25)
+        row["pattern_multiplier"] = round(modifier, 6)
+        row["probability"] = safe_float(row.get("probability"), 0.0) * modifier
+        adjusted.append(row)
+
+    total = sum(safe_float(row.get("probability"), 0.0) for row in adjusted) or 1.0
+    for row in adjusted:
+        row["probability"] = safe_float(row.get("probability"), 0.0) / total
+        row["weight"] = row["probability"]
+    adjusted.sort(key=lambda row: safe_float(row.get("probability"), 0.0), reverse=True)
+    for index, row in enumerate(adjusted, 1):
+        row["rank"] = index
+    return adjusted
+
+
+def _apply_script_mixture(
+    grid: list[dict[str, Any]],
+    script: HexagramScript,
+) -> list[dict[str, Any]]:
+    """Blend the continuous hexagram script into the bounded Poisson grid.
+
+    The script never invents an unbounded probability surface. It contributes a
+    transparent, capped scenario distribution over precomputed score archetypes;
+    the football-first Poisson grid retains the remaining mass.
+    """
+    candidate_weights: dict[str, float] = {}
+    candidate_reasons: dict[str, str] = {}
+    for candidate in script.candidate_scores:
+        score = str(candidate.get("score", "")).strip()
+        if not score:
+            continue
+        candidate_weights[score] = max(
+            candidate_weights.get(score, 0.0),
+            safe_float(candidate.get("script_strength"), 0.0),
         )
-    return body_xg, use_xg
+        candidate_reasons[score] = str(candidate.get("reason", "")).strip()
+
+    total_candidate_weight = sum(candidate_weights.values())
+    if total_candidate_weight <= 0.0:
+        return grid
+
+    script_weight = clamp(safe_float(script.script_weight, 0.0), 0.0, 0.46)
+    adjusted: list[dict[str, Any]] = []
+    for source in grid:
+        row = dict(source)
+        score = str(row.get("score", ""))
+        scenario_probability = candidate_weights.get(score, 0.0) / total_candidate_weight
+        base_probability = safe_float(row.get("probability"), 0.0)
+        row["base_probability"] = base_probability
+        row["script_probability"] = scenario_probability
+        row["script_support"] = bool(scenario_probability > 0.0)
+        row["script_strength"] = round(candidate_weights.get(score, 0.0), 6)
+        row["script_reason"] = candidate_reasons.get(score, "")
+        row["probability"] = (1.0 - script_weight) * base_probability + script_weight * scenario_probability
+        row["weight"] = row["probability"]
+        adjusted.append(row)
+
+    total = sum(safe_float(row.get("probability"), 0.0) for row in adjusted) or 1.0
+    for row in adjusted:
+        row["probability"] = safe_float(row.get("probability"), 0.0) / total
+        row["weight"] = row["probability"]
+    adjusted.sort(key=lambda row: safe_float(row.get("probability"), 0.0), reverse=True)
+    for index, row in enumerate(adjusted, 1):
+        row["rank"] = index
+    return adjusted
 
 
-def _apply_football_prior(
-    match: MatchInput | None,
-    body_xg: float,
-    use_xg: float,
-    reasons: list[str],
-) -> tuple[float, float, dict[str, Any]]:
-    if match is None:
-        return body_xg, use_xg, {
-            "body_strength_rating": 50.0,
-            "use_strength_rating": 50.0,
-            "prior_confidence": 0.0,
-            "venue": "未提供",
-            "shift": 0.0,
-        }
-
-    body_rating = _clamp(_safe_float(getattr(match, "body_strength_rating", 50.0), 50.0), 0.0, 100.0)
-    use_rating = _clamp(_safe_float(getattr(match, "use_strength_rating", 50.0), 50.0), 0.0, 100.0)
-    confidence = _clamp(_safe_float(getattr(match, "prior_confidence", 0.5), 0.5), 0.0, 1.0)
-    venue = str(getattr(match, "venue", "中立場") or "中立場")
-
-    normalized_gap = _clamp((body_rating - use_rating) / 50.0, -1.0, 1.0)
-    shift = 0.72 * normalized_gap * confidence
-    body_xg += shift
-    use_xg -= shift
-
-    if "體方主場" in venue:
-        body_xg += 0.08 * confidence
-        use_xg -= 0.03 * confidence
-    elif "用方主場" in venue:
-        use_xg += 0.08 * confidence
-        body_xg -= 0.03 * confidence
-
-    reasons.append(
-        f"賽前足球先驗：體{body_rating:.0f}、用{use_rating:.0f}、可信度{confidence:.0%}、{venue}；"
-        f"對雙方期望進球作對稱修正{shift:+.2f}。此先驗不參與起卦字數。"
-    )
-    return body_xg, use_xg, {
-        "body_strength_rating": round(body_rating, 2),
-        "use_strength_rating": round(use_rating, 2),
-        "prior_confidence": round(confidence, 3),
-        "venue": venue,
-        "shift": round(shift, 4),
-    }
-
-
-def _rule_scale(rule: dict[str, Any]) -> float:
-    status = str(rule.get("status", "")).lower()
-    if status == "verified":
-        return 1.0
-    if status == "reviewed":
-        return 0.65
-    if status == "general":
-        return 0.35
-    return 0.50
+def _parse_grid_score(row: Mapping[str, Any]) -> tuple[int, int] | None:
+    try:
+        return int(row["body_goals"]), int(row["use_goals"])
+    except (KeyError, TypeError, ValueError):
+        return None
 
 
 def _select_top_scores(
-    grid: list[tuple[tuple[int, int], float]],
-    outcome_probabilities: dict[str, float],
-    football_prior: dict[str, Any],
+    grid: list[Mapping[str, Any]],
+    probabilities: Mapping[str, float],
+    football_prior: Mapping[str, Any],
 ) -> list[tuple[int, int]]:
-    ranked = [score for score, _ in grid]
+    ranked = [score for row in grid if (score := _parse_grid_score(row)) is not None]
     top = ranked[:3]
     if not top:
         return [(0, 0), (1, 0), (0, 1)]
 
-    dominant_probability = max(outcome_probabilities.values() or [0.0])
+    dominant_probability = max((safe_float(value, 0.0) for value in probabilities.values()), default=0.0)
     top_outcomes = {_outcome(score) for score in top}
     if len(top_outcomes) == 1 and dominant_probability < 0.68:
         alternative = next((score for score in ranked if _outcome(score) not in top_outcomes), None)
         if alternative is not None:
             top[-1] = alternative
 
-    body_rating = _safe_float(football_prior.get("body_strength_rating"), 50.0)
-    use_rating = _safe_float(football_prior.get("use_strength_rating"), 50.0)
-    prior_confidence = _safe_float(football_prior.get("prior_confidence"), 0.0)
-    rating_gap = body_rating - use_rating
-    if abs(rating_gap) >= 12 and prior_confidence >= 0.50 and dominant_probability < 0.72:
+    rating_gap = safe_float(football_prior.get("rating_gap"), 0.0)
+    confidence = safe_float(football_prior.get("prior_confidence"), 0.0)
+    if abs(rating_gap) >= 12 and confidence >= 0.50 and dominant_probability < 0.72:
         desired = "體方勝" if rating_gap > 0 else "用方勝"
         if all(_outcome(score) != desired for score in top):
             candidate = next((score for score in ranked if _outcome(score) == desired), None)
@@ -234,137 +270,198 @@ def _select_top_scores(
 def predict_scores(result: HexagramResult, match: MatchInput | None = None) -> RulePrediction:
     trigrams = load_trigrams()
     hexagrams = load_hexagrams()
-    body_tri = trigrams[result.body_gua]
-    use_tri = trigrams[result.use_gua]
-    main = hexagrams[result.main_hexagram]
-    mutual = hexagrams[result.mutual_hexagram]
-    changed = hexagrams[result.changed_hexagram]
+    body_tri, use_tri = trigrams[result.body_gua], trigrams[result.use_gua]
+    main, mutual, changed = (
+        hexagrams[result.main_hexagram],
+        hexagrams[result.mutual_hexagram],
+        hexagrams[result.changed_hexagram],
+    )
 
     reasons: list[str] = []
     diagnostics: list[str] = []
-    body_xg = 1.02
-    use_xg = 1.02
-
-    # 八卦基礎只建立攻守骨架，不直接決定勝負。
-    body_xg += 0.38 * (float(body_tri["attack_rating"]) - 1.0)
-    body_xg -= 0.28 * (float(use_tri["defense_rating"]) - 1.0)
-    use_xg += 0.38 * (float(use_tri["attack_rating"]) - 1.0)
-    use_xg -= 0.28 * (float(body_tri["defense_rating"]) - 1.0)
-    reasons.append(f"八卦攻守骨架：體{result.body_gua}、用{result.use_gua}；不把卦數直接當進球數。")
-
-    # 本卦主局、互卦中段、變卦後段，主要調整總節奏。
-    pace_index = 0.55 * float(main["pace"]) + 0.25 * float(mutual["pace"]) + 0.20 * float(changed["pace"])
-    pace_goal_delta = 0.12 * pace_index
-    body_xg += pace_goal_delta
-    use_xg += pace_goal_delta
+    football_prior = build_football_prior(match)
+    football_body_lambda = safe_float(football_prior["body_lambda"], 1.275)
+    football_use_lambda = safe_float(football_prior["use_lambda"], 1.275)
     reasons.append(
-        f"本互變節奏：{result.main_hexagram}→{result.mutual_hexagram}→{result.changed_hexagram}，"
-        f"綜合節奏指數{pace_index:+.2f}，只共同修正總進球。"
+        f"足球基線先建立λ：體{football_body_lambda:.2f}、用{football_use_lambda:.2f}；"
+        "只使用0–100實力、先驗可信度與場地，不使用任何卦象或本場賽後資訊。"
     )
 
-    body_xg, use_xg = _apply_relation(result, body_xg, use_xg, reasons)
-    body_xg, use_xg = _apply_phase_aware_transition(result, body_xg, use_xg, reasons)
-    body_xg, use_xg, football_prior = _apply_football_prior(match, body_xg, use_xg, reasons)
+    body_delta = 0.0
+    use_delta = 0.0
+    body_delta += 0.24 * (safe_float(body_tri.get("attack_rating"), 1.0) - 1.0)
+    body_delta -= 0.16 * (safe_float(use_tri.get("defense_rating"), 1.0) - 1.0)
+    use_delta += 0.24 * (safe_float(use_tri.get("attack_rating"), 1.0) - 1.0)
+    use_delta -= 0.16 * (safe_float(body_tri.get("defense_rating"), 1.0) - 1.0)
+    reasons.append(f"八卦攻守只修正足球λ：體{result.body_gua}、用{result.use_gua}；卦數不直接等同進球數。")
+
+    pace_index = 0.55 * safe_float(main.get("pace"), 0.0) + 0.25 * safe_float(mutual.get("pace"), 0.0) + 0.20 * safe_float(changed.get("pace"), 0.0)
+    pace_delta = 0.08 * pace_index
+    body_delta += pace_delta
+    use_delta += pace_delta
+    reasons.append(
+        f"連續卦線：{result.main_hexagram}→{result.mutual_hexagram}→{result.changed_hexagram}，"
+        f"節奏指數{pace_index:+.2f}，共同修正總進球環境。"
+    )
+
+    body_delta, use_delta = _apply_relation(result, body_delta, use_delta, reasons)
+    body_delta, use_delta = _apply_phase_transition(result, body_delta, use_delta, reasons)
 
     matched_rules = match_calibration_rules(result)
-    score_multipliers: dict[str, float] = {}
+    audited_rules: list[dict[str, Any]] = []
+    score_boosts: dict[str, float] = {}
     score_penalties: dict[str, float] = {}
     for rule in matched_rules:
         scale = _rule_scale(rule)
+        audited = dict(rule)
+        audited["applied_scale"] = scale
+        audited["applied"] = scale > 0.0
+        audited_rules.append(audited)
+        if scale <= 0.0:
+            reasons.append(f"命中未達升級門檻的規則〔{rule.get('name', '')}〕，本場權重為0。")
+            continue
         effects = rule.get("effects", {})
-        body_xg += scale * float(effects.get("body_delta", 0.0))
-        use_xg += scale * float(effects.get("use_delta", 0.0))
-        total_delta = scale * float(effects.get("total_delta", 0.0))
-        body_xg += total_delta / 2
-        use_xg += total_delta / 2
+        body_delta += scale * safe_float(effects.get("body_delta"), 0.0)
+        use_delta += scale * safe_float(effects.get("use_delta"), 0.0)
+        total_delta = scale * safe_float(effects.get("total_delta"), 0.0)
+        body_delta += total_delta / 2.0
+        use_delta += total_delta / 2.0
         for score, multiplier in effects.get("boost_scores", {}).items():
-            adjusted = 1.0 + (float(multiplier) - 1.0) * scale
-            score_multipliers[score] = score_multipliers.get(score, 1.0) * adjusted
+            adjusted = 1.0 + (safe_float(multiplier, 1.0) - 1.0) * scale * 0.25
+            score_boosts[str(score)] = score_boosts.get(str(score), 1.0) * adjusted
         for score, multiplier in effects.get("penalize_scores", {}).items():
-            adjusted = 1.0 + (float(multiplier) - 1.0) * scale
-            score_penalties[score] = score_penalties.get(score, 1.0) * adjusted
-        reasons.append(f"校準規則〔{rule['name']}〕按狀態權重{scale:.0%}套用：{rule['lesson']}")
+            adjusted = 1.0 + (safe_float(multiplier, 1.0) - 1.0) * scale * 0.25
+            score_penalties[str(score)] = score_penalties.get(str(score), 1.0) * adjusted
+        reasons.append(f"校準規則〔{rule.get('name', '')}〕按晉級狀態權重{scale:.0%}有限套用。")
 
-    body_xg = _clamp(body_xg, 0.15, 4.3)
-    use_xg = _clamp(use_xg, 0.15, 4.3)
+    raw_body_multiplier, body_multiplier = _bounded_multiplier(football_body_lambda, body_delta)
+    raw_use_multiplier, use_multiplier = _bounded_multiplier(football_use_lambda, use_delta)
+    body_lambda = clamp(football_body_lambda * body_multiplier, 0.10, 6.00)
+    use_lambda = clamp(football_use_lambda * use_multiplier, 0.10, 6.00)
+    reasons.append(
+        f"卦象有界修正：體{body_multiplier:.3f}倍、用{use_multiplier:.3f}倍，"
+        f"單方上限±{HEXAGRAM_ADJUSTMENT_CAP:.0%}；修正後λ為{body_lambda:.2f}／{use_lambda:.2f}。"
+    )
+    if abs(raw_body_multiplier - body_multiplier) > 1e-9 or abs(raw_use_multiplier - use_multiplier) > 1e-9:
+        diagnostics.append("至少一方的原始卦象修正超出上限，已截斷至±25%，避免卦象壓過足球基線。")
+    else:
+        diagnostics.append("兩方卦象修正均在±25%研究上限內。")
 
-    grid: list[tuple[tuple[int, int], float]] = []
-    for body_goals in range(0, 6):
-        for use_goals in range(0, 6):
-            score = (body_goals, use_goals)
-            text = _score_text(score)
-            weight = _poisson(body_goals, body_xg) * _poisson(use_goals, use_xg)
-            if text in main.get("score_patterns", []):
-                weight *= 1.24
-            if text in mutual.get("score_patterns", []):
-                weight *= 1.08
-            if text in changed.get("score_patterns", []):
-                weight *= 1.10
-            weight *= score_multipliers.get(text, 1.0)
-            weight *= score_penalties.get(text, 1.0)
-            if body_goals + use_goals >= 7:
-                weight *= 0.45
-            grid.append((score, weight))
+    raw_grid, tail_mass = poisson_grid(body_lambda, use_lambda)
+    pattern_grid = _apply_score_patterns(
+        raw_grid,
+        set(main.get("score_patterns", [])),
+        set(mutual.get("score_patterns", [])),
+        set(changed.get("score_patterns", [])),
+        score_boosts,
+        score_penalties,
+    )
+    script = interpret_hexagram_script(result, match, football_prior)
+    grid = _apply_script_mixture(pattern_grid, script)
+    probabilities = outcome_probabilities(grid)
+    top_scores = _select_top_scores(grid, probabilities, football_prior)
 
-    grid.sort(key=lambda item: item[1], reverse=True)
-    total_weight = sum(weight for _, weight in grid) or 1.0
-    outcome_probabilities = {"體方勝": 0.0, "平局": 0.0, "用方勝": 0.0}
-    for score, weight in grid:
-        outcome_probabilities[_outcome(score)] += weight / total_weight
-    outcome_probabilities = {key: round(value, 4) for key, value in outcome_probabilities.items()}
-
-    top_scores = _select_top_scores(grid, outcome_probabilities, football_prior)
-    ordered_outcomes = sorted(outcome_probabilities.items(), key=lambda item: item[1], reverse=True)
+    ordered_outcomes = sorted(probabilities.items(), key=lambda item: item[1], reverse=True)
     best_outcome, best_probability = ordered_outcomes[0]
     second_probability = ordered_outcomes[1][1]
-    if best_probability >= 0.44 and best_probability - second_probability >= 0.07:
-        direction = best_outcome
-    else:
-        direction = "平局或一球差拉鋸"
-
-    top_weight = grid[0][1]
-    total_top_12 = sum(weight for _, weight in grid[:12]) or 1.0
+    direction = best_outcome if best_probability >= 0.44 and best_probability - second_probability >= 0.07 else "平局或一球差拉鋸"
     outcome_margin = max(0.0, best_probability - second_probability)
-    confidence = _clamp(0.20 + 0.55 * outcome_margin + 0.35 * (top_weight / total_top_12), 0.20, 0.72)
+    top_probability = safe_float(grid[0].get("probability"), 0.0) if grid else 0.0
+    confidence = clamp(0.22 + 0.62 * outcome_margin + 0.45 * top_probability, 0.20, 0.74)
 
-    if result.relation_code == "body_generates_use":
-        diagnostics.append("體生用只被視為外洩風險，不可單獨推出用方勝。")
+    high_total_probability = sum(
+        safe_float(row.get("probability"), 0.0)
+        for row in grid
+        if safe_float(row.get("body_goals"), 0.0) + safe_float(row.get("use_goals"), 0.0) >= 5
+    )
+    scenario_expected_body_goals = sum(
+        safe_float(row.get("probability"), 0.0) * safe_float(row.get("body_goals"), 0.0)
+        for row in grid
+    )
+    scenario_expected_use_goals = sum(
+        safe_float(row.get("probability"), 0.0) * safe_float(row.get("use_goals"), 0.0)
+        for row in grid
+    )
+    diagnostics.append(f"五球以上機率尾部保留為{high_total_probability:.1%}，比分網格擴至單方0–10球。")
+    diagnostics.append(
+        f"連續卦象劇本以{script.script_weight:.0%}情境權重重排比分；"
+        f"環境為「{script.environment}」，劇本期望進球{scenario_expected_body_goals:.2f}／{scenario_expected_use_goals:.2f}。"
+    )
+    if any(not rule.get("applied") for rule in audited_rules):
+        diagnostics.append("命中的單場賽後規則仍屬假說，不參與本場排序；需通過留出樣本後才能升級。")
     if len({_outcome(score) for score in top_scores}) == 1 and best_probability < 0.68:
-        diagnostics.append("前三選方向過度集中，但勝平負機率未形成強優勢；應保留替代方向。")
-    prior_gap = football_prior["body_strength_rating"] - football_prior["use_strength_rating"]
-    if abs(prior_gap) >= 12 and football_prior["prior_confidence"] >= 0.50:
-        prior_direction = "體方勝" if prior_gap > 0 else "用方勝"
-        if best_outcome != prior_direction and best_probability < 0.65:
-            diagnostics.append("卦象方向與高可信足球先驗衝突；最終排序必須交由AI作證據審查，不可只信單一規則。")
-    if not diagnostics:
-        diagnostics.append("未發現單一體用關係壟斷方向或前三選異常集中的系統性警訊。")
+        diagnostics.append("前三選方向過度集中且機率優勢不足，已保留替代方向。")
 
-    score_grid = [
+    compact_grid = [
         {
-            "score": _score_text(score),
-            "weight": round(weight, 8),
-            "probability": round(weight / total_weight, 6),
-            "outcome": _outcome(score),
-            "rank": index + 1,
+            "score": str(row.get("score", "")),
+            "weight": round(safe_float(row.get("probability"), 0.0), 8),
+            "probability": round(safe_float(row.get("probability"), 0.0), 8),
+            "outcome": str(row.get("outcome", "")),
+            "rank": int(row.get("rank", 0)),
+            "body_goals": int(row.get("body_goals", 0)),
+            "use_goals": int(row.get("use_goals", 0)),
+            "pattern_multiplier": round(safe_float(row.get("pattern_multiplier"), 1.0), 6),
+            "base_probability": round(safe_float(row.get("base_probability"), 0.0), 8),
+            "script_probability": round(safe_float(row.get("script_probability"), 0.0), 8),
+            "script_support": bool(row.get("script_support", False)),
+            "script_strength": round(safe_float(row.get("script_strength"), 0.0), 6),
+            "script_reason": str(row.get("script_reason", "")),
         }
-        for index, (score, weight) in enumerate(grid)
+        for row in grid
     ]
+    football_scores = [tuple(int(value) for value in score) for score in football_prior.get("scores", []) if len(score) == 2]
+    football_probabilities = dict(football_prior.get("outcome_probabilities", {}))
+
     reasons.append(
-        f"最終期望進球：{result.body_team}{body_xg:.2f}、{result.use_team}{use_xg:.2f}；"
-        f"勝平負機率＝體{outcome_probabilities['體方勝']:.1%}／平{outcome_probabilities['平局']:.1%}／用{outcome_probabilities['用方勝']:.1%}。"
+        f"最終機率：體勝{probabilities['體方勝']:.1%}／平{probabilities['平局']:.1%}／用勝{probabilities['用方勝']:.1%}；"
+        f"網格外尾端質量{tail_mass:.4%}。"
+    )
+    reasons.append(script.energy_flow_summary)
+    reasons.extend(script.reasons)
+    enriched_prior = dict(football_prior)
+    enriched_prior.update(
+        {
+            "hexagram_body_raw_multiplier": round(raw_body_multiplier, 6),
+            "hexagram_use_raw_multiplier": round(raw_use_multiplier, 6),
+            "hexagram_body_multiplier": round(body_multiplier, 6),
+            "hexagram_use_multiplier": round(use_multiplier, 6),
+            "hexagram_adjustment_cap": HEXAGRAM_ADJUSTMENT_CAP,
+            "adjusted_body_lambda": round(body_lambda, 4),
+            "adjusted_use_lambda": round(use_lambda, 4),
+            "five_plus_probability": round(high_total_probability, 6),
+            "script_environment": script.environment,
+            "script_weight": script.script_weight,
+            "scenario_expected_body_goals": round(scenario_expected_body_goals, 4),
+            "scenario_expected_use_goals": round(scenario_expected_use_goals, 4),
+        }
     )
 
     return RulePrediction(
         scores=top_scores,
-        expected_body_goals=round(body_xg, 2),
-        expected_use_goals=round(use_xg, 2),
+        expected_body_goals=round(body_lambda, 3),
+        expected_use_goals=round(use_lambda, 3),
         direction=direction,
         confidence=round(confidence, 3),
         reasons=reasons,
-        matched_rules=matched_rules,
-        score_grid=score_grid,
-        outcome_probabilities=outcome_probabilities,
+        matched_rules=audited_rules,
+        score_grid=compact_grid,
+        outcome_probabilities={key: round(value, 6) for key, value in probabilities.items()},
         diagnostics=diagnostics,
-        football_prior=football_prior,
+        football_prior=enriched_prior,
+        football_only_scores=football_scores,
+        football_only_outcome_probabilities={key: round(safe_float(value, 0.0), 6) for key, value in football_probabilities.items()},
+        football_expected_body_goals=round(football_body_lambda, 3),
+        football_expected_use_goals=round(football_use_lambda, 3),
+        hexagram_body_multiplier=round(body_multiplier, 6),
+        hexagram_use_multiplier=round(use_multiplier, 6),
+        hexagram_adjustment_cap=HEXAGRAM_ADJUSTMENT_CAP,
+        hexagram_script=script.to_dict(),
+        scenario_weight=script.script_weight,
+        scenario_expected_body_goals=round(scenario_expected_body_goals, 3),
+        scenario_expected_use_goals=round(scenario_expected_use_goals, 3),
         method=RULE_VERSION,
     )
+
+
+__all__ = ["HEXAGRAM_ADJUSTMENT_CAP", "RULE_VERSION", "match_calibration_rules", "predict_scores"]

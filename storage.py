@@ -116,7 +116,8 @@ class CaseStore:
             if column not in df.columns:
                 df[column] = ""
         ordered = CASE_COLUMNS + [column for column in df.columns if column not in CASE_COLUMNS]
-        return df[ordered].fillna("").astype("object")
+        ordered_df = df[ordered]
+        return ordered_df.where(pd.notna(ordered_df), "").astype("object")
 
     def save(self, df: pd.DataFrame) -> None:
         df = self._normalize(df)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 from typing import Any, Iterable, Mapping
 
@@ -77,9 +78,29 @@ def evaluate_predictions(scores: list[tuple[int, int]], actual_score: str) -> di
             "body_goal_error": "",
             "use_goal_error": "",
             "first_score_distance": "",
+            "btts_hit": "",
+            "over_2_5_hit": "",
         }
 
     actual_text = _score_text(actual)
+    if not scores:
+        return {
+            "actual_score": actual_text,
+            "first_hit": "",
+            "second_hit": "",
+            "third_hit": "",
+            "any_hit": "",
+            "first_outcome": "",
+            "actual_outcome": outcome(actual_text),
+            "outcome_hit": "",
+            "first_total_goal_error": "",
+            "body_goal_error": "",
+            "use_goal_error": "",
+            "first_score_distance": "",
+            "btts_hit": "",
+            "over_2_5_hit": "",
+        }
+
     hits = ["是" if text == actual_text else "否" for text in score_texts[:3]]
     while len(hits) < 3:
         hits.append("否")
@@ -99,13 +120,54 @@ def evaluate_predictions(scores: list[tuple[int, int]], actual_score: str) -> di
         "body_goal_error": first[0] - actual[0],
         "use_goal_error": first[1] - actual[1],
         "first_score_distance": abs(first[0] - actual[0]) + abs(first[1] - actual[1]),
+        "btts_hit": "是" if (first[0] > 0 and first[1] > 0) == (actual[0] > 0 and actual[1] > 0) else "否",
+        "over_2_5_hit": "是" if (sum(first) >= 3) == (sum(actual) >= 3) else "否",
     }
+
+
+def outcome_brier(probabilities: Mapping[str, Any], actual_score: str) -> float | None:
+    actual = outcome(actual_score)
+    if not actual:
+        return None
+    labels = ["體方勝", "平局", "用方勝"]
+    values: list[float] = []
+    for label in labels:
+        try:
+            value = float(probabilities.get(label, 0.0))
+        except (TypeError, ValueError):
+            value = 0.0
+        values.append(max(0.0, min(1.0, value)))
+    total = sum(values)
+    if total <= 0.0:
+        return None
+    normalized = [value / total for value in values]
+    return sum(
+        (probability - (1.0 if label == actual else 0.0)) ** 2
+        for label, probability in zip(labels, normalized)
+    )
+
+
+def outcome_log_loss(probabilities: Mapping[str, Any], actual_score: str) -> float | None:
+    actual = outcome(actual_score)
+    if not actual:
+        return None
+    values: dict[str, float] = {}
+    for label in ["體方勝", "平局", "用方勝"]:
+        try:
+            values[label] = max(0.0, min(1.0, float(probabilities.get(label, 0.0))))
+        except (TypeError, ValueError):
+            values[label] = 0.0
+    total = sum(values.values())
+    if total <= 0.0:
+        return None
+    return -math.log(max(1e-12, values[actual] / total))
 
 
 def candidate_scores(rule_prediction: RulePrediction, limit: int = 15) -> list[tuple[int, int]]:
     """建立勝、平、負都有代表的候選池，避免錯誤規則把AI鎖死在單一方向。"""
     ranked: list[tuple[int, int]] = []
     buckets: dict[str, list[tuple[int, int]]] = {"體方勝": [], "平局": [], "用方勝": []}
+    script_ranked: list[tuple[int, int]] = []
 
     for row in rule_prediction.score_grid:
         if not isinstance(row, Mapping):
@@ -121,6 +183,21 @@ def candidate_scores(rule_prediction: RulePrediction, limit: int = 15) -> list[t
             ranked.append(score)
             buckets[outcome(_score_text(score))].append(score)
 
+    script = rule_prediction.hexagram_script if isinstance(rule_prediction.hexagram_script, Mapping) else {}
+    raw_script_candidates = script.get("candidate_scores", [])
+    if isinstance(raw_script_candidates, list):
+        for item in raw_script_candidates:
+            if not isinstance(item, Mapping):
+                continue
+            parsed = score_tuple(str(item.get("score", "")))
+            if parsed is None:
+                continue
+            if parsed not in script_ranked:
+                script_ranked.append(parsed)
+            if parsed not in ranked:
+                ranked.append(parsed)
+                buckets[outcome(_score_text(parsed))].append(parsed)
+
     # 每個方向至少保留4個候選；其餘按原始規則順位補滿。
     selected: list[tuple[int, int]] = []
     for label in ["體方勝", "平局", "用方勝"]:
@@ -129,6 +206,12 @@ def candidate_scores(rule_prediction: RulePrediction, limit: int = 15) -> list[t
                 selected.append(score)
 
     selected.sort(key=lambda score: ranked.index(score) if score in ranked else 999)
+    # Script archetypes are the auditable bridge between continuous interpretation
+    # and the AI. Keep them selectable even when a rare 4+ goal score is outside
+    # the first Poisson rows.
+    for score in script_ranked[:6]:
+        if score not in selected:
+            selected.append(score)
     for score in ranked:
         if score not in selected:
             selected.append(score)
@@ -144,6 +227,16 @@ def _strong_ai_evidence(ai_analysis: AIAnalysis) -> bool:
         and float(ai_analysis.direction_confidence) >= 0.65
         and strength_gap >= 12.0
     )
+
+
+def _fill_three(preferred: list[tuple[int, int]], pool: list[tuple[int, int]]) -> list[tuple[int, int]]:
+    output: list[tuple[int, int]] = []
+    for score in preferred + pool:
+        if score not in output:
+            output.append(score)
+        if len(output) == 3:
+            break
+    return output
 
 
 def controlled_final_scores(
@@ -185,6 +278,27 @@ def controlled_final_scores(
     ai_first_outcome = outcome(_score_text(ai_scores[0]))
     direction_conflict = ai_first_outcome != rule_first_outcome
 
+    # Strong correction remains bounded to the rule engine's first nine balanced
+    # candidates. AI cannot invent a score or escape the football/hexagram grid.
+    if direction_conflict and strong_evidence:
+        eligible = [score for score in ai_scores if pool.index(score) <= 8]
+        if eligible:
+            final = _fill_three(eligible, pool)
+            metadata.update(
+                {
+                    "mode": "strong_evidence_correction_v4",
+                    "ai_weight": 0.55,
+                    "evidence_quality": round(evidence_quality, 3),
+                    "direction_confidence": round(direction_confidence, 3),
+                    "strength_gap": round(strength_gap_signed, 2),
+                    "note": (
+                        "足球證據品質、方向信心與實力差同時達標；"
+                        "允許AI在足球先驗×有界卦象候選池前9名內糾正方向。"
+                    ),
+                }
+            )
+            return final, metadata
+
     # 案例少時仍可糾正規則，但必須同時有高品質足球證據、方向信心與明顯實力差。
     if direction_conflict and similar_case_count < 3 and not strong_evidence:
         metadata.update(
@@ -218,7 +332,7 @@ def controlled_final_scores(
         bounded_rank = max(base_rank - max_shift, min(base_rank + max_shift, requested_rank))
         blended_rank = (1.0 - ai_weight) * base_rank + ai_weight * bounded_rank
         if preferred_outcome and evidence_quality >= 0.60 and outcome(_score_text(score)) == preferred_outcome:
-            blended_rank -= 0.55 * direction_confidence
+            blended_rank -= 0.75 * direction_confidence
         blended.append((score, blended_rank))
 
     blended.sort(key=lambda item: (item[1], rule_rank[item[0]]))
@@ -236,14 +350,14 @@ def controlled_final_scores(
 
     metadata.update(
         {
-            "mode": "evidence_ensemble_v3.3",
+            "mode": "evidence_ensemble_v4",
             "ai_weight": round(ai_weight, 4),
             "direction_guard": False,
             "evidence_quality": round(evidence_quality, 3),
             "direction_confidence": round(direction_confidence, 3),
             "strength_gap": round(strength_gap_signed, 2),
             "note": (
-                "AI只在勝平負平衡候選池內重排；一般最多移動3位，"
+                "AI只在足球先驗×有界卦象產生的勝平負平衡候選池內重排；一般最多移動3位，"
                 "只有高品質足球證據、方向信心與明顯實力差同時成立時才可移動6位並糾正規則方向。"
             ),
         }

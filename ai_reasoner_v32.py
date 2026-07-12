@@ -322,6 +322,7 @@ def _run_postmatch_payload(client: GitHubModelsClient, payload: Mapping[str, Any
 請誠實區分精確命中、方向命中、完全偏差；輸出可泛化結構教訓，且不得把單一結果直接變成永久規則。
 只輸出JSON：accuracy_summary、error_type、hexagram_cause、generalizable_lesson、non_generalizable_factors、suggested_structural_tags、suggested_calibration_reason、rule_candidate。
 """.strip()
-    data, raw = client.infer_json(system_prompt, json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
+    infer = getattr(client, "infer_json_object", client.infer_json)
+    data, raw = infer(system_prompt, json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
     data["_raw_usage"] = raw.get("usage", {}) if isinstance(raw, dict) else {}
     return data

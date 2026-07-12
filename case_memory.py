@@ -64,6 +64,11 @@ def normalize_match_name(name: str) -> str:
     return re.sub(r"[\W_]+", "", (name or "").lower(), flags=re.UNICODE)
 
 
+def fixture_key(body_team: str, use_team: str) -> str:
+    teams = sorted(filter(None, [normalize_match_name(body_team), normalize_match_name(use_team)]))
+    return "::".join(teams) if len(teams) == 2 else ""
+
+
 def infer_relation_code(text: str) -> str:
     text = text or ""
     if "體生用" in text:
@@ -266,11 +271,17 @@ def retrieve_similar_cases(
         return []
 
     current_name = normalize_match_name(result.match_name)
+    current_fixture = fixture_key(result.body_team, result.use_team)
     candidates: list[tuple[pd.Series, float, list[str], list[str], str]] = []
     subset = casebook.tail(max_rows).copy()
     for _, row in subset.iterrows():
         match_name = _first(row, "match_name")
-        if not match_name or normalize_match_name(match_name) == current_name:
+        old_fixture = fixture_key(_first(row, "body_team"), _first(row, "use_team"))
+        if (
+            not match_name
+            or normalize_match_name(match_name) == current_name
+            or (current_fixture and old_fixture == current_fixture)
+        ):
             continue
         if not _case_is_usable(row):
             continue

@@ -28,7 +28,7 @@ def build_markdown_report(
 ) -> str:
     trigrams = load_trigrams()
     hexagrams = load_hexagrams()
-    final = final_scores(rule_prediction, ai_analysis)
+    final = final_scores(rule_prediction, ai_analysis, len(similar_cases))
     body_tri = trigrams[result.body_gua]
     use_tri = trigrams[result.use_gua]
     main = hexagrams[result.main_hexagram]
@@ -183,9 +183,11 @@ def build_markdown_report(
 - 後段：{changed['ending']}
 - 風險：{changed['risk']}
 
-## 六、固定規則引擎
+## 六、足球先驗 × 卦象有界修正引擎
 
-- 期望進球：{match.body_team} {rule_prediction.expected_body_goals:.2f}｜{match.use_team} {rule_prediction.expected_use_goals:.2f}
+- 純足球基線 λ：{match.body_team} {rule_prediction.football_expected_body_goals:.2f}｜{match.use_team} {rule_prediction.football_expected_use_goals:.2f}
+- 卦象修正倍率：體方 ×{rule_prediction.hexagram_body_multiplier:.3f}｜用方 ×{rule_prediction.hexagram_use_multiplier:.3f}｜上限 ±{rule_prediction.hexagram_adjustment_cap:.0%}
+- 修正後 λ：{match.body_team} {rule_prediction.expected_body_goals:.2f}｜{match.use_team} {rule_prediction.expected_use_goals:.2f}
 - 方向：{rule_prediction.direction}
 - 信心：{rule_prediction.confidence:.3f}
 - 首選：{_score_text(rule_prediction.scores[0])}
@@ -198,7 +200,7 @@ def build_markdown_report(
 
 ### 命中的校準規則
 
-{_bullets([f"{rule['id']}｜{rule['name']}：{rule['lesson']}" for rule in rule_prediction.matched_rules])}
+{_bullets([f"{rule['id']}｜{rule['name']}｜狀態 {rule.get('status', '')}｜實際權重 {float(rule.get('applied_scale', 0.0)):.0%}：{rule['lesson']}" for rule in rule_prediction.matched_rules])}
 
 ## 七、本地相似案例引擎
 
