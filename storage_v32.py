@@ -66,7 +66,8 @@ class CaseStore(BaseCaseStore):
             if not str(df.at[index, "案例品質"]).strip():
                 df.at[index, "案例品質"] = "中"
         ordered = CASE_COLUMNS + [column for column in df.columns if column not in CASE_COLUMNS]
-        return df[ordered].fillna("").astype("object")
+        ordered_df = df[ordered]
+        return ordered_df.where(pd.notna(ordered_df), "").astype("object")
 
     def get_by_id(self, case_id: str) -> dict[str, Any] | None:
         df = self.load()

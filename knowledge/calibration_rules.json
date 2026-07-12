@@ -2,7 +2,7 @@
   {
     "id": "CAL-001",
     "name": "剝坤艮土重收束",
-    "status": "verified",
+    "status": "hypothesis",
     "source_case": "哥倫比亞 vs 瑞士，90分鐘0-0",
     "conditions": {
       "main_hexagram": "山地剝",
@@ -23,7 +23,7 @@
   {
     "id": "CAL-002",
     "name": "鼎夬恆與用方火轉雷",
-    "status": "verified",
+    "status": "hypothesis",
     "source_case": "阿根廷 vs 埃及，實際3-2",
     "conditions": {
       "main_hexagram": "火風鼎",
@@ -45,7 +45,7 @@
   {
     "id": "CAL-003",
     "name": "雙震受蹇與用方轉坤",
-    "status": "verified",
+    "status": "hypothesis",
     "source_case": "巴西 vs 蘇格蘭，實際3-0",
     "conditions": {
       "main_hexagram": "震為雷",
@@ -65,7 +65,7 @@
   {
     "id": "CAL-004",
     "name": "訟局乾生坎與乾極變兌",
-    "status": "verified",
+    "status": "hypothesis",
     "source_case": "剛果民主共和國 vs 烏茲別克，實際3-1",
     "conditions": {
       "main_hexagram": "天水訟",
@@ -86,7 +86,7 @@
   {
     "id": "CAL-005",
     "name": "困局體坎轉巽不宜過度放大",
-    "status": "verified",
+    "status": "hypothesis",
     "source_case": "埃及 vs 伊朗，實際1-1",
     "conditions": {
       "main_hexagram": "澤水困",
@@ -105,7 +105,7 @@
   {
     "id": "CAL-006",
     "name": "兌口得家人組織後由節收住",
-    "status": "verified",
+    "status": "hypothesis",
     "source_case": "巴西 vs 海地，實際3-0",
     "conditions": {
       "main_hexagram": "兌為澤",
@@ -123,7 +123,7 @@
   {
     "id": "CAL-007",
     "name": "睽既濟後用方火止於艮與損",
-    "status": "verified",
+    "status": "hypothesis",
     "source_case": "迦納 vs 巴拿馬，實際1-0",
     "conditions": {
       "main_hexagram": "火澤睽",
@@ -142,7 +142,7 @@
   {
     "id": "CAL-008",
     "name": "益被剝削薄後中孚留下雙方一球",
-    "status": "verified",
+    "status": "hypothesis",
     "source_case": "捷克 vs 南非，實際1-1",
     "conditions": {
       "main_hexagram": "風雷益",
@@ -160,7 +160,7 @@
   {
     "id": "CAL-009",
     "name": "師局土吸水與體坎轉坤",
-    "status": "verified",
+    "status": "hypothesis",
     "source_case": "澳洲 vs 土耳其，實際2-0（體方澳洲）",
     "conditions": {
       "main_hexagram": "地水師",
@@ -178,7 +178,7 @@
   {
     "id": "CAL-010",
     "name": "渙局體水生用風且用風轉山",
-    "status": "verified",
+    "status": "hypothesis",
     "source_case": "美國 vs 波赫，實際用方美國2-0",
     "conditions": {
       "main_hexagram": "風水渙",
@@ -199,7 +199,7 @@
   {
     "id": "CAL-011",
     "name": "雙坤不可機械判小",
-    "status": "reviewed",
+    "status": "hypothesis",
     "source_case": "日本 vs 突尼西亞，實際4-0",
     "conditions": {
       "body_gua": "坤",

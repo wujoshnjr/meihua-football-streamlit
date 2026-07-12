@@ -118,6 +118,52 @@ def test_case_memory_reads_v32_final_scores_and_skips_unconfirmed():
     assert cases[0].predicted_scores == "0-0/0-1/1-1"
 
 
+def test_case_memory_excludes_same_fixture_even_when_team_order_is_reversed():
+    result = HexagramResult(
+        match_name="甲 vs 乙",
+        body_team="甲",
+        use_team="乙",
+        body_count=8,
+        use_count=5,
+        total_count=18,
+        body_gua="坤",
+        use_gua="巽",
+        body_number=8,
+        use_number=5,
+        body_element="土",
+        use_element="木",
+        main_hexagram="風地觀",
+        mutual_hexagram="山地剝",
+        moving_line=3,
+        moving_side="體方",
+        moving_layer="下卦",
+        changed_hexagram="風山漸",
+        changed_body_gua="艮",
+        changed_use_gua="巽",
+        body_transition="坤->艮",
+        use_transition="巽->巽",
+        relation_code="use_controls_body",
+        relation="用剋體",
+        relation_detail="",
+        moving_detail="",
+        structural_tags=[],
+    )
+    casebook = pd.DataFrame(
+        [
+            {
+                "案例ID": "SAME",
+                "比賽": "乙對甲",
+                "體方": "乙",
+                "用方": "甲",
+                "實際比分": "1-0",
+                "校準原因": "不得倒灌同一場",
+                "校準狀態": "已確認",
+            }
+        ]
+    )
+    assert retrieve_similar_cases(result, casebook) == []
+
+
 def test_postmatch_update_persists_separate_rule_ai_metrics(tmp_path: Path):
     config = AppConfig(data_dir=tmp_path / "data", reports_dir=tmp_path / "reports")
     store = CaseStore(config)

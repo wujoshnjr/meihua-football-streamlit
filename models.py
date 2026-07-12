@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from version import CALCULATION_VERSION, RULE_VERSION
+
 
 @dataclass(slots=True)
 class MatchInput:
@@ -55,7 +57,7 @@ class HexagramResult:
     relation_detail: str
     moving_detail: str
     structural_tags: list[str] = field(default_factory=list)
-    calculation_version: str = "meihua-engine-v3.1"
+    calculation_version: str = CALCULATION_VERSION
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -74,11 +76,19 @@ class RulePrediction:
     outcome_probabilities: dict[str, float] = field(default_factory=dict)
     diagnostics: list[str] = field(default_factory=list)
     football_prior: dict[str, Any] = field(default_factory=dict)
-    method: str = "hybrid-rule-engine-v3.3"
+    football_only_scores: list[tuple[int, int]] = field(default_factory=list)
+    football_only_outcome_probabilities: dict[str, float] = field(default_factory=dict)
+    football_expected_body_goals: float = 0.0
+    football_expected_use_goals: float = 0.0
+    hexagram_body_multiplier: float = 1.0
+    hexagram_use_multiplier: float = 1.0
+    hexagram_adjustment_cap: float = 0.25
+    method: str = RULE_VERSION
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
         data["scores"] = [list(x) for x in self.scores]
+        data["football_only_scores"] = [list(x) for x in self.football_only_scores]
         return data
 
 
@@ -117,7 +127,7 @@ class AIAnalysis:
     used_case_ids: list[str] = field(default_factory=list)
     raw_response: dict[str, Any] = field(default_factory=dict)
     error: str = ""
-    # v3.3：把足球先驗、卦象判斷與矛盾證據分開，避免單一體用關係直接決勝。
+    # v4：把足球先驗、卦象判斷與矛盾證據分開，避免單一體用關係直接決勝。
     body_strength_score: float = 50.0
     use_strength_score: float = 50.0
     evidence_quality: float = 0.0

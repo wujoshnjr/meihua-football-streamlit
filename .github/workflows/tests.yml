@@ -2,9 +2,13 @@ name: tests
 
 on:
   push:
-    branches: [main, v3.2-calibration-loop]
+    branches: [main]
   pull_request:
     branches: [main]
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -23,7 +27,11 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: python -m pip install --upgrade pip && pip install -r requirements-dev.txt
+      - name: Verify dependencies
+        run: pip check
       - name: Compile Python files
         run: python -m compileall -q .
+      - name: Check fatal Python errors
+        run: ruff check --select E9,F63,F7,F82 .
       - name: Run tests
         run: pytest -q

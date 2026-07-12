@@ -1,33 +1,37 @@
-# v3.1 升級檢查表
+# v4.0 升級檢查表
 
-## 上傳前
+## 升級前
 
-- [ ] 下載並備份舊的 `data/meihua_cases.csv`
-- [ ] 不要刪除 Streamlit Secrets
-- [ ] 不要把真正的 Token 放進 GitHub
+- [ ] 下載並備份 `data/meihua_cases.csv`。
+- [ ] 確認 `reports/` 與正式 Secrets 仍可用。
+- [ ] 確認 `.streamlit/secrets.toml` 沒有被 Git 追蹤。
+- [ ] 在 PR 分支執行完整測試。
 
-## GitHub
+## 程式與 GitHub
 
-- [ ] 上傳所有根目錄 `.py` 檔
-- [ ] 上傳 `knowledge/` 三個 JSON 檔
-- [ ] 更新 `requirements.txt`
-- [ ] 保留現有 `data/meihua_cases.csv`
-- [ ] 確認 `.streamlit/secrets.toml.example` 只是範例，不含真 Token
-
-## Streamlit Secrets
-
-- [ ] `GITHUB_TOKEN` 可寫入 repository Contents
-- [ ] `GITHUB_MODELS_TOKEN` 只有 Models Read-only
-- [ ] `AI_ENABLED = true`
-- [ ] `AI_MODEL` 是 catalog 內存在的模型 ID
+- [ ] `version.py` 顯示 v4.0.0／schema 4。
+- [ ] `football_prior.py` 已部署。
+- [ ] workflow 在 Python 3.12、3.13 通過。
+- [ ] 原 `data/meihua_cases.csv` 未被空白範本覆蓋。
+- [ ] 11 條單場規則狀態為 `hypothesis`。
 
 ## 部署後
 
-- [ ] 固定起卦可完成
-- [ ] 顯示本卦、互卦、動爻、變卦
-- [ ] 本地相似案例可以搜尋
-- [ ] AI 連線測試成功
-- [ ] AI 推理按鈕只呼叫一次
-- [ ] 儲存後 GitHub `data/meihua_cases.csv` 有新增欄位
-- [ ] GitHub `reports/` 有 Markdown 報告
-- [ ] 賽後校準必須人工確認才採用 AI 建議
+- [ ] 頁面標題顯示 v4.0.0。
+- [ ] 起卦後同時顯示純足球 λ 與卦象倍率。
+- [ ] 體／用倍率均介於 0.75–1.25。
+- [ ] 比分網格包含單方 0–10 球。
+- [ ] 相同預測重複儲存不增加列數。
+- [ ] 修改實力分後儲存會新增版本並記錄前版 ID。
+- [ ] 回填實際比分後再儲存，不會清空賽果與校準。
+- [ ] 報告採雜湊檔名，不覆蓋舊版。
+- [ ] 舊案例可顯示，但 v4 盲測樣本數不包含 legacy。
+- [ ] AI 停用或額度用完時固定引擎仍可工作。
+
+## 首場正式 v4 盲測
+
+- [ ] 開賽前完成並儲存預測。
+- [ ] 記錄案例 ID、雜湊、鎖定時間與版本。
+- [ ] 不在開賽後修改該版本。
+- [ ] 賽後只回填 90 分鐘比分。
+- [ ] 檢查足球基線、卦象與 AI 指標分開寫入。

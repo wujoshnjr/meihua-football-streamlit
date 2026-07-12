@@ -1,4 +1,4 @@
-from ai_reasoner import _parse_json_object
+from ai_reasoner_v33 import _parse_json_object
 
 
 def test_parse_json_fenced_content():

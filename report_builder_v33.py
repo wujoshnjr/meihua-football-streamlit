@@ -55,7 +55,7 @@ def build_markdown_report(
 
 ---
 
-## 十三、v3.3 決策審計
+## 十三、v4 決策審計
 
 ### 賽前足球先驗（不參與起卦字數）
 
@@ -63,6 +63,16 @@ def build_markdown_report(
 - 用方實力：{match.use_strength_rating:.1f}
 - 先驗可信度：{match.prior_confidence:.0%}
 - 場地：{match.venue}
+- 純足球體方 λ：{rule_prediction.football_expected_body_goals:.3f}
+- 純足球用方 λ：{rule_prediction.football_expected_use_goals:.3f}
+
+### 卦象有界修正
+
+- 體方倍率：{rule_prediction.hexagram_body_multiplier:.3f}
+- 用方倍率：{rule_prediction.hexagram_use_multiplier:.3f}
+- 單方修正上限：±{rule_prediction.hexagram_adjustment_cap:.0%}
+- 修正後體方 λ：{rule_prediction.expected_body_goals:.3f}
+- 修正後用方 λ：{rule_prediction.expected_use_goals:.3f}
 
 ### 規則勝平負機率
 
@@ -86,6 +96,6 @@ def build_markdown_report(
 - 控制說明：{control.get('note', '')}
 - 最終三選：{final_text}
 
-> v3.3 原則：體用生剋只是一項風險證據；足球先驗、本卦、互卦、動爻、變卦、歷史校準與AI證據必須分層審查，禁止任何單一規則直接決定勝負。
+> v4 原則：足球先驗先獨立建立 λ；整條卦線只可作單方 ±25% 有界修正。單場賽果產生的規則保持假說、權重為零，直到通過留出驗證；任何賽後資料不得改寫已鎖定的賽前版本。
 """
     return base + audit

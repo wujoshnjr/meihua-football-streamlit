@@ -5,7 +5,7 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
-from ai_reasoner_v32 import GitHubModelsClient, run_postmatch_calibration_from_row
+from ai_reasoner_v33 import GitHubModelsClient, run_postmatch_calibration_from_row
 from config import AppConfig
 from evaluation import calibration_summary_from_row, normalize_score
 from storage_v32 import CaseStore
@@ -19,7 +19,7 @@ def _case_label(row: pd.Series) -> str:
 
 def render_calibration_center(config: AppConfig, store: CaseStore, casebook: pd.DataFrame) -> pd.DataFrame:
     st.subheader("賽後校準中心")
-    st.caption("從GitHub案例庫選擇已鎖定的賽前預測，回填90分鐘結果；不依賴目前瀏覽器Session。")
+    st.caption("從GitHub案例庫選擇不可覆寫的賽前版本，回填90分鐘結果；不依賴目前瀏覽器Session，也不改寫原預測。")
     if casebook is None or casebook.empty:
         st.info("案例庫目前為空。請先在『賽前預測』儲存一場比賽。")
         return casebook

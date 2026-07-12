@@ -41,4 +41,4 @@ def test_rule_prediction_returns_three_unique_scores():
     prediction = predict_scores(result)
     assert len(prediction.scores) == 3
     assert len(set(prediction.scores)) == 3
-    assert all(0 <= a <= 5 and 0 <= b <= 5 for a, b in prediction.scores)
+    assert all(0 <= a <= 10 and 0 <= b <= 10 for a, b in prediction.scores)

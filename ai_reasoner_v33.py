@@ -11,16 +11,14 @@ from ai_reasoner_v32 import run_postmatch_calibration, run_postmatch_calibration
 from evaluation import candidate_scores, outcome, score_tuple
 from knowledge_loader import load_hexagrams, load_trigrams
 from models import AIAnalysis, HexagramResult, MatchInput, RulePrediction, SimilarCase
+from version import PROMPT_VERSION
 
 
 GITHUB_MODELS_ENDPOINT = "https://models.github.ai/inference/chat/completions"
 GITHUB_MODELS_CATALOG = "https://models.github.ai/catalog/models"
 GITHUB_MODELS_API_VERSION = "2026-03-10"
-PROMPT_VERSION = "meihua-football-ai-v3.3.0"
-
-
 PREDICTION_SCHEMA: dict[str, Any] = {
-    "name": "meihua_football_prediction_v33",
+    "name": "meihua_football_prediction_v40",
     "strict": True,
     "schema": {
         "type": "object",
@@ -132,6 +130,39 @@ class GitHubModelsClient:
         ]
         last_response: requests.Response | None = None
         for body in attempts:
+            response = requests.post(
+                GITHUB_MODELS_ENDPOINT,
+                headers=self._headers(),
+                json=body,
+                timeout=self.timeout,
+            )
+            last_response = response
+            if response.status_code not in {400, 422}:
+                break
+        if last_response is None:
+            raise GitHubModelsError("GitHub Models 未產生回應")
+        self._raise_for_status(last_response)
+        payload = last_response.json()
+        try:
+            content = payload["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise GitHubModelsError("GitHub Models 回應缺少 choices[0].message.content") from exc
+        return _parse_json_object(str(content)), payload
+
+    def infer_json_object(self, system_prompt: str, user_prompt: str) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Request generic JSON for post-match tasks that use a different schema."""
+        base_body = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+            "stream": False,
+        }
+        last_response: requests.Response | None = None
+        for body in [{**base_body, "response_format": {"type": "json_object"}}, base_body]:
             response = requests.post(
                 GITHUB_MODELS_ENDPOINT,
                 headers=self._headers(),
@@ -305,6 +336,28 @@ def build_prediction_prompt(
         for name in {result.main_hexagram, result.mutual_hexagram, result.changed_hexagram}
     }
     allowed = [f"{a}-{b}" for a, b in candidate_scores(rule_prediction, 15)]
+    rule_payload = rule_prediction.to_dict()
+    # Unverified single-case hypotheses are visible as audit metadata only. Their
+    # source score and exact effects are deliberately withheld from prematch AI.
+    rule_payload["matched_rules"] = [
+        {
+            "id": rule.get("id", ""),
+            "name": rule.get("name", ""),
+            "status": rule.get("status", ""),
+            "applied": bool(rule.get("applied", False)),
+            "applied_scale": rule.get("applied_scale", 0.0),
+            **(
+                {
+                    "conditions": rule.get("conditions", {}),
+                    "effects": rule.get("effects", {}),
+                    "lesson": rule.get("lesson", ""),
+                }
+                if rule.get("applied")
+                else {}
+            ),
+        }
+        for rule in rule_prediction.matched_rules
+    ]
 
     case_payload = []
     for case in similar_cases:
@@ -323,7 +376,7 @@ def build_prediction_prompt(
         )
 
     system_prompt = f"""
-你是「梅花易數足球證據融合AI」，版本{PROMPT_VERSION}。你不是照抄規則，而是審查規則是否被單一體用關係、變卦或舊案例帶偏。
+你是「梅花易數足球證據融合AI」，版本{PROMPT_VERSION}。你不是重新建立足球基線，也不是照抄規則；你的任務是審查有限卦象修正與歷史證據。
 
 不可違反：
 1. 只使用提供的賽前資料，只判90分鐘，不含延長賽與PK；不得使用或猜測本場賽後結果。
@@ -331,11 +384,12 @@ def build_prediction_prompt(
 3. 支持隊只決定體方，不代表體方強或必勝。
 4. 「體生用、用剋體」只能是風險訊號，禁止單獨推出勝負。
 5. 必須把本卦視為主局、互卦視為中段、動爻與變卦視為時段轉折；後段收束不等於前段不能進球。
-6. 先獨立評估足球證據，再獨立評估卦象證據，最後處理兩者矛盾。足球實力分只能根據提供文字，不可憑模型記憶補充未提供事實。
-7. 只能從allowed_score_candidates選3個比分，但候選池已包含體勝、平局、用勝，不能以規則原排序當成真理。
-8. 證據不足時evidence_quality與direction_confidence必須降低；不得假裝高信心。
-9. 歷史案例只提供可泛化教訓，不可直接複製舊比分。
-10. 只輸出符合JSON Schema的物件。
+6. Python已先用純足球先驗建立λ，再把卦象修正限制在單方±25%。你必須先審查足球基線，再審查卦象修正，最後處理兩者矛盾；不得要求卦象突破上限。
+7. 足球實力分只能根據提供文字，不可憑模型記憶補充未提供事實。
+8. 只能從allowed_score_candidates選3個比分，但候選池已包含體勝、平局、用勝，不能以規則原排序當成真理。
+9. 證據不足時evidence_quality與direction_confidence必須降低；不得假裝高信心。
+10. 歷史案例只提供可泛化教訓；單場產生且未通過留出驗證的假說不可當成固定規則，也不可直接複製舊比分。
+11. 只輸出符合JSON Schema的物件。
 """.strip()
 
     user_payload = {
@@ -358,15 +412,16 @@ def build_prediction_prompt(
             },
         },
         "immutable_hexagram_result": result.to_dict(),
-        "rule_engine_prediction": rule_prediction.to_dict(),
+        "rule_engine_prediction": rule_payload,
         "allowed_score_candidates": allowed,
         "confirmed_similar_case_count": len(similar_cases),
         "involved_trigram_knowledge": involved_trigrams,
         "involved_hexagram_knowledge": involved_hexagrams,
         "retrieved_historical_cases": case_payload,
         "decision_protocol": [
-            "列出足球證據支持哪一方及資料品質",
+            "先確認football_prior中的足球基線λ與資料品質",
             "列出本互動變各自支持的節奏與方向",
+            "確認卦象倍率沒有突破單方±25%上限",
             "檢查規則是否把體生用或轉艮過度放大",
             "若足球證據與卦象矛盾，明確寫入contradiction_warning",
             "從平衡候選池排序三個比分",
@@ -394,7 +449,7 @@ def run_ai_prediction(
             direction=rule_prediction.direction,
             scores=list(rule_prediction.scores),
             confidences=[0.0, 0.0, 0.0],
-            score_reasons=["AI不可用，沿用v3.3規則引擎。"] * 3,
+            score_reasons=["AI不可用，沿用v4足球先驗×有界卦象規則引擎。"] * 3,
             overall_reasoning="",
             risk_warning="",
             error=str(exc),

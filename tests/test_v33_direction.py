@@ -51,10 +51,12 @@ def test_body_generates_use_does_not_force_all_use_wins() -> None:
         venue="中立場",
     )
     prediction = predict_scores(france_morocco_like_result(), match)
-    assert prediction.method == "score-engine-v3.3.0"
+    assert prediction.method == "score-engine-v4.0.0"
     assert any(body > use for body, use in prediction.scores)
     assert not all(body < use for body, use in prediction.scores)
-    assert any("體生用只被視為外洩風險" in item for item in prediction.diagnostics)
+    assert any("體生用視為外洩與反擊風險" in item for item in prediction.reasons)
+    assert 0.75 <= prediction.hexagram_body_multiplier <= 1.25
+    assert 0.75 <= prediction.hexagram_use_multiplier <= 1.25
 
 
 def test_balanced_candidate_pool_contains_all_outcomes() -> None:
@@ -132,4 +134,4 @@ def test_strong_evidence_can_correct_direction_inside_pool() -> None:
     )
     final, metadata = controlled_final_scores(rule, ai, similar_case_count=1)
     assert final[0] == (2, 0)
-    assert metadata["mode"] == "strong_evidence_correction_v3.3"
+    assert metadata["mode"] == "strong_evidence_correction_v4"

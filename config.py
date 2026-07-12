@@ -4,10 +4,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
+from version import APP_TITLE
+
 
 @dataclass(frozen=True, slots=True)
 class AppConfig:
-    app_title: str = "梅花易數足球AI自主推理系統 v3.1"
+    app_title: str = APP_TITLE
     data_dir: Path = Path("data")
     reports_dir: Path = Path("reports")
     knowledge_dir: Path = Path("knowledge")
