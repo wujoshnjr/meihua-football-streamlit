@@ -1,24 +1,10 @@
-# GitHub Actions 工作流程
+# GitHub Actions
 
-工作流程位於 `.github/workflows/tests.yml`，在以下情況執行：
+`.github/workflows/tests.yml` 在 pull request 與 `main` push 時，使用 Python 3.12、3.13 執行：
 
-- 向 `main` push。
-- 以 `main` 為目標的 pull request。
+1. 安裝依賴並執行 `pip check`。
+2. 編譯所有 Python 檔案。
+3. 執行 Ruff 致命錯誤檢查。
+4. 執行 pytest。
 
-## 測試矩陣
-
-- Python 3.12。
-- Python 3.13。
-
-## 步驟
-
-1. Checkout。
-2. 安裝對應 Python 並啟用 pip cache。
-3. 安裝 `requirements-dev.txt`。
-4. `pip check` 驗證相依性。
-5. `python -m compileall -q .`。
-6. `ruff check --select E9,F63,F7,F82 .`。
-7. `pytest -q`，包含 Streamlit AppTest。
-
-測試不應使用正式 Token、網路 AI 或 GitHub 寫入。所有外部服務測試都應以 mock 或離線資料完成。
-
+知識庫測試會檢查八卦、六十四卦、三百八十四爻、經文必填欄位、相關卦索引與禁止的預測欄位。
