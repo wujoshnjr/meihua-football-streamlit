@@ -10,6 +10,9 @@ from report_builder import build_markdown_report
 from storage import CastingStore, build_casting_row, casting_fingerprint
 
 
+ROOT = Path(__file__).resolve().parents[1]
+
+
 def fixture() -> tuple[CastingInput, object]:
     casting = CastingInput(
         title="甲 vs 乙",
@@ -50,7 +53,20 @@ def test_casting_storage_is_idempotent_and_persists_full_json(tmp_path: Path) ->
     assert first_action == "新增排卦"
     assert second_action == "確認既有排卦"
     assert len(first) == len(second) == 1
-    assert second.iloc[0]["排卦指紋"] == casting_fingerprint(casting, result)
-    payload = json.loads(second.iloc[0]["完整排盤JSON"])
+    assert second[0]["排卦指紋"] == casting_fingerprint(casting, result)
+    payload = json.loads(second[0]["完整排盤JSON"])
     assert payload["main_hexagram"] == result.main_hexagram
     assert len(payload["line_table"]) == 6
+
+    csv_payload = store.csv_bytes(second).decode("utf-8-sig")
+    assert "排卦指紋" in csv_payload
+    assert casting_fingerprint(casting, result) in csv_payload
+
+
+def test_existing_multiline_casting_csv_round_trips_without_data_loss() -> None:
+    source = (ROOT / "data" / "meihua_castings.csv").read_text(encoding="utf-8-sig")
+    rows = CastingStore._read_csv(source)
+
+    assert rows
+    assert "\n" in rows[0]["補充資料"]
+    assert CastingStore._read_csv(CastingStore._csv_text(rows)) == rows

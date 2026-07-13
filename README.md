@@ -22,7 +22,7 @@
 - 變卦、體卦轉象、用卦轉象。
 - 本卦與變卦的體用五行關係名稱。
 - JSON 與 Markdown 完整排盤下載。
-- 本機或 GitHub Contents 後台排卦紀錄。
+- 本機或 GitHub Contents 後台排卦紀錄，以及 UTF-8 CSV 紀錄下載。
 
 ## 完整知識庫
 

@@ -2,6 +2,11 @@
 # crash at native-process level immediately after that server starts, before
 # app.py can report a Python exception. Keep the proven Tornado server path.
 streamlit==1.56.0
-pandas>=2.2,<3
-requests>=2.32,<3
-openpyxl>=3.1,<4
+# Streamlit installs these native dependencies transitively. Pin versions with
+# stable CPython 3.12/3.13 manylinux wheels so uv cannot drift to a new binary
+# stack during Community Cloud rebuilds. The application itself does not import
+# pandas, NumPy, or PyArrow at startup.
+pandas==2.2.3
+numpy==2.2.6
+pyarrow==19.0.1
+requests==2.32.5
