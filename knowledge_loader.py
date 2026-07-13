@@ -56,10 +56,36 @@ def load_classics() -> dict[str, Any]:
     return {title: _load_json(CLASSICS_DIR / filename) for title, filename in CLASSIC_FILES.items()}
 
 
+@lru_cache(maxsize=1)
+def load_jiaoshi_yilin() -> dict[str, Any]:
+    payload = _load_json(CLASSICS_DIR / "jiaoshi_yilin.json")
+    if not isinstance(payload, dict):
+        raise ValueError("jiaoshi_yilin.json 必須是 JSON 物件")
+
+    ordered_hexagrams = sorted(load_hexagrams().values(), key=lambda item: int(item["sequence"]))
+    expected_names = [str(item["short_name"]) for item in ordered_hexagrams]
+    names = payload.get("hexagram_order")
+    entries = payload.get("entries")
+    if names != expected_names:
+        raise ValueError("焦氏易林的 64 卦次序與周易知識庫不一致")
+    if not isinstance(entries, dict) or set(entries) != set(expected_names):
+        raise ValueError("焦氏易林必須完整包含 64 個本卦章節")
+    for main_name in expected_names:
+        changed_entries = entries.get(main_name)
+        if not isinstance(changed_entries, dict) or set(changed_entries) != set(expected_names):
+            raise ValueError(f"焦氏易林「{main_name}之」章必須完整包含 64 個之卦")
+        if any(not isinstance(text, str) or not text.strip() for text in changed_entries.values()):
+            raise ValueError(f"焦氏易林「{main_name}之」章含有空白林辭")
+    if payload.get("entry_count") != 4096:
+        raise ValueError("焦氏易林必須完整包含 64×64＝4,096 條林辭")
+    return payload
+
+
 def knowledge_completeness() -> dict[str, Any]:
     trigrams = load_trigrams()
     hexagrams = load_hexagrams()
     classics = load_classics()
+    yilin = load_jiaoshi_yilin()
     lines = sum(len(item.get("lines", [])) for item in hexagrams.values())
     complete_hexagrams = sum(
         int(
@@ -77,7 +103,16 @@ def knowledge_completeness() -> dict[str, Any]:
         "line_records": lines,
         "complete_hexagrams": complete_hexagrams,
         "classic_appendices": len(classics),
-        "is_complete": len(trigrams) == 8 and len(hexagrams) == 64 and lines == 384 and complete_hexagrams == 64,
+        "yilin_main_hexagrams": len(yilin["entries"]),
+        "yilin_entries": sum(len(item) for item in yilin["entries"].values()),
+        "is_complete": (
+            len(trigrams) == 8
+            and len(hexagrams) == 64
+            and lines == 384
+            and complete_hexagrams == 64
+            and len(yilin["entries"]) == 64
+            and yilin["entry_count"] == 4096
+        ),
     }
 
 
@@ -86,6 +121,7 @@ def clear_knowledge_cache() -> None:
     load_hexagrams.cache_clear()
     load_meihua_principles.cache_clear()
     load_classics.cache_clear()
+    load_jiaoshi_yilin.cache_clear()
 
 
 __all__ = [
@@ -93,6 +129,7 @@ __all__ = [
     "knowledge_completeness",
     "load_classics",
     "load_hexagrams",
+    "load_jiaoshi_yilin",
     "load_meihua_principles",
     "load_trigrams",
 ]

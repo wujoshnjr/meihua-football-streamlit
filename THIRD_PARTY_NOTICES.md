@@ -1,5 +1,13 @@
 # Third-Party Notices
 
+## Kanripo KR3 — 焦氏易林
+
+The source snapshot in `knowledge/sources/jiaoshi_yilin_kanripo.txt` and the derived 4,096-entry database in `knowledge/classics/jiaoshi_yilin.json` were prepared from Kanripo `KR3g0029 焦氏易林-漢-焦贛.txt` at commit `eca6cb15ba5ee47a4267fde608db2ecd2d5f55ac`.
+
+The source repository applies the CC0 1.0 Universal public-domain dedication. Full legal text: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Source: https://github.com/kr-shadow/KR3/blob/eca6cb15ba5ee47a4267fde608db2ecd2d5f55ac/KR3g0029%20%E7%84%A6%E6%B0%8F%E6%98%93%E6%9E%97-%E6%BC%A2-%E7%84%A6%E8%B4%9B.txt
+
 ## @freizl/yijing 2.1.0
 
 The structured Traditional Chinese Zhouyi corpus in `knowledge/hexagrams.json` and `knowledge/classics/` was prepared from `@freizl/yijing` 2.1.0.

@@ -11,6 +11,7 @@ from knowledge_loader import (
     knowledge_completeness,
     load_classics,
     load_hexagrams,
+    load_jiaoshi_yilin,
     load_meihua_principles,
     load_trigrams,
 )
@@ -122,6 +123,24 @@ def _render_hexagram_reference(label: str, name: str, moving_line: int | None = 
             st.write(item["wenyan_text"])
 
 
+def _render_jiaoshi_reference(main_name: str, changed_name: str) -> None:
+    hexagrams = load_hexagrams()
+    yilin = load_jiaoshi_yilin()
+    main = hexagrams[main_name]
+    changed = hexagrams[changed_name]
+    main_short = str(main["short_name"])
+    changed_short = str(changed["short_name"])
+    st.markdown(
+        f"#### {main['unicode']} {main_name} 之 {changed['unicode']} {changed_name}"
+    )
+    st.caption(
+        f"《焦氏易林》{main_short}之{changed_short}｜"
+        f"本卦第 {main['sequence']} 卦，之卦第 {changed['sequence']} 卦"
+    )
+    st.write(yilin["entries"][main_short][changed_short])
+    st.caption("只顯示《焦氏易林》原典林辭，不自動解釋，也不參與本次文字取數。")
+
+
 def _render_casting_result(config: Any, store: CastingStore) -> None:
     casting: CastingInput | None = st.session_state.get("casting_input")
     result: HexagramResult | None = st.session_state.get("casting_result")
@@ -193,6 +212,9 @@ def _render_casting_result(config: Any, store: CastingStore) -> None:
     with tabs[2]:
         _render_hexagram_reference("變卦", result.changed_hexagram)
 
+    st.markdown("### 焦氏易林原典")
+    _render_jiaoshi_reference(result.main_hexagram, result.changed_hexagram)
+
     report = build_markdown_report(casting, result)
     payload = json.dumps(
         {"input": casting.to_dict(), "casting": result.to_dict()},
@@ -225,7 +247,10 @@ def _render_casting_result(config: Any, store: CastingStore) -> None:
 def _render_database() -> None:
     trigrams = load_trigrams()
     hexagrams = load_hexagrams()
-    trigram_tab, hexagram_tab = st.tabs(["八卦資料", "六十四卦與三百八十四爻"])
+    yilin = load_jiaoshi_yilin()
+    trigram_tab, hexagram_tab, yilin_tab = st.tabs(
+        ["八卦資料", "六十四卦與三百八十四爻", "焦氏易林 4096 林辭"]
+    )
     with trigram_tab:
         selected = st.selectbox("選擇經卦", list(trigrams), key="database_trigram")
         item = trigrams[selected]
@@ -240,6 +265,33 @@ def _render_database() -> None:
             key="database_hexagram",
         )
         _render_hexagram_reference("資料庫", selected)
+    with yilin_tab:
+        ordered = sorted(hexagrams, key=lambda name: int(hexagrams[name]["sequence"]))
+        main_col, changed_col = st.columns(2)
+        main_name = main_col.selectbox(
+            "本卦",
+            ordered,
+            format_func=lambda name: (
+                f"{int(hexagrams[name]['sequence']):02d} {hexagrams[name]['unicode']} {name}"
+            ),
+            key="yilin_main_hexagram",
+        )
+        changed_name = changed_col.selectbox(
+            "之卦",
+            ordered,
+            format_func=lambda name: (
+                f"{int(hexagrams[name]['sequence']):02d} {hexagrams[name]['unicode']} {name}"
+            ),
+            key="yilin_changed_hexagram",
+        )
+        st.caption(
+            f"已完整收錄 {yilin['entry_count']:,} 條林辭；可查任一「本卦 → 之卦」組合。"
+        )
+        _render_jiaoshi_reference(main_name, changed_name)
+        with st.expander("版本、來源與標題校正紀錄"):
+            st.write(f"版本：{yilin['edition']}｜作者標示：{yilin['author']}")
+            st.json(yilin["source"], expanded=False)
+            st.json(yilin["source_label_corrections"], expanded=False)
 
 
 def _render_classic_content(payload: Any) -> None:
@@ -291,13 +343,14 @@ def _render_records(store: CastingStore) -> None:
 def _render_method() -> None:
     completeness = knowledge_completeness()
     st.subheader("知識庫完整性")
-    m1, m2, m3, m4 = st.columns(4)
+    m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric("八卦", f"{completeness['trigrams']}/8")
     m2.metric("六十四卦", f"{completeness['hexagrams']}/64")
     m3.metric("六爻資料", f"{completeness['line_records']}/384")
     m4.metric("易傳附錄", completeness["classic_appendices"])
+    m5.metric("焦氏易林", f"{completeness['yilin_entries']}/4096")
     if completeness["is_complete"]:
-        st.success("卦辭、彖傳、大象、384 條爻辭與小象的必填欄位全部通過完整性檢查。")
+        st.success("卦辭、彖傳、大象、384 條爻辭與小象，以及 4,096 條焦氏易林林辭全部通過完整性檢查。")
     st.subheader("固定排卦方法")
     st.json(load_meihua_principles(), expanded=True)
 
@@ -340,7 +393,6 @@ def run_app() -> None:
             body_text = st.text_area("體方段落（用來取體卦／下卦）", height=150)
             use_text = st.text_area("用方段落（用來取用卦／上卦）", height=150)
             full_text = st.text_area("完整賽前中性段落（用來取動爻）", height=190)
-            context_notes = st.text_area("補充資料（保存但不參與任何取數）", height=100)
             submitted = st.form_submit_button("完整排卦（不解卦）", type="primary", width="stretch")
         if submitted:
             try:
@@ -353,7 +405,6 @@ def run_app() -> None:
                     use_text=use_text,
                     full_text=full_text,
                     category=category.strip() or "未分類",
-                    context_notes=context_notes,
                 )
                 result = calculate_casting(casting)
                 st.session_state["casting_input"] = casting

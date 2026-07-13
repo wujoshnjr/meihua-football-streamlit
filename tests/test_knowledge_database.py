@@ -4,6 +4,7 @@ from knowledge_loader import (
     knowledge_completeness,
     load_classics,
     load_hexagrams,
+    load_jiaoshi_yilin,
     load_meihua_principles,
     load_trigrams,
 )
@@ -25,6 +26,8 @@ def test_database_covers_all_trigrams_hexagrams_and_lines() -> None:
         "line_records": 384,
         "complete_hexagrams": 64,
         "classic_appendices": 5,
+        "yilin_main_hexagrams": 64,
+        "yilin_entries": 4096,
         "is_complete": True,
     }
 
@@ -75,3 +78,29 @@ def test_meihua_principles_and_five_classic_appendices_load() -> None:
     assert principles["number_system"]["mapping"]["8"] == "坤"
     assert set(classics) == {"文言", "說卦", "繫辭", "序卦", "雜卦"}
     assert all(payload.get("content") for payload in classics.values())
+
+
+def test_jiaoshi_yilin_covers_every_main_and_changed_hexagram() -> None:
+    yilin = load_jiaoshi_yilin()
+    expected_names = [
+        item["short_name"]
+        for item in sorted(load_hexagrams().values(), key=lambda item: int(item["sequence"]))
+    ]
+
+    assert yilin["entry_count"] == 4096
+    assert yilin["hexagram_order"] == expected_names
+    assert set(yilin["entries"]) == set(expected_names)
+    assert all(set(entries) == set(expected_names) for entries in yilin["entries"].values())
+    assert all(text.strip() for entries in yilin["entries"].values() for text in entries.values())
+    assert yilin["entries"]["乾"]["乾"] == "道陟多阪胡言連蹇譯瘠且聾莫使道通請謁不行求事無功"
+    assert yilin["entries"]["乾"]["坤"] == "招殃來螫害我邦國病傷手足不得安息"
+    assert yilin["source"]["license"] == "CC0-1.0"
+    assert yilin["source_label_corrections"] == [
+        {
+            "main_hexagram": "艮",
+            "position": 10,
+            "source_label": "小過",
+            "normalized_label": "小畜",
+            "reason": "依該章固定 64 變次序校正來源標題；林辭原文未改。",
+        }
+    ]
