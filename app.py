@@ -130,6 +130,12 @@ def _render_casting_result(config: Any, store: CastingStore) -> None:
         return
 
     st.subheader("排卦結果")
+    st.info(
+        f"**起卦國曆時間**：{result.casting_moment.gregorian_text} "
+        f"（{result.casting_moment.timezone}／{result.casting_moment.utc_offset}）  \n"
+        f"**起卦農曆時間**：{result.casting_moment.lunar_text}"
+    )
+    st.caption("起卦時間在按下排卦時固定保存，只作排盤紀錄，不參與文字取數。")
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("體卦／下卦", f"{result.body_gua} {result.body_number}")
     c2.metric("用卦／上卦", f"{result.use_gua} {result.use_number}")
@@ -269,7 +275,10 @@ def _render_records(store: CastingStore) -> None:
     if not rows:
         st.info("尚無已儲存的排卦紀錄。")
         return
-    columns = ["排卦ID", "建立時間", "標題", "體方名稱", "用方名稱", "本卦", "互卦", "動爻爻名", "變卦"]
+    columns = [
+        "排卦ID", "建立時間", "起卦農曆時間", "標題", "體方名稱", "用方名稱",
+        "本卦", "互卦", "動爻爻名", "變卦",
+    ]
     _render_html_table(rows, columns)
     st.download_button(
         "下載排卦紀錄 CSV",

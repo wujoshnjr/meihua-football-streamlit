@@ -56,31 +56,38 @@ def build_markdown_report(casting: CastingInput, result: HexagramResult) -> str:
 > 知識庫版本：{KNOWLEDGE_VERSION}
 > 範圍：只排卦，不解卦；不預測勝負、比分或任何結果。
 
-## 一、輸入角色
+## 一、起卦時間
+
+- 起卦國曆時間：{result.casting_moment.gregorian_text}
+- 起卦農曆時間：{result.casting_moment.lunar_text}
+- 時區：{result.casting_moment.timezone}／{result.casting_moment.utc_offset}
+- 使用規則：時間只作排盤紀錄，不參與三段文字取數
+
+## 二、輸入角色
 
 - 體方名稱：{result.body_name}
 - 用方名稱：{result.use_name}
 - 類別：{casting.category}
 - 固定配置：體卦為下卦，用卦為上卦
 
-## 二、取數計算
+## 三、取數計算
 
 - 體方段落：{result.body_count} 數；{result.body_count} ÷ 8 餘 {_modulo_text(result.body_modulo, 8)} → {result.body_gua}（先天數 {result.body_number}、五行 {result.body_element}）
 - 用方段落：{result.use_count} 數；{result.use_count} ÷ 8 餘 {_modulo_text(result.use_modulo, 8)} → {result.use_gua}（先天數 {result.use_number}、五行 {result.use_element}）
 - 完整中性段落：{result.total_count} 數；{result.total_count} ÷ 6 餘 {_modulo_text(result.moving_modulo, 6)} → 第 {result.moving_line} 爻動（{result.moving_line_label}）
 
-## 三、八卦資料
+## 四、八卦資料
 
 | 角色 | 卦 | 卦象 | 先天數 | 五行 | 三爻自下而上 | 陰陽結構 | 自然象 | 性質 |
 |---|---|:---:|---:|---|---|---|---|---|
 | 體／下卦 | {result.body_gua} | {body['unicode']} | {body['number']} | {body['element']} | `{body['lines_bottom_up']}` | {body['yin_yang']} | {body['natural_image']} | {body['core_nature']} |
 | 用／上卦 | {result.use_gua} | {use['unicode']} | {use['number']} | {use['element']} | `{use['lines_bottom_up']}` | {use['yin_yang']} | {use['natural_image']} | {use['core_nature']} |
 
-## 四、本卦六爻排盤
+## 五、本卦六爻排盤
 
 {chr(10).join(line_rows)}
 
-## 五、本、互、動、變結構
+## 六、本、互、動、變結構
 
 - 本卦：{result.main_hexagram}｜六爻自下而上 `{result.main_lines_bottom_up}`
 - 互卦：二三四爻成下卦 {result.mutual_lower_gua}；三四五爻成上卦 {result.mutual_upper_gua} → {result.mutual_hexagram}｜`{result.mutual_lines_bottom_up}`
@@ -91,7 +98,7 @@ def build_markdown_report(casting: CastingInput, result: HexagramResult) -> str:
 - 本卦體用五行關係：{result.relation}
 - 變卦體用五行關係：{result.changed_relation}
 
-## 六、經文資料
+## 七、經文資料
 
 > 以下只列資料庫經文與卦義提要，不把內容套用到本次事件。
 
@@ -101,7 +108,7 @@ def build_markdown_report(casting: CastingInput, result: HexagramResult) -> str:
 
 {_hexagram_reference('變卦', result.changed_hexagram)}
 
-## 七、原始文字
+## 八、原始文字
 
 ### 體方段落
 

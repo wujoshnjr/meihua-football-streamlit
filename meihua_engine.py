@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime
 
+from casting_time import build_casting_moment
 from models import CastingInput, HexagramResult
 
 
@@ -101,7 +103,7 @@ def _line_table(main_lines: str, changed_lines: str, moving_line: int) -> list[d
     return rows
 
 
-def calculate_casting(casting: CastingInput) -> HexagramResult:
+def calculate_casting(casting: CastingInput, *, cast_at: datetime | None = None) -> HexagramResult:
     body_count = count_symbols(casting.body_text)
     use_count = count_symbols(casting.use_text)
     total_count = count_symbols(casting.full_text)
@@ -133,6 +135,7 @@ def calculate_casting(casting: CastingInput) -> HexagramResult:
     moving_original = main_lines[moving_index]
 
     return HexagramResult(
+        casting_moment=build_casting_moment(cast_at),
         title=casting.title.strip(),
         body_name=casting.body_name.strip(),
         use_name=casting.use_name.strip(),
