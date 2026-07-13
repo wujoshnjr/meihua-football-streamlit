@@ -32,6 +32,16 @@ def _modulo(value: int, divisor: int) -> str:
     return str(value) if value else f"0 → 作{divisor}"
 
 
+def _normalize_parties(body_name: str, use_name: str) -> tuple[str, str, str]:
+    """Return cleaned party names and the single canonical event title."""
+
+    body = body_name.strip()
+    use = use_name.strip()
+    if not body or not use:
+        raise ValueError("請輸入體方名稱與用方名稱。")
+    return body, use, f"{body} vs {use}"
+
+
 def _render_line_table(result: HexagramResult) -> None:
     rows = []
     for row in reversed(result.line_table):
@@ -273,10 +283,20 @@ def run_app() -> None:
     )
     with casting_tab:
         with st.form("casting_form", clear_on_submit=False):
-            a, b, c = st.columns(3)
-            title = a.text_input("事件／比賽名稱", placeholder="例如：A隊 vs B隊")
-            body_name = b.text_input("體方名稱", placeholder="例如：A隊")
-            use_name = c.text_input("用方名稱", placeholder="例如：B隊")
+            st.markdown("#### 事件／比賽名稱")
+            body_col, versus_col, use_col = st.columns([10, 1.5, 10])
+            body_name = body_col.text_input(
+                "體方名稱（vs 前）", placeholder="例如：A隊", key="body_name"
+            )
+            versus_col.markdown(
+                '<div style="text-align:center;padding-top:2.35rem;'
+                'font-weight:700;font-size:1rem;">vs</div>',
+                unsafe_allow_html=True,
+            )
+            use_name = use_col.text_input(
+                "用方名稱（vs 後）", placeholder="例如：B隊", key="use_name"
+            )
+            st.caption("事件名稱會自動組合為「體方名稱 vs 用方名稱」，不需要重複輸入。")
             category = st.text_input("內容類別", value="足球賽前內容")
             body_text = st.text_area("體方段落（用來取體卦／下卦）", height=150)
             use_text = st.text_area("用方段落（用來取用卦／上卦）", height=150)
@@ -285,10 +305,11 @@ def run_app() -> None:
             submitted = st.form_submit_button("完整排卦（不解卦）", type="primary", width="stretch")
         if submitted:
             try:
+                body_name, use_name, title = _normalize_parties(body_name, use_name)
                 casting = CastingInput(
-                    title=title.strip() or "未命名事件",
-                    body_name=body_name.strip() or "體方",
-                    use_name=use_name.strip() or "用方",
+                    title=title,
+                    body_name=body_name,
+                    use_name=use_name,
                     body_text=body_text,
                     use_text=use_text,
                     full_text=full_text,
