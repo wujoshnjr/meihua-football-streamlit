@@ -1,4 +1,7 @@
-streamlit>=1.58,<2
+# 1.57+ switched the default server to Starlette/Uvicorn. Community Cloud can
+# crash at native-process level immediately after that server starts, before
+# app.py can report a Python exception. Keep the proven Tornado server path.
+streamlit==1.56.0
 pandas>=2.2,<3
 requests>=2.32,<3
 openpyxl>=3.1,<4
