@@ -11,13 +11,16 @@ APP = Path(__file__).resolve().parents[1] / "app.py"
 def test_streamlit_app_loads_as_casting_only_product() -> None:
     app = AppTest.from_file(str(APP), default_timeout=30).run()
     assert not app.exception
-    assert app.title[0].value == "梅花易數完整排卦系統 v5.2.1"
+    assert app.title[0].value == "梅花易數完整排卦系統 v5.3.0"
     assert any("只排卦，不解卦" in item.value for item in app.success)
     labels = {item.label for item in app.text_input}
     assert "體方名稱（vs 前）" in labels
     assert "用方名稱（vs 後）" in labels
     assert "事件／比賽名稱" not in labels
     assert any(">vs</div>" in item.value for item in app.markdown)
+    selectbox_labels = {item.label for item in app.selectbox}
+    assert {"本卦", "之卦"}.issubset(selectbox_labels)
+    assert any("4,096 條林辭" in item.value for item in app.caption)
 
 
 def test_streamlit_form_casts_without_score_or_ai_output() -> None:

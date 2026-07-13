@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from knowledge_loader import load_hexagrams, load_trigrams
+from knowledge_loader import load_hexagrams, load_jiaoshi_yilin, load_trigrams
 from models import CastingInput, HexagramResult
 from version import APP_VERSION, KNOWLEDGE_VERSION
 
@@ -38,8 +38,13 @@ def _hexagram_reference(label: str, name: str, moving_line: int | None = None) -
 
 def build_markdown_report(casting: CastingInput, result: HexagramResult) -> str:
     trigrams = load_trigrams()
+    hexagrams = load_hexagrams()
+    yilin = load_jiaoshi_yilin()
     body = trigrams[result.body_gua]
     use = trigrams[result.use_gua]
+    main_short = str(hexagrams[result.main_hexagram]["short_name"])
+    changed_short = str(hexagrams[result.changed_hexagram]["short_name"])
+    yilin_text = yilin["entries"][main_short][changed_short]
     line_rows = [
         "| 爻位（上至下顯示） | 本卦 | 動爻 | 變卦 | 所屬 |",
         "|---:|:---:|:---:|:---:|---|",
@@ -108,7 +113,15 @@ def build_markdown_report(casting: CastingInput, result: HexagramResult) -> str:
 
 {_hexagram_reference('變卦', result.changed_hexagram)}
 
-## 八、原始文字
+## 八、焦氏易林原典
+
+### {main_short}之{changed_short}
+
+{yilin_text}
+
+> 只列《焦氏易林》原典林辭，不作解釋，也不參與文字取數。
+
+## 九、原始文字
 
 ### 體方段落
 

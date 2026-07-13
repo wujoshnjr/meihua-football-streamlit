@@ -37,6 +37,8 @@ def test_report_contains_complete_casting_but_no_prediction_sections() -> None:
     assert "本卦六爻排盤" in report
     assert "本、互、動、變結構" in report
     assert "卦辭" in report and "彖傳" in report and "小象" in report
+    assert "焦氏易林原典" in report
+    assert "不作解釋，也不參與文字取數" in report
     assert "只排卦，不解卦" in report
     assert "首選比分" not in report
     assert "Poisson" not in report

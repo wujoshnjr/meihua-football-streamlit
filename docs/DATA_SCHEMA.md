@@ -28,6 +28,16 @@
 - 互卦、錯卦、綜卦索引。
 - 來源與範圍。
 
+## `knowledge/classics/jiaoshi_yilin.json`
+
+- `hexagram_order`：與周易知識庫一致的 64 卦短名順序。
+- `hexagrams`：短卦名對應卦序、完整卦名、卦符與六爻二進位結構。
+- `entries[本卦短名][之卦短名]`：對應林辭原文，共 64×64＝4,096 條。
+- `source`：底本、固定 commit、路徑、授權、範圍與來源網址。
+- `source_label_corrections`：來源標題與固定六十四變次序不一致時的可稽核校正；只校正索引標題，不改林辭原文。
+
+應用啟動時要求 4,096 個本卦／之卦組合全部存在且非空，並要求卦序與 `hexagrams.json` 一致。
+
 ## 歷史資料
 
 `data/meihua_cases.csv` 是 v1–v4 的比分預測歷史檔案。v5 不載入、不遷移、不更新，以避免新舊語意混用。

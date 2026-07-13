@@ -19,9 +19,11 @@
 ./knowledge/classics/xi_ci.json
 ./knowledge/classics/xu_gua.json
 ./knowledge/classics/za_gua.json
+./knowledge/classics/jiaoshi_yilin.json
 ./knowledge/hexagrams.json
 ./knowledge/meihua_principles.json
 ./knowledge/trigrams.json
+./knowledge/sources/jiaoshi_yilin_kanripo.txt
 ./knowledge_loader.py
 ./meihua_engine.py
 ./models.py
@@ -37,4 +39,5 @@
 ./tests/test_report_and_storage.py
 ./tests/test_streamlit_server.py
 ./tools/build_complete_knowledge.py
+./tools/build_jiaoshi_yilin.py
 ./version.py
