@@ -1,8 +1,20 @@
 # Third-Party Notices
 
+## Wikisource — 焦氏易林 punctuated transcription
+
+The punctuated transcription represented by `knowledge/sources/jiaoshi_yilin_wikisource_punctuated.csv` and used for 4,093 entries in `knowledge/classics/jiaoshi_yilin.json` is attributed to Wikisource contributors. The exact text snapshot is pinned through the `Subiectum/Zhouyi` mirror at commit `3ea1b1e93dc8c5dfbdf11c338f4c38a8825194a0`.
+
+Wikisource work and contributor history: https://zh.wikisource.org/wiki/焦氏易林
+
+Snapshot: https://github.com/Subiectum/Zhouyi/blob/3ea1b1e93dc8c5dfbdf11c338f4c38a8825194a0/%E8%B1%A1%E6%95%B0/%E7%84%A6%E6%B0%8F%E6%98%93%E6%9E%97.csv
+
+License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0), https://creativecommons.org/licenses/by-sa/4.0/
+
+Changes made for this project: normalized variant hexagram labels to the canonical local index; removed one inline source footnote from the verse field; corrected two invalid index labels by their fixed 64-change positions; and supplied punctuation for three entries marked missing in Wikisource using the Kanripo Siku Quanshu transcription described below.
+
 ## Kanripo KR3 — 焦氏易林
 
-The source snapshot in `knowledge/sources/jiaoshi_yilin_kanripo.txt` and the derived 4,096-entry database in `knowledge/classics/jiaoshi_yilin.json` were prepared from Kanripo `KR3g0029 焦氏易林-漢-焦贛.txt` at commit `eca6cb15ba5ee47a4267fde608db2ecd2d5f55ac`.
+The source snapshot in `knowledge/sources/jiaoshi_yilin_kanripo.txt` is a collation base and supplies three entries that the punctuated Wikisource snapshot marks missing. It was prepared from Kanripo `KR3g0029 焦氏易林-漢-焦贛.txt` at commit `eca6cb15ba5ee47a4267fde608db2ecd2d5f55ac`.
 
 The source repository applies the CC0 1.0 Universal public-domain dedication. Full legal text: https://creativecommons.org/publicdomain/zero/1.0/legalcode
 

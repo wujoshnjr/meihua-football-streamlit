@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from config import AppConfig
+from export_builder import build_casting_export
 from meihua_engine import calculate_casting
 from models import CastingInput
 from report_builder import build_markdown_report
@@ -38,6 +39,7 @@ def test_report_contains_complete_casting_but_no_prediction_sections() -> None:
     assert "本、互、動、變結構" in report
     assert "卦辭" in report and "彖傳" in report and "小象" in report
     assert "焦氏易林原典" in report
+    assert "繁體中文標點版" in report
     assert "不作解釋，也不參與文字取數" in report
     assert "只排卦，不解卦" in report
     assert "首選比分" not in report
@@ -64,6 +66,9 @@ def test_casting_storage_is_idempotent_and_persists_full_json(tmp_path: Path) ->
     assert payload["main_hexagram"] == result.main_hexagram
     assert len(payload["line_table"]) == 6
     assert payload["casting_moment"]["lunar_year_ganzhi"] == "丙午"
+    assert payload["jiaoshi_yilin"]["entry_key"]
+    assert payload["jiaoshi_yilin"]["text"].endswith(("。", "！", "？"))
+    assert payload["jiaoshi_yilin"]["source"]["license"] == "CC-BY-SA-4.0"
     assert second[0]["建立時間"] == "2026-07-13 15:30:00"
     assert second[0]["起卦農曆時間"] == result.casting_moment.lunar_text
     assert second[0]["起卦時辰"] == "申時"
@@ -72,6 +77,18 @@ def test_casting_storage_is_idempotent_and_persists_full_json(tmp_path: Path) ->
     assert "排卦指紋" in csv_payload
     assert "起卦農曆時間" in csv_payload
     assert casting_fingerprint(casting, result) in csv_payload
+
+
+def test_download_json_contains_punctuated_jiaoshi_yilin_entry() -> None:
+    casting, result = fixture()
+    payload = json.loads(json.dumps(build_casting_export(casting, result), ensure_ascii=False))
+
+    assert payload["schema_version"] == "5.2"
+    assert payload["casting"]["main_hexagram"] == result.main_hexagram
+    assert payload["jiaoshi_yilin"]["entry_key"]
+    assert payload["jiaoshi_yilin"]["text_style"] == "繁體中文標點版"
+    assert payload["jiaoshi_yilin"]["text"].endswith(("。", "！", "？"))
+    assert payload["jiaoshi_yilin"]["source"]["work_url"].endswith("/焦氏易林")
 
 
 def test_recasting_same_text_gets_a_distinct_time_audit_record() -> None:

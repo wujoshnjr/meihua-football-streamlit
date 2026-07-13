@@ -12,12 +12,18 @@
 
 ## 《焦氏易林》
 
-4,096 條林辭取自 Kanripo 的 `KR3g0029 焦氏易林-漢-焦贛.txt`，底本標示為《欽定四庫全書》十六卷本。本專案固定使用 `kr-shadow/KR3` commit `eca6cb15ba5ee47a4267fde608db2ecd2d5f55ac` 的快照；來源檔案另記其上游 Kanripo commit `764e995c`。該資料庫以 CC0 1.0 釋出。
+顯示用林辭採用維基文庫的繁體標點校對本，並固定保存 `Subiectum/Zhouyi` commit `3ea1b1e93dc8c5dfbdf11c338f4c38a8825194a0` 的 CSV 鏡像快照。維基文庫標點與協作整理內容依 CC BY-SA 4.0 提供，署名與編輯歷史可由作品頁查閱。
+
+- [維基文庫《焦氏易林》](https://zh.wikisource.org/wiki/%E7%84%A6%E6%B0%8F%E6%98%93%E6%9E%97)
+- [固定標點快照](https://github.com/Subiectum/Zhouyi/blob/3ea1b1e93dc8c5dfbdf11c338f4c38a8825194a0/%E8%B1%A1%E6%95%B0/%E7%84%A6%E6%B0%8F%E6%98%93%E6%9E%97.csv)
+- [CC BY-SA 4.0 授權](https://creativecommons.org/licenses/by-sa/4.0/)
+
+維基文庫快照有三條明確標示「原缺」：大壯之睽、井之巽、井之渙。本專案以 Kanripo `KR3g0029 焦氏易林-漢-焦贛.txt` 的《欽定四庫全書》十六卷本補足原文，並只加入句讀標點、不改動字詞。Kanripo 快照固定於 `kr-shadow/KR3` commit `eca6cb15ba5ee47a4267fde608db2ecd2d5f55ac`，來源檔案另記上游 commit `764e995c`，以 CC0 1.0 釋出。
 
 - [Kanripo／KR3 固定版本](https://github.com/kr-shadow/KR3/blob/eca6cb15ba5ee47a4267fde608db2ecd2d5f55ac/KR3g0029%20%E7%84%A6%E6%B0%8F%E6%98%93%E6%9E%97-%E6%BC%A2-%E7%84%A6%E8%B4%9B.txt)
 - [CC0 1.0 授權](https://github.com/kr-shadow/KR3/blob/master/LICENSE)
 
-`tools/build_jiaoshi_yilin.py` 依每章固定的六十四變次序建立 `entries[本卦][之卦]` 索引，並硬性驗證 64×64＝4,096 個組合全部存在且非空。底本「艮之」章第十筆標為「小過」，但該位置依固定次序應為「小畜」；資料庫只把索引標題校正為「小畜」，林辭原文完全保留，並在 `source_label_corrections` 留下紀錄。
+`tools/build_jiaoshi_yilin.py` 建立 `entries[本卦][之卦]` 索引，硬性驗證 64×64＝4,096 個組合全部存在、非空、含標點並以句末標點結束。標點快照的兩個非卦名索引會依固定六十四變次序校正；三條原缺補足記錄在 `source_completion_notes`。Kanripo 原始快照及其一筆索引校正則另存於 `base_source_label_corrections`，兩種來源不混稱為同一版本。
 
 ## 本專案整理
 
@@ -35,6 +41,6 @@
 - 三百八十四爻全部具備爻辭與小象。
 - 乾坤的用九／用六與文言已收錄。
 - 五篇易傳附錄已收錄。
-- 《焦氏易林》64 個本卦各有 64 個之卦，共 4,096 條非空林辭。
+- 《焦氏易林》64 個本卦各有 64 個之卦，共 4,096 條非空、完整標點林辭。
 
-這不表示收錄歷代所有注家、所有版本異文或所有占法；《焦氏易林》的「完整」特指上述四庫本資料快照的 4,096 組索引完整，不代表已完成跨版本文字校勘。版本差異應由人工文獻校勘，不由排卦程式自行裁決。
+這不表示收錄歷代所有注家、所有版本異文或所有占法；《焦氏易林》的「完整」特指上述標點顯示本的 4,096 組索引與標點覆蓋完整，不代表已完成跨版本文字校勘。版本差異應由人工文獻校勘，不由排卦程式自行裁決。
