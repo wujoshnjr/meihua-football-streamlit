@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from collections import Counter
+import re
 
 import pytest
 
 from evaluation import candidate_scores
 from meihua_engine import calculate_match_hexagram
 from models import MatchInput, RulePrediction
+from report_builder_v33 import build_markdown_report
 from score_engine import predict_scores
 
 
@@ -47,6 +49,28 @@ def test_double_qian_without_channel_is_mirror_cancellation() -> None:
     assert script["zero_goal_gate"] is True
     assert script["scoring_channel_score"] < script["closure_score"]
     assert result.scores[0] == (0, 0)
+
+
+def test_semantic_story_preserves_timeline_and_counter_reading_before_scores() -> None:
+    result = prediction(1, 1, 2)
+    script = result.hexagram_script
+
+    assert all(name in script["semantic_story"] for name in ["乾為天", "天火同人"])
+    assert all(stage in script["semantic_story"] for stage in ["主局", "中段", "轉折", "終局"])
+    assert "鏡像對消" in script["semantic_story"]
+    assert script["primary_interpretation"] != script["counter_interpretation"]
+    assert script["body_scoring_path"]
+    assert script["use_scoring_path"]
+    assert len(script["semantic_evidence"]) >= 7
+    assert len(script["scenario_hypotheses"]) == 3
+    semantic_payload = " ".join(
+        [
+            script["semantic_story"],
+            script["primary_interpretation"],
+            script["counter_interpretation"],
+        ]
+    )
+    assert not re.search(r"(?<!\d)\d{1,2}\s*[-:：]\s*\d{1,2}(?!\d)", semantic_payload)
 
 
 def test_double_dui_open_transition_uses_same_number_resonance() -> None:
@@ -145,3 +169,21 @@ def test_script_archetypes_are_available_to_ai_candidate_pool() -> None:
 
     assert len(pool & script_scores) >= 3
     assert any(sum(map(int, score.split("-"))) >= 5 for score in pool)
+
+
+def test_report_places_semantic_reading_before_numeric_score_engine() -> None:
+    match = MatchInput(
+        match_name="甲 vs 乙",
+        body_team="甲",
+        use_team="乙",
+        body_text="甲甲",
+        use_text="乙乙",
+        full_text="中中",
+    )
+    hexagram = calculate_match_hexagram(match)
+    rule = predict_scores(hexagram, match)
+    report = build_markdown_report(match, hexagram, rule, [])
+
+    assert "連續語義卦線（先於比分決策）" in report
+    assert report.index("連續語義卦線（先於比分決策）") < report.index("足球先驗 × 卦象有界修正引擎")
+    assert "v4.2 語義卦線、盲解卦與決策審計" in report

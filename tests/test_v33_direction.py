@@ -51,7 +51,7 @@ def test_body_generates_use_does_not_force_all_use_wins() -> None:
         venue="中立場",
     )
     prediction = predict_scores(france_morocco_like_result(), match)
-    assert prediction.method == "score-engine-v4.1.0"
+    assert prediction.method == "score-engine-v4.2.0"
     assert any(body > use for body, use in prediction.scores)
     assert not all(body < use for body, use in prediction.scores)
     assert any("體生用視為外洩與反擊風險" in item for item in prediction.reasons)

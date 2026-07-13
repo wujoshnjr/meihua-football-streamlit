@@ -4,7 +4,7 @@ from pathlib import Path
 
 from config import AppConfig
 from meihua_engine import calculate_match_hexagram
-from models import MatchInput
+from models import AIAnalysis, MatchInput
 from score_engine import predict_scores
 from storage_v33 import CaseStore, build_case_row
 
@@ -81,11 +81,61 @@ def test_changed_prediction_becomes_linked_version(tmp_path: Path) -> None:
     assert second.iloc[0]["預測內容雜湊"] != second.iloc[1]["預測內容雜湊"]
 
 
-def test_v41_row_persists_continuous_script_audit() -> None:
+def test_v42_row_persists_semantic_script_audit() -> None:
     row = make_row(make_match())
 
-    assert row["卦線劇本版本"] == "hexagram-script-v1.0.0"
+    assert row["卦線劇本版本"] == "hexagram-semantic-script-v2.0.0"
     assert row["劇本環境"]
+    assert "主局" in row["本地語義卦線"]
+    assert row["劇本主解"]
+    assert row["劇本反解"]
+    assert row["語義證據鏈JSON"].startswith("[")
+    assert row["語義劇本分支JSON"].startswith("[")
     assert 0.18 <= float(row["劇本混合權重"]) <= 0.46
     assert row["劇本候選比分"].startswith("[")
     assert row["劇本觸發理由"]
+
+
+def test_v42_row_persists_blind_deliberation_separately_from_decision() -> None:
+    match = make_match()
+    result = calculate_match_hexagram(match)
+    prediction = predict_scores(result, match)
+    ai = AIAnalysis(
+        ok=True,
+        provider="github_models_two_stage",
+        model="fake/model",
+        direction="體方勝",
+        scores=list(prediction.scores),
+        confidences=[0.6, 0.5, 0.4],
+        score_reasons=["劇本校準"] * 3,
+        overall_reasoning="第二階段決策",
+        risk_warning="替代劇本仍存在",
+        hexagram_deliberation={
+            "version": "blind-hexagram-deliberation-v1.0.0",
+            "model": "fake/blind-model",
+            "thesis": "第一階段盲解主線",
+            "counter_reading": "第一階段反解",
+            "blind_to_scores": True,
+        },
+        selected_scenario_names=["主劇本", "替代劇本"],
+    )
+    row = build_case_row(
+        match,
+        result,
+        prediction,
+        ai,
+        [],
+        actual_score="",
+        calibration_reason="",
+        calibration_summary="賽前鎖定",
+        confirmed_ai_calibration=False,
+        report_path="reports/test.md",
+    )
+
+    assert row["AI盲解版本"] == "blind-hexagram-deliberation-v1.0.0"
+    assert row["AI盲解模型"] == "fake/blind-model"
+    assert row["AI盲解核心論點"] == "第一階段盲解主線"
+    assert row["AI盲解反解"] == "第一階段反解"
+    assert row["AI採用劇本"] == "主劇本 | 替代劇本"
+    assert '"blind_to_scores":true' in row["AI盲解卦JSON"]
+    assert row["預測模式"] == "blind_semantic_hexagram_x_football_ai"

@@ -43,13 +43,40 @@ def build_markdown_report(
         f"- {item.get('score', '')}（{item.get('archetype', '')}，強度{float(item.get('script_strength', 0)):.2f}）：{item.get('reason', '')}"
         for item in script.get("candidate_scores", [])
     ) or "- 無"
+    semantic_evidence = "\n".join(
+        f"- **{item.get('stage', '')}｜{item.get('source', '')}**：{item.get('observation', '')} → {item.get('interpretation', '')}"
+        for item in script.get("semantic_evidence", [])
+    ) or "- 無"
+    semantic_scenarios = "\n".join(
+        f"- **{item.get('name', '')}**：{item.get('narrative', '')}；成立條件：{'、'.join(item.get('requires', []))}；"
+        f"失效條件：{item.get('failure_condition', '')}；成果形狀：{item.get('goal_shape', '')}"
+        for item in script.get("scenario_hypotheses", [])
+    ) or "- 無"
 
     ai_audit = "- 本次未呼叫AI。"
     if ai_analysis:
         if ai_analysis.ok:
             football = "；".join(ai_analysis.football_evidence) or "未提供"
             hexagram = "；".join(ai_analysis.hexagram_evidence) or "未提供"
+            deliberation = ai_analysis.hexagram_deliberation or {}
+            primary_scenario = deliberation.get("primary_scenario", {})
+            alternative_scenario = deliberation.get("alternative_scenario", {})
             ai_audit = (
+                f"#### 第一階段：盲解卦（未見比分、機率、λ與實力分）\n\n"
+                f"- 盲解模型：{deliberation.get('model', '未記錄')}\n"
+                f"- 核心論點：{deliberation.get('thesis', '未提供')}\n"
+                f"- 核心矛盾：{deliberation.get('primary_conflict', '未提供')}\n"
+                f"- 開局：{deliberation.get('opening_phase', '未提供')}\n"
+                f"- 中段：{deliberation.get('middle_phase', '未提供')}\n"
+                f"- 動爻轉折：{deliberation.get('turning_point', '未提供')}\n"
+                f"- 終局：{deliberation.get('ending_phase', '未提供')}\n"
+                f"- 體方破門路徑：{deliberation.get('body_scoring_path', '未提供')}\n"
+                f"- 用方破門路徑：{deliberation.get('use_scoring_path', '未提供')}\n"
+                f"- 主劇本〔{primary_scenario.get('name', '')}〕：{primary_scenario.get('narrative', '')}\n"
+                f"- 替代劇本〔{alternative_scenario.get('name', '')}〕：{alternative_scenario.get('narrative', '')}\n"
+                f"- 反解：{deliberation.get('counter_reading', '未提供')}\n\n"
+                f"#### 第二階段：足球校準與比分決策\n\n"
+                f"- 採用劇本：{'、'.join(ai_analysis.selected_scenario_names) or '未提供'}\n"
                 f"- AI體方實力分：{ai_analysis.body_strength_score:.1f}\n"
                 f"- AI用方實力分：{ai_analysis.use_strength_score:.1f}\n"
                 f"- 證據品質：{ai_analysis.evidence_quality:.2f}\n"
@@ -73,7 +100,32 @@ def build_markdown_report(
 
 ---
 
-## 十三、v4.1 連續卦象劇本與決策審計
+## 十三、v4.2 語義卦線、盲解卦與決策審計
+
+### 本地語義卦線（先於任何比分決策）
+
+{script.get('semantic_story', '')}
+
+#### 主解
+
+{script.get('primary_interpretation', '')}
+
+#### 反解與失效條件
+
+{script.get('counter_interpretation', '')}
+
+- 體方破門路徑：{script.get('body_scoring_path', '')}
+- 用方破門路徑：{script.get('use_scoring_path', '')}
+- 動爻轉折：{script.get('turning_point', '')}
+- 終局邏輯：{script.get('ending_logic', '')}
+
+#### 語義證據鏈
+
+{semantic_evidence}
+
+#### 預先保留的劇本分支
+
+{semantic_scenarios}
 
 ### 賽前足球先驗（不參與起卦字數）
 
@@ -92,7 +144,7 @@ def build_markdown_report(
 - 修正後體方 λ：{rule_prediction.expected_body_goals:.3f}
 - 修正後用方 λ：{rule_prediction.expected_use_goals:.3f}
 
-### 連續卦象劇本
+### 量化劇本審計（不是解卦本身）
 
 - 劇本版本：{script.get('version', '')}
 - 比賽環境：{script.get('environment', '')}
@@ -139,7 +191,7 @@ def build_markdown_report(
 
 {diagnostics}
 
-### AI證據分離
+### AI兩階段證據分離
 
 {ai_audit}
 
@@ -151,6 +203,6 @@ def build_markdown_report(
 - 控制說明：{control.get('note', '')}
 - 最終三選：{final_text}
 
-> v4.1 原則：足球先驗先獨立建立 λ；卦象對單方 λ 的修正仍限制在 ±25%，再由可稽核的連續劇本以最高 46% 情境權重重排比分。先判動能與破門通道，再判能量歸屬與收束，最後才選總球與分配比分。單場賽果產生的規則保持假說、權重為零，直到通過留出驗證；任何賽後資料不得改寫已鎖定的賽前版本。
+> v4.2 原則：先保存本→互→動→變的語義卦線與反解。AI第一階段完全看不到比分池、機率、λ、實力分與歷史比分；第二階段才以足球先驗校準並從中性候選池決策。數值只作有界校驗，不得反過來取代解卦。單場賽果產生的規則保持假說、權重為零；任何賽後資料不得改寫已鎖定的賽前版本。
 """
     return base + audit

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-from version import CALCULATION_VERSION, RULE_VERSION, SCRIPT_VERSION
+from version import CALCULATION_VERSION, DELIBERATION_VERSION, RULE_VERSION, SCRIPT_VERSION
 
 
 @dataclass(slots=True)
@@ -93,6 +93,15 @@ class HexagramScript:
     rout_side: str
     one_sided_side: str
     total_goal_targets: list[int]
+    semantic_story: str = ""
+    primary_interpretation: str = ""
+    counter_interpretation: str = ""
+    body_scoring_path: str = ""
+    use_scoring_path: str = ""
+    turning_point: str = ""
+    ending_logic: str = ""
+    semantic_evidence: list[dict[str, Any]] = field(default_factory=list)
+    scenario_hypotheses: list[dict[str, Any]] = field(default_factory=list)
     numeric_signals: list[dict[str, Any]] = field(default_factory=list)
     candidate_scores: list[dict[str, Any]] = field(default_factory=list)
     reasons: list[str] = field(default_factory=list)
@@ -171,7 +180,7 @@ class AIAnalysis:
     used_case_ids: list[str] = field(default_factory=list)
     raw_response: dict[str, Any] = field(default_factory=dict)
     error: str = ""
-    # v4.1：把足球先驗、連續卦象劇本與矛盾證據分開，避免單一體用關係直接決勝。
+    # v4.2：保存盲解語義與足球決策兩層，避免數值結論倒灌第一階段。
     body_strength_score: float = 50.0
     use_strength_score: float = 50.0
     evidence_quality: float = 0.0
@@ -187,6 +196,9 @@ class AIAnalysis:
     energy_ownership_analysis: str = ""
     total_goals_reasoning: str = ""
     score_allocation_reasoning: str = ""
+    hexagram_deliberation: dict[str, Any] = field(default_factory=dict)
+    selected_scenario_names: list[str] = field(default_factory=list)
+    deliberation_version: str = DELIBERATION_VERSION
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)

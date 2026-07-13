@@ -17,6 +17,7 @@
 ./data/meihua_cases.csv
 ./decision_control_v33.py
 ./docs/ARCHITECTURE.md
+./docs/BLIND_DELIBERATION.md
 ./docs/DATA_SCHEMA.md
 ./docs/DATA_SOURCES.md
 ./docs/EVALUATION_METHOD.md

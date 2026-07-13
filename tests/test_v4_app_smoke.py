@@ -4,7 +4,7 @@ from streamlit.testing.v1 import AppTest
 def test_streamlit_app_loads_without_runtime_exception() -> None:
     app = AppTest.from_file("app.py", default_timeout=30).run()
     assert not app.exception
-    assert app.title[0].value == "梅花易數足球AI自主推理系統 v4.1.0"
+    assert app.title[0].value == "梅花易數足球AI自主推理系統 v4.2.0"
 
 
 def test_streamlit_prediction_form_renders_results_without_arrow_crash() -> None:
@@ -19,6 +19,6 @@ def test_streamlit_prediction_form_renders_results_without_arrow_crash() -> None
         app.text_area[index].set_value(value)
     app.button[0].click().run()
     assert not app.exception
-    assert any(message.value.startswith("足球基線λ") for message in app.success)
+    assert any(message.value.startswith("固定起卦") for message in app.success)
     labels = {metric.label for metric in app.metric}
     assert {"基線首選", "首選", "最終首選"}.issubset(labels)

@@ -34,6 +34,15 @@ def build_markdown_report(
     main = hexagrams[result.main_hexagram]
     mutual = hexagrams[result.mutual_hexagram]
     changed = hexagrams[result.changed_hexagram]
+    semantic_script = rule_prediction.hexagram_script or {}
+    semantic_early = ""
+    if semantic_script.get("semantic_story"):
+        semantic_early = (
+            "\n### 連續語義卦線（先於比分決策）\n\n"
+            f"{semantic_script.get('semantic_story', '')}\n\n"
+            f"**主解**：{semantic_script.get('primary_interpretation', '')}\n\n"
+            f"**反解／失效條件**：{semantic_script.get('counter_interpretation', '')}\n"
+        )
 
     similar_md: list[str] = []
     for case in similar_cases:
@@ -138,6 +147,8 @@ def build_markdown_report(
 {result.relation_detail}
 
 {result.moving_detail}
+
+{semantic_early}
 
 ## 四、八卦詳細解讀
 

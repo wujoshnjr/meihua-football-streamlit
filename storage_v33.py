@@ -46,6 +46,15 @@ V4_COLUMNS = [
     "卦象調整後體方λ",
     "卦象調整後用方λ",
     "卦線劇本版本",
+    "本地語義卦線",
+    "劇本主解",
+    "劇本反解",
+    "體方語義破門路徑",
+    "用方語義破門路徑",
+    "動爻語義轉折",
+    "終局語義邏輯",
+    "語義證據鏈JSON",
+    "語義劇本分支JSON",
     "劇本環境",
     "劇本能量走勢",
     "劇本開局",
@@ -85,6 +94,12 @@ V4_COLUMNS = [
     "AI足球證據",
     "AI卦象證據",
     "AI矛盾警告",
+    "AI盲解版本",
+    "AI盲解模型",
+    "AI盲解卦JSON",
+    "AI盲解核心論點",
+    "AI盲解反解",
+    "AI採用劇本",
     "AI連續劇本摘要",
     "AI開局解讀",
     "AI中段解讀",
@@ -403,6 +418,23 @@ def build_case_row(
             "卦象調整後體方λ": rule_prediction.expected_body_goals,
             "卦象調整後用方λ": rule_prediction.expected_use_goals,
             "卦線劇本版本": script.get("version", ""),
+            "本地語義卦線": script.get("semantic_story", ""),
+            "劇本主解": script.get("primary_interpretation", ""),
+            "劇本反解": script.get("counter_interpretation", ""),
+            "體方語義破門路徑": script.get("body_scoring_path", ""),
+            "用方語義破門路徑": script.get("use_scoring_path", ""),
+            "動爻語義轉折": script.get("turning_point", ""),
+            "終局語義邏輯": script.get("ending_logic", ""),
+            "語義證據鏈JSON": json.dumps(
+                script.get("semantic_evidence", []),
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ),
+            "語義劇本分支JSON": json.dumps(
+                script.get("scenario_hypotheses", []),
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ),
             "劇本環境": script.get("environment", ""),
             "劇本能量走勢": script.get("trajectory", ""),
             "劇本開局": script.get("opening_reading", ""),
@@ -442,6 +474,28 @@ def build_case_row(
             "AI足球證據": " | ".join(ai_analysis.football_evidence) if ai_analysis else "",
             "AI卦象證據": " | ".join(ai_analysis.hexagram_evidence) if ai_analysis else "",
             "AI矛盾警告": ai_analysis.contradiction_warning if ai_analysis else "",
+            "AI盲解版本": ai_analysis.deliberation_version if ai_analysis else "",
+            "AI盲解模型": (
+                ai_analysis.hexagram_deliberation.get("model", "")
+                if ai_analysis
+                else ""
+            ),
+            "AI盲解卦JSON": json.dumps(
+                ai_analysis.hexagram_deliberation if ai_analysis else {},
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ),
+            "AI盲解核心論點": (
+                ai_analysis.hexagram_deliberation.get("thesis", "")
+                if ai_analysis
+                else ""
+            ),
+            "AI盲解反解": (
+                ai_analysis.hexagram_deliberation.get("counter_reading", "")
+                if ai_analysis
+                else ""
+            ),
+            "AI採用劇本": " | ".join(ai_analysis.selected_scenario_names) if ai_analysis else "",
             "AI連續劇本摘要": ai_analysis.match_script_summary if ai_analysis else "",
             "AI開局解讀": ai_analysis.opening_phase if ai_analysis else "",
             "AI中段解讀": ai_analysis.middle_phase if ai_analysis else "",
@@ -457,7 +511,11 @@ def build_case_row(
             "Prompt版本": PROMPT_VERSION if ai_analysis else "",
             "引擎版本": rule_prediction.method,
             "規則版本": rule_prediction.method,
-            "預測模式": "football_prior_x_hexagram_ai" if ai_analysis and ai_analysis.ok else "football_prior_x_hexagram",
+            "預測模式": (
+                "blind_semantic_hexagram_x_football_ai"
+                if ai_analysis and ai_analysis.ok
+                else "local_semantic_hexagram_x_football"
+            ),
             "最終首選比分": final_texts[0],
             "最終第二選比分": final_texts[1],
             "最終第三選比分": final_texts[2],

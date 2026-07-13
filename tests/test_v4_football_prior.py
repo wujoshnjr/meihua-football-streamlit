@@ -87,7 +87,7 @@ def test_prematch_ai_does_not_receive_hypothesis_source_score_or_effects() -> No
     prediction = predict_scores(result, current_match)
     _, user_prompt = build_prediction_prompt(current_match, result, prediction, [])
     payload = json.loads(user_prompt)
-    hypothesis = next(rule for rule in payload["rule_engine_prediction"]["matched_rules"] if rule["id"] == "CAL-001")
+    hypothesis = next(rule for rule in payload["applied_rule_audit"] if rule["id"] == "CAL-001")
     assert hypothesis["applied"] is False
     assert "source_case" not in hypothesis
     assert "effects" not in hypothesis
