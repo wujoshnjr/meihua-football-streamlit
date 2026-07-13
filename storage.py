@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import csv
 import hashlib
 import io
 import json
@@ -8,9 +9,8 @@ import re
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
-import pandas as pd
 import requests
 
 from config import AppConfig
@@ -117,29 +117,56 @@ class CastingStore:
         self.local_csv = config.data_dir / "meihua_castings.csv"
 
     @staticmethod
-    def _normalize(df: pd.DataFrame) -> pd.DataFrame:
-        if df is None or df.empty:
-            return pd.DataFrame(columns=CASTING_COLUMNS).astype("object")
-        normalized = df.copy().astype("object")
-        for column in CASTING_COLUMNS:
-            if column not in normalized.columns:
-                normalized[column] = ""
-        ordered = CASTING_COLUMNS + [column for column in normalized.columns if column not in CASTING_COLUMNS]
-        return normalized[ordered].where(pd.notna(normalized[ordered]), "").astype("object")
+    def _normalize(rows: Sequence[Mapping[str, Any]] | None) -> list[dict[str, str]]:
+        if not rows:
+            return []
+        extras: list[str] = []
+        for row in rows:
+            for column in row:
+                if column not in CASTING_COLUMNS and column not in extras:
+                    extras.append(column)
+        columns = CASTING_COLUMNS + extras
+        return [
+            {
+                column: "" if row.get(column) is None else str(row.get(column, ""))
+                for column in columns
+            }
+            for row in rows
+        ]
 
-    def load(self) -> pd.DataFrame:
+    @classmethod
+    def _read_csv(cls, text: str) -> list[dict[str, str]]:
+        reader = csv.DictReader(io.StringIO(text.lstrip("\ufeff")))
+        return cls._normalize(list(reader))
+
+    @classmethod
+    def _csv_text(cls, rows: Sequence[Mapping[str, Any]]) -> str:
+        normalized = cls._normalize(rows)
+        extras = [
+            column
+            for row in normalized
+            for column in row
+            if column not in CASTING_COLUMNS
+        ]
+        columns = CASTING_COLUMNS + list(dict.fromkeys(extras))
+        output = io.StringIO(newline="")
+        writer = csv.DictWriter(output, fieldnames=columns, extrasaction="ignore", lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(normalized)
+        return output.getvalue()
+
+    def load(self) -> list[dict[str, str]]:
         text: str | None = None
         if self.config.use_github_backend:
             text, _ = self.backend.get_text(self.config.github_castings_path)
         if text:
-            return self._normalize(pd.read_csv(io.StringIO(text.lstrip("\ufeff")), dtype="object", keep_default_na=False))
+            return self._read_csv(text)
         if self.local_csv.exists():
-            return self._normalize(pd.read_csv(self.local_csv, dtype="object", keep_default_na=False))
-        return self._normalize(pd.DataFrame())
+            return self._read_csv(self.local_csv.read_text(encoding="utf-8-sig"))
+        return []
 
-    def save(self, df: pd.DataFrame) -> None:
-        normalized = self._normalize(df)
-        csv_body = normalized.to_csv(index=False, lineterminator="\n")
+    def save(self, rows: Sequence[Mapping[str, Any]]) -> None:
+        csv_body = self._csv_text(rows)
         self.local_csv.parent.mkdir(parents=True, exist_ok=True)
         self.local_csv.write_text(csv_body, encoding="utf-8-sig")
         if self.config.use_github_backend:
@@ -150,32 +177,31 @@ class CastingStore:
                 retries=1,
             )
 
-    def upsert(self, row: Mapping[str, Any]) -> tuple[pd.DataFrame, str]:
-        df = self.load()
+    def upsert(self, row: Mapping[str, Any]) -> tuple[list[dict[str, str]], str]:
+        rows = self.load()
         fingerprint = str(row.get("排卦指紋", "")).strip()
-        matches = df.index[df["排卦指紋"].astype(str).str.strip().eq(fingerprint)].tolist() if fingerprint else []
-        safe_row = {key: "" if value is None else value for key, value in row.items()}
+        matches = [
+            index
+            for index, existing in enumerate(rows)
+            if fingerprint and str(existing.get("排卦指紋", "")).strip() == fingerprint
+        ]
+        safe_row = {key: "" if value is None else str(value) for key, value in row.items()}
         if matches:
             index = matches[-1]
-            safe_row["排卦ID"] = df.at[index, "排卦ID"]
-            safe_row["建立時間"] = df.at[index, "建立時間"]
-            for key, value in safe_row.items():
-                if key not in df.columns:
-                    df[key] = ""
-                df.at[index, key] = value
+            safe_row["排卦ID"] = rows[index].get("排卦ID", safe_row.get("排卦ID", ""))
+            safe_row["建立時間"] = rows[index].get("建立時間", safe_row.get("建立時間", ""))
+            rows[index].update(safe_row)
             action = "確認既有排卦"
         else:
-            df = pd.concat([df, pd.DataFrame([safe_row])], ignore_index=True).astype("object")
+            rows.append(safe_row)
             action = "新增排卦"
-        self.save(df)
-        return self._normalize(df), action
+        normalized = self._normalize(rows)
+        self.save(normalized)
+        return normalized, action
 
-    @staticmethod
-    def excel_bytes(df: pd.DataFrame) -> bytes:
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            df.to_excel(writer, index=False, sheet_name="castings")
-        return output.getvalue()
+    @classmethod
+    def csv_bytes(cls, rows: Sequence[Mapping[str, Any]]) -> bytes:
+        return ("\ufeff" + cls._csv_text(rows)).encode("utf-8")
 
 
 def build_casting_row(

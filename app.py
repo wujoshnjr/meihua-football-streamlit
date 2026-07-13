@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import html
 import json
-from typing import Any
+from typing import Any, Mapping, Sequence
 
-import pandas as pd
 import streamlit as st
 
 from config import load_config
@@ -42,6 +42,36 @@ def _normalize_parties(body_name: str, use_name: str) -> tuple[str, str, str]:
     return body, use, f"{body} vs {use}"
 
 
+def _render_html_table(rows: Sequence[Mapping[str, Any]], columns: Sequence[str]) -> None:
+    """Render tabular text without importing pandas/NumPy/PyArrow at app startup."""
+
+    cell_style = (
+        "border-bottom:1px solid rgba(128,128,128,.25);padding:.55rem .7rem;"
+        "text-align:left;vertical-align:top;white-space:pre-wrap;"
+    )
+    header = "".join(
+        f'<th style="{cell_style}font-weight:700;position:sticky;top:0;'
+        f'background:var(--background-color);">{html.escape(str(column))}</th>'
+        for column in columns
+    )
+    body = "".join(
+        "<tr>"
+        + "".join(
+            f'<td style="{cell_style}">{html.escape(str(row.get(column, "")))}</td>'
+            for column in columns
+        )
+        + "</tr>"
+        for row in rows
+    )
+    st.markdown(
+        '<div style="overflow:auto;max-height:34rem;border:1px solid '
+        'rgba(128,128,128,.22);border-radius:.5rem;">'
+        '<table style="width:100%;border-collapse:collapse;font-size:.92rem;">'
+        f"<thead><tr>{header}</tr></thead><tbody>{body}</tbody></table></div>",
+        unsafe_allow_html=True,
+    )
+
+
 def _render_line_table(result: HexagramResult) -> None:
     rows = []
     for row in reversed(result.line_table):
@@ -54,7 +84,7 @@ def _render_line_table(result: HexagramResult) -> None:
                 "所屬": row["layer"],
             }
         )
-    st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
+    _render_html_table(rows, ["爻位", "本卦爻", "動爻", "變卦爻", "所屬"])
     st.caption("畫面由上爻往初爻顯示；程式計算與資料庫一律自下而上儲存。○＝陽爻動，×＝陰爻動。")
 
 
@@ -86,7 +116,7 @@ def _render_hexagram_reference(label: str, name: str, moving_line: int | None = 
     special = item.get("special_line")
     if special:
         line_rows.append({"爻位": "用爻", "爻辭": special["classic_text"], "小象": special["small_image_text"]})
-    st.dataframe(pd.DataFrame(line_rows), width="stretch", hide_index=True)
+    _render_html_table(line_rows, ["爻位", "爻辭", "小象"])
     if item.get("wenyan_text"):
         with st.expander("文言全文"):
             st.write(item["wenyan_text"])
@@ -232,20 +262,20 @@ def _render_classics() -> None:
 
 def _render_records(store: CastingStore) -> None:
     try:
-        df = store.load()
+        rows = store.load()
     except Exception as exc:
         st.error(f"讀取排卦紀錄失敗：{exc}")
         return
-    if df.empty:
+    if not rows:
         st.info("尚無已儲存的排卦紀錄。")
         return
     columns = ["排卦ID", "建立時間", "標題", "體方名稱", "用方名稱", "本卦", "互卦", "動爻爻名", "變卦"]
-    st.dataframe(df[columns], width="stretch", hide_index=True)
+    _render_html_table(rows, columns)
     st.download_button(
-        "下載排卦紀錄 Excel",
-        store.excel_bytes(df),
-        file_name="meihua_castings.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "下載排卦紀錄 CSV",
+        store.csv_bytes(rows),
+        file_name="meihua_castings.csv",
+        mime="text/csv",
     )
 
 

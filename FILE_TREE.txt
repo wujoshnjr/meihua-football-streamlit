@@ -1,4 +1,5 @@
 ./.github/workflows/tests.yml
+./.streamlit/config.toml
 ./.streamlit/secrets.toml.example
 ./CHANGELOG.md
 ./README.md
@@ -31,7 +32,9 @@
 ./tests/conftest.py
 ./tests/test_app_smoke.py
 ./tests/test_casting_engine.py
+./tests/test_deployment_safety.py
 ./tests/test_knowledge_database.py
 ./tests/test_report_and_storage.py
+./tests/test_streamlit_server.py
 ./tools/build_complete_knowledge.py
 ./version.py

@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.1 — Community Cloud 原生崩潰第二層修復
+
+- 應用啟動路徑移除 pandas、NumPy、PyArrow 與 openpyxl 直接載入。
+- 排卦紀錄改用 Python 標準庫 CSV，紀錄下載由 Excel 改為 UTF-8 CSV。
+- Streamlit 表格改為安全 HTML，避免健康檢查時啟動 Arrow 資料轉換。
+- 固定 pandas 2.2.3、NumPy 2.2.6 與 PyArrow 19.0.1，避免 `uv` 重建時原生套件漂移。
+- Community Cloud 停用 Streamlit 內建檔案監看，由平台自身負責 GitHub 更新。
+
 ## v5.1.0 — 隊伍名稱自動組合
 
 - 事件／比賽名稱改為左右兩個隊伍輸入框，中央 `vs` 固定顯示。

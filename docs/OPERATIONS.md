@@ -4,6 +4,8 @@
 
 - 新部署請在 Advanced settings 選擇 Python 3.12。既有部署無法原地更換 Python；若不是 3.12，需先記下網址、GitHub 設定與 Secrets，再刪除並以 3.12 重新部署。
 - `requirements.txt` 固定使用 Streamlit 1.56.0，避免新版 Starlette／Uvicorn 啟動路徑在託管環境發生原生程序崩潰。
+- pandas、NumPy 與 PyArrow 固定為具有 CPython 3.12／3.13 manylinux wheel 的相容版本；應用本身以標準庫 CSV 儲存，不在啟動時匯入這些原生資料套件。
+- `.streamlit/config.toml` 停用 Streamlit 內建檔案監看；GitHub 更新仍由 Community Cloud 平台拉取。
 - 依賴版本變更後，請從 App settings 執行 Reboot app，讓平台重建環境。
 
 ## 日常排卦
