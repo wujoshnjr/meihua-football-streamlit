@@ -1,5 +1,10 @@
 # Changelog
 
+## v5.0.1 — Streamlit Community Cloud 啟動修正
+
+- 固定 Streamlit 1.56.0，避開新版 Starlette／Uvicorn 啟動後的原生程序崩潰。
+- 新增真實 Streamlit CLI 與 `/_stcore/health` 啟動測試，不再只依賴 AppTest。
+
 ## v5.0.0
 
 - 產品由足球比分預測系統改為「完整排卦系統」。
