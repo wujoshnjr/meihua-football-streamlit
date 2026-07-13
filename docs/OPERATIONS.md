@@ -1,5 +1,11 @@
 # 操作手冊
 
+## Streamlit Community Cloud
+
+- 新部署請在 Advanced settings 選擇 Python 3.12。既有部署無法原地更換 Python；若不是 3.12，需先記下網址、GitHub 設定與 Secrets，再刪除並以 3.12 重新部署。
+- `requirements.txt` 固定使用 Streamlit 1.56.0，避免新版 Starlette／Uvicorn 啟動路徑在託管環境發生原生程序崩潰。
+- 依賴版本變更後，請從 App settings 執行 Reboot app，讓平台重建環境。
+
 ## 日常排卦
 
 1. 填寫事件名稱、體方、用方。
