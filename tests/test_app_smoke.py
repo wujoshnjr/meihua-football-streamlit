@@ -11,7 +11,7 @@ APP = Path(__file__).resolve().parents[1] / "app.py"
 def test_streamlit_app_loads_as_casting_only_product() -> None:
     app = AppTest.from_file(str(APP), default_timeout=30).run()
     assert not app.exception
-    assert app.title[0].value == "梅花易數完整排卦系統 v5.4.0"
+    assert app.title[0].value == "梅花易數完整排卦系統 v5.4.1"
     assert any("只排卦，不解卦" in item.value for item in app.success)
     labels = {item.label for item in app.text_input}
     assert "體方名稱（vs 前）" in labels
