@@ -25,7 +25,32 @@ class CastingInput:
 
 
 @dataclass(slots=True)
+class CastingMoment:
+    """Immutable timestamp captured when the casting is calculated."""
+
+    timezone: str
+    utc_offset: str
+    gregorian_iso: str
+    gregorian_text: str
+    lunar_text: str
+    lunar_year: int
+    lunar_year_chinese: str
+    lunar_year_ganzhi: str
+    lunar_month: int
+    lunar_month_text: str
+    lunar_is_leap_month: bool
+    lunar_day: int
+    lunar_day_text: str
+    shichen: str
+    shichen_ganzhi: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(slots=True)
 class HexagramResult:
+    casting_moment: CastingMoment
     title: str
     body_name: str
     use_name: str
@@ -74,4 +99,4 @@ class HexagramResult:
 MatchInput = CastingInput
 
 
-__all__ = ["CastingInput", "HexagramResult", "MatchInput"]
+__all__ = ["CastingInput", "CastingMoment", "HexagramResult", "MatchInput"]

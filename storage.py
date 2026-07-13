@@ -7,8 +7,6 @@ import io
 import json
 import re
 import time
-from datetime import datetime
-from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 import requests
@@ -19,7 +17,9 @@ from version import APP_VERSION, SCHEMA_VERSION
 
 
 CASTING_COLUMNS = [
-    "資料結構版本", "系統版本", "排卦ID", "建立時間", "標題", "類別", "範圍", "體方名稱", "用方名稱",
+    "資料結構版本", "系統版本", "排卦ID", "建立時間", "起卦國曆ISO", "起卦農曆時間",
+    "起卦時區", "農曆年份", "農曆年干支", "農曆月份", "是否閏月", "農曆日",
+    "起卦時辰", "起卦干支時辰", "標題", "類別", "範圍", "體方名稱", "用方名稱",
     "體方段字數", "體方除八餘數", "體卦", "體卦數", "體卦五行",
     "用方段字數", "用方除八餘數", "用卦", "用卦數", "用卦五行",
     "完整段落字數", "完整段落除六餘數", "本卦", "本卦六爻自下而上",
@@ -30,10 +30,6 @@ CASTING_COLUMNS = [
     "排卦計算版本", "排卦指紋", "完整排盤JSON", "報告檔案",
     "體方原文", "用方原文", "完整中性原文", "補充資料",
 ]
-
-
-def _now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def safe_filename(value: str) -> str:
@@ -214,7 +210,17 @@ def build_casting_row(
         "資料結構版本": SCHEMA_VERSION,
         "系統版本": APP_VERSION,
         "排卦ID": new_casting_id(fingerprint),
-        "建立時間": _now(),
+        "建立時間": result.casting_moment.gregorian_text,
+        "起卦國曆ISO": result.casting_moment.gregorian_iso,
+        "起卦農曆時間": result.casting_moment.lunar_text,
+        "起卦時區": f"{result.casting_moment.timezone}／{result.casting_moment.utc_offset}",
+        "農曆年份": result.casting_moment.lunar_year,
+        "農曆年干支": result.casting_moment.lunar_year_ganzhi,
+        "農曆月份": f"{result.casting_moment.lunar_month_text}月",
+        "是否閏月": "是" if result.casting_moment.lunar_is_leap_month else "否",
+        "農曆日": result.casting_moment.lunar_day_text,
+        "起卦時辰": f"{result.casting_moment.shichen}時",
+        "起卦干支時辰": f"{result.casting_moment.shichen_ganzhi}時",
         "標題": result.title,
         "類別": casting.category,
         "範圍": casting.scope,
