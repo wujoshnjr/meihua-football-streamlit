@@ -69,6 +69,12 @@ def test_casting_storage_is_idempotent_and_persists_full_json(tmp_path: Path) ->
     assert payload["jiaoshi_yilin"]["entry_key"]
     assert payload["jiaoshi_yilin"]["text"].endswith(("。", "！", "？"))
     assert payload["jiaoshi_yilin"]["source"]["license"] == "CC-BY-SA-4.0"
+    assert payload["moving_line_classics"]["line_text"]
+    assert payload["moving_line_classics"]["small_image_text"]
+    assert payload["moving_line_dynamics"]["position"] == result.moving_line
+    assert payload["hexagram_classics"]["main_hexagram"]["gua_ci"]
+    assert payload["hexagram_classics"]["changed_hexagram"]["tuan_text"]
+    assert payload["seasonal_strength"]["month_element"] == "火"
     assert second[0]["建立時間"] == "2026-07-13 15:30:00"
     assert second[0]["起卦農曆時間"] == result.casting_moment.lunar_text
     assert second[0]["起卦時辰"] == "申時"
@@ -83,12 +89,19 @@ def test_download_json_contains_punctuated_jiaoshi_yilin_entry() -> None:
     casting, result = fixture()
     payload = json.loads(json.dumps(build_casting_export(casting, result), ensure_ascii=False))
 
-    assert payload["schema_version"] == "5.2"
+    assert payload["schema_version"] == "5.3"
     assert payload["casting"]["main_hexagram"] == result.main_hexagram
     assert payload["jiaoshi_yilin"]["entry_key"]
     assert payload["jiaoshi_yilin"]["text_style"] == "繁體中文標點版"
     assert payload["jiaoshi_yilin"]["text"].endswith(("。", "！", "？"))
     assert payload["jiaoshi_yilin"]["source"]["work_url"].endswith("/焦氏易林")
+    assert payload["moving_line_classics"]["line_text"]
+    assert payload["moving_line_classics"]["small_image_text"]
+    assert payload["moving_line_dynamics"]["position_status"] in {"得位", "失位"}
+    assert payload["moving_line_dynamics"]["central_status"] in {"得中", "不得中"}
+    assert payload["hexagram_classics"]["main_hexagram"]["gua_ci"]
+    assert payload["hexagram_classics"]["changed_hexagram"]["da_xiang_text"]
+    assert payload["seasonal_strength"]["strength_shift"]
 
 
 def test_recasting_same_text_gets_a_distinct_time_audit_record() -> None:

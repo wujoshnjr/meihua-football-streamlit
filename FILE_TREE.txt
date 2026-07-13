@@ -6,6 +6,7 @@
 ./THIRD_PARTY_NOTICES.md
 ./UPGRADE_CHECKLIST.md
 ./app.py
+./casting_structure.py
 ./config.py
 ./data/meihua_cases.csv                 legacy v1-v4，v5不讀取
 ./docs/ARCHITECTURE.md
@@ -13,6 +14,7 @@
 ./docs/DATA_SOURCES.md
 ./docs/GITHUB_ACTIONS_WORKFLOW.md
 ./docs/OPERATIONS.md
+./docs/STRUCTURED_CASTING_RULES.md
 ./knowledge/SOURCES.md
 ./knowledge/classics/shuo_gua.json
 ./knowledge/classics/wen_yan.json
@@ -36,6 +38,7 @@
 ./tests/conftest.py
 ./tests/test_app_smoke.py
 ./tests/test_casting_engine.py
+./tests/test_casting_structure.py
 ./tests/test_deployment_safety.py
 ./tests/test_knowledge_database.py
 ./tests/test_report_and_storage.py

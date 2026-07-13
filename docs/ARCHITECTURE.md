@@ -16,6 +16,7 @@ v5 只有兩個工作層：
 - `app.py`：Streamlit 表單、排盤、知識瀏覽、紀錄下載。
 - `meihua_engine.py`：文字計數與本互動變計算。
 - `casting_time.py`：台北時區時間快照與農曆／時辰換算。
+- `casting_structure.py`：主變卦經傳、動爻爻辭／小象、得位得中相應乘承比及月令旺衰結構化計算。
 - `models.py`：輸入與排卦結果資料結構。
 - `knowledge_loader.py`：8／64／384／4,096 完整性驗證與快取。
 - `export_builder.py`：組合排卦 JSON、對應焦氏易林標點林辭與來源欄位。

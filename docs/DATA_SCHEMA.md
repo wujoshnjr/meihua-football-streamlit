@@ -43,7 +43,36 @@
 
 ## 排卦下載 JSON
 
-下載檔頂層包含 `schema_version`、`system_version`、`knowledge_version`、`input`、`casting` 與 `jiaoshi_yilin`。其中 `jiaoshi_yilin` 只收錄本次排卦對應的一條林辭，包含：
+下載檔頂層包含 `schema_version`、`system_version`、`knowledge_version`、`input`、`casting`、`hexagram_classics`、`moving_line_classics`、`moving_line_dynamics`、`seasonal_strength` 與 `jiaoshi_yilin`。
+
+### `hexagram_classics`
+
+主卦與變卦各固定包含 `gua_ci`、`tuan_text`、`da_xiang_text`，並附卦名、短名、卦序與卦符。
+
+### `moving_line_classics`
+
+固定從主卦取出本次動爻的爻位、爻名、爻辭及《小象》。動爻變後的陰陽已保留在 `casting`，不以變卦同爻文本取代主卦動爻文本。
+
+### `moving_line_dynamics`
+
+- 奇數爻位為陽位，偶數爻位為陰位；陰陽與位置相符為得位。
+- 二、五爻為得中。
+- 初四、二五、三上配對，陰陽相異為相應。
+- 相鄰爻固定列出動爻所乘、所承及相比關係；另標記剛柔位序為順、逆或同類。
+- 這些欄位只描述結構，不直接產生吉凶或比分。
+
+### `seasonal_strength`
+
+- 農曆一至十二月依寅至丑月建取五行，閏月沿用原月份月建。
+- 以月令五行為基準固定計算：同月令為旺、月令所生為相、生月令者為休、克月令者為囚、月令所克為死。
+- 體用動爻前後分別輸出五行、旺衰及轉強／轉弱／持平。
+- 時辰五行只取時支並獨立列出，不覆寫月令旺衰。
+
+完整公式與欄位界線見 `docs/STRUCTURED_CASTING_RULES.md`。
+
+### `jiaoshi_yilin`
+
+其中 `jiaoshi_yilin` 只收錄本次排卦對應的一條林辭，包含：
 
 - `entry_key`：例如 `乾之坤`。
 - `main_hexagram`、`changed_hexagram`：完整卦名、短名、卦序、卦符與六爻結構。
