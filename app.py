@@ -340,7 +340,6 @@ def run_app() -> None:
             body_text = st.text_area("體方段落（用來取體卦／下卦）", height=150)
             use_text = st.text_area("用方段落（用來取用卦／上卦）", height=150)
             full_text = st.text_area("完整賽前中性段落（用來取動爻）", height=190)
-            context_notes = st.text_area("補充資料（保存但不參與任何取數）", height=100)
             submitted = st.form_submit_button("完整排卦（不解卦）", type="primary", width="stretch")
         if submitted:
             try:
@@ -353,7 +352,6 @@ def run_app() -> None:
                     use_text=use_text,
                     full_text=full_text,
                     category=category.strip() or "未分類",
-                    context_notes=context_notes,
                 )
                 result = calculate_casting(casting)
                 st.session_state["casting_input"] = casting

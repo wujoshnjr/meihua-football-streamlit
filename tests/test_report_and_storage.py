@@ -41,6 +41,7 @@ def test_report_contains_complete_casting_but_no_prediction_sections() -> None:
     assert "首選比分" not in report
     assert "Poisson" not in report
     assert "GitHub Models" not in report
+    assert "補充資料" not in report
 
 
 def test_casting_storage_is_idempotent_and_persists_full_json(tmp_path: Path) -> None:

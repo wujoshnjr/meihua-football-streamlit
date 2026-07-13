@@ -121,10 +121,6 @@ def build_markdown_report(casting: CastingInput, result: HexagramResult) -> str:
 ### 完整中性段落
 
 {casting.full_text}
-
-### 補充資料（不參與取數）
-
-{casting.context_notes or '未填'}
 """
 
 
