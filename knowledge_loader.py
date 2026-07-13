@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,7 @@ CLASSIC_FILES = {
     "序卦": "xu_gua.json",
     "雜卦": "za_gua.json",
 }
+YILIN_PUNCTUATION_RE = re.compile(r"[，。；！？：、]")
 
 
 def _load_json(path: Path) -> Any:
@@ -76,9 +78,59 @@ def load_jiaoshi_yilin() -> dict[str, Any]:
             raise ValueError(f"焦氏易林「{main_name}之」章必須完整包含 64 個之卦")
         if any(not isinstance(text, str) or not text.strip() for text in changed_entries.values()):
             raise ValueError(f"焦氏易林「{main_name}之」章含有空白林辭")
-    if payload.get("entry_count") != 4096:
+        if any(
+            not YILIN_PUNCTUATION_RE.search(text) or text[-1] not in "。！？"
+            for text in changed_entries.values()
+        ):
+            raise ValueError(f"焦氏易林「{main_name}之」章含有未完整標點的林辭")
+    if payload.get("entry_count") != 4096 or payload.get("punctuated_entry_count") != 4096:
         raise ValueError("焦氏易林必須完整包含 64×64＝4,096 條林辭")
     return payload
+
+
+def build_jiaoshi_yilin_reference(main_name: str, changed_name: str) -> dict[str, Any]:
+    """Return the exact punctuated Yi Lin entry and its auditable provenance."""
+
+    hexagrams = load_hexagrams()
+    yilin = load_jiaoshi_yilin()
+    main = hexagrams[main_name]
+    changed = hexagrams[changed_name]
+    main_short = str(main["short_name"])
+    changed_short = str(changed["short_name"])
+    completion_note = next(
+        (
+            note
+            for note in yilin.get("source_completion_notes", [])
+            if note.get("main_hexagram") == main_short
+            and note.get("changed_hexagram") == changed_short
+        ),
+        None,
+    )
+    return {
+        "title": yilin["title"],
+        "author": yilin["author"],
+        "edition": yilin["edition"],
+        "text_style": yilin["text_style"],
+        "entry_key": f"{main_short}之{changed_short}",
+        "main_hexagram": {
+            "name": main_name,
+            "short_name": main_short,
+            "sequence": int(main["sequence"]),
+            "unicode": str(main["unicode"]),
+            "binary_bottom_up": str(main["binary_bottom_up"]),
+        },
+        "changed_hexagram": {
+            "name": changed_name,
+            "short_name": changed_short,
+            "sequence": int(changed["sequence"]),
+            "unicode": str(changed["unicode"]),
+            "binary_bottom_up": str(changed["binary_bottom_up"]),
+        },
+        "text": yilin["entries"][main_short][changed_short],
+        "source": yilin["source"],
+        "base_source": yilin["base_source"],
+        "source_completion_note": completion_note,
+    }
 
 
 def knowledge_completeness() -> dict[str, Any]:
@@ -125,6 +177,7 @@ def clear_knowledge_cache() -> None:
 
 
 __all__ = [
+    "build_jiaoshi_yilin_reference",
     "clear_knowledge_cache",
     "knowledge_completeness",
     "load_classics",

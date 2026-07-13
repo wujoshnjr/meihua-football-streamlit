@@ -12,6 +12,7 @@ from typing import Any, Mapping, Sequence
 import requests
 
 from config import AppConfig
+from export_builder import build_stored_casting_payload
 from models import CastingInput, HexagramResult
 from version import APP_VERSION, SCHEMA_VERSION
 
@@ -262,7 +263,11 @@ def build_casting_row(
         "變卦體用關係": result.changed_relation,
         "排卦計算版本": result.calculation_version,
         "排卦指紋": fingerprint,
-        "完整排盤JSON": json.dumps(result.to_dict(), ensure_ascii=False, separators=(",", ":")),
+        "完整排盤JSON": json.dumps(
+            build_stored_casting_payload(result),
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ),
         "報告檔案": report_path,
         "體方原文": casting.body_text,
         "用方原文": casting.use_text,

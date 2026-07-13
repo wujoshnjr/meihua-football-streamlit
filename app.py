@@ -7,7 +7,9 @@ from typing import Any, Mapping, Sequence
 import streamlit as st
 
 from config import load_config
+from export_builder import build_casting_export
 from knowledge_loader import (
+    build_jiaoshi_yilin_reference,
     knowledge_completeness,
     load_classics,
     load_hexagrams,
@@ -124,20 +126,17 @@ def _render_hexagram_reference(label: str, name: str, moving_line: int | None = 
 
 
 def _render_jiaoshi_reference(main_name: str, changed_name: str) -> None:
-    hexagrams = load_hexagrams()
-    yilin = load_jiaoshi_yilin()
-    main = hexagrams[main_name]
-    changed = hexagrams[changed_name]
-    main_short = str(main["short_name"])
-    changed_short = str(changed["short_name"])
+    reference = build_jiaoshi_yilin_reference(main_name, changed_name)
+    main = reference["main_hexagram"]
+    changed = reference["changed_hexagram"]
     st.markdown(
         f"#### {main['unicode']} {main_name} 之 {changed['unicode']} {changed_name}"
     )
     st.caption(
-        f"《焦氏易林》{main_short}之{changed_short}｜"
+        f"《焦氏易林》{reference['entry_key']}｜{reference['text_style']}｜"
         f"本卦第 {main['sequence']} 卦，之卦第 {changed['sequence']} 卦"
     )
-    st.write(yilin["entries"][main_short][changed_short])
+    st.write(reference["text"])
     st.caption("只顯示《焦氏易林》原典林辭，不自動解釋，也不參與本次文字取數。")
 
 
@@ -217,7 +216,7 @@ def _render_casting_result(config: Any, store: CastingStore) -> None:
 
     report = build_markdown_report(casting, result)
     payload = json.dumps(
-        {"input": casting.to_dict(), "casting": result.to_dict()},
+        build_casting_export(casting, result),
         ensure_ascii=False,
         indent=2,
     )

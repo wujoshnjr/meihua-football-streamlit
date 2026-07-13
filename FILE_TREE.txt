@@ -24,6 +24,8 @@
 ./knowledge/meihua_principles.json
 ./knowledge/trigrams.json
 ./knowledge/sources/jiaoshi_yilin_kanripo.txt
+./knowledge/sources/jiaoshi_yilin_wikisource_punctuated.csv
+./export_builder.py
 ./knowledge_loader.py
 ./meihua_engine.py
 ./models.py

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from knowledge_loader import (
+    build_jiaoshi_yilin_reference,
     knowledge_completeness,
     load_classics,
     load_hexagrams,
@@ -92,15 +93,45 @@ def test_jiaoshi_yilin_covers_every_main_and_changed_hexagram() -> None:
     assert set(yilin["entries"]) == set(expected_names)
     assert all(set(entries) == set(expected_names) for entries in yilin["entries"].values())
     assert all(text.strip() for entries in yilin["entries"].values() for text in entries.values())
-    assert yilin["entries"]["乾"]["乾"] == "道陟多阪胡言連蹇譯瘠且聾莫使道通請謁不行求事無功"
-    assert yilin["entries"]["乾"]["坤"] == "招殃來螫害我邦國病傷手足不得安息"
-    assert yilin["source"]["license"] == "CC0-1.0"
+    assert all(
+        any(mark in text for mark in "，。；！？：、") and text[-1] in "。！？"
+        for entries in yilin["entries"].values()
+        for text in entries.values()
+    )
+    assert yilin["punctuated_entry_count"] == 4096
+    assert yilin["entries"]["乾"]["乾"] == (
+        "道陟石阪，胡言連蹇。譯瘖且聾，莫使道通。請謁不行，求事無功。"
+    )
+    assert yilin["entries"]["乾"]["坤"] == "招殃來螫，害我邦國；病在手足，不得安息。"
+    assert yilin["source"]["license"] == "CC-BY-SA-4.0"
+    assert yilin["base_source"]["license"] == "CC0-1.0"
     assert yilin["source_label_corrections"] == [
         {
-            "main_hexagram": "艮",
-            "position": 10,
-            "source_label": "小過",
-            "normalized_label": "小畜",
-            "reason": "依該章固定 64 變次序校正來源標題；林辭原文未改。",
-        }
+            "main_hexagram": "大過",
+            "position": 45,
+            "source_label": "卒",
+            "normalized_label": "萃",
+            "reason": "依該章固定 64 變次序校正來源索引標題；林辭原文未移位。",
+        },
+        {
+            "main_hexagram": "益",
+            "position": 43,
+            "source_label": "夫",
+            "normalized_label": "夬",
+            "reason": "依該章固定 64 變次序校正來源索引標題；林辭原文未移位。",
+        },
     ]
+    assert len(yilin["source_completion_notes"]) == 3
+    assert yilin["entries"]["井"]["巽"] == "春陽生草，夏長條枝。萬物蕃滋，充實益有。"
+
+
+def test_jiaoshi_yilin_reference_has_text_structure_and_provenance() -> None:
+    reference = build_jiaoshi_yilin_reference("乾為天", "坤為地")
+
+    assert reference["entry_key"] == "乾之坤"
+    assert reference["main_hexagram"]["sequence"] == 1
+    assert reference["changed_hexagram"]["sequence"] == 2
+    assert reference["text"] == "招殃來螫，害我邦國；病在手足，不得安息。"
+    assert reference["text_style"] == "繁體中文標點版"
+    assert reference["source"]["license"] == "CC-BY-SA-4.0"
+    assert reference["source_completion_note"] is None
