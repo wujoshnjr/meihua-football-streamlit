@@ -12,6 +12,7 @@ from typing import Any, Mapping, Sequence
 import requests
 
 from config import AppConfig
+from casting_structure import build_casting_structure
 from export_builder import build_stored_casting_payload
 from models import CastingInput, HexagramResult
 from version import APP_VERSION, SCHEMA_VERSION
@@ -20,12 +21,14 @@ from version import APP_VERSION, SCHEMA_VERSION
 CASTING_COLUMNS = [
     "資料結構版本", "系統版本", "排卦ID", "建立時間", "起卦國曆ISO", "起卦農曆時間",
     "起卦時區", "農曆年份", "農曆年干支", "農曆月份", "是否閏月", "農曆日",
-    "起卦時辰", "起卦干支時辰", "標題", "類別", "範圍", "體方名稱", "用方名稱",
+    "起卦時辰", "起卦干支時辰", "日辰", "日干", "日支", "月令", "旬名", "旬空",
+    "標題", "類別", "範圍", "體方名稱", "用方名稱",
     "體方段字數", "體方除八餘數", "體卦", "體卦數", "體卦五行",
     "用方段字數", "用方除八餘數", "用卦", "用卦數", "用卦五行",
     "完整段落字數", "完整段落除六餘數", "本卦", "本卦六爻自下而上",
     "互卦下卦", "互卦上卦", "互卦", "互卦六爻自下而上",
     "動爻", "動爻爻名", "動爻原陰陽", "動爻變後陰陽", "動爻所屬", "動爻層級",
+    "本卦宮", "本卦宮位", "本卦世爻", "本卦應爻", "動爻納甲", "動爻六親（日干）", "動爻六親（卦宮）", "動爻旬空",
     "變卦", "變卦六爻自下而上", "變後體卦", "變後用卦", "體卦轉象", "用卦轉象",
     "本卦體用關係代碼", "本卦體用關係", "變卦體用關係代碼", "變卦體用關係",
     "排卦計算版本", "排卦指紋", "完整排盤JSON", "報告檔案",
@@ -200,6 +203,20 @@ class CastingStore:
     def csv_bytes(cls, rows: Sequence[Mapping[str, Any]]) -> bytes:
         return ("\ufeff" + cls._csv_text(rows)).encode("utf-8")
 
+    @classmethod
+    def public_csv_bytes(cls, rows: Sequence[Mapping[str, Any]]) -> bytes:
+        """Return a readable record table without raw audit JSON or fingerprint code."""
+
+        hidden = {"完整排盤JSON", "排卦指紋"}
+        public_rows = [{key: value for key, value in row.items() if key not in hidden} for row in rows]
+        normalized = cls._normalize(public_rows)
+        columns = [column for column in normalized[0] if column not in hidden] if normalized else []
+        output = io.StringIO(newline="")
+        writer = csv.DictWriter(output, fieldnames=columns, extrasaction="ignore", lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(normalized)
+        return ("\ufeff" + output.getvalue()).encode("utf-8")
+
 
 def build_casting_row(
     casting: CastingInput,
@@ -207,6 +224,12 @@ def build_casting_row(
     report_path: str = "",
 ) -> dict[str, Any]:
     fingerprint = casting_fingerprint(casting, result)
+    structure = build_casting_structure(result)
+    najia = structure["najia_analysis"]
+    day = najia["day_cycle"]
+    void = najia["xun_void"]
+    main_chart = najia["main_hexagram"]
+    moving_line = main_chart["lines"][result.moving_line - 1]
     return {
         "資料結構版本": SCHEMA_VERSION,
         "系統版本": APP_VERSION,
@@ -222,6 +245,12 @@ def build_casting_row(
         "農曆日": result.casting_moment.lunar_day_text,
         "起卦時辰": f"{result.casting_moment.shichen}時",
         "起卦干支時辰": f"{result.casting_moment.shichen_ganzhi}時",
+        "日辰": f"{day['day_ganzhi']}日",
+        "日干": f"{day['day_stem']}（{day['day_stem_element']}）",
+        "日支": day["day_branch"],
+        "月令": f"{day['month_branch']}月（{day['month_element']}）",
+        "旬名": void["xun_name"],
+        "旬空": void["void_text"],
         "標題": result.title,
         "類別": casting.category,
         "範圍": casting.scope,
@@ -251,6 +280,14 @@ def build_casting_row(
         "動爻變後陰陽": result.moving_changed_type,
         "動爻所屬": result.moving_side,
         "動爻層級": result.moving_layer,
+        "本卦宮": f"{main_chart['palace']}宮（{main_chart['palace_element']}）",
+        "本卦宮位": main_chart["palace_stage"],
+        "本卦世爻": f"第{main_chart['world_line']}爻 {main_chart['world_line_label']}",
+        "本卦應爻": f"第{main_chart['response_line']}爻 {main_chart['response_line_label']}",
+        "動爻納甲": moving_line["gan_zhi"],
+        "動爻六親（日干）": moving_line["six_relative_by_day_stem"],
+        "動爻六親（卦宮）": moving_line["six_relative_by_palace"],
+        "動爻旬空": moving_line["void_status"],
         "變卦": result.changed_hexagram,
         "變卦六爻自下而上": result.changed_lines_bottom_up,
         "變後體卦": result.changed_body_gua,
@@ -277,7 +314,7 @@ def build_casting_row(
 
 
 def save_report(config: AppConfig, row: Mapping[str, Any], report: str) -> str:
-    filename = f"{safe_filename(str(row.get('標題', 'casting')))}_{row.get('排卦ID', '')}.md"
+    filename = f"{safe_filename(str(row.get('標題', 'casting')))}_{row.get('排卦ID', '')}.html"
     local_path = config.reports_dir / filename
     local_path.write_text(report, encoding="utf-8")
     if config.use_github_backend:

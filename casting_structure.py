@@ -2,39 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from knowledge_loader import load_hexagrams
+from knowledge_loader import load_hexagram_interpretations, load_hexagrams
 from meihua_engine import CONTROLS, ELEMENTS, GENERATES, line_label
 from models import HexagramResult
+from najia_structure import BRANCH_ELEMENTS, LUNAR_MONTH_BRANCHES, build_najia_analysis
 
 
-LUNAR_MONTH_BRANCHES = {
-    1: "寅",
-    2: "卯",
-    3: "辰",
-    4: "巳",
-    5: "午",
-    6: "未",
-    7: "申",
-    8: "酉",
-    9: "戌",
-    10: "亥",
-    11: "子",
-    12: "丑",
-}
-BRANCH_ELEMENTS = {
-    "寅": "木",
-    "卯": "木",
-    "辰": "土",
-    "巳": "火",
-    "午": "火",
-    "未": "土",
-    "申": "金",
-    "酉": "金",
-    "戌": "土",
-    "亥": "水",
-    "子": "水",
-    "丑": "土",
-}
 STRENGTH_RANK = {"死": 1, "囚": 2, "休": 3, "相": 4, "旺": 5}
 POSITION_NAMES = {1: "初爻", 2: "二爻", 3: "三爻", 4: "四爻", 5: "五爻", 6: "上爻"}
 
@@ -72,6 +45,27 @@ def build_hexagram_classics(result: HexagramResult) -> dict[str, Any]:
     return {
         "main_hexagram": _hexagram_classics(result.main_hexagram),
         "changed_hexagram": _hexagram_classics(result.changed_hexagram),
+    }
+
+
+def _hexagram_meaning(name: str) -> dict[str, Any]:
+    item = load_hexagram_interpretations()["hexagrams"][name]
+    return {
+        "name": name,
+        "short_name": str(item["short_name"]),
+        "sequence": int(item["sequence"]),
+        "unicode": str(item["unicode"]),
+        "classical_meaning": dict(item["classical_meaning"]),
+        "football_mapping": dict(item["football_mapping"]),
+    }
+
+
+def build_hexagram_meanings(result: HexagramResult) -> dict[str, Any]:
+    return {
+        "main_hexagram": _hexagram_meaning(result.main_hexagram),
+        "mutual_hexagram": _hexagram_meaning(result.mutual_hexagram),
+        "changed_hexagram": _hexagram_meaning(result.changed_hexagram),
+        "scope_note": load_hexagram_interpretations()["scope"],
     }
 
 
@@ -234,9 +228,11 @@ def build_seasonal_strength(result: HexagramResult) -> dict[str, Any]:
 def build_casting_structure(result: HexagramResult) -> dict[str, Any]:
     return {
         "hexagram_classics": build_hexagram_classics(result),
+        "hexagram_meanings": build_hexagram_meanings(result),
         "moving_line_classics": build_moving_line_classics(result),
         "moving_line_dynamics": build_moving_line_dynamics(result),
         "seasonal_strength": build_seasonal_strength(result),
+        "najia_analysis": build_najia_analysis(result),
     }
 
 
@@ -245,6 +241,7 @@ __all__ = [
     "LUNAR_MONTH_BRANCHES",
     "build_casting_structure",
     "build_hexagram_classics",
+    "build_hexagram_meanings",
     "build_moving_line_classics",
     "build_moving_line_dynamics",
     "build_seasonal_strength",

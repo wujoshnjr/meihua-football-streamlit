@@ -5,6 +5,7 @@ from knowledge_loader import (
     knowledge_completeness,
     load_classics,
     load_hexagrams,
+    load_hexagram_interpretations,
     load_jiaoshi_yilin,
     load_meihua_principles,
     load_trigrams,
@@ -29,8 +30,23 @@ def test_database_covers_all_trigrams_hexagrams_and_lines() -> None:
         "classic_appendices": 5,
         "yilin_main_hexagrams": 64,
         "yilin_entries": 4096,
+        "interpretation_hexagrams": 64,
+        "classical_meaning_fields": 384,
+        "football_mapping_fields": 576,
         "is_complete": True,
     }
+
+
+def test_all_64_hexagrams_have_complete_meaning_and_football_fields() -> None:
+    payload = load_hexagram_interpretations()
+    assert len(payload["hexagrams"]) == 64
+    assert sum(len(x["classical_meaning"]) for x in payload["hexagrams"].values()) == 384
+    assert sum(len(x["football_mapping"]) for x in payload["hexagrams"].values()) == 576
+    assert all(
+        all(str(value).strip() for value in section.values())
+        for item in payload["hexagrams"].values()
+        for section in (item["classical_meaning"], item["football_mapping"])
+    )
 
 
 def test_every_hexagram_has_classical_and_structural_fields() -> None:
