@@ -1,0 +1,1576 @@
+{
+  "version": "zhouyi-64-meaning-football-v1.0.0",
+  "language": "zh-Hant",
+  "entry_count": 64,
+  "classical_fields": [
+    "core_theme",
+    "structural_image",
+    "development_pattern",
+    "constructive_expression",
+    "shadow_expression",
+    "timing_and_action"
+  ],
+  "football_fields": [
+    "match_pattern",
+    "tempo",
+    "attack",
+    "defense",
+    "transition",
+    "scoring_environment",
+    "body_use_context",
+    "late_phase",
+    "interpretation_caution"
+  ],
+  "scope": "傳統卦義層依本專案已收錄的卦辭、彖傳、大象、序卦、雜卦與上下卦結構整理；足球層為本專案的情境映射，只提供閱讀維度，不是《周易》原文、固定吉凶、固定比分或自動預測。",
+  "source_layers": {
+    "classical_text": {
+      "title": "《周易》經傳",
+      "ctext_url": "https://ctext.org/book-of-changes/zh",
+      "wikisource_url": "https://zh.wikisource.org/wiki/周易",
+      "note": "實際原文由 knowledge/hexagrams.json 與 knowledge/classics/ 提供。"
+    },
+    "football_mapping": {
+      "title": "梅花易數足球情境映射",
+      "origin": "本專案原創整理",
+      "note": "不以單卦機械決定勝負、總球或比分；必須與體用、動爻、變卦、旺衰及賽前資料合看。"
+    }
+  },
+  "hexagrams": {
+    "乾為天": {
+      "sequence": 1,
+      "short_name": "乾",
+      "unicode": "䷀",
+      "classical_meaning": {
+        "core_theme": "純陽剛健，主動創始，自強不息。",
+        "structural_image": "上下皆乾，力量連續上行，重在時位與節制。",
+        "development_pattern": "由潛藏、顯現、躍進至高位，盛極須防亢悔。",
+        "constructive_expression": "方向清楚、組織有力時，適合主動承擔與持續推進。",
+        "shadow_expression": "過剛、過急、只知進不知退，容易由優勢轉為僵硬與反噬。",
+        "timing_and_action": "先辨所處爻位；未成熟宜蓄勢，居高位更須留退路。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方主導並持續施壓，強度高但成果取決於破門通道。",
+        "tempo": "偏快、偏強、主動掌控；也可能形成高強度鏡像僵持。",
+        "attack": "適合高位壓迫、直接推進、連續射門與主動創造。",
+        "defense": "前壓可壓縮對手，但身後空間與過度冒進是主要風險。",
+        "transition": "由守轉攻速度快，二次進攻能力強。",
+        "scoring_environment": "高動能不等於高比分；須配合離、兌、震等轉化或破口訊號。",
+        "body_use_context": "落在體方多指體方主動；落在用方則表示外部壓力強，仍須合看生剋與動爻。",
+        "late_phase": "領先後若仍全線前壓，可能出現亢龍式反擊風險。",
+        "interpretation_caution": "不可把乾的強勢直接等同勝利或固定進球數。"
+      }
+    },
+    "坤為地": {
+      "sequence": 2,
+      "short_name": "坤",
+      "unicode": "䷁",
+      "classical_meaning": {
+        "core_theme": "純陰厚載，順承、包容、集體鋪展。",
+        "structural_image": "上下皆坤，廣而能載，力量不爭先而以承接成事。",
+        "development_pattern": "先承受與聚合，再依勢形成穩定秩序；久被動則易耗散。",
+        "constructive_expression": "適合紀律執行、集體協作、耐心承接與穩定鋪陳。",
+        "shadow_expression": "缺乏主動核心時，可能被壓制、拖慢或成為單方面承受。",
+        "timing_and_action": "宜順勢而非盲從；需要明確主導者與可落實的方向。"
+      },
+      "football_mapping": {
+        "match_pattern": "偏集體防守、陣地承受與大範圍覆蓋，也可能是全面鋪展。",
+        "tempo": "多為穩、慢、耐心；遇震或離可由承受轉成集體推進。",
+        "attack": "依靠人數、二點球、邊路鋪開與團隊接應，不靠單點爆發。",
+        "defense": "低位密集與區域保護較強，但長期受壓會累積裂縫。",
+        "transition": "轉換初速不高，重在第一腳出球與集體跟進。",
+        "scoring_environment": "可收束低比分，也可在巨大實力差下成為被持續得分的一方。",
+        "body_use_context": "坤在體方可為穩守或被動；在用方可為承壓或整體壓上，須由生剋判能量歸屬。",
+        "late_phase": "末段體能與專注若下降，承受可能轉為連續失守。",
+        "interpretation_caution": "不可把坤固定解成零進球、弱方或失敗。"
+      }
+    },
+    "水雷屯": {
+      "sequence": 3,
+      "short_name": "屯",
+      "unicode": "䷂",
+      "classical_meaning": {
+        "core_theme": "萬事初生而艱難，動能被險阻包圍。",
+        "structural_image": "震動在下、坎險在上，想啟動卻先遇阻。",
+        "development_pattern": "早期混亂與反覆試探，經整理後才可能建立路徑。",
+        "constructive_expression": "在困難中組織資源、確立支點，可把阻力轉成成長。",
+        "shadow_expression": "急於求成會放大失誤，方向未定時容易反覆受挫。",
+        "timing_and_action": "開局宜穩住基本盤，先解決第一個障礙再擴張。"
+      },
+      "football_mapping": {
+        "match_pattern": "開場想搶節奏但出球不順，攻勢常被中斷後重啟。",
+        "tempo": "斷續、混亂，快慢交替。",
+        "attack": "有啟動意圖，最後一傳與禁區處理容易卡住。",
+        "defense": "防線也可能因開局未定而出現早段危險。",
+        "transition": "攻守轉換頻繁但品質不穩，失誤後容易立刻再受壓。",
+        "scoring_environment": "不必然低比分；可代表反覆受阻，也可形成混亂機會。",
+        "body_use_context": "體方得屯要看能否走出初難；用方得屯可能是對手壓力或自身推進障礙。",
+        "late_phase": "若中段完成整理，後程才會逐漸形成有效攻勢。",
+        "interpretation_caution": "不可只見『難』便判無球，須分辨障礙落在進攻或防守。"
+      }
+    },
+    "山水蒙": {
+      "sequence": 4,
+      "short_name": "蒙",
+      "unicode": "䷃",
+      "classical_meaning": {
+        "core_theme": "蒙昧待啟，資訊不足，方向與規則尚未清楚。",
+        "structural_image": "坎險在內、艮止在外，內有疑惑而外受界線約束。",
+        "development_pattern": "由試錯、受教到逐步明朗；重複犯錯則困於蒙昧。",
+        "constructive_expression": "接受指導、簡化問題、建立清楚紀律可破蒙。",
+        "shadow_expression": "判斷失準、輕率試探與缺乏共識會造成無效消耗。",
+        "timing_and_action": "不宜憑一時衝動定局，應先取得可靠訊號。"
+      },
+      "football_mapping": {
+        "match_pattern": "部署或臨場判斷不清，雙方可能先試探再修正。",
+        "tempo": "偏慢且不穩，常因誤判突然加速。",
+        "attack": "進攻路線模糊，容易傳錯區域或選擇不佳。",
+        "defense": "位置感若不足會露出空檔，但艮也可能形成外層封鎖。",
+        "transition": "轉換決策慢，第一傳品質是關鍵。",
+        "scoring_environment": "偏向低效率，但失誤可製造意外進球。",
+        "body_use_context": "蒙在動方常表示調整能力受考驗，不能直接判弱。",
+        "late_phase": "教練換人或角色釐清後，末段可能比前段清楚。",
+        "interpretation_caution": "不可用球隊名氣替代卦中『資訊不足』的限制。"
+      }
+    },
+    "水天需": {
+      "sequence": 5,
+      "short_name": "需",
+      "unicode": "䷄",
+      "classical_meaning": {
+        "core_theme": "有能力而待時，蓄勢、耐心與資源準備。",
+        "structural_image": "乾健在下、坎險在前，前進者須等待安全時機。",
+        "development_pattern": "力量先積蓄，時機成熟才渡險；躁進則陷危。",
+        "constructive_expression": "守住節奏、等待條件齊備，可在關鍵點集中發力。",
+        "shadow_expression": "拖延過久會失去窗口，焦躁出手又可能落入陷阱。",
+        "timing_and_action": "等待不是停滯；應持續準備並辨認真正窗口。"
+      },
+      "football_mapping": {
+        "match_pattern": "有控場或進攻能力，但不急於全面投入。",
+        "tempo": "中低速蓄勢，局部突然提速。",
+        "attack": "耐心倒腳、吸引壓迫後尋找縱深或弱側。",
+        "defense": "陣形通常保留安全人數，避免先暴露。",
+        "transition": "轉換會選擇時機，不一定每次都快攻。",
+        "scoring_environment": "前段可能機會少，進球窗口集中在對手鬆動之後。",
+        "body_use_context": "體方得需可為有力待發；用方得需也可能是在等待體方失誤。",
+        "late_phase": "若比分未開，後段投入會增加；若領先則更可能控制時間。",
+        "interpretation_caution": "不可把等待固定解成0:0，須看蓄勢是否在變卦兌現。"
+      }
+    },
+    "天水訟": {
+      "sequence": 6,
+      "short_name": "訟",
+      "unicode": "䷅",
+      "classical_meaning": {
+        "core_theme": "立場衝突、爭持難合，宜辨是非而避免窮爭。",
+        "structural_image": "乾剛向上、坎水向下，兩股方向背離。",
+        "development_pattern": "爭端由小而大，能中止則保全，硬爭到底則兩傷。",
+        "constructive_expression": "清楚界線、就事論事、保留退讓空間可減少損耗。",
+        "shadow_expression": "情緒化對抗、報復與過度執著使局面失控。",
+        "timing_and_action": "宜及早設定止損點，不宜把每次對抗都推到極端。"
+      },
+      "football_mapping": {
+        "match_pattern": "身體對抗、球權爭奪與判罰爭議增加，節奏被衝突切碎。",
+        "tempo": "強硬但斷裂，停頓與突然衝刺並存。",
+        "attack": "攻勢容易在一對一或禁區碰撞中終止。",
+        "defense": "防守侵略性高，犯規、定位球和牌面風險上升。",
+        "transition": "反搶頻繁，但情緒可能破壞回防秩序。",
+        "scoring_environment": "可能低效拉鋸，也可能因定位球、紅牌或失誤打開。",
+        "body_use_context": "哪一方得勢取決於誰能控制衝突而非誰更強硬。",
+        "late_phase": "末段若比分接近，爭議、犯規與最後定位球權重提高。",
+        "interpretation_caution": "不可把訟直接等同雙方進球或單純高比分。"
+      }
+    },
+    "地水師": {
+      "sequence": 7,
+      "short_name": "師",
+      "unicode": "䷆",
+      "classical_meaning": {
+        "core_theme": "以眾成軍，紀律、統率、責任與正當性。",
+        "structural_image": "坎險藏於坤眾之中，集體面對危險需要主帥與秩序。",
+        "development_pattern": "由整隊、執行到勝負，成敗繫於領導與紀律。",
+        "constructive_expression": "角色清楚、號令一致、賞罰分明，可把群體力量集中。",
+        "shadow_expression": "無統率的集體會混亂，濫用力量則招致損失。",
+        "timing_and_action": "先整隊再出戰；關鍵不是人多，而是指揮是否有效。"
+      },
+      "football_mapping": {
+        "match_pattern": "戰術紀律鮮明，球隊按區域和任務集體運作。",
+        "tempo": "穩定、有組織，可依戰術需要突然壓迫。",
+        "attack": "依靠設計好的套路、定位球與多人協作。",
+        "defense": "防守層次完整，重視站位、協防與封鎖核心區。",
+        "transition": "轉換遵循預定路線，個人自由度較低。",
+        "scoring_environment": "常見可控比分；若紀律破裂，失球可能連鎖。",
+        "body_use_context": "師卦強弱要看主將、動爻與得位，不可只因『軍隊』便判主導。",
+        "late_phase": "領先後適合收陣管理；落後時需防全隊壓上留下後場。",
+        "interpretation_caution": "不可忽略領導失誤或執行疲勞。"
+      }
+    },
+    "水地比": {
+      "sequence": 8,
+      "short_name": "比",
+      "unicode": "䷇",
+      "classical_meaning": {
+        "core_theme": "親比、依附、結盟與彼此靠近。",
+        "structural_image": "水在地上匯聚，個體因共同需要而相親。",
+        "development_pattern": "先辨可親之對象，再形成聯結；遲疑或錯附會失位。",
+        "constructive_expression": "信任、互助與靠近核心可建立穩定關係。",
+        "shadow_expression": "盲目依附、缺乏主體或結盟過晚會受制於人。",
+        "timing_and_action": "應及早確認中心與合作方式，親近須有原則。"
+      },
+      "football_mapping": {
+        "match_pattern": "雙方距離緊密、盯防貼身，也可指一方陣形高度連結。",
+        "tempo": "多為黏著拉鋸，節奏被彼此牽制。",
+        "attack": "短距離配合與二點支援重要，單獨突破空間少。",
+        "defense": "防線靠近、壓縮空間，容易形成密集區域。",
+        "transition": "搶回球後常先找近點同伴，不一定直接長傳。",
+        "scoring_environment": "可為低比分黏局，也可能是雙方互相跟進的開放回應。",
+        "body_use_context": "比和或相生時合作感強；相克時『比』可能成為緊貼限制。",
+        "late_phase": "末段一旦有人脫離原結構，空間會突然擴大。",
+        "interpretation_caution": "不可把比卦機械判成0:0或必然平局。"
+      }
+    },
+    "風天小畜": {
+      "sequence": 9,
+      "short_name": "小畜",
+      "unicode": "䷈",
+      "classical_meaning": {
+        "core_theme": "小有積蓄，以柔制剛，力量尚未充分釋放。",
+        "structural_image": "巽風在上牽制乾天，細小力量暫時蓄止強勢。",
+        "development_pattern": "逐步累積但仍差臨門條件，宜小成不宜冒進。",
+        "constructive_expression": "靠細節、耐心與局部控制，可累積可用優勢。",
+        "shadow_expression": "力量不足卻急求大成，容易反覆被壓回。",
+        "timing_and_action": "先完成小目標，等待條件成熟再擴大成果。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方掌握球權或壓力，但進攻被細部牽制，難一次打穿。",
+        "tempo": "中速、累積型，攻勢多次但爆發有限。",
+        "attack": "邊路滲透、短傳累積與二次進攻較多。",
+        "defense": "防守方以細密站位和延誤降低強攻效率。",
+        "transition": "轉換不一定直達禁區，常需再次組織。",
+        "scoring_environment": "偏小幅成果或延後開球，但變卦若打開可放大。",
+        "body_use_context": "體方得小畜可為累積優勢；用方得小畜可為外部牽制。",
+        "late_phase": "末段是否兌現取決於動爻能否解除蓄止。",
+        "interpretation_caution": "不可把『小』當成固定小球或一球上限。"
+      }
+    },
+    "天澤履": {
+      "sequence": 10,
+      "short_name": "履",
+      "unicode": "䷉",
+      "classical_meaning": {
+        "core_theme": "履行、踩在危險邊界，以禮與謹慎通過。",
+        "structural_image": "兌悅在下履乾剛，如履虎尾，重在分寸。",
+        "development_pattern": "一路面對風險測試，守正得體則可通行。",
+        "constructive_expression": "尊重規則、控制步幅、審慎處置能化險為夷。",
+        "shadow_expression": "挑釁強敵、越界或自信過度，容易遭到反擊。",
+        "timing_and_action": "每一步都需驗證安全，尤其臨近成功時不可失慎。"
+      },
+      "football_mapping": {
+        "match_pattern": "比賽充滿邊界對抗與高風險決策，一方需要精準避壓。",
+        "tempo": "緊張、節奏可快，但行動通常帶著試探。",
+        "attack": "利用小空間與個人技術穿越壓迫，失誤代價高。",
+        "defense": "防守強度大，禁區邊緣犯規與一對一風險突出。",
+        "transition": "過第一線後可能獲得大空間，未過則立刻被反擊。",
+        "scoring_environment": "機會品質可能高於機會數量。",
+        "body_use_context": "弱勢方得履不等於必敗，謹慎執行可穿越強壓。",
+        "late_phase": "末段需要保持紀律，領先方尤其忌危險踩線。",
+        "interpretation_caution": "不可只看乾的強勢，必須看兌如何履行與動爻是否失足。"
+      }
+    },
+    "地天泰": {
+      "sequence": 11,
+      "short_name": "泰",
+      "unicode": "䷊",
+      "classical_meaning": {
+        "core_theme": "天地交泰，上下互通，陰陽各得其位。",
+        "structural_image": "坤下降、乾上升而相交，內外氣機流通。",
+        "development_pattern": "由閉轉通、合作增強，但通泰久了也會走向鬆弛。",
+        "constructive_expression": "溝通順暢、上下協同時，資源能有效流動。",
+        "shadow_expression": "安逸、自滿與忽視微小失衡，會使泰轉為否。",
+        "timing_and_action": "順境更要維持制度與警覺，避免把暢通視為永久。"
+      },
+      "football_mapping": {
+        "match_pattern": "陣形銜接流暢，攻守各線能互相支援。",
+        "tempo": "節奏自然且連續，傳接與移動順暢。",
+        "attack": "由後場到前場的通道完整，能形成多人參與的進攻。",
+        "defense": "攻守平衡較佳，但過度舒適可能降低回防警覺。",
+        "transition": "轉換流暢，第一線與第二線容易連接。",
+        "scoring_environment": "較有利形成有效機會；總球仍看雙方通道是否都開。",
+        "body_use_context": "泰落哪一方不必單看上下卦，需結合體用與動爻判斷誰受益。",
+        "late_phase": "領先後若保持結構可穩定控制，鬆懈則可能被追近。",
+        "interpretation_caution": "不可把泰固定等同大勝或必然雙方進球。"
+      }
+    },
+    "天地否": {
+      "sequence": 12,
+      "short_name": "否",
+      "unicode": "䷋",
+      "classical_meaning": {
+        "core_theme": "天地不交，閉塞、隔絕與上下失去溝通。",
+        "structural_image": "乾在上、坤在下，各行其道而不相交。",
+        "development_pattern": "結構由疏離走向停滯；守正等待可避免被亂局吞沒。",
+        "constructive_expression": "在不通之時保存核心、縮小戰線，等待轉機。",
+        "shadow_expression": "勉強推進、內外不一與訊息斷裂會加深閉塞。",
+        "timing_and_action": "不宜硬求全面突破，先找出斷點並保留可逆性。"
+      },
+      "football_mapping": {
+        "match_pattern": "中後場脫節、傳球線被封，進攻與支援無法接合。",
+        "tempo": "慢、碎、缺乏連續性。",
+        "attack": "控球可能不少但難進危險區，形成無效攻勢。",
+        "defense": "兩端各自穩固時可形成封閉；若一方斷裂則可能被集中打擊。",
+        "transition": "由守轉攻第一點與後續支援脫離。",
+        "scoring_environment": "常壓低機會產量，但閉塞被打破後也可能單邊失守。",
+        "body_use_context": "否可作用於體方或用方的某條線，不宜直接判整場無球。",
+        "late_phase": "越接近終場，強行壓上可能暴露原本被遮住的斷層。",
+        "interpretation_caution": "不可把否一律當0:0；要判斷究竟誰不通、哪個通道被封。"
+      }
+    },
+    "天火同人": {
+      "sequence": 13,
+      "short_name": "同人",
+      "unicode": "䷌",
+      "classical_meaning": {
+        "core_theme": "求同存異，以共同目標聚合眾人。",
+        "structural_image": "離明在下、乾健在上，內明而外健，能與人同。",
+        "development_pattern": "由辨同到合力，私黨或排他則破壞共同性。",
+        "constructive_expression": "公開目標、角色互信與跨線協作可形成合力。",
+        "shadow_expression": "表面一致、內部分裂或只與少數結黨，會失去大同。",
+        "timing_and_action": "先確認共同原則，再把不同力量導向同一方向。"
+      },
+      "football_mapping": {
+        "match_pattern": "團隊協作清楚，多人圍繞共同進攻或防守目標。",
+        "tempo": "中高節奏，配合順時可連續推進。",
+        "attack": "多人跑位、第三人接應與集體壓迫能創造空間。",
+        "defense": "整體協防與同步前移較強，單點失位可被隊友補上。",
+        "transition": "攻守切換依賴共同觸發點，執行一致時效率高。",
+        "scoring_environment": "有進球條件，但也可能因雙方組織完整而互相抵消。",
+        "body_use_context": "體方得同人多看內部整合；用方得同人則代表對手協作壓力。",
+        "late_phase": "末段換人若能保持共同節奏，成果較穩；角色失衡則下降。",
+        "interpretation_caution": "不可把協作直接等同高比分，仍須看破口與轉化。"
+      }
+    },
+    "火天大有": {
+      "sequence": 14,
+      "short_name": "大有",
+      "unicode": "䷍",
+      "classical_meaning": {
+        "core_theme": "資源充足、光明在上，能大有而須善用。",
+        "structural_image": "離明居乾健之上，既有力量又能照見與統攝。",
+        "development_pattern": "由取得資源到管理成果，德不配位則盛中藏危。",
+        "constructive_expression": "透明配置、用人得當與節制分享能放大已有優勢。",
+        "shadow_expression": "炫耀、貪多與資源失衡，會使富有變成負擔。",
+        "timing_and_action": "有利主動運用資源，但應把優勢轉成可持續成果。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方陣容、球權或進攻資源明顯充足，能持續製造威脅。",
+        "tempo": "偏主動、明快，資源可支持多波攻勢。",
+        "attack": "進攻點多、換位能力強，能從不同區域形成機會。",
+        "defense": "前場壓制減少防守時間，但高位空間仍需管理。",
+        "transition": "搶回球後有足夠接應，可快速再次形成進攻。",
+        "scoring_environment": "高機會環境，但實際進球仍受效率與對手封鎖影響。",
+        "body_use_context": "大有在體方可代表可用資源；在用方則是外部優勢，不能脫離生剋。",
+        "late_phase": "領先後可用板凳與控球維持優勢，也可能因自滿鬆動。",
+        "interpretation_caution": "不可把『大有』直接換算成大比分或固定勝方。"
+      }
+    },
+    "地山謙": {
+      "sequence": 15,
+      "short_name": "謙",
+      "unicode": "䷎",
+      "classical_meaning": {
+        "core_theme": "有實而不居，謙下、平衡與藏鋒。",
+        "structural_image": "艮山藏於坤地之下，高者自降而使上下均平。",
+        "development_pattern": "先收斂實力、穩定位置，再在合適時機顯效。",
+        "constructive_expression": "低姿態、務實執行與尊重限制可長久受益。",
+        "shadow_expression": "過度退讓會失去主動，假謙則形成表裡不一。",
+        "timing_and_action": "不搶一時之名，重在持續做好基本功並伺機而動。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方降低姿態、讓出表面球權，實際保持結構與反擊準備。",
+        "tempo": "偏穩、偏低調，局部提速。",
+        "attack": "不追求華麗控球，重視有效進入與精準終結。",
+        "defense": "防守紀律、空間壓縮與不輕易失位是優勢。",
+        "transition": "由守轉攻可突然顯露被隱藏的能力。",
+        "scoring_environment": "常壓低無效對攻，但不排除高效率少次數得分。",
+        "body_use_context": "謙在強方可為主動降速，在弱方可為務實自保。",
+        "late_phase": "領先後適合守成；落後太久則需避免謙退變成無力。",
+        "interpretation_caution": "不可把低姿態誤認為實力弱或必然小比分。"
+      }
+    },
+    "雷地豫": {
+      "sequence": 16,
+      "short_name": "豫",
+      "unicode": "䷏",
+      "classical_meaning": {
+        "core_theme": "和順而動，預備、動員、喜悅與聲勢。",
+        "structural_image": "震雷出於坤地，積蓄的群體力量被喚起。",
+        "development_pattern": "由準備到動員，能順勢振奮；沉迷安樂則失去警覺。",
+        "constructive_expression": "預案充分、群體響應與士氣一致可帶來推進。",
+        "shadow_expression": "過度樂觀、只靠情緒與聲勢，容易熱而不實。",
+        "timing_and_action": "行動前先完成準備，動起後仍需紀律約束。"
+      },
+      "football_mapping": {
+        "match_pattern": "賽前部署成熟後主動提速，士氣與集體壓迫感突出。",
+        "tempo": "可由慢速準備突然轉為高節奏。",
+        "attack": "依靠預設跑位、快速啟動與多人跟進製造聲勢。",
+        "defense": "壓迫成功時能把對手推回去，壓迫落空則身後暴露。",
+        "transition": "轉換有明確觸發點，第一波最具威脅。",
+        "scoring_environment": "具開局或階段性爆發可能，但持續性須看後續卦線。",
+        "body_use_context": "體方得豫可主動部署；用方得豫代表對手已有準備。",
+        "late_phase": "若早段未兌現，末段情緒與體能可能下滑。",
+        "interpretation_caution": "不可把豫的喜悅當成已知結果或必勝訊號。"
+      }
+    },
+    "澤雷隨": {
+      "sequence": 17,
+      "short_name": "隨",
+      "unicode": "䷐",
+      "classical_meaning": {
+        "core_theme": "隨時而動，順勢跟從，能變通但須守正。",
+        "structural_image": "震動在下、兌悅在上，行動引發回應與跟隨。",
+        "development_pattern": "由一方啟動、另一方隨之調整，節奏具有連鎖性。",
+        "constructive_expression": "看清主勢、靈活回應而不失原則，可借力前行。",
+        "shadow_expression": "盲從、失去主體或總是落後一步，容易被牽制。",
+        "timing_and_action": "先辨誰是主動源，再決定應隨、應停或應轉。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方先改變節奏，另一方迅速跟進，形成追隨或鏡像調整。",
+        "tempo": "流動、反應型，常隨比分或換人改變。",
+        "attack": "擅長利用對手動作後留下的空間，進攻具有回應性。",
+        "defense": "防守容易跟著對手移動，整體同步是關鍵。",
+        "transition": "攻守轉換頻繁，第二反應可能比第一動作重要。",
+        "scoring_environment": "可形成一方進球後另一方回應，也可因互相跟隨而抵消。",
+        "body_use_context": "必須判定主隨關係；隨在用方不一定代表用方被動。",
+        "late_phase": "末段比分變化會迅速改寫雙方策略。",
+        "interpretation_caution": "不可把隨固定等同雙方進球或某一比分。"
+      }
+    },
+    "山風蠱": {
+      "sequence": 18,
+      "short_name": "蠱",
+      "unicode": "䷑",
+      "classical_meaning": {
+        "core_theme": "積弊已成，需要整治、修復與重新立序。",
+        "structural_image": "巽風入內而艮山止外，內部腐敗積久而外表停滯。",
+        "development_pattern": "先揭露問題，再整頓根因；只補表面則舊病復發。",
+        "constructive_expression": "勇於檢查、修正制度與承擔前因，可重建秩序。",
+        "shadow_expression": "逃避責任、臨時補洞與內耗會讓問題擴大。",
+        "timing_and_action": "宜先處理根本缺陷，整治前後都需留下檢查期。"
+      },
+      "football_mapping": {
+        "match_pattern": "球隊內部結構、站位習慣或既有戰術存在累積問題。",
+        "tempo": "節奏可能被內部失誤拖慢，也可能因急修而突然改變。",
+        "attack": "進攻套路被看穿或銜接老化，需要重新安排。",
+        "defense": "防線有反覆出現的同類漏洞，尤其協防與第二點。",
+        "transition": "失球或失誤後的修正能力比初始部署更重要。",
+        "scoring_environment": "若問題未修，可能連續失球；若及時調整，後段可回穩。",
+        "body_use_context": "蠱指向哪一方要由體用、動爻和受克位置判定。",
+        "late_phase": "換人與陣形修正可能成為轉折，但臨時改動也有新風險。",
+        "interpretation_caution": "不可把『有問題』直接等同敗局，蠱同時包含整治機會。"
+      }
+    },
+    "地澤臨": {
+      "sequence": 19,
+      "short_name": "臨",
+      "unicode": "䷒",
+      "classical_meaning": {
+        "core_theme": "由上臨下、逐步逼近，機會增長但盛勢有期。",
+        "structural_image": "兌悅在下、坤順在上，陽氣由下而長，接近目標。",
+        "development_pattern": "優勢逐步擴大並進入可施展區，後期須防盛極而衰。",
+        "constructive_expression": "親近現場、持續施力與及早處理可取得成果。",
+        "shadow_expression": "居高臨下、自滿或忽視期限，會錯過最佳窗口。",
+        "timing_and_action": "宜在勢正上升時行動，不可把增勢當成永久。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方逐步把陣線推近禁區，壓力由外圍轉入核心區。",
+        "tempo": "由慢到快、由試探到壓臨。",
+        "attack": "持續推進、邊中結合與禁區前沿壓迫較明顯。",
+        "defense": "高位站位可壓制對手，但回防距離隨之增加。",
+        "transition": "搶回球的位置越來越靠前，二次進攻威脅上升。",
+        "scoring_environment": "進球機率隨時間增長，但若久攻不下也可能被反擊。",
+        "body_use_context": "臨在體方常指體方逼近；在用方則可能是對手壓臨體方。",
+        "late_phase": "中後段是兌現窗口，過了高峰可能轉為疲勞。",
+        "interpretation_caution": "不可把逼近直接等同已完成進球。"
+      }
+    },
+    "風地觀": {
+      "sequence": 20,
+      "short_name": "觀",
+      "unicode": "䷓",
+      "classical_meaning": {
+        "core_theme": "觀察、示範、審勢與由外見內。",
+        "structural_image": "巽風行於坤地之上，既觀人也為人所觀。",
+        "development_pattern": "先遠觀全局，再細察內情；觀而不行則停在表面。",
+        "constructive_expression": "冷靜蒐集訊號、從整體辨趨勢，有利作出準確選擇。",
+        "shadow_expression": "旁觀過久、只看外表或被表象誤導，會錯失時機。",
+        "timing_and_action": "先看清再行動；行動前應確認觀察所得是否真實。"
+      },
+      "football_mapping": {
+        "match_pattern": "雙方重視觀察與試探，前段可能不急於暴露計畫。",
+        "tempo": "偏慢、偏控制，隨資訊累積而改變。",
+        "attack": "透過持球觀察對手移動，尋找弱側和站位錯誤。",
+        "defense": "保持陣形、等待對手先出牌，防守較有耐心。",
+        "transition": "轉換前常多一拍判斷，速度不一定快。",
+        "scoring_environment": "機會量可能偏少；若觀察找到明確缺口，效率可突然提升。",
+        "body_use_context": "觀在不同方可代表觀察者或被觀察者，需看動爻主體。",
+        "late_phase": "末段若仍只觀不動，可能錯過得分窗口。",
+        "interpretation_caution": "不可把觀的靜態外表直接判成封閉或無球。"
+      }
+    },
+    "火雷噬嗑": {
+      "sequence": 21,
+      "short_name": "噬嗑",
+      "unicode": "䷔",
+      "classical_meaning": {
+        "core_theme": "以剛明咬斷阻礙，整頓、執法與突破。",
+        "structural_image": "雷動於下、火明於上，看清障礙後以力處理。",
+        "development_pattern": "先遭梗阻，再透過明確手段咬開；處置失當則更傷。",
+        "constructive_expression": "辨明問題、果斷執行與保持尺度，可恢復通行。",
+        "shadow_expression": "用力過猛、判斷錯誤或只求懲治，會製造新衝突。",
+        "timing_and_action": "宜在證據清楚時果斷，不可在不明時盲目硬咬。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方持續攻擊明確弱點，試圖咬開中路或最後防線。",
+        "tempo": "中高節奏、對抗強，突破點集中。",
+        "attack": "直攻障礙、反覆衝擊同一通道，定位球也可能重要。",
+        "defense": "防守方承受針對性壓力，犯規與解圍品質是關鍵。",
+        "transition": "奪回球後立刻攻向被辨識的弱點。",
+        "scoring_environment": "具破門訊號，但咬開一次不等於持續大比分。",
+        "body_use_context": "必須判斷誰是咬開者、誰是障礙；不能只按上下卦自動歸屬。",
+        "late_phase": "末段若仍有障礙，會出現更直接的強攻或高風險處置。",
+        "interpretation_caution": "不可把噬嗑固定解為某方一定進球。"
+      }
+    },
+    "山火賁": {
+      "sequence": 22,
+      "short_name": "賁",
+      "unicode": "䷕",
+      "classical_meaning": {
+        "core_theme": "文飾、形式、美化與以質為本。",
+        "structural_image": "離火照於艮山之下，內有光彩而外有節止。",
+        "development_pattern": "先以形式顯現內容，終究須回歸本質與樸素。",
+        "constructive_expression": "適度包裝、清楚呈現與秩序美感能提升完成度。",
+        "shadow_expression": "重表面輕實質、華而不實，會掩蓋內部不足。",
+        "timing_and_action": "可修飾不可取代根本；成果應接受實質檢驗。"
+      },
+      "football_mapping": {
+        "match_pattern": "場面或技術看起來漂亮，但實際威脅需另外判斷。",
+        "tempo": "節奏可流暢但常受艮止約束。",
+        "attack": "傳控、個人技巧與精緻配合較多，終結未必同等有效。",
+        "defense": "外層結構完整，可能讓對手只能在表面傳導。",
+        "transition": "轉換有視覺亮點，但後續人數與效率要另看。",
+        "scoring_environment": "射門觀感可能優於進球產量，也可能由單一亮點決定。",
+        "body_use_context": "賁在強方可為技術展示，在弱方可為外表抵抗。",
+        "late_phase": "末段若回歸直接與簡潔，反而更可能形成成果。",
+        "interpretation_caution": "不可把『火』或亮點直接當成高比分。"
+      }
+    },
+    "山地剝": {
+      "sequence": 23,
+      "short_name": "剝",
+      "unicode": "䷖",
+      "classical_meaning": {
+        "core_theme": "陽氣被層層剝落，結構削弱、舊基礎瓦解。",
+        "structural_image": "艮山覆於坤地，僅存之實受到陰勢逐層侵蝕。",
+        "development_pattern": "由局部鬆動到核心受損；宜止損保種，不宜強撐外殼。",
+        "constructive_expression": "辨認正在剝落之處、保存核心並等待復起。",
+        "shadow_expression": "否認問題、繼續耗損或把資源分散，會加速崩解。",
+        "timing_and_action": "以退守和保存為先；先判斷被剝的是哪一層。"
+      },
+      "football_mapping": {
+        "match_pattern": "某一方的防線、體能、控球或信心被逐層削弱。",
+        "tempo": "常由穩轉鬆，壓力具有累積性。",
+        "attack": "進攻方可透過持續重複衝擊剝開保護層。",
+        "defense": "若剝落作用在防守，失位可能由一點擴散；若作用在進攻，則威脅逐步消失。",
+        "transition": "失球或失誤後恢復速度下降，容易被二次打擊。",
+        "scoring_environment": "可形成低效消耗，也可在防線被剝時出現連續進球。",
+        "body_use_context": "必須先定被剝的一方與層次，不能把剝一律判成雙方低分。",
+        "late_phase": "上爻附近常是結構是否完全崩解或保住最後核心的關鍵。",
+        "interpretation_caution": "不可機械疊加坤、艮為0:0。"
+      }
+    },
+    "地雷復": {
+      "sequence": 24,
+      "short_name": "復",
+      "unicode": "䷗",
+      "classical_meaning": {
+        "core_theme": "一陽來復，回轉、恢復與重新開始。",
+        "structural_image": "震雷藏於坤地之下，微小生機自沉寂中返回。",
+        "development_pattern": "由低點出現第一個轉機，再循序恢復；不可急求全復。",
+        "constructive_expression": "抓住微小正向訊號、回到正道，可逐步重建。",
+        "shadow_expression": "反覆偏離、剛復即躁進，會再次耗損。",
+        "timing_and_action": "復在初機，宜保護新生動能並讓循環穩定。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方失去節奏後重新奪回主動，攻勢可能反覆回來。",
+        "tempo": "由靜轉動，具有周期性回攻。",
+        "attack": "二次進攻、重複壓迫與丟球後再組織較突出。",
+        "defense": "先前被壓的一方可重新站穩，但恢復初期仍脆弱。",
+        "transition": "轉換重點是快速回到既定位置與路線。",
+        "scoring_environment": "可支持追平或重新產生機會；在強弱懸殊時也可能形成反覆進攻。",
+        "body_use_context": "復落在體方常指體方回勢；落在用方則可能是對手反撲。",
+        "late_phase": "越到後段，能否把復勢持續而非只出現一次最重要。",
+        "interpretation_caution": "不可把復只解成一球回應或固定逆轉。"
+      }
+    },
+    "天雷無妄": {
+      "sequence": 25,
+      "short_name": "無妄",
+      "unicode": "䷘",
+      "classical_meaning": {
+        "core_theme": "不妄為、順其真實，也含意外與非預期。",
+        "structural_image": "震動在下、乾天在上，動出於自然正直而非人為妄作。",
+        "development_pattern": "真實行動可通，刻意強求或偏離常道則遭意外。",
+        "constructive_expression": "保持本分、快速回應真實情況，可在突發中不失序。",
+        "shadow_expression": "投機、預設過多或硬製造結果，容易遭反效果。",
+        "timing_and_action": "行動應真而直接，面對意外先驗證而非過度解釋。"
+      },
+      "football_mapping": {
+        "match_pattern": "比賽劇本可能偏離賽前預期，突發球、折射或臨場失誤權重上升。",
+        "tempo": "具有突然啟動與不規則變化。",
+        "attack": "直接、自然的進攻比過度設計更有效，意外空間可能出現。",
+        "defense": "防線需處理第二落點和非結構性事件。",
+        "transition": "轉換突然而難預測，第一反應很重要。",
+        "scoring_environment": "可能出現意外進球，也可能是強攻無妄、機會未轉化。",
+        "body_use_context": "無妄不指定哪方得利，須看動爻、得位與後續變卦。",
+        "late_phase": "末段強求結果容易反受其害，保持基本結構較重要。",
+        "interpretation_caution": "不可把『意外』當成任意選比分的理由。"
+      }
+    },
+    "山天大畜": {
+      "sequence": 26,
+      "short_name": "大畜",
+      "unicode": "䷙",
+      "classical_meaning": {
+        "core_theme": "大積蓄、止健養力，以德與資源等待大用。",
+        "structural_image": "乾健在內、艮止在外，強大力量被有序蓄養。",
+        "development_pattern": "先克制與累積，成熟後可跨越更大障礙。",
+        "constructive_expression": "訓練、儲備、控制衝動與善用既有資源能成大事。",
+        "shadow_expression": "蓄而不用會僵化，控制過度也會壓抑有效力量。",
+        "timing_and_action": "先蓄後發；何時解除艮止是成敗關鍵。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方有明顯能力但先控制投入，等待集中爆發窗口。",
+        "tempo": "前慢後快，或長時間壓制後集中提速。",
+        "attack": "攻勢有資源與後手，替補或戰術變化可能帶來第二波。",
+        "defense": "結構穩、保護人數足，可把對手限制在外圍。",
+        "transition": "轉換通常有選擇，不輕易把所有人投入。",
+        "scoring_environment": "前段可偏低，後段若開閘則機會快速增加。",
+        "body_use_context": "大畜在體方可為蓄力，在用方可為對手限制體方。",
+        "late_phase": "換人或比分壓力常是解除蓄止的節點。",
+        "interpretation_caution": "不可把『大』直接解成大比分，也不可把『止』固定解成無球。"
+      }
+    },
+    "山雷頤": {
+      "sequence": 27,
+      "short_name": "頤",
+      "unicode": "䷚",
+      "classical_meaning": {
+        "core_theme": "養正、供給、口實與自我維持。",
+        "structural_image": "震動在內、艮止在外，動能需要正確入口與支撐。",
+        "development_pattern": "能否獲得合宜供給決定成長；錯誤攝取則反受其害。",
+        "constructive_expression": "照顧基本需求、選擇正確來源與維持核心支點。",
+        "shadow_expression": "只求口腹、依賴外援或供給中斷會使結構失衡。",
+        "timing_and_action": "先看誰供養誰、資源從何而來，再判是否能持續。"
+      },
+      "football_mapping": {
+        "match_pattern": "比賽關鍵在支點、餵球、第二點與進攻供應鏈。",
+        "tempo": "依供給是否順暢而變化，可能一段活躍一段停滯。",
+        "attack": "中鋒支點、邊路傳中、定位球與禁區餵球重要。",
+        "defense": "切斷供應線比只盯終結者更有效。",
+        "transition": "轉換後第一個接應點決定進攻能否延續。",
+        "scoring_environment": "供給順則有持續機會，供給被斷則即使有動能也難得分。",
+        "body_use_context": "頤在體方不一定表示體方得分，要看它是供養者或受養者。",
+        "late_phase": "末段長傳與禁區堆人會提高供給量，也可能降低品質。",
+        "interpretation_caution": "不可把『口』或卦數直接固定為進球。"
+      }
+    },
+    "澤風大過": {
+      "sequence": 28,
+      "short_name": "大過",
+      "unicode": "䷛",
+      "classical_meaning": {
+        "core_theme": "棟橈負重，責任超載，須非常手段過關。",
+        "structural_image": "兌澤在上、巽木在下，中間四陽承壓過重。",
+        "development_pattern": "壓力累積到臨界，若調整支撐可過渡，否則結構彎曲。",
+        "constructive_expression": "承認超載、減輕非必要負擔並採取果決調整。",
+        "shadow_expression": "硬撐、逞強或繼續加碼，容易由局部問題變成崩裂。",
+        "timing_and_action": "非常時宜非常行動，但必須保住核心支柱。"
+      },
+      "football_mapping": {
+        "match_pattern": "高壓、超載或對攻把某方結構推近臨界。",
+        "tempo": "強度高、來回大，也可能是單邊持續施壓。",
+        "attack": "進攻投入多人，禁區壓力與連續二次攻勢突出。",
+        "defense": "防線承受超量衝擊，邊中支撐點容易被拉斷。",
+        "transition": "轉換空間大，攻方失去球權後也可能立刻遇險。",
+        "scoring_environment": "提高高比分與防線崩解尾部，但不保證雙方都進球。",
+        "body_use_context": "要辨別誰在承重、誰在加壓；大過不是天然屬於體方或用方。",
+        "late_phase": "末段體能下降時最容易越過臨界點。",
+        "interpretation_caution": "不可只因『大過』便直接選大球，仍要檢查破門通道。"
+      }
+    },
+    "坎為水": {
+      "sequence": 29,
+      "short_name": "坎",
+      "unicode": "䷜",
+      "classical_meaning": {
+        "core_theme": "習坎重險，在反覆危險中守信行事。",
+        "structural_image": "上下皆坎，險中有通道，但危機一再出現。",
+        "development_pattern": "反覆落險、脫險，再受考驗；熟悉危險才能通過。",
+        "constructive_expression": "保持核心、按既定方法處理危機，可把經驗轉為能力。",
+        "shadow_expression": "恐懼、冒險成癮或同一錯誤重犯，會深陷不出。",
+        "timing_and_action": "不求一次清除所有風險，重在每一段安全通過。"
+      },
+      "football_mapping": {
+        "match_pattern": "危險轉換、禁區事件與反覆攻守交換明顯。",
+        "tempo": "忽快忽慢，常由失誤或搶斷突然加速。",
+        "attack": "反擊、直塞、肋部穿透和混戰機會較多。",
+        "defense": "防線需要反覆處理危機，門將與最後一線重要。",
+        "transition": "丟球後立即出現反向機會，風險連鎖。",
+        "scoring_environment": "可形成多次危險但低轉化，也可在防線失控時放大比分。",
+        "body_use_context": "雙坎可能共振成高風險，也可能互相熟悉而僵持。",
+        "late_phase": "末段體能與決策下降會放大最後一次險情。",
+        "interpretation_caution": "不可把坎固定等同失球、弱方或高比分。"
+      }
+    },
+    "離為火": {
+      "sequence": 30,
+      "short_name": "離",
+      "unicode": "䷝",
+      "classical_meaning": {
+        "core_theme": "光明、附麗、辨識與依附正道。",
+        "structural_image": "上下皆離，火需有所附，明亮同時也暴露。",
+        "development_pattern": "由照見、依附到持續燃燒；失去所附則光散。",
+        "constructive_expression": "看清局勢、找到可靠支點並保持明晰可成事。",
+        "shadow_expression": "外明內虛、過熱、炫耀或暴露過多會快速消耗。",
+        "timing_and_action": "宜明辨依附對象，亮度要能轉成實質成果。"
+      },
+      "football_mapping": {
+        "match_pattern": "技術、射門、空間辨識和進攻亮度較高，也容易暴露防線。",
+        "tempo": "偏快、偏熱，連續亮點明顯。",
+        "attack": "擅長找到射門線、禁區空檔與快速組合。",
+        "defense": "高位站位和進攻投入會留下被反擊的可見空間。",
+        "transition": "轉換時方向清楚，但需要隊友支點維持火勢。",
+        "scoring_environment": "具得分通道；雙離也可能高強度互抵，不能預設互有進球。",
+        "body_use_context": "離在體方可為體方明攻，也可能是體方被照見弱點；須看生剋。",
+        "late_phase": "末段若支點仍在可持續威脅，失去依附則迅速降溫。",
+        "interpretation_caution": "不可把離3直接當作三球或固定進球數。"
+      }
+    },
+    "澤山咸": {
+      "sequence": 31,
+      "short_name": "咸",
+      "unicode": "䷞",
+      "classical_meaning": {
+        "core_theme": "感應、相互作用，以虛受人而自然相通。",
+        "structural_image": "艮少男在下、兌少女在上，山澤通氣而互感。",
+        "development_pattern": "由細微感應到全身反應，順其自然則相與。",
+        "constructive_expression": "保持開放、尊重對方反應，可形成有效互動。",
+        "shadow_expression": "操控、急迫或只求表面回應，會使感應失真。",
+        "timing_and_action": "先觀察反應再調整，感應重質不重聲勢。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方動作立即觸發另一方回應，對位和心理互動突出。",
+        "tempo": "反應型、可快可慢，取決於第一個刺激。",
+        "attack": "利用對手移動形成反向跑位或二過一配合。",
+        "defense": "防守容易因被牽動而失位，也可透過同步感應完成協防。",
+        "transition": "攻守互相觸發，二次反應尤其重要。",
+        "scoring_environment": "可能形成雙方機會，也可能彼此感應後互相抵消。",
+        "body_use_context": "咸不天然支持雙方進球；需看感應是否開啟破門通道。",
+        "late_phase": "末段換人或一次成功對位可能帶動連鎖變化。",
+        "interpretation_caution": "不可把『相感』直接解成平局或互有進球。"
+      }
+    },
+    "雷風恆": {
+      "sequence": 32,
+      "short_name": "恆",
+      "unicode": "䷟",
+      "classical_meaning": {
+        "core_theme": "持久、常道與在變動中維持原則。",
+        "structural_image": "震動於外、巽入於內，行動與滲透長期相續。",
+        "development_pattern": "重複運作形成穩定趨勢；僵化則失去恆的生命力。",
+        "constructive_expression": "制度、耐心與一致執行能把小優勢累積成結果。",
+        "shadow_expression": "疲乏、機械重複或中途變心會破壞持久性。",
+        "timing_and_action": "宜建立可持續節奏，長久不等於一成不變。"
+      },
+      "football_mapping": {
+        "match_pattern": "同一戰術或壓力長時間反覆出現，耐力與調整能力重要。",
+        "tempo": "穩定持續，節奏不易大幅中斷。",
+        "attack": "反覆利用固定路線、邊路滲透或持續跑動。",
+        "defense": "防守紀律能長期維持，但同一模式也可能被讀懂。",
+        "transition": "轉換方式具有規律，執行熟練。",
+        "scoring_environment": "可累積多次機會，也可形成長時間均衡。",
+        "body_use_context": "恆在動方表示變後仍可持續，不代表立即得分。",
+        "late_phase": "末段通常延續既有趨勢，除非體能使結構突然失效。",
+        "interpretation_caution": "不可把恆固定為平局、低比分或不變比分。"
+      }
+    },
+    "天山遯": {
+      "sequence": 33,
+      "short_name": "遯",
+      "unicode": "䷠",
+      "classical_meaning": {
+        "core_theme": "時勢不利而退避，保存力量、遠害守正。",
+        "structural_image": "艮止在下、乾健在上，陰長而陽宜退。",
+        "development_pattern": "由察覺威脅到有序撤退；戀戰則被困。",
+        "constructive_expression": "主動收縮、讓出非核心位置並保留反擊能力。",
+        "shadow_expression": "把退當敗、退得太晚或退而無序，會失去保存效果。",
+        "timing_and_action": "宜及早判斷不利之勢，退要有方向與邊界。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方主動降低陣線、避開正面對攻，尋求守成或反擊。",
+        "tempo": "偏慢、偏收縮，偶有快速突擊。",
+        "attack": "進攻次數少而直接，依靠反擊或定位球。",
+        "defense": "低位封鎖、保護禁區與讓出外圍球權。",
+        "transition": "轉換以安全為先，成功突破第一線後才快速。",
+        "scoring_environment": "多數情況壓低機會量，但退守失序時可被連續攻破。",
+        "body_use_context": "遯在體方可是保存優勢，在用方可是對手退避；不等同哪方必敗。",
+        "late_phase": "領先後遯可守成，落後後仍遯則可能來不及改變。",
+        "interpretation_caution": "不可機械把遯判為零進球或單方被零封。"
+      }
+    },
+    "雷天大壯": {
+      "sequence": 34,
+      "short_name": "大壯",
+      "unicode": "䷡",
+      "classical_meaning": {
+        "core_theme": "陽盛壯大，力量外放，利於守正不利恃強。",
+        "structural_image": "震雷在乾天之上，強健之力向外爆發。",
+        "development_pattern": "力量快速上升並形成衝擊；越界則壯極而傷。",
+        "constructive_expression": "把強度用在正確方向、尊重邊界，可突破停滯。",
+        "shadow_expression": "恃強、硬撞與忽視技術細節，容易犯規或失控。",
+        "timing_and_action": "可以進，但每次加力前都要確認正當與可控。"
+      },
+      "football_mapping": {
+        "match_pattern": "強烈壓迫、身體衝擊與大範圍前推形成明顯氣勢。",
+        "tempo": "高速、高強度，爆發段落突出。",
+        "attack": "直接衝擊禁區、遠射、傳中和連續壓迫較多。",
+        "defense": "前壓可壓制對手，但過度投入留下巨大反擊空間。",
+        "transition": "搶回球後迅速縱向推進。",
+        "scoring_environment": "提高高機會與高比分尾部，也可能因硬攻低效。",
+        "body_use_context": "大壯屬於誰要看動爻和體用，外放力量也可能是對手施壓。",
+        "late_phase": "末段若仍只靠強衝，犯規、體能和反擊風險增加。",
+        "interpretation_caution": "不可把『壯』等同進球效率或必勝。"
+      }
+    },
+    "火地晉": {
+      "sequence": 35,
+      "short_name": "晉",
+      "unicode": "䷢",
+      "classical_meaning": {
+        "core_theme": "光明出地，進升、受賞與逐步顯現。",
+        "structural_image": "離日在坤地之上，明逐漸升起並照見全局。",
+        "development_pattern": "由默默累積到被看見，進程清楚但須防急升受傷。",
+        "constructive_expression": "順勢前進、展現成果與接受支持，可擴大影響。",
+        "shadow_expression": "只求升進、忽略根基或嫉妒競逐，會使上升不穩。",
+        "timing_and_action": "宜循序增勢，越接近高位越要維持謙慎。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方場面與威脅逐步增加，從外圍推進到核心區。",
+        "tempo": "由慢到快，趨勢偏向上升。",
+        "attack": "攻勢次數與位置逐漸改善，信心也隨之提升。",
+        "defense": "防線可隨控球優勢前移，但須防背後反擊。",
+        "transition": "每次成功推進都提高下一次轉換起點。",
+        "scoring_environment": "後段比前段更有得分可能，未必一開始就開放。",
+        "body_use_context": "晉在體方可為體方上升，在用方可能代表對手增勢。",
+        "late_phase": "末段若已建立優勢，可再擴大；上升過急也可能被反擊。",
+        "interpretation_caution": "不可把晉直接等同勝利，需確認進勢是否轉成有效射門。"
+      }
+    },
+    "地火明夷": {
+      "sequence": 36,
+      "short_name": "明夷",
+      "unicode": "䷣",
+      "classical_meaning": {
+        "core_theme": "光明受傷，處暗時藏明守正。",
+        "structural_image": "離火在坤地下，明被覆蓋而未真正熄滅。",
+        "development_pattern": "由受壓、受傷到隱藏實力，待環境轉變再顯。",
+        "constructive_expression": "低調保護核心、避免正面暴露，可穿越不利時段。",
+        "shadow_expression": "絕望、逞強顯露或內部受傷擴大，會失去復明機會。",
+        "timing_and_action": "不利時宜藏而不失其明，先求保存再求表現。"
+      },
+      "football_mapping": {
+        "match_pattern": "具技術或進攻能力的一方被壓制，亮點難以正常顯現。",
+        "tempo": "偏低、偏受控，偶有隱蔽突擊。",
+        "attack": "進攻機會少但可能來自突然顯露的個人能力。",
+        "defense": "通常先求保護禁區與承受壓力。",
+        "transition": "反擊要避免過早暴露路線，隱蔽第一傳重要。",
+        "scoring_environment": "多壓低表面機會，但被壓方仍可能靠單次亮點得分。",
+        "body_use_context": "明夷需判斷誰的『明』受傷，不能直接按體用名稱。",
+        "late_phase": "若末段環境鬆動，藏住的能力可能重新出現。",
+        "interpretation_caution": "不可把明夷固定等同弱方零進球。"
+      }
+    },
+    "風火家人": {
+      "sequence": 37,
+      "short_name": "家人",
+      "unicode": "䷤",
+      "classical_meaning": {
+        "core_theme": "內部秩序、角色名分與由家而外。",
+        "structural_image": "離明在內、巽順在外，內部清楚才能向外運作。",
+        "development_pattern": "角色各正則組織穩定；內部失序會由近及遠擴散。",
+        "constructive_expression": "明確分工、溝通與日常紀律可建立持久成果。",
+        "shadow_expression": "權責不清、偏私或表面和諧會削弱整體。",
+        "timing_and_action": "先整內部再求外部成績，細節規範比臨時激情重要。"
+      },
+      "football_mapping": {
+        "match_pattern": "球隊陣形、角色分工和彼此距離清楚，重視體系。",
+        "tempo": "有序、中等節奏，不輕易脫離結構。",
+        "attack": "依靠固定三角、層次跑位與熟悉配合。",
+        "defense": "區域責任清楚，協防與補位穩定。",
+        "transition": "轉換遵守站位秩序，較少無計畫的全線衝刺。",
+        "scoring_environment": "多為有秩序的機會產出，比分較少完全失控。",
+        "body_use_context": "家人落在某方可表示其內部體系，也可能表示對手的組織壓力。",
+        "late_phase": "領先後管理能力較好；落後時過度守角色可能缺乏冒險。",
+        "interpretation_caution": "不可把秩序固定解為低比分或主隊優勢。"
+      }
+    },
+    "火澤睽": {
+      "sequence": 38,
+      "short_name": "睽",
+      "unicode": "䷥",
+      "classical_meaning": {
+        "core_theme": "彼此相背，分歧、異中求小同。",
+        "structural_image": "離火向上、兌澤向下，性向不同而同處一體。",
+        "development_pattern": "矛盾逐步顯露，能在小事求同則仍可行，大事難強合。",
+        "constructive_expression": "承認差異、保留界線並尋找局部合作。",
+        "shadow_expression": "把差異擴成敵意、各行其是，會造成持續分裂。",
+        "timing_and_action": "宜處理小範圍問題，不宜幻想一次消除所有對立。"
+      },
+      "football_mapping": {
+        "match_pattern": "雙方戰術方向相反，對位錯開，容易形成各自的機會。",
+        "tempo": "節奏分裂，可能一段由一方主導、一段由另一方回應。",
+        "attack": "利用對手結構相反處形成錯位，邊路與半空間突出。",
+        "defense": "協防若意見不一會出現空檔，但差異也可能造成彼此牽制。",
+        "transition": "攻守轉換方向常不對稱，一方走快、一方走控制。",
+        "scoring_environment": "可形成互有機會，也可因各自不相交而低效。",
+        "body_use_context": "睽不等於必然雙方進球；要看差異是否形成實際通道。",
+        "late_phase": "末段比分壓力會放大矛盾，可能出現決勝或完全斷裂。",
+        "interpretation_caution": "不可把對立直接換算成某一比分。"
+      }
+    },
+    "水山蹇": {
+      "sequence": 39,
+      "short_name": "蹇",
+      "unicode": "䷦",
+      "classical_meaning": {
+        "core_theme": "前有險、足被止，行路艱難，宜反身求助。",
+        "structural_image": "艮止在下、坎險在上，起步受阻且前路危險。",
+        "development_pattern": "直行不利，轉向、求援與修正路線才能逐步解困。",
+        "constructive_expression": "承認障礙、尋找支援、改走可行路徑。",
+        "shadow_expression": "固執硬闖、孤立無援或把暫阻當終局，會更困。",
+        "timing_and_action": "不宜正面強行推進，先判斷可退、可援、可轉之處。"
+      },
+      "football_mapping": {
+        "match_pattern": "進攻推進受阻，尤其由中場進入禁區的銜接困難。",
+        "tempo": "慢、卡頓、反覆回傳。",
+        "attack": "直線攻擊效率低，需要換邊、定位球或替補改道。",
+        "defense": "受阻方可能仍守得住；若蹇作用於防線，則解圍與出球同樣困難。",
+        "transition": "由守轉攻常在第一或第二腳被切斷。",
+        "scoring_environment": "通常壓低受阻方的機會，不必同步壓低另一方得分。",
+        "body_use_context": "蹇的非對稱性很重要：先判誰行路難、哪條線受阻。",
+        "late_phase": "末段強攻可能增加定位球，亦可能暴露反擊空間。",
+        "interpretation_caution": "不可把蹇和艮一概疊成全場0:0。"
+      }
+    },
+    "雷水解": {
+      "sequence": 40,
+      "short_name": "解",
+      "unicode": "䷧",
+      "classical_meaning": {
+        "core_theme": "解除危難、釋放束縛，宜早解早復常。",
+        "structural_image": "坎險在內、震動在外，行動使危機得以疏解。",
+        "development_pattern": "緊張累積後出現出口，解開後應迅速回到秩序。",
+        "constructive_expression": "抓住解除窗口、簡化問題、及早處理遺留風險。",
+        "shadow_expression": "解開後放縱、拖延或把暫時舒緩當完全解決。",
+        "timing_and_action": "機會來時宜快解，不必再製造複雜度。"
+      },
+      "football_mapping": {
+        "match_pattern": "僵局或壓力被一次行動打開，場面可能由緊轉鬆。",
+        "tempo": "前緊後快，解開後空間增加。",
+        "attack": "一次成功突破、搶斷或定位球可打開原本封閉通道。",
+        "defense": "壓力解除後防線可能恢復，也可能因鬆懈留下新空間。",
+        "transition": "轉換速度在解局瞬間明顯提高。",
+        "scoring_environment": "支持至少一次破局；是否繼續放大要看變卦收束。",
+        "body_use_context": "解在體方可指體方脫困，在用方可能是對手解開體方壓力。",
+        "late_phase": "末段常有關鍵解除或釋放，但也可能只是追平而非反勝。",
+        "interpretation_caution": "不可把『解』固定理解成只進一球或必然逆轉。"
+      }
+    },
+    "山澤損": {
+      "sequence": 41,
+      "short_name": "損",
+      "unicode": "䷨",
+      "classical_meaning": {
+        "core_theme": "減損下益上，節制、取捨與以少成真。",
+        "structural_image": "兌澤在下、艮山在上，喜悅受止而資源重新分配。",
+        "development_pattern": "先減去多餘以保核心，適度損可換取長期平衡。",
+        "constructive_expression": "主動節流、犧牲次要目標、集中最重要資源。",
+        "shadow_expression": "損及根本、分配不公或一味削減會使整體衰弱。",
+        "timing_and_action": "先辨可損與不可損；減量必須換來更清楚的目的。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方減少進攻人數或球權，換取防守穩定與控制。",
+        "tempo": "偏慢、偏收束。",
+        "attack": "攻勢更精簡，重質不重量，可能只保留少數反擊點。",
+        "defense": "回收人數、壓縮空間、犧牲前場壓迫。",
+        "transition": "轉換次數減少，但成功時更直接。",
+        "scoring_environment": "多降低總機會；若損錯位置，反而讓對手集中攻擊。",
+        "body_use_context": "損在體方可是主動收縮或被削弱，需看是否得位與得益。",
+        "late_phase": "領先後有利管理，落後時過度收縮會縮小翻盤窗口。",
+        "interpretation_caution": "不可把損直接等同零進球或必敗。"
+      }
+    },
+    "風雷益": {
+      "sequence": 42,
+      "short_name": "益",
+      "unicode": "䷩",
+      "classical_meaning": {
+        "core_theme": "損上益下，增益、推動與利於行動。",
+        "structural_image": "震動在下、巽風在上，行動與滲透互相助長。",
+        "development_pattern": "小增益形成正向循環，及時行動可持續放大。",
+        "constructive_expression": "把資源投入最能產生回報之處，利於改進與前行。",
+        "shadow_expression": "只求擴張、分配失衡或把短期增長當永久，會反耗。",
+        "timing_and_action": "見善即遷、有過即改，趁增勢採取實際行動。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方每次成功攻勢都為下一波增加位置、信心或人數。",
+        "tempo": "節奏逐步提高，連續性強。",
+        "attack": "邊路滲透、前插與二次進攻可互相放大。",
+        "defense": "高位壓迫成功會持續壓縮對手，但身後風險同步增加。",
+        "transition": "搶回球的位置與速度逐步改善。",
+        "scoring_environment": "提高多次有效機會與比分擴大可能，但仍看能量歸屬。",
+        "body_use_context": "益可能是用方增益體方，也可能是動方自身擴張，不能機械判定。",
+        "late_phase": "末段若正循環未被切斷，強勢方仍可能增加成果。",
+        "interpretation_caution": "不可把益直接當成加一球的固定公式。"
+      }
+    },
+    "澤天夬": {
+      "sequence": 43,
+      "short_name": "夬",
+      "unicode": "䷪",
+      "classical_meaning": {
+        "core_theme": "決而去陰，公開決斷、突破與危中求清。",
+        "structural_image": "兌澤在乾天之上，五陽推一陰，決口將開。",
+        "development_pattern": "壓力聚到必須決定之時，決斷得當則通，逞強則傷。",
+        "constructive_expression": "公開問題、果斷切除阻礙並保持戒慎。",
+        "shadow_expression": "情緒決裂、孤注一擲或以暴制弱會造成反噬。",
+        "timing_and_action": "可決不可躁；先完成告知、準備與風險控制。"
+      },
+      "football_mapping": {
+        "match_pattern": "比賽出現明確突破口或決勝行動，場面由平衡轉開。",
+        "tempo": "決斷時刻速度高，前後可能相對僵持。",
+        "attack": "直接打擊單一弱點、快速射門與禁區決策。",
+        "defense": "決口一開，防線可能連帶失衡；未開則形成高壓對峙。",
+        "transition": "轉換更果斷，少做多餘傳遞。",
+        "scoring_environment": "具有破局與決勝訊號，未必代表多球。",
+        "body_use_context": "夬的突破者需依動爻與體用判定，不能自動歸體方。",
+        "late_phase": "末段決策與最後一擊權重高，領先方要防過度決裂。",
+        "interpretation_caution": "不可把夬固定成一球、絕殺或大比分。"
+      }
+    },
+    "天風姤": {
+      "sequence": 44,
+      "short_name": "姤",
+      "unicode": "䷫",
+      "classical_meaning": {
+        "core_theme": "不期而遇，微小力量突然介入，宜早辨早制。",
+        "structural_image": "巽風在乾天下，一陰初生而與五陽相遇。",
+        "development_pattern": "突發因素由小而可能擴大，處理得早則可控。",
+        "constructive_expression": "保持警覺、辨識新變因並設定界線。",
+        "shadow_expression": "輕忽小變、被表面吸引或讓單一因素滲透全局。",
+        "timing_and_action": "初遇時最適合判斷，不宜等其坐大後才處理。"
+      },
+      "football_mapping": {
+        "match_pattern": "突發對位、換人、傷停或意外戰術介入改變原有節奏。",
+        "tempo": "平時可穩，突發瞬間快速。",
+        "attack": "利用第一次相遇與對手未適應的時間製造機會。",
+        "defense": "防線需快速辨識新威脅，否則小漏洞會擴大。",
+        "transition": "轉換常由一個意外接觸點啟動。",
+        "scoring_environment": "提高突然機會，不代表整場持續高比分。",
+        "body_use_context": "姤的外來因素可能幫助或干擾任一方，須看其所入之位。",
+        "late_phase": "末段新換上者或偶發事件可能影響結果。",
+        "interpretation_caution": "不可把『相遇』直接等同雙方進球或桃花式泛化。"
+      }
+    },
+    "澤地萃": {
+      "sequence": 45,
+      "short_name": "萃",
+      "unicode": "䷬",
+      "classical_meaning": {
+        "core_theme": "聚集、會合、集中資源而成群體力量。",
+        "structural_image": "兌澤在坤地之上，水氣聚於地表，需要中心統攝。",
+        "development_pattern": "人與資源逐步聚攏，中心穩則成勢，中心弱則群聚生亂。",
+        "constructive_expression": "集中力量、明確共同核心與預備不測。",
+        "shadow_expression": "只聚不統、情緒擁擠與資源堆疊會造成內亂。",
+        "timing_and_action": "聚集之前先確立中心與秩序，盛會中仍要防意外。"
+      },
+      "football_mapping": {
+        "match_pattern": "球員與球權集中在特定區域，形成局部人數優勢或禁區圍攻。",
+        "tempo": "中高節奏，局部密度很高。",
+        "attack": "多人集中、二點球、角球與禁區混戰威脅上升。",
+        "defense": "集中也可能壓縮自身空間，外圍與弱側防守要保留。",
+        "transition": "搶回球後大量人員快速聚向球區。",
+        "scoring_environment": "增加局部混戰與二次射門，未必讓全場都開放。",
+        "body_use_context": "萃要判中心屬誰；集中可能是進攻合力，也可能是防守包圍。",
+        "late_phase": "末段落後方容易萃於禁區，反擊風險同步提高。",
+        "interpretation_caution": "不可把人多或聚集直接換算成進球數。"
+      }
+    },
+    "地風升": {
+      "sequence": 46,
+      "short_name": "升",
+      "unicode": "䷭",
+      "classical_meaning": {
+        "core_theme": "柔順積累而上升，循階前進、日積月累。",
+        "structural_image": "巽木生於坤地之中，由下向上逐步成長。",
+        "development_pattern": "從微小根基持續上升，急跳階段反而失穩。",
+        "constructive_expression": "謙遜求助、穩定累積與把握向上通道。",
+        "shadow_expression": "缺乏根基、急於登高或只求位置，會使上升中斷。",
+        "timing_and_action": "有利漸進，不利躁進；每一步都應能承接下一步。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方從後場或低位逐步把比賽推向前場。",
+        "tempo": "由低到高，穩定增速。",
+        "attack": "透過層層傳遞、邊路推進與持續前插改善進攻位置。",
+        "defense": "陣線隨球權穩步上移，背後保護需同步。",
+        "transition": "轉換不是一次長傳，而是連續數次成功承接。",
+        "scoring_environment": "進球機會偏向中後段累積，通常不是瞬間爆炸。",
+        "body_use_context": "升在體方可為體方增勢，在用方則可能是對手逐步壓上。",
+        "late_phase": "末段若上升路徑仍完整，壓力會持續；被切斷則回落。",
+        "interpretation_caution": "不可把升固定成逆轉或一方進球增加。"
+      }
+    },
+    "澤水困": {
+      "sequence": 47,
+      "short_name": "困",
+      "unicode": "䷮",
+      "classical_meaning": {
+        "core_theme": "澤無水而困，資源受限，守志待通。",
+        "structural_image": "坎水在下、兌澤在上，水漏於下而表面仍見澤。",
+        "development_pattern": "外表可維持，內部資源逐漸不足；誠信與核心意志受考驗。",
+        "constructive_expression": "承認限制、節省資源、保持可信與等待出口。",
+        "shadow_expression": "逞強、空談或在缺乏資源時擴張，會加深困局。",
+        "timing_and_action": "不宜用表面聲勢掩蓋實際不足，先保最重要能力。"
+      },
+      "football_mapping": {
+        "match_pattern": "球隊被壓在有限空間，出球、體能或替補資源不足。",
+        "tempo": "偏慢、偏沉重，偶有求生式反擊。",
+        "attack": "進攻缺少接應與持續供應，單點突破負擔大。",
+        "defense": "長期低位承壓，解圍後難把陣線推出去。",
+        "transition": "第一腳可能成功，第二點與後續跟進不足。",
+        "scoring_environment": "多限制受困方得分；若對手也低效，可能形成僵局。",
+        "body_use_context": "需判斷誰受困、困在何處；兌的表面機會不等於真正資源。",
+        "late_phase": "末段體能下降與孤注一擲都可能擴大風險。",
+        "interpretation_caution": "不可把困直接等同失敗，守志得位仍可能保住結果。"
+      }
+    },
+    "水風井": {
+      "sequence": 48,
+      "short_name": "井",
+      "unicode": "䷯",
+      "classical_meaning": {
+        "core_theme": "井養不窮，固定資源、制度與取用方式。",
+        "structural_image": "巽木入坎水，以器汲井；井不移而取水方法可成敗。",
+        "development_pattern": "資源長存，但是否能取到取決於設備、秩序與維護。",
+        "constructive_expression": "修好渠道、穩定供應並讓眾人共享。",
+        "shadow_expression": "井泥、繩短或器破，會使有資源而無法使用。",
+        "timing_and_action": "先檢查供應鏈最後一段，臨近成功時尤其不可功虧一簣。"
+      },
+      "football_mapping": {
+        "match_pattern": "球隊有穩定套路與固定進攻來源，重點在最後輸送是否有效。",
+        "tempo": "節奏穩定、重複，依賴熟悉路線。",
+        "attack": "固定邊路、定位球、支點或核心組織者反覆供應。",
+        "defense": "防守可針對其固定水源封鎖；若封不住，機會持續出現。",
+        "transition": "轉換路線明確，品質取決於最後傳遞工具。",
+        "scoring_environment": "機會供應可穩定，但『有井』不代表一定取水成功。",
+        "body_use_context": "井可表示任一方的資源系統，須看誰在汲取、誰在阻斷。",
+        "late_phase": "末段最後一傳、換人與定位球執行常決定是否功成。",
+        "interpretation_caution": "不可把井固定等同穩定一球或固定比分。"
+      }
+    },
+    "澤火革": {
+      "sequence": 49,
+      "short_name": "革",
+      "unicode": "䷰",
+      "classical_meaning": {
+        "core_theme": "革故鼎新，時機成熟才可改制。",
+        "structural_image": "離火在下、兌澤在上，水火相息而必生變革。",
+        "development_pattern": "舊秩序累積矛盾，到了可信時點才完成翻轉。",
+        "constructive_expression": "理由充分、時機明確、改後能建立新秩序。",
+        "shadow_expression": "為變而變、過早翻桌或只破不立，會造成更大混亂。",
+        "timing_and_action": "先建立信任與必要性，再在關鍵時點果斷改變。"
+      },
+      "football_mapping": {
+        "match_pattern": "陣形、策略或比賽主導權出現明顯翻轉。",
+        "tempo": "變化前後差異大，轉折段速度高。",
+        "attack": "換位、換陣或改變進攻側重可打破原本對位。",
+        "defense": "原防守方式可能被棄用，新結構初期也有磨合風險。",
+        "transition": "轉換邏輯被重新設定，攻守角色可能交換。",
+        "scoring_environment": "提高比分方向改變或連續事件可能，不必然高比分。",
+        "body_use_context": "革在動方通常強調其改變，但改變是否有利仍看得位與變卦。",
+        "late_phase": "中後段戰術革命最可能影響結果，太晚則時間不足。",
+        "interpretation_caution": "不可把革固定解成逆轉、雙方進球或某個比分。"
+      }
+    },
+    "火風鼎": {
+      "sequence": 50,
+      "short_name": "鼎",
+      "unicode": "䷱",
+      "classical_meaning": {
+        "core_theme": "鼎新、調和配置，以器成養、化生新質。",
+        "structural_image": "巽木在下生離火，上下配合使原料成熟轉化。",
+        "development_pattern": "各種資源經時間與火候整合，形成新的穩定成果。",
+        "constructive_expression": "角色配置、持續培養與恰當火候能完成質變。",
+        "shadow_expression": "器不正、配料失衡或急火過度，會使轉化失敗。",
+        "timing_and_action": "重在配置與成熟度，不宜只追求瞬間效果。"
+      },
+      "football_mapping": {
+        "match_pattern": "陣容與戰術組合逐步磨合，進攻在比賽中慢慢煮開。",
+        "tempo": "中速漸熱，後段可能更成熟。",
+        "attack": "多種進攻方式被組合，終結點不一定固定。",
+        "defense": "防守依賴角色平衡，任何一環失位會破壞整體配置。",
+        "transition": "轉換經過一至兩個協調點，品質會逐步提高。",
+        "scoring_environment": "可形成有序的多次機會，不一定是失控對攻。",
+        "body_use_context": "鼎要看誰掌火、誰為器；用生體也可能是資源轉化而非單向失分。",
+        "late_phase": "末段配合成熟時威脅提高，換人不當則打斷火候。",
+        "interpretation_caution": "不可把鼎直接等同高比分或三球以上。"
+      }
+    },
+    "震為雷": {
+      "sequence": 51,
+      "short_name": "震",
+      "unicode": "䷲",
+      "classical_meaning": {
+        "core_theme": "震動、驚醒、突發而後守常。",
+        "structural_image": "上下皆震，衝擊連續，驚而能定則可保秩序。",
+        "development_pattern": "第一次震動引發第二反應，能否鎮定決定後續。",
+        "constructive_expression": "快速回應、在驚變中守住核心，可把衝擊轉成行動。",
+        "shadow_expression": "慌亂、追逐每個震動或連續冒進，會擴大失控。",
+        "timing_and_action": "先承受第一震，再判斷第二步；速度與鎮定同等重要。"
+      },
+      "football_mapping": {
+        "match_pattern": "高動能、連續衝刺與多次突發攻守事件。",
+        "tempo": "快、跳躍、具有爆發段。",
+        "attack": "直接縱向、搶開局、連續壓迫與二次進攻強。",
+        "defense": "壓迫失敗後防線容易受第二次衝擊。",
+        "transition": "轉換速度極高，球權可能快速來回。",
+        "scoring_environment": "提高多球與大勝尾部，但若缺乏終結通道也可能只熱鬧不進球。",
+        "body_use_context": "震在哪一方通常顯示行動源，但成果歸屬仍受生剋與防線狀態限制。",
+        "late_phase": "末段仍可能再有一波強震，體能下降也會放大失誤。",
+        "interpretation_caution": "不可把震4直接當四球或把高動能等同高比分。"
+      }
+    },
+    "艮為山": {
+      "sequence": 52,
+      "short_name": "艮",
+      "unicode": "䷳",
+      "classical_meaning": {
+        "core_theme": "止於其所，界線、靜定與適時停止。",
+        "structural_image": "上下皆艮，內外皆止，重在止得其時其位。",
+        "development_pattern": "動到界線後停止，能守位則安；止錯位置則隔絕。",
+        "constructive_expression": "設定邊界、控制衝動、在應停之處穩住。",
+        "shadow_expression": "僵硬、封閉、只守不變或該動不動，會失去機會。",
+        "timing_and_action": "先判斷止的是風險還是生機；止本身無固定吉凶。"
+      },
+      "football_mapping": {
+        "match_pattern": "強封鎖、低位界線或領先後守成，也可能是進攻停滯。",
+        "tempo": "慢、穩、停頓多。",
+        "attack": "進攻容易停在外圍，需要定位球、遠射或變陣破山。",
+        "defense": "禁區保護、站位與一對一封鎖突出。",
+        "transition": "轉換量少，通常先確保位置。",
+        "scoring_environment": "多壓低被艮止一方的機會，但若艮是守成可保住既有進球。",
+        "body_use_context": "必須判止作用在誰、止的是攻勢還是失球，不能一律判0:0。",
+        "late_phase": "末段領先方艮可有效收束；落後方艮則可能來不及。",
+        "interpretation_caution": "不可把艮7直接折算進球，亦不可把艮固定成零封。"
+      }
+    },
+    "風山漸": {
+      "sequence": 53,
+      "short_name": "漸",
+      "unicode": "䷴",
+      "classical_meaning": {
+        "core_theme": "循序漸進、按位成熟，不可躁進。",
+        "structural_image": "艮山止於下、巽木進於上，進而有序。",
+        "development_pattern": "由近及遠、由基礎到成熟，每一步都需承接。",
+        "constructive_expression": "穩健累積、尊重次序與長期信任可成事。",
+        "shadow_expression": "急跳階段、外進內虛或耐心不足會破壞漸進。",
+        "timing_and_action": "宜逐步驗證，不求一次完成；越後段越看成熟度。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方逐步建立場面與機會，不靠單次爆發。",
+        "tempo": "前慢後穩定加速。",
+        "attack": "持續滲透、層層推進與反覆利用同一弱側。",
+        "defense": "防線能隨比賽逐步調整，但也可能被慢慢拉開。",
+        "transition": "轉換由短距離承接累積，不以孤注長傳為主。",
+        "scoring_environment": "得分傾向晚於場面優勢出現，總球取決於累積是否完成。",
+        "body_use_context": "漸在體方可為體方增勢，在用方可為對手逐步壓力。",
+        "late_phase": "中後段是成果成熟期，初爻動則表示進程仍在很早階段。",
+        "interpretation_caution": "不可把漸固定壓成低比分或慢等於無球。"
+      }
+    },
+    "雷澤歸妹": {
+      "sequence": 54,
+      "short_name": "歸妹",
+      "unicode": "䷵",
+      "classical_meaning": {
+        "core_theme": "關係與時位不正，急於結合，宜慎終。",
+        "structural_image": "兌悅在下、震動在上，情動而急進，名分次序易亂。",
+        "development_pattern": "由吸引與衝動進入錯位關係，後續需承擔失序。",
+        "constructive_expression": "承認位置限制、延後不成熟結合、重新整理角色。",
+        "shadow_expression": "急求成果、跨越程序或以情緒替代秩序，會留下後患。",
+        "timing_and_action": "時位未正不宜強成，尤其臨近終點更須審慎。"
+      },
+      "football_mapping": {
+        "match_pattern": "戰術角色錯位、陣形不對稱，卻可能因此產生突然攻勢。",
+        "tempo": "不穩、跳躍，易在快慢間失衡。",
+        "attack": "冒險前插、位置交換與非典型跑位可創造機會。",
+        "defense": "回防責任不清，弱側與禁區二點容易失守。",
+        "transition": "轉換快速但人員站位常不完整。",
+        "scoring_environment": "提高雙方機會和失誤尾部，也可能因配合失序而低效。",
+        "body_use_context": "歸妹不指定哪方失序，需看動爻與爻位是否得正。",
+        "late_phase": "第四、五爻後變化仍有時間形成成果，上爻則可能太晚或有始無終。",
+        "interpretation_caution": "不可把歸妹固定成爆冷、平局或雙方進球。"
+      }
+    },
+    "雷火豐": {
+      "sequence": 55,
+      "short_name": "豐",
+      "unicode": "䷶",
+      "classical_meaning": {
+        "core_theme": "盛大豐滿、光明與動能達到高峰。",
+        "structural_image": "離明在下、震動在上，明與動相互放大。",
+        "development_pattern": "能量迅速達峰，盛時宜把握，日中後必走向減退。",
+        "constructive_expression": "在資源最足時果斷完成關鍵事項並保持公平。",
+        "shadow_expression": "盛極自蔽、判斷過熱或錯過高峰，會快速轉衰。",
+        "timing_and_action": "窗口明確而短，宜在峰值時完成，不可迷信盛勢長存。"
+      },
+      "football_mapping": {
+        "match_pattern": "比賽亮度、速度與攻擊事件同時放大，可能形成高潮。",
+        "tempo": "高節奏、高強度，峰值段明顯。",
+        "attack": "射門、前插和禁區事件集中，兩線一起提高。",
+        "defense": "防守在高強度下容易暴露，尤其峰值過後回防。",
+        "transition": "攻守轉換快且人數多，場面可能連續翻動。",
+        "scoring_environment": "提高高比分與雙方被放大的可能，但能量也可能集中給一方。",
+        "body_use_context": "須判斷誰承接豐的能量，不能預設平均分配。",
+        "late_phase": "高峰後可能快速收束，末段未必持續同樣速度。",
+        "interpretation_caution": "不可把豐直接換算成固定總球或雙方各得幾球。"
+      }
+    },
+    "火山旅": {
+      "sequence": 56,
+      "short_name": "旅",
+      "unicode": "䷷",
+      "classical_meaning": {
+        "core_theme": "羈旅在外、根基不足，小事可行而須守慎。",
+        "structural_image": "艮山止於下、離火附於上，火行山上不久留。",
+        "development_pattern": "短暫停駐、依環境而行，過度擴張則失去依靠。",
+        "constructive_expression": "保持禮節、輕裝、明確短期目標與風險管理。",
+        "shadow_expression": "孤立、躁動、無根而逞強，容易失去支援。",
+        "timing_and_action": "宜小步求成，不宜假設臨時優勢可以長久。"
+      },
+      "football_mapping": {
+        "match_pattern": "一方缺乏穩定根基，可能是客場式應對、臨時陣容或漂移站位。",
+        "tempo": "不穩定，段落性快攻與停頓交替。",
+        "attack": "依靠個人、反擊或短暫火力，持續組織較難。",
+        "defense": "防守站位容易受環境牽動，彼此距離需特別注意。",
+        "transition": "轉換可突然發亮，但後續接應不足。",
+        "scoring_environment": "常出現少量高品質機會與不穩定失誤，比分方向需看誰更有根。",
+        "body_use_context": "旅在體方可指體方不安，在用方則可能是外部流動壓力。",
+        "late_phase": "末段體能與歸屬感下降，領先方也未必守得穩。",
+        "interpretation_caution": "不可把旅固定等同客隊、失敗或低比分。"
+      }
+    },
+    "巽為風": {
+      "sequence": 57,
+      "short_name": "巽",
+      "unicode": "䷸",
+      "classical_meaning": {
+        "core_theme": "柔順滲透、反覆申命、入而能通。",
+        "structural_image": "上下皆巽，風無孔不入，以柔進而非硬撞。",
+        "development_pattern": "細微影響反覆累積，久而改變全局；失主則飄忽。",
+        "constructive_expression": "耐心滲透、清楚指令與持續微調可深入問題。",
+        "shadow_expression": "優柔寡斷、反覆無定或只順從外力，會失去中心。",
+        "timing_and_action": "宜小步深入並保持主心，效果常晚於行動出現。"
+      },
+      "football_mapping": {
+        "match_pattern": "邊路、肋部與小空間反覆滲透，壓力不是一次完成。",
+        "tempo": "流動、中快，連續小幅加速。",
+        "attack": "短傳、套邊、回做與弱側轉移逐步穿透。",
+        "defense": "以逼迫傳球方向和多人包夾限制對手，硬度未必高。",
+        "transition": "轉換靠多腳快速傳導，延續性優於單次爆發。",
+        "scoring_environment": "可累積多次機會；若缺乏終結點，滲透也可能無果。",
+        "body_use_context": "雙巽可能形成共振傳導，也可能彼此隨風而缺乏決斷。",
+        "late_phase": "末段持續滲透會考驗防線專注，亦可能因無主而失速。",
+        "interpretation_caution": "不可把巽5直接當五球或把滲透等同破門。"
+      }
+    },
+    "兌為澤": {
+      "sequence": 58,
+      "short_name": "兌",
+      "unicode": "䷹",
+      "classical_meaning": {
+        "core_theme": "和悅、言說、交換與以誠相通。",
+        "structural_image": "上下皆兌，兩澤相連，開口交流也有缺口之象。",
+        "development_pattern": "互動與承諾帶來和悅，失信或只求討好則反傷。",
+        "constructive_expression": "真誠溝通、互相補益與保持清楚界線。",
+        "shadow_expression": "口舌、表面愉悅、漏洞與過度迎合會削弱實質。",
+        "timing_and_action": "宜以誠取悅而非以說掩飾，並注意開口處的風險。"
+      },
+      "football_mapping": {
+        "match_pattern": "比賽互動性高、空間有開口，雙方容易形成回應。",
+        "tempo": "靈活、交流多，可快可慢。",
+        "attack": "小組配合、禁區邊緣做球與把握缺口較重要。",
+        "defense": "防守可能存在可見開口，需防對手反覆利用。",
+        "transition": "轉換依靠快速交換與近距離接應。",
+        "scoring_environment": "可支持雙方機會或一方利用缺口；雙兌也可能鏡像對消。",
+        "body_use_context": "兌在受克時可能是防守缺口而非自身得分能力。",
+        "late_phase": "末段溝通、定位球與最後一次開口可能決定結果。",
+        "interpretation_caution": "不可把兌2固定為兩球、雙方進球或平局。"
+      }
+    },
+    "風水渙": {
+      "sequence": 59,
+      "short_name": "渙",
+      "unicode": "䷺",
+      "classical_meaning": {
+        "core_theme": "渙散、離散，也含解開隔閡、重新聚心。",
+        "structural_image": "坎水在下、巽風在上，風吹水散，舊結構被鬆開。",
+        "development_pattern": "先分散僵結，再以共同中心重新整合；無中心則散而不復。",
+        "constructive_expression": "化解隔閡、疏通堵點並建立新的凝聚核心。",
+        "shadow_expression": "人心離散、陣腳鬆動與資源四散會失去控制。",
+        "timing_and_action": "散是手段不是目的；解開後必須立即重新組織。"
+      },
+      "football_mapping": {
+        "match_pattern": "陣形被拉散、空間擴大，或僵局因移動而被疏通。",
+        "tempo": "流動、空間化，節奏可能突然放開。",
+        "attack": "拉寬、換位與轉移可拆散密集防守。",
+        "defense": "線間距若過大，協防與禁區保護會明顯下降。",
+        "transition": "轉換空間大，球一過中線就可能形成威脅。",
+        "scoring_environment": "提高開放機會與防線鬆動，但也可能是壓力被成功化解。",
+        "body_use_context": "須判斷渙散的是哪方結構，還是雙方僵局。",
+        "late_phase": "末段落後方壓上最容易造成渙散式大空間。",
+        "interpretation_caution": "不可把渙固定等同失球或大比分，重點是散後能否重聚。"
+      }
+    },
+    "水澤節": {
+      "sequence": 60,
+      "short_name": "節",
+      "unicode": "䷻",
+      "classical_meaning": {
+        "core_theme": "節制、制度、分寸與有限資源的管理。",
+        "structural_image": "兌澤在下、坎水在上，水入澤須有容積與界線。",
+        "development_pattern": "透過規則把流動限制在可承受範圍；苦節過度則不可久。",
+        "constructive_expression": "設定合理邊界、管理節奏與把資源用在關鍵處。",
+        "shadow_expression": "過度限制、僵硬配額或毫無節制，都會破壞平衡。",
+        "timing_and_action": "限制要可持續；宜節其過，不宜扼殺必要生機。"
+      },
+      "football_mapping": {
+        "match_pattern": "球隊主動管理節奏、空間與投入人數，降低比賽失控。",
+        "tempo": "偏慢、分段、有明顯節奏控制。",
+        "attack": "選擇性進攻，重視機會品質與定位球。",
+        "defense": "防線邊界清楚，控制禁區與犯規區域。",
+        "transition": "轉換是否發動有明確條件，不每球都快攻。",
+        "scoring_environment": "通常壓低總機會，但過度節制可能讓對手持續壓臨。",
+        "body_use_context": "節在體方可為主動管理，在用方可為外部限制。",
+        "late_phase": "領先後有利收束；落後時需及時解除部分限制。",
+        "interpretation_caution": "不可把節直接等同小球或0:0，仍須看限制是否被突破。"
+      }
+    },
+    "風澤中孚": {
+      "sequence": 61,
+      "short_name": "中孚",
+      "unicode": "䷼",
+      "classical_meaning": {
+        "core_theme": "內心誠信、內外相應，以真實感通。",
+        "structural_image": "兌澤在下、巽風在上，中間兩陰形成虛心，外剛而內誠。",
+        "development_pattern": "由內在一致形成可信訊號，能涉險；虛假則失去感通。",
+        "constructive_expression": "資訊一致、承諾可信與內外同調可成大事。",
+        "shadow_expression": "表面默契、內部不信或把情緒當真實，會誤判。",
+        "timing_and_action": "先驗證核心是否一致，再依可信訊號前進。"
+      },
+      "football_mapping": {
+        "match_pattern": "球隊內部連結與戰術信任較強，配合建立在彼此預期上。",
+        "tempo": "流暢、協調，節奏常由默契自然形成。",
+        "attack": "無球跑動、快速做球與隊友間預判可提升效率。",
+        "defense": "協防與補位依賴信任，整體同步時很穩。",
+        "transition": "轉換中第一腳與第二跑動能彼此呼應。",
+        "scoring_environment": "可形成高品質機會，但也可能因雙方結構互信而有序收束。",
+        "body_use_context": "中孚需結合相應與動爻檢驗，不能只因卦名就判合作成功。",
+        "late_phase": "末段壓力下，真實默契與表面配合的差別會被放大。",
+        "interpretation_caution": "不可把中孚固定等同平局、雙方進球或信心結果。"
+      }
+    },
+    "雷山小過": {
+      "sequence": 62,
+      "short_name": "小過",
+      "unicode": "䷽",
+      "classical_meaning": {
+        "core_theme": "小事可過、細節超越，大事不宜冒進。",
+        "structural_image": "艮止在下、震動在上，動勢越過但根基有限。",
+        "development_pattern": "局部行動能略超常規，過度擴張則失衡。",
+        "constructive_expression": "處理細節、做小幅調整與保持低姿態可得成果。",
+        "shadow_expression": "把小優勢放大成大冒險、追求一步登天，容易失手。",
+        "timing_and_action": "宜小步修正、不可高飛；時間與幅度都要受控。"
+      },
+      "football_mapping": {
+        "match_pattern": "局部對位、定位球或一次細節變化可能超出預期。",
+        "tempo": "有短爆發，但整體幅度受限。",
+        "attack": "小範圍突破、第二點和個別球員前插較關鍵。",
+        "defense": "整體仍偏守界線，局部冒險後要迅速回位。",
+        "transition": "轉換快速但投入人數有限。",
+        "scoring_environment": "常支持有限超越或一球差，也可能只是高壓而未形成持續優勢。",
+        "body_use_context": "小過在動方代表可做出小幅修正，不保證足以反勝。",
+        "late_phase": "上爻變化時間短，較可能影響末段一次事件而非重寫全場。",
+        "interpretation_caution": "不可把『小』固定成小球，也不可把小過直接等同一球差。"
+      }
+    },
+    "水火既濟": {
+      "sequence": 63,
+      "short_name": "既濟",
+      "unicode": "䷾",
+      "classical_meaning": {
+        "core_theme": "水火定位，事情已成而成中有危。",
+        "structural_image": "離火在下、坎水在上，六爻皆相應得位，秩序暫成。",
+        "development_pattern": "完成後進入維持期，微小失序可能使已成轉壞。",
+        "constructive_expression": "守成、檢查細節、保持初始謹慎可延長成果。",
+        "shadow_expression": "以為完成便鬆懈、追求多餘變動，會破壞平衡。",
+        "timing_and_action": "初吉而終亂之戒；越接近結束越須防反轉。"
+      },
+      "football_mapping": {
+        "match_pattern": "雙方結構與攻守通道相對完整，場面可能暫時平衡。",
+        "tempo": "有序、中等，完成一次攻守循環後趨於穩定。",
+        "attack": "進攻配合具完成度，但未必大量製造機會。",
+        "defense": "防守角色清楚，能把比賽維持在既有狀態。",
+        "transition": "轉換銜接完整，雙方可能各有一條有效通道。",
+        "scoring_environment": "可支持已有比分被維持，也可因末段鬆懈出現反轉。",
+        "body_use_context": "既濟不是雙方必進球；需看『已成』究竟是領先、平衡還是防守結構。",
+        "late_phase": "末段最須警惕，領先方一個細節失誤即可破壞完成狀態。",
+        "interpretation_caution": "不可把既濟固定等同1:1、已勝或低比分。"
+      }
+    },
+    "火水未濟": {
+      "sequence": 64,
+      "short_name": "未濟",
+      "unicode": "䷿",
+      "classical_meaning": {
+        "core_theme": "水火未交，事情未成，差最後整合。",
+        "structural_image": "坎水在下、離火在上，六爻皆不當位而仍有可成之機。",
+        "development_pattern": "接近完成卻尚未落定，最後一步最容易失誤或翻轉。",
+        "constructive_expression": "保持專注、完成最後銜接、不要把接近成功當已成功。",
+        "shadow_expression": "急於宣告完成、最後階段鬆懈或各線不接，會功虧一簣。",
+        "timing_and_action": "終局仍開放，最後窗口重要，但不可冒進到失去全局。"
+      },
+      "football_mapping": {
+        "match_pattern": "比分與場面直到末段仍未完全定型，雙方都有未完成任務。",
+        "tempo": "不穩、開放，末段變化權重較高。",
+        "attack": "攻勢常差最後一傳或終結，但仍有持續嘗試空間。",
+        "defense": "防線尚未完全站穩，領先也未必安全。",
+        "transition": "攻守轉換銜接不完整，卻容易因一次成功連接形成大機會。",
+        "scoring_environment": "提高晚球、追平或未兌現機會並存的尾部，不保證一定有進球。",
+        "body_use_context": "未濟不指定最後成功者，須由動爻時間、體用變化與旺衰判斷。",
+        "late_phase": "接近終場仍有變數；上爻若動，也可能因時間不足只留下未成。",
+        "interpretation_caution": "不可把未濟固定等同逆轉、絕殺或雙方進球。"
+      }
+    }
+  }
+}

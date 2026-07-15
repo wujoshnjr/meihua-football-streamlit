@@ -46,6 +46,37 @@ def load_hexagrams() -> dict[str, dict[str, Any]]:
 
 
 @lru_cache(maxsize=1)
+def load_hexagram_interpretations() -> dict[str, Any]:
+    payload = _load_json(KNOWLEDGE_DIR / "hexagram_interpretations.json")
+    hexagrams = load_hexagrams()
+    entries = payload.get("hexagrams") if isinstance(payload, dict) else None
+    classical_fields = payload.get("classical_fields") if isinstance(payload, dict) else None
+    football_fields = payload.get("football_fields") if isinstance(payload, dict) else None
+    if not isinstance(entries, dict) or set(entries) != set(hexagrams):
+        raise ValueError("hexagram_interpretations.json 必須完整包含六十四卦")
+    if not isinstance(classical_fields, list) or len(classical_fields) != 6:
+        raise ValueError("每卦必須固定包含六個傳統卦義欄位")
+    if not isinstance(football_fields, list) or len(football_fields) != 9:
+        raise ValueError("每卦必須固定包含九個足球情境欄位")
+    for name, entry in entries.items():
+        if int(entry.get("sequence", 0)) != int(hexagrams[name]["sequence"]):
+            raise ValueError(f"{name} 的卦序與六十四卦資料庫不一致")
+        classical = entry.get("classical_meaning")
+        football = entry.get("football_mapping")
+        if not isinstance(classical, dict) or set(classical) != set(classical_fields):
+            raise ValueError(f"{name} 的傳統卦義欄位不完整")
+        if not isinstance(football, dict) or set(football) != set(football_fields):
+            raise ValueError(f"{name} 的足球情境欄位不完整")
+        if any(not isinstance(value, str) or not value.strip() for value in classical.values()):
+            raise ValueError(f"{name} 的傳統卦義含空白內容")
+        if any(not isinstance(value, str) or not value.strip() for value in football.values()):
+            raise ValueError(f"{name} 的足球情境含空白內容")
+    if payload.get("entry_count") != 64:
+        raise ValueError("六十四卦詮釋資料筆數必須為 64")
+    return payload
+
+
+@lru_cache(maxsize=1)
 def load_meihua_principles() -> dict[str, Any]:
     payload = _load_json(KNOWLEDGE_DIR / "meihua_principles.json")
     if not isinstance(payload, dict):
@@ -138,6 +169,7 @@ def knowledge_completeness() -> dict[str, Any]:
     hexagrams = load_hexagrams()
     classics = load_classics()
     yilin = load_jiaoshi_yilin()
+    interpretations = load_hexagram_interpretations()
     lines = sum(len(item.get("lines", [])) for item in hexagrams.values())
     complete_hexagrams = sum(
         int(
@@ -157,6 +189,15 @@ def knowledge_completeness() -> dict[str, Any]:
         "classic_appendices": len(classics),
         "yilin_main_hexagrams": len(yilin["entries"]),
         "yilin_entries": sum(len(item) for item in yilin["entries"].values()),
+        "interpretation_hexagrams": len(interpretations["hexagrams"]),
+        "classical_meaning_fields": sum(
+            len(item["classical_meaning"])
+            for item in interpretations["hexagrams"].values()
+        ),
+        "football_mapping_fields": sum(
+            len(item["football_mapping"])
+            for item in interpretations["hexagrams"].values()
+        ),
         "is_complete": (
             len(trigrams) == 8
             and len(hexagrams) == 64
@@ -164,6 +205,12 @@ def knowledge_completeness() -> dict[str, Any]:
             and complete_hexagrams == 64
             and len(yilin["entries"]) == 64
             and yilin["entry_count"] == 4096
+            and len(interpretations["hexagrams"]) == 64
+            and all(
+                len(item["classical_meaning"]) == 6
+                and len(item["football_mapping"]) == 9
+                for item in interpretations["hexagrams"].values()
+            )
         ),
     }
 
@@ -171,6 +218,7 @@ def knowledge_completeness() -> dict[str, Any]:
 def clear_knowledge_cache() -> None:
     load_trigrams.cache_clear()
     load_hexagrams.cache_clear()
+    load_hexagram_interpretations.cache_clear()
     load_meihua_principles.cache_clear()
     load_classics.cache_clear()
     load_jiaoshi_yilin.cache_clear()
@@ -182,6 +230,7 @@ __all__ = [
     "knowledge_completeness",
     "load_classics",
     "load_hexagrams",
+    "load_hexagram_interpretations",
     "load_jiaoshi_yilin",
     "load_meihua_principles",
     "load_trigrams",

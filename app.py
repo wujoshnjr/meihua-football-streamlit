@@ -1,25 +1,25 @@
 from __future__ import annotations
 
 import html
-import json
 from typing import Any, Mapping, Sequence
 
 import streamlit as st
 
 from config import load_config
-from export_builder import build_casting_export
+from casting_structure import build_casting_structure
+from html_report_builder import CLASSICAL_LABELS, FOOTBALL_LABELS, build_html_report
 from knowledge_loader import (
     build_jiaoshi_yilin_reference,
     knowledge_completeness,
     load_classics,
     load_hexagrams,
+    load_hexagram_interpretations,
     load_jiaoshi_yilin,
     load_meihua_principles,
     load_trigrams,
 )
 from meihua_engine import calculate_casting
 from models import CastingInput, HexagramResult
-from report_builder import build_markdown_report
 from storage import CastingStore, build_casting_row, save_report
 from version import APP_TITLE, KNOWLEDGE_VERSION
 
@@ -93,6 +93,7 @@ def _render_line_table(result: HexagramResult) -> None:
 
 def _render_hexagram_reference(label: str, name: str, moving_line: int | None = None) -> None:
     item = load_hexagrams()[name]
+    interpretation = load_hexagram_interpretations()["hexagrams"][name]
     st.markdown(f"#### {label}：{item['unicode']} {name}（第 {item['sequence']} 卦）")
     st.caption(
         f"上卦 {item['upper']}｜下卦 {item['lower']}｜六爻自下而上 {item['binary_bottom_up']}｜"
@@ -101,6 +102,17 @@ def _render_hexagram_reference(label: str, name: str, moving_line: int | None = 
     )
     st.write(f"**卦義提要（資料庫索引）**：{item['meaning_overview']}")
     st.write(f"**卦辭**：{item['judgment_text']}")
+    st.markdown("##### 完整卦義")
+    _render_html_table(
+        [{"欄位": CLASSICAL_LABELS[key], "內容": value} for key, value in interpretation["classical_meaning"].items()],
+        ["欄位", "內容"],
+    )
+    st.markdown("##### 足球比賽應用參考")
+    _render_html_table(
+        [{"欄位": FOOTBALL_LABELS[key], "內容": value} for key, value in interpretation["football_mapping"].items()],
+        ["欄位", "內容"],
+    )
+    st.caption("足球欄位是本專案的應用層，不是經典原文，也不是固定比分公式。")
     with st.expander("彖傳與大象", expanded=(label == "本卦")):
         st.write(f"**彖傳**：{item['tuan_text']}")
         st.write(f"**大象**：{item['great_image_text']}")
@@ -151,7 +163,8 @@ def _render_casting_result(config: Any, store: CastingStore) -> None:
     st.info(
         f"**起卦國曆時間**：{result.casting_moment.gregorian_text} "
         f"（{result.casting_moment.timezone}／{result.casting_moment.utc_offset}）  \n"
-        f"**起卦農曆時間**：{result.casting_moment.lunar_text}"
+        f"**起卦農曆時間**：{result.casting_moment.lunar_text}  \n"
+        f"**日辰**：{result.casting_moment.day_ganzhi}日"
     )
     st.caption("起卦時間在按下排卦時固定保存，只作排盤紀錄，不參與文字取數。")
     c1, c2, c3, c4 = st.columns(4)
@@ -200,7 +213,45 @@ def _render_casting_result(config: Any, store: CastingStore) -> None:
             ]
         )
     )
-    st.warning("以上只陳列排卦結構，不對球隊、勝負、比分、吉凶或事件發展作解讀。")
+    structure = build_casting_structure(result)
+    najia = structure["najia_analysis"]
+    day = najia["day_cycle"]
+    void = najia["xun_void"]
+    st.markdown("### 日辰、月令、旬空與完整納甲")
+    st.info(
+        f"日辰 **{day['day_ganzhi']}日**（日干 {day['day_stem']}／{day['day_stem_element']}）｜"
+        f"月令 **{day['month_branch']}月**（{day['month_element']}）｜"
+        f"{void['xun_name']}｜旬空 **{void['void_text']}**"
+    )
+    st.caption("六親主欄依日干五行計算；另列八宮卦宮五行口徑。旬空是暫受限制，不代表永久無效。")
+    chart_tabs = st.tabs(["本卦納甲", "互卦納甲", "變卦納甲"])
+    for tab, key in zip(chart_tabs, ("main_hexagram", "mutual_hexagram", "changed_hexagram"), strict=True):
+        with tab:
+            chart = najia[key]
+            st.write(
+                f"**{chart['palace']}宮（{chart['palace_element']}）／{chart['palace_stage']}**｜"
+                f"世爻第 {chart['world_line']} 爻｜應爻第 {chart['response_line']} 爻"
+            )
+            rows = [
+                {
+                    "爻位": line["position_name"], "爻名": line["line_label"], "經卦": line["trigram"],
+                    "納甲": line["gan_zhi"], "世應": "、".join(line["roles"]) or "—",
+                    "六親（日干）": line["six_relative_by_day_stem"],
+                    "六親（卦宮）": line["six_relative_by_palace"], "旬空": line["void_status"],
+                    "動爻": "是" if line["is_original_moving_position"] else "否",
+                }
+                for line in reversed(chart["lines"])
+            ]
+            _render_html_table(rows, ["爻位", "爻名", "經卦", "納甲", "世應", "六親（日干）", "六親（卦宮）", "旬空", "動爻"])
+            relations = chart["branch_interactions"]
+            if relations:
+                _render_html_table(
+                    [{"關係": x["relation"], "爻組": f"第{x['first_line']}爻{x['first_branch']}－第{x['second_line']}爻{x['second_branch']}", "提醒": x["football_note"]} for x in relations],
+                    ["關係", "爻組", "提醒"],
+                )
+            else:
+                st.caption("此卦未檢出爻間六沖或六合。")
+    st.warning("以上完整呈現排卦與卦義資料，但不自動預測勝負或固定比分。")
 
     st.markdown("### 本次涉及的經文資料")
     tabs = st.tabs(["本卦", "互卦", "變卦"])
@@ -214,28 +265,16 @@ def _render_casting_result(config: Any, store: CastingStore) -> None:
     st.markdown("### 焦氏易林原典")
     _render_jiaoshi_reference(result.main_hexagram, result.changed_hexagram)
 
-    report = build_markdown_report(casting, result)
-    payload = json.dumps(
-        build_casting_export(casting, result),
-        ensure_ascii=False,
-        indent=2,
-    )
-    d1, d2, d3 = st.columns(3)
+    report = build_html_report(casting, result)
+    d1, d2 = st.columns(2)
     d1.download_button(
-        "下載完整排盤 JSON",
-        payload,
-        file_name=f"{result.title or 'casting'}.json",
-        mime="application/json",
-        width="stretch",
-    )
-    d2.download_button(
-        "下載完整排盤 Markdown",
+        "下載完整排卦表 HTML",
         report,
-        file_name=f"{result.title or 'casting'}.md",
-        mime="text/markdown",
+        file_name=f"{result.title or 'casting'}.html",
+        mime="text/html",
         width="stretch",
     )
-    if d3.button("儲存本次排卦", width="stretch"):
+    if d2.button("儲存本次排卦", width="stretch"):
         row = build_casting_row(casting, result)
         report_path = save_report(config, row, report)
         row["報告檔案"] = report_path
@@ -333,7 +372,7 @@ def _render_records(store: CastingStore) -> None:
     _render_html_table(rows, columns)
     st.download_button(
         "下載排卦紀錄 CSV",
-        store.csv_bytes(rows),
+        store.public_csv_bytes(rows),
         file_name="meihua_castings.csv",
         mime="text/csv",
     )
@@ -342,14 +381,15 @@ def _render_records(store: CastingStore) -> None:
 def _render_method() -> None:
     completeness = knowledge_completeness()
     st.subheader("知識庫完整性")
-    m1, m2, m3, m4, m5 = st.columns(5)
+    m1, m2, m3, m4, m5, m6 = st.columns(6)
     m1.metric("八卦", f"{completeness['trigrams']}/8")
     m2.metric("六十四卦", f"{completeness['hexagrams']}/64")
     m3.metric("六爻資料", f"{completeness['line_records']}/384")
     m4.metric("易傳附錄", completeness["classic_appendices"])
     m5.metric("焦氏易林", f"{completeness['yilin_entries']}/4096")
+    m6.metric("卦義／足球欄位", f"{completeness['classical_meaning_fields']}／{completeness['football_mapping_fields']}")
     if completeness["is_complete"]:
-        st.success("卦辭、彖傳、大象、384 條爻辭與小象，以及 4,096 條焦氏易林林辭全部通過完整性檢查。")
+        st.success("六十四卦完整卦義、足球應用欄位、經傳、384 條爻辭與小象，以及 4,096 條焦氏易林林辭全部通過完整性檢查。")
     st.subheader("固定排卦方法")
     st.json(load_meihua_principles(), expanded=True)
 
@@ -361,11 +401,11 @@ def run_app() -> None:
 
     st.title(APP_TITLE)
     st.caption(
-        "輸入賽前文字後，只做可重現的文字取數與完整排卦。已移除 AI 解卦、足球實力、勝負方向、比分候選及賽後校準。"
+        "輸入賽前文字後，產生可重現的完整排卦、經傳、納甲與卦義資料；不自動預測勝負或固定比分。"
     )
     st.sidebar.markdown("### 系統範圍")
-    st.sidebar.success("只排卦，不解卦")
-    st.sidebar.write("本卦、互卦、動爻、變卦、體用與完整經文資料")
+    st.sidebar.success("完整排卦與卦義資料，不自動預測")
+    st.sidebar.write("本卦、互卦、動爻、變卦、納甲、世應、六親、旬空、沖合與完整經文")
     st.sidebar.caption(f"知識庫：{KNOWLEDGE_VERSION}")
     st.sidebar.write("儲存位置：" + ("GitHub 後台" if config.use_github_backend else "本機資料夾"))
 
@@ -392,7 +432,7 @@ def run_app() -> None:
             body_text = st.text_area("體方段落（用來取體卦／下卦）", height=150)
             use_text = st.text_area("用方段落（用來取用卦／上卦）", height=150)
             full_text = st.text_area("完整賽前中性段落（用來取動爻）", height=190)
-            submitted = st.form_submit_button("完整排卦（不解卦）", type="primary", width="stretch")
+            submitted = st.form_submit_button("完整排卦", type="primary", width="stretch")
         if submitted:
             try:
                 body_name, use_name, title = _normalize_parties(body_name, use_name)

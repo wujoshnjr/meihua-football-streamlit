@@ -18,7 +18,7 @@ class CastingInput:
     full_text: str
     category: str = "足球賽前內容"
     context_notes: str = ""
-    scope: str = "只排卦，不解卦"
+    scope: str = "完整排卦與卦義資料，不自動預測"
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -41,6 +41,9 @@ class CastingMoment:
     lunar_is_leap_month: bool
     lunar_day: int
     lunar_day_text: str
+    day_ganzhi: str
+    day_stem: str
+    day_branch: str
     shichen: str
     shichen_ganzhi: str
 

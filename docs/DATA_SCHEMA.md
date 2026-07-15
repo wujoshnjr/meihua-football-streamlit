@@ -5,11 +5,11 @@
 每列是一份排卦紀錄，主要欄位分為：
 
 - 識別：資料結構版本、系統版本、排卦 ID、指紋。
-- 起卦時間：台北國曆時間與 ISO 時間、完整農曆時間、干支年、閏月、農曆日及干支時辰。
+- 起卦時間：台北國曆時間與 ISO 時間、完整農曆時間、干支年、日辰、月令、旬名、旬空及干支時辰。
 - 輸入：標題、類別、體／用名稱與三段原文。舊版「補充資料」欄位僅為歷史資料相容而保留，新紀錄固定留空。
 - 取數：三段字數、除八／除六餘數。
 - 八卦：體卦、用卦、先天數、五行。
-- 六爻：本卦、互卦、動爻、變卦及各自六爻字串。
+- 六爻：本卦、互卦、動爻、變卦及各自六爻字串；另存本卦宮位、世應、動爻納甲、六親與旬空。
 - 轉象：體卦轉象、用卦轉象、本卦與變卦五行關係。
 - 稽核：完整排盤 JSON、報告路徑、計算版本。完整排盤 JSON 保留既有排盤欄位，並新增 `jiaoshi_yilin` 對應林辭物件。
 
@@ -41,9 +41,20 @@
 
 應用啟動時要求 4,096 個本卦／之卦組合全部存在、非空、含標點且以句末標點結束，並要求卦序與 `hexagrams.json` 一致。
 
-## 排卦下載 JSON
+## 排卦下載 HTML 表
 
-下載檔頂層包含 `schema_version`、`system_version`、`knowledge_version`、`input`、`casting`、`hexagram_classics`、`moving_line_classics`、`moving_line_dynamics`、`seasonal_strength` 與 `jiaoshi_yilin`。
+使用者下載為獨立 UTF-8 HTML 文件，以完整表格呈現時間、旬空、本互變納甲、世應、雙軌六親、沖合、經傳、六十四卦義、足球應用參考及焦氏易林，不顯示 JSON 程式資料。後台 `完整排盤JSON` 仍保留以下結構供稽核。
+
+## 後台完整排盤 JSON
+
+後台物件包含 `casting`、`hexagram_classics`、`hexagram_meanings`、`moving_line_classics`、`moving_line_dynamics`、`seasonal_strength`、`najia_analysis` 與 `jiaoshi_yilin`。
+
+### `najia_analysis`
+
+- `day_cycle`：日辰天干地支、日干五行、月令與月令五行。
+- `xun_void`：六甲旬名、兩個旬空地支與計算說明。
+- `main_hexagram`、`mutual_hexagram`、`changed_hexagram`：各自六爻納甲、世應、雙軌六親、旬空及沖合。
+- 日干六親是本專案指定主欄；卦宮六親另列為常見文王卦參考，兩者不互相覆寫。
 
 ### `hexagram_classics`
 

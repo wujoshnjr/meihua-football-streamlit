@@ -9,6 +9,7 @@ from export_builder import build_casting_export
 from meihua_engine import calculate_casting
 from models import CastingInput
 from report_builder import build_markdown_report
+from html_report_builder import build_html_report
 from storage import CastingStore, build_casting_row, casting_fingerprint
 
 
@@ -48,6 +49,18 @@ def test_report_contains_complete_casting_but_no_prediction_sections() -> None:
     assert "補充資料" not in report
 
 
+def test_html_report_is_a_complete_readable_table_without_raw_json() -> None:
+    casting, result = fixture()
+    report = build_html_report(casting, result)
+    assert "<!doctype html>" in report
+    assert "起卦時間與旬空" in report
+    assert "本卦納甲" in report and "互卦納甲" in report and "變卦納甲" in report
+    assert "完整卦義" in report and "足球比賽應用層" in report
+    assert "焦氏易林" in report
+    assert "完整排盤JSON" not in report
+    assert '"najia_analysis"' not in report
+
+
 def test_casting_storage_is_idempotent_and_persists_full_json(tmp_path: Path) -> None:
     casting, result = fixture()
     config = AppConfig(data_dir=tmp_path / "data", reports_dir=tmp_path / "reports")
@@ -75,6 +88,9 @@ def test_casting_storage_is_idempotent_and_persists_full_json(tmp_path: Path) ->
     assert payload["hexagram_classics"]["main_hexagram"]["gua_ci"]
     assert payload["hexagram_classics"]["changed_hexagram"]["tuan_text"]
     assert payload["seasonal_strength"]["month_element"] == "火"
+    assert payload["hexagram_meanings"]["main_hexagram"]["classical_meaning"]
+    assert len(payload["hexagram_meanings"]["main_hexagram"]["football_mapping"]) == 9
+    assert len(payload["najia_analysis"]["main_hexagram"]["lines"]) == 6
     assert second[0]["建立時間"] == "2026-07-13 15:30:00"
     assert second[0]["起卦農曆時間"] == result.casting_moment.lunar_text
     assert second[0]["起卦時辰"] == "申時"
@@ -83,13 +99,17 @@ def test_casting_storage_is_idempotent_and_persists_full_json(tmp_path: Path) ->
     assert "排卦指紋" in csv_payload
     assert "起卦農曆時間" in csv_payload
     assert casting_fingerprint(casting, result) in csv_payload
+    public_csv = store.public_csv_bytes(second).decode("utf-8-sig")
+    assert "日辰" in public_csv and "旬空" in public_csv and "動爻納甲" in public_csv
+    assert "完整排盤JSON" not in public_csv
+    assert "排卦指紋" not in public_csv
 
 
 def test_download_json_contains_punctuated_jiaoshi_yilin_entry() -> None:
     casting, result = fixture()
     payload = json.loads(json.dumps(build_casting_export(casting, result), ensure_ascii=False))
 
-    assert payload["schema_version"] == "5.3"
+    assert payload["schema_version"] == "5.4"
     assert payload["casting"]["main_hexagram"] == result.main_hexagram
     assert payload["jiaoshi_yilin"]["entry_key"]
     assert payload["jiaoshi_yilin"]["text_style"] == "繁體中文標點版"
