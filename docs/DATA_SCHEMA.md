@@ -10,6 +10,7 @@
 - 取數：三段字數、除八／除六餘數。
 - 八卦：體卦、用卦、先天數、五行。
 - 六爻：本卦、互卦、動爻、變卦及各自六爻字串；另存本卦宮位、世應、動爻納甲、六親與旬空。
+- 條件式卦義：體／用卦線摘要、優先義項與命中規則數。
 - 轉象：體卦轉象、用卦轉象、本卦與變卦五行關係。
 - 稽核：完整排盤 JSON、報告路徑、計算版本。完整排盤 JSON 保留既有排盤欄位，並新增 `jiaoshi_yilin` 對應林辭物件。
 
@@ -43,11 +44,18 @@
 
 ## 排卦下載 HTML 表
 
-使用者下載為獨立 UTF-8 HTML 文件，以完整表格呈現時間、旬空、本互變納甲、世應、雙軌六親、沖合、經傳、六十四卦義、足球應用參考及焦氏易林，不顯示 JSON 程式資料。後台 `完整排盤JSON` 仍保留以下結構供稽核。
+使用者下載為獨立 UTF-8 HTML 文件，以完整表格呈現時間、旬空、本互變納甲、世應、雙軌六親、沖合、條件式卦義、經傳、六十四卦義、足球應用參考及焦氏易林，不顯示 JSON 程式資料。後台 `完整排盤JSON` 仍保留以下結構供稽核。
 
 ## 後台完整排盤 JSON
 
-後台物件包含 `casting`、`hexagram_classics`、`hexagram_meanings`、`moving_line_classics`、`moving_line_dynamics`、`seasonal_strength`、`najia_analysis` 與 `jiaoshi_yilin`。
+後台物件包含 `casting`、`hexagram_classics`、`hexagram_meanings`、`moving_line_classics`、`moving_line_dynamics`、`seasonal_strength`、`najia_analysis`、`conditional_meanings` 與 `jiaoshi_yilin`。
+
+### `conditional_meanings`
+
+- `body_path`、`use_path`：體用雙方的變前卦、變後卦、旺衰、生克、空破、沖合與破門訊號。
+- `stages[].possible_meanings`：該經卦全部八個可能義項及足球含義。
+- `stages[].matched_rules`：本次真正命中的條件、證據、優先義項與降低權重義項。
+- `stages[].prioritized_meanings`：依透明規則排序的前三義；`rule_score` 只供排序，不是機率或比分。
 
 ### `najia_analysis`
 

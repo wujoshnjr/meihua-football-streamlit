@@ -30,6 +30,7 @@ CASTING_COLUMNS = [
     "動爻", "動爻爻名", "動爻原陰陽", "動爻變後陰陽", "動爻所屬", "動爻層級",
     "本卦宮", "本卦宮位", "本卦世爻", "本卦應爻", "動爻納甲", "動爻六親（日干）", "動爻六親（卦宮）", "動爻旬空",
     "變卦", "變卦六爻自下而上", "變後體卦", "變後用卦", "體卦轉象", "用卦轉象",
+    "體方條件式卦義", "用方條件式卦義", "體方命中條件數", "用方命中條件數",
     "本卦體用關係代碼", "本卦體用關係", "變卦體用關係代碼", "變卦體用關係",
     "排卦計算版本", "排卦指紋", "完整排盤JSON", "報告檔案",
     "體方原文", "用方原文", "完整中性原文", "補充資料",
@@ -230,6 +231,9 @@ def build_casting_row(
     void = najia["xun_void"]
     main_chart = najia["main_hexagram"]
     moving_line = main_chart["lines"][result.moving_line - 1]
+    conditional = structure["conditional_meanings"]
+    body_path = conditional["body_path"]
+    use_path = conditional["use_path"]
     return {
         "資料結構版本": SCHEMA_VERSION,
         "系統版本": APP_VERSION,
@@ -294,6 +298,10 @@ def build_casting_row(
         "變後用卦": result.changed_use_gua,
         "體卦轉象": result.body_transition,
         "用卦轉象": result.use_transition,
+        "體方條件式卦義": body_path["path_summary"],
+        "用方條件式卦義": use_path["path_summary"],
+        "體方命中條件數": sum(len(stage["matched_rules"]) for stage in body_path["stages"]),
+        "用方命中條件數": sum(len(stage["matched_rules"]) for stage in use_path["stages"]),
         "本卦體用關係代碼": result.relation_code,
         "本卦體用關係": result.relation,
         "變卦體用關係代碼": result.changed_relation_code,

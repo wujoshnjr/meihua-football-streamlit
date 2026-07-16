@@ -77,6 +77,59 @@ def load_hexagram_interpretations() -> dict[str, Any]:
 
 
 @lru_cache(maxsize=1)
+def load_conditional_trigram_meanings() -> dict[str, Any]:
+    payload = _load_json(KNOWLEDGE_DIR / "conditional_trigram_meanings.json")
+    trigrams = load_trigrams()
+    entries = payload.get("trigrams") if isinstance(payload, dict) else None
+    definitions = payload.get("signal_definitions") if isinstance(payload, dict) else None
+    if not isinstance(entries, dict) or set(entries) != set(trigrams):
+        raise ValueError("conditional_trigram_meanings.json 必須完整包含八個經卦")
+    if not isinstance(definitions, dict) or not definitions:
+        raise ValueError("條件式卦義庫必須定義可稽核判斷訊號")
+    rule_ids: set[str] = set()
+    for name, entry in entries.items():
+        meanings = entry.get("possible_meanings")
+        rules = entry.get("rules")
+        if not isinstance(meanings, list) or len(meanings) < 8:
+            raise ValueError(f"{name} 必須至少包含八個可能義項")
+        if not isinstance(rules, list) or len(rules) < 6:
+            raise ValueError(f"{name} 必須至少包含六條條件規則")
+        meaning_names = {
+            str(item.get("name", "")).strip()
+            for item in meanings
+            if isinstance(item, dict)
+        }
+        if len(meaning_names) != len(meanings) or "" in meaning_names:
+            raise ValueError(f"{name} 的可能義項名稱重複或空白")
+        if any(not str(item.get("football", "")).strip() for item in meanings):
+            raise ValueError(f"{name} 的足球義項不可空白")
+        for rule in rules:
+            rule_id = str(rule.get("id", "")).strip()
+            if not rule_id or rule_id in rule_ids:
+                raise ValueError(f"條件規則 ID 重複或空白：{rule_id}")
+            rule_ids.add(rule_id)
+            used_signals = {
+                str(signal)
+                for key in ("all", "any", "none")
+                for signal in rule.get(key, [])
+            }
+            if not used_signals.issubset(definitions):
+                unknown = sorted(used_signals - set(definitions))
+                raise ValueError(f"{name}/{rule_id} 使用未知訊號：{unknown}")
+            preferred = set(rule.get("prefer", []))
+            suppressed = set(rule.get("suppress", []))
+            if not preferred or not (preferred | suppressed).issubset(meaning_names):
+                raise ValueError(f"{name}/{rule_id} 的義項索引無效")
+            if not str(rule.get("condition_text", "")).strip():
+                raise ValueError(f"{name}/{rule_id} 缺少判斷條件文字")
+            if not str(rule.get("football_reading", "")).strip():
+                raise ValueError(f"{name}/{rule_id} 缺少足球閱讀說明")
+    if payload.get("entry_count") != 8:
+        raise ValueError("條件式經卦資料筆數必須為 8")
+    return payload
+
+
+@lru_cache(maxsize=1)
 def load_meihua_principles() -> dict[str, Any]:
     payload = _load_json(KNOWLEDGE_DIR / "meihua_principles.json")
     if not isinstance(payload, dict):
@@ -170,6 +223,7 @@ def knowledge_completeness() -> dict[str, Any]:
     classics = load_classics()
     yilin = load_jiaoshi_yilin()
     interpretations = load_hexagram_interpretations()
+    conditional = load_conditional_trigram_meanings()
     lines = sum(len(item.get("lines", [])) for item in hexagrams.values())
     complete_hexagrams = sum(
         int(
@@ -198,6 +252,14 @@ def knowledge_completeness() -> dict[str, Any]:
             len(item["football_mapping"])
             for item in interpretations["hexagrams"].values()
         ),
+        "conditional_trigram_meanings": sum(
+            len(item["possible_meanings"])
+            for item in conditional["trigrams"].values()
+        ),
+        "conditional_trigram_rules": sum(
+            len(item["rules"])
+            for item in conditional["trigrams"].values()
+        ),
         "is_complete": (
             len(trigrams) == 8
             and len(hexagrams) == 64
@@ -211,6 +273,12 @@ def knowledge_completeness() -> dict[str, Any]:
                 and len(item["football_mapping"]) == 9
                 for item in interpretations["hexagrams"].values()
             )
+            and len(conditional["trigrams"]) == 8
+            and all(
+                len(item["possible_meanings"]) >= 8
+                and len(item["rules"]) >= 6
+                for item in conditional["trigrams"].values()
+            )
         ),
     }
 
@@ -219,6 +287,7 @@ def clear_knowledge_cache() -> None:
     load_trigrams.cache_clear()
     load_hexagrams.cache_clear()
     load_hexagram_interpretations.cache_clear()
+    load_conditional_trigram_meanings.cache_clear()
     load_meihua_principles.cache_clear()
     load_classics.cache_clear()
     load_jiaoshi_yilin.cache_clear()
@@ -229,6 +298,7 @@ __all__ = [
     "clear_knowledge_cache",
     "knowledge_completeness",
     "load_classics",
+    "load_conditional_trigram_meanings",
     "load_hexagrams",
     "load_hexagram_interpretations",
     "load_jiaoshi_yilin",

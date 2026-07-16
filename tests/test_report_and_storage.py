@@ -56,6 +56,9 @@ def test_html_report_is_a_complete_readable_table_without_raw_json() -> None:
     assert "起卦時間與旬空" in report
     assert "本卦納甲" in report and "互卦納甲" in report and "變卦納甲" in report
     assert "完整卦義" in report and "足球比賽應用層" in report
+    assert "條件式卦義" in report
+    assert "全部可能含義" in report
+    assert "本次命中條件" in report
     assert "焦氏易林" in report
     assert "完整排盤JSON" not in report
     assert '"najia_analysis"' not in report
@@ -91,6 +94,8 @@ def test_casting_storage_is_idempotent_and_persists_full_json(tmp_path: Path) ->
     assert payload["hexagram_meanings"]["main_hexagram"]["classical_meaning"]
     assert len(payload["hexagram_meanings"]["main_hexagram"]["football_mapping"]) == 9
     assert len(payload["najia_analysis"]["main_hexagram"]["lines"]) == 6
+    assert payload["conditional_meanings"]["body_path"]["stages"]
+    assert payload["conditional_meanings"]["use_path"]["stages"]
     assert second[0]["建立時間"] == "2026-07-13 15:30:00"
     assert second[0]["起卦農曆時間"] == result.casting_moment.lunar_text
     assert second[0]["起卦時辰"] == "申時"
@@ -109,7 +114,7 @@ def test_download_json_contains_punctuated_jiaoshi_yilin_entry() -> None:
     casting, result = fixture()
     payload = json.loads(json.dumps(build_casting_export(casting, result), ensure_ascii=False))
 
-    assert payload["schema_version"] == "5.4"
+    assert payload["schema_version"] == "5.5"
     assert payload["casting"]["main_hexagram"] == result.main_hexagram
     assert payload["jiaoshi_yilin"]["entry_key"]
     assert payload["jiaoshi_yilin"]["text_style"] == "繁體中文標點版"

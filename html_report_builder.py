@@ -48,6 +48,43 @@ def _meaning_section(label: str, meaning: Mapping[str, Any]) -> str:
     """
 
 
+def _conditional_path_section(path: Mapping[str, Any]) -> str:
+    stages: list[str] = []
+    for stage in path["stages"]:
+        priority_rows = [
+            (item["rank"], item["meaning"], item["rule_score"], item["football"])
+            for item in stage["prioritized_meanings"]
+        ]
+        all_rows = [
+            (item["name"], item["football"])
+            for item in stage["possible_meanings"]
+        ]
+        matched_rows = [
+            (
+                item["priority"],
+                item["condition"],
+                "、".join(item["preferred_meanings"]),
+                item["football_reading"],
+            )
+            for item in stage["matched_rules"]
+        ] or [("—", "本次沒有命中特定條件", "保留全部義項", "不強行選義。")]
+        stages.append(f"""
+        <h3>{escape(str(stage['stage']))}：{escape(str(stage['trigram']))}｜優先義項：{escape(str(stage['primary_summary']))}</h3>
+        {_table(('排序','優先義項','規則分','足球含義'), priority_rows)}
+        <h4>全部可能含義</h4>{_table(('可能含義','足球含義'), all_rows)}
+        <h4>本次命中條件</h4>{_table(('優先級','判斷條件','優先解為','足球判讀'), matched_rows)}
+        <p><small>{escape(str(stage['rule_note']))}</small></p>
+        """)
+    return f"""
+    <section><h2>{escape(str(path['party_name']))}／{escape(str(path['side']))}條件式卦義</h2>
+    <p><b>卦線：</b>{escape(str(path['transition']))}｜<b>旺衰：</b>{escape(str(path['strength_before']))}→{escape(str(path['strength_after']))}｜
+    <b>生克：</b>{escape(str(path['relation_before']))}→{escape(str(path['relation_after']))}</p>
+    <p>六沖 {path['clash_count']} 組｜六合 {path['combination_count']} 組｜破門／突破訊號 {path['breakthrough_signal_count']} 個｜
+    動爻旬空：{'是' if path['moving_line_void'] else '否'}｜動爻月破：{'是' if path['moving_line_month_broken'] else '否'}</p>
+    {''.join(stages)}</section>
+    """
+
+
 def build_html_report(casting: CastingInput, result: HexagramResult) -> str:
     structure = build_casting_structure(result)
     najia = structure["najia_analysis"]
@@ -56,6 +93,7 @@ def build_html_report(casting: CastingInput, result: HexagramResult) -> str:
     dynamics = structure["moving_line_dynamics"]
     moving = structure["moving_line_classics"]
     seasonal = structure["seasonal_strength"]
+    conditional = structure["conditional_meanings"]
     yilin = build_jiaoshi_yilin_reference(result.main_hexagram, result.changed_hexagram)
 
     najia_sections = []
@@ -106,6 +144,9 @@ def build_html_report(casting: CastingInput, result: HexagramResult) -> str:
 ('相應', f"{dynamics['relation_to_corresponding_line']}（對應第{dynamics['corresponding_line']}爻）"), ('乘承比', dynamics['adjacent_relation'])))}</section>
 <section><h2>月令旺衰</h2>{_table(('體用','變前','變後','轉勢'), (
 ('體方', seasonal['body_before'], seasonal['body_after'], seasonal['body_shift']), ('用方', seasonal['use_before'], seasonal['use_after'], seasonal['use_shift'])))}</section>
+<section><h2>條件式卦義判斷原則</h2><p>{escape(conditional['whole_line_note'])}</p><p>{escape(conditional['evaluation_boundary'])}</p></section>
+{_conditional_path_section(conditional['body_path'])}
+{_conditional_path_section(conditional['use_path'])}
 <p class='note'>六親主欄依你指定的「日干五行」算法；另列常見的「八宮卦宮五行」結果，兩種口徑不混用。旬空表示訊號暫受限制，不代表永久無效。</p>
 {''.join(najia_sections)}
 {meaning_html}
