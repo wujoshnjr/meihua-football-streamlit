@@ -86,7 +86,7 @@ def _render_input_protocol_check(
         use_text,
         full_text,
     )
-    st.markdown("#### v2 格式與計數檢查")
+    st.markdown("#### v3 格式與計數檢查")
     columns = st.columns(3)
     for column, section in zip(columns, audit["sections"].values(), strict=True):
         minimum, maximum = section["target_count"]
@@ -104,9 +104,16 @@ def _render_input_protocol_check(
         full_text,
     )
     if issues:
-        st.error("v2 起象輸入規格未通過：\n- " + "\n- ".join(issues))
+        st.error("v3 起象輸入規格未通過：\n- " + "\n- ".join(issues))
     else:
-        st.success("三段內容的人稱、固定結構、雙方名稱與計數範圍全部通過，可以完整排卦。")
+        st.success("三段內容的人稱、十一行結構、雙方名稱與計數範圍全部通過，可以完整排卦。")
+    warnings = [
+        warning
+        for key in ("body", "use")
+        for warning in audit["sections"][key]["quality_warnings"]
+    ]
+    if warnings:
+        st.warning("文字品質提醒：\n- " + "\n- ".join(warnings))
 
 
 def _render_html_table(rows: Sequence[Mapping[str, Any]], columns: Sequence[str]) -> None:
@@ -543,6 +550,15 @@ def _render_records(store: CastingStore) -> None:
 
 def _render_method() -> None:
     completeness = knowledge_completeness()
+    st.subheader("v3 起象輸入的研究邊界")
+    st.info(
+        "十一行固定格式只降低文字噪音並提高一致性、可重複性與可回測性；"
+        "目前沒有公開實證能證明某種球隊自述寫法本身會提高梅花易數足球預測準確率。"
+    )
+    st.write(
+        "系統保存三段原文、輸入規格版本與排卦指紋。起卦後不得因卦象不合直覺替換同義詞、"
+        "補句或重新計數；本版維持只排卦，不加入比分、賠率或足球先驗模型。"
+    )
     st.subheader("知識庫完整性")
     m1, m2, m3, m4, m5, m6, m7 = st.columns(7)
     m1.metric("八卦", f"{completeness['trigrams']}/8")
@@ -593,31 +609,44 @@ def run_app() -> None:
             )
             st.caption("事件名稱會自動組合為「體方名稱 vs 用方名稱」，不需要重複輸入。")
             category = st.text_input("內容類別", value="足球賽前內容")
-            st.markdown("#### v2 起象輸入規格")
+            st.markdown("#### v3 起象輸入規格")
             st.info(
                 "只使用賽前資訊，判斷範圍固定為九十分鐘，不含延長賽與PK。"
-                "兩隊自述聚焦同一股氣，避免大量球員姓名與枝節資料。"
+                "固定格式用來降低文字噪音並提高一致性、可重複性與可回測性，"
+                "不宣稱某種寫法本身會提高預測準確率。"
             )
-            with st.expander("查看自述固定結構"):
+            with st.expander("查看十一行自述固定結構"):
                 st.markdown(
                     "我是XXX。  \n"
-                    "目前我的整體狀態……  \n"
-                    "我的士氣……  \n"
-                    "我的比賽策略……  \n"
-                    "我主要依靠……  \n"
-                    "我的進攻方式……  \n"
-                    "我的防守方式……  \n"
-                    "我最大的優勢……  \n"
-                    "我最需要注意……  \n"
+                    "目前我的客觀狀態……  \n"
+                    "我的士氣與比賽壓力……  \n"
+                    "我的預計比賽策略……  \n"
+                    "我主要依靠的組織支點……  \n"
+                    "我的主要進攻通道……  \n"
+                    "我的主要防守結構……  \n"
+                    "我最大的相對優勢……  \n"
+                    "我目前最明顯的限制……  \n"
+                    "我最需要防範對手的……  \n"
                     "我希望在九十分鐘內……"
+                )
+                st.caption("每一項必須各自成為一個非空行，固定開頭與順序不可調換。")
+            with st.expander("查看防噪寫作規則"):
+                st.markdown(
+                    "- 體用雙方使用完全相同的十一行結構。\n"
+                    "- 每行只寫一個主要訊號；自己的限制與對手威脅分開。\n"
+                    "- 狀態評級優先使用：明顯正面、略正面、中性、略負面、明顯負面。\n"
+                    "- 主要策略優先使用：主動控球、快速轉換、直接推進、中低位防守。\n"
+                    "- 避免必勝、取勝晉級、復仇、創造歷史等結果導向文字。\n"
+                    "- 建議開賽前六小時凍結；重大傷停或先發變化才重做，且雙方一起更新。\n"
+                    "- 起卦後保留原文，不因卦象不合直覺替換同義詞或補句。"
                 )
             body_text = st.text_area(
                 BODY_SECTION_LABEL,
-                height=230,
+                height=340,
                 key=BODY_TEXT_KEY,
-                placeholder="我是體方隊伍。\n\n目前我的整體狀態……",
+                placeholder="我是體方隊伍。\n\n目前我的客觀狀態……",
                 help=(
-                    f"第一人稱固定結構；依系統起卦計數法須為 "
+                    f"第一人稱十一行固定結構；依系統起卦計數法須為 "
                     f"{SELF_NARRATIVE_MIN_COUNT}～{SELF_NARRATIVE_MAX_COUNT} 數，用來取體卦／下卦。"
                 ),
             )
@@ -631,11 +660,11 @@ def run_app() -> None:
             )
             use_text = st.text_area(
                 USE_SECTION_LABEL,
-                height=230,
+                height=340,
                 key=USE_TEXT_KEY,
-                placeholder="我是用方隊伍。\n\n目前我的整體狀態……",
+                placeholder="我是用方隊伍。\n\n目前我的客觀狀態……",
                 help=(
-                    f"第一人稱固定結構；依系統起卦計數法須為 "
+                    f"第一人稱十一行固定結構；依系統起卦計數法須為 "
                     f"{SELF_NARRATIVE_MIN_COUNT}～{SELF_NARRATIVE_MAX_COUNT} 數，用來取用卦／上卦。"
                 ),
             )
@@ -712,7 +741,7 @@ def run_app() -> None:
                     full_text,
                 )
                 if issues:
-                    raise ValueError("v2 起象輸入規格未通過：\n- " + "\n- ".join(issues))
+                    raise ValueError("v3 起象輸入規格未通過：\n- " + "\n- ".join(issues))
                 result = calculate_casting(casting)
                 st.session_state["casting_input"] = casting
                 st.session_state["casting_result"] = result

@@ -1,4 +1,4 @@
-# v5 資料結構
+# v5.7 資料結構
 
 ## `data/meihua_castings.csv`
 
@@ -52,10 +52,11 @@
 
 ### `input_protocol`
 
-- `version`：固定為 `team-self-narrative-v2`。
-- `sections.body`、`sections.use`：第一人稱、固定結構、目標 180～220 數、實際計數及格式檢查結果。
+- `version`：固定為 `team-self-narrative-v3`。
+- `sections.body`、`sections.use`：第一人稱十一行固定結構、目標 180～220 數、實際計數、逐行固定開頭／順序、空欄、結果導向詞及品質提醒。
 - `sections.neutral`：第三人稱、目標 300～450 數、實際計數及雙方名稱檢查結果。
-- 三段只使用賽前資訊，判斷範圍為九十分鐘；此規格只控制起象文字一致性，不改變固定排卦公式。
+- 頂層另存控制詞彙、五條硬規則、賽前凍結政策、原始版本政策及研究用途邊界。
+- 三段只使用賽前資訊，判斷範圍為九十分鐘；此規格只降低文字噪音並控制起象一致性，不改變固定排卦公式，也不宣稱提高預測準確率。
 
 ### `conditional_meanings`
 
