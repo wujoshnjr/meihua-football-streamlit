@@ -28,11 +28,21 @@ def _pad_to(text: str, target: int) -> str:
 
 def _self_narrative(name: str) -> str:
     return _pad_to(
-        f"我是{name}。目前我的整體狀態穩定。我的士氣專注。"
-        "我的比賽策略是控制節奏。我主要依靠整體合作。"
-        "我的進攻方式是持續施壓。我的防守方式是保持距離。"
-        "我最大的優勢是行動一致。我最需要注意快速反擊。"
-        "我希望在九十分鐘內掌握主動。",
+        "\n".join(
+            (
+                f"我是{name}。",
+                "目前我的客觀狀態為略正面，陣容完整。",
+                "我的士氣與比賽壓力為中性，壓力明確。",
+                "我的預計比賽策略是主動控球。",
+                "我主要依靠的組織支點是後腰出球。",
+                "我的主要進攻通道是右路推進。",
+                "我的主要防守結構是中位四後衛。",
+                "我最大的相對優勢是邊路速度。",
+                "我目前最明顯的限制是終結不穩。",
+                "我最需要防範對手的是快速反擊。",
+                "我希望在九十分鐘內減少失誤提高射門品質。",
+            )
+        ),
         180,
     )
 
@@ -48,7 +58,7 @@ def _neutral_introduction(body: str, use: str) -> str:
 def test_streamlit_app_loads_as_casting_only_product() -> None:
     app = AppTest.from_file(str(APP), default_timeout=30).run()
     assert not app.exception
-    assert app.title[0].value == "梅花易數完整排卦系統 v5.7.1"
+    assert app.title[0].value == "梅花易數完整排卦系統 v5.8.0"
     assert any("完整排卦與卦義資料" in item.value for item in app.success)
     labels = {item.label for item in app.text_input}
     assert "體方名稱（vs 前）" in labels
@@ -101,7 +111,7 @@ def test_streamlit_form_requires_both_party_names() -> None:
     assert any("請輸入體方名稱與用方名稱" in item.value for item in app.error)
 
 
-def test_streamlit_form_rejects_text_outside_v2_input_protocol() -> None:
+def test_streamlit_form_rejects_text_outside_v3_input_protocol() -> None:
     app = AppTest.from_file(str(APP), default_timeout=30).run()
     for index, value in enumerate(["甲", "乙", "足球賽前內容"]):
         app.text_input[index].set_value(value)
@@ -110,7 +120,7 @@ def test_streamlit_form_rejects_text_outside_v2_input_protocol() -> None:
     _button(app, "完整排卦").click().run()
 
     assert not app.exception
-    assert any("v2 起象輸入規格未通過" in item.value for item in app.error)
+    assert any("v3 起象輸入規格未通過" in item.value for item in app.error)
     assert "casting_result" not in app.session_state
 
 

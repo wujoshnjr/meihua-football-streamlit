@@ -159,9 +159,10 @@ def build_html_report(casting: CastingInput, result: HexagramResult) -> str:
 <h1>☯ {escape(result.title)}｜完整排卦表</h1>
 <p><small>系統 {APP_VERSION}｜知識庫 {KNOWLEDGE_VERSION}</small></p>
 <p class='note'>本表完整呈現排卦、經傳、卦義與足球應用參考；不自動預測勝負或固定比分。足球欄位屬本專案應用層，不等同經典原文。</p>
-<section><h2>v2 起象輸入規格</h2><p>{escape(input_audit['scope'])}</p>
+<section><h2>v3 起象輸入規格</h2><p>{escape(input_audit['scope'])}</p>
+<p>{escape(input_audit['purpose_boundary'])}</p>
 {_table(('區塊','敘述人稱','排卦用途','固定範圍','本次計數'), protocol_rows)}
-<p><small>{escape(input_audit['counting_note'])}</small></p></section>
+<p><small>{escape(input_audit['counting_note'])} {escape(input_audit['freeze_policy'])} {escape(input_audit['versioning_policy'])}</small></p></section>
 <section><h2>起卦時間與旬空</h2>{_table(('項目','內容'), (
 ('國曆時間', result.casting_moment.gregorian_text), ('農曆時間', result.casting_moment.lunar_text),
 ('日辰', day['day_ganzhi']), ('日干五行', f"{day['day_stem']}／{day['day_stem_element']}"),
