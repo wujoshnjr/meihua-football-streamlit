@@ -34,6 +34,9 @@ def test_report_contains_complete_casting_but_no_prediction_sections() -> None:
     report = build_markdown_report(casting, result)
 
     assert "取數計算" in report
+    assert "體方自述（起象）" in report
+    assert "用方自述（起象）" in report
+    assert "賽前中性介紹（動爻）" in report
     assert "起卦農曆時間" in report
     assert "農曆二〇二六年（丙午年）五月廿九 庚申時（申時）" in report
     assert "本卦六爻排盤" in report
@@ -57,6 +60,9 @@ def test_html_report_is_a_complete_readable_table_without_raw_json() -> None:
     assert "本卦納甲" in report and "互卦納甲" in report and "變卦納甲" in report
     assert "完整卦義" in report and "足球比賽應用層" in report
     assert "條件式卦義" in report
+    assert "v2 起象輸入規格" in report
+    assert "體方自述（起象）" in report
+    assert "賽前中性介紹（動爻）" in report
     assert "全部可能含義" in report
     assert "本次命中條件" in report
     assert "焦氏易林" in report
@@ -96,9 +102,13 @@ def test_casting_storage_is_idempotent_and_persists_full_json(tmp_path: Path) ->
     assert len(payload["najia_analysis"]["main_hexagram"]["lines"]) == 6
     assert payload["conditional_meanings"]["body_path"]["stages"]
     assert payload["conditional_meanings"]["use_path"]["stages"]
+    assert payload["input_protocol"]["version"] == "team-self-narrative-v2"
+    assert payload["input"]["body_text"] == casting.body_text
     assert second[0]["建立時間"] == "2026-07-13 15:30:00"
     assert second[0]["起卦農曆時間"] == result.casting_moment.lunar_text
     assert second[0]["起卦時辰"] == "申時"
+    assert second[0]["輸入規格版本"] == "team-self-narrative-v2"
+    assert second[0]["體方自述（起象）"] == casting.body_text
 
     csv_payload = store.csv_bytes(second).decode("utf-8-sig")
     assert "排卦指紋" in csv_payload
@@ -106,6 +116,8 @@ def test_casting_storage_is_idempotent_and_persists_full_json(tmp_path: Path) ->
     assert casting_fingerprint(casting, result) in csv_payload
     public_csv = store.public_csv_bytes(second).decode("utf-8-sig")
     assert "日辰" in public_csv and "旬空" in public_csv and "動爻納甲" in public_csv
+    assert "體方自述（起象）" in public_csv and "賽前中性介紹（動爻）" in public_csv
+    assert "體方原文" not in public_csv and "完整中性原文" not in public_csv
     assert "完整排盤JSON" not in public_csv
     assert "排卦指紋" not in public_csv
 
@@ -114,7 +126,8 @@ def test_download_json_contains_punctuated_jiaoshi_yilin_entry() -> None:
     casting, result = fixture()
     payload = json.loads(json.dumps(build_casting_export(casting, result), ensure_ascii=False))
 
-    assert payload["schema_version"] == "5.5"
+    assert payload["schema_version"] == "5.6"
+    assert payload["input_protocol"]["version"] == "team-self-narrative-v2"
     assert payload["casting"]["main_hexagram"] == result.main_hexagram
     assert payload["jiaoshi_yilin"]["entry_key"]
     assert payload["jiaoshi_yilin"]["text_style"] == "繁體中文標點版"
@@ -148,4 +161,6 @@ def test_existing_multiline_casting_csv_round_trips_without_data_loss() -> None:
 
     assert rows
     assert "\n" in rows[0]["補充資料"]
+    assert rows[0]["體方自述（起象）"]
+    assert "體方原文" not in rows[0]
     assert CastingStore._read_csv(CastingStore._csv_text(rows)) == rows

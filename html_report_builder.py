@@ -4,6 +4,12 @@ from html import escape
 from typing import Any, Mapping, Sequence
 
 from casting_structure import build_casting_structure
+from input_protocol import (
+    BODY_SECTION_LABEL,
+    NEUTRAL_SECTION_LABEL,
+    USE_SECTION_LABEL,
+    build_input_protocol_audit,
+)
 from knowledge_loader import build_jiaoshi_yilin_reference, load_hexagrams
 from models import CastingInput, HexagramResult
 from version import APP_VERSION, KNOWLEDGE_VERSION
@@ -94,6 +100,13 @@ def build_html_report(casting: CastingInput, result: HexagramResult) -> str:
     moving = structure["moving_line_classics"]
     seasonal = structure["seasonal_strength"]
     conditional = structure["conditional_meanings"]
+    input_audit = build_input_protocol_audit(
+        casting.body_name,
+        casting.use_name,
+        casting.body_text,
+        casting.use_text,
+        casting.full_text,
+    )
     yilin = build_jiaoshi_yilin_reference(result.main_hexagram, result.changed_hexagram)
 
     najia_sections = []
@@ -126,12 +139,29 @@ def build_html_report(casting: CastingInput, result: HexagramResult) -> str:
         for key, label in (("main_hexagram", "本卦"), ("mutual_hexagram", "互卦"), ("changed_hexagram", "變卦"))
     )
     workflow = _table(("步驟", "內容", "作用"), [(x["step"], x["content"], x["purpose"]) for x in najia["workflow"]])
-    source_rows = (("體方原文", casting.body_text), ("用方原文", casting.use_text), ("完整中性原文", casting.full_text))
+    source_rows = (
+        (BODY_SECTION_LABEL, casting.body_text),
+        (USE_SECTION_LABEL, casting.use_text),
+        (NEUTRAL_SECTION_LABEL, casting.full_text),
+    )
+    protocol_rows = [
+        (
+            section["label"],
+            section["voice"],
+            section["purpose"],
+            f"{section['target_count'][0]}～{section['target_count'][1]}",
+            section["actual_count"],
+        )
+        for section in input_audit["sections"].values()
+    ]
     return f"""<!doctype html><html lang='zh-Hant'><head><meta charset='utf-8'><title>{escape(result.title)}完整排卦表</title>
 <style>body{{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;max-width:1200px;margin:32px auto;padding:0 22px;color:#202124;line-height:1.65}}h1,h2{{color:#5b351b}}section{{margin:28px 0;padding-top:8px;border-top:2px solid #d9c3a5}}.note{{padding:12px 16px;background:#fff7e8;border-left:4px solid #b2742e}}.table{{overflow:auto}}table{{width:100%;border-collapse:collapse;margin:10px 0 20px}}th,td{{border:1px solid #d7d7d7;padding:8px;text-align:left;vertical-align:top;white-space:pre-wrap}}th{{background:#f4eee5}}small{{color:#666}}</style></head><body>
 <h1>☯ {escape(result.title)}｜完整排卦表</h1>
 <p><small>系統 {APP_VERSION}｜知識庫 {KNOWLEDGE_VERSION}</small></p>
 <p class='note'>本表完整呈現排卦、經傳、卦義與足球應用參考；不自動預測勝負或固定比分。足球欄位屬本專案應用層，不等同經典原文。</p>
+<section><h2>v2 起象輸入規格</h2><p>{escape(input_audit['scope'])}</p>
+{_table(('區塊','敘述人稱','排卦用途','固定範圍','本次計數'), protocol_rows)}
+<p><small>{escape(input_audit['counting_note'])}</small></p></section>
 <section><h2>起卦時間與旬空</h2>{_table(('項目','內容'), (
 ('國曆時間', result.casting_moment.gregorian_text), ('農曆時間', result.casting_moment.lunar_text),
 ('日辰', day['day_ganzhi']), ('日干五行', f"{day['day_stem']}／{day['day_stem_element']}"),
@@ -152,7 +182,7 @@ def build_html_report(casting: CastingInput, result: HexagramResult) -> str:
 {meaning_html}
 <section><h2>焦氏易林</h2><p><b>{escape(yilin['entry_key'])}：</b>{escape(yilin['text'])}</p><p><small>{escape(yilin['text_style'])}</small></p></section>
 <section><h2>實戰操作步驟</h2>{workflow}</section>
-<section><h2>本次輸入原文</h2>{_table(('欄位','內容'), source_rows)}</section>
+<section><h2>本次起象原文</h2>{_table(('區塊','內容'), source_rows)}</section>
 </body></html>"""
 
 

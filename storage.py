@@ -22,7 +22,7 @@ CASTING_COLUMNS = [
     "資料結構版本", "系統版本", "排卦ID", "建立時間", "起卦國曆ISO", "起卦農曆時間",
     "起卦時區", "農曆年份", "農曆年干支", "農曆月份", "是否閏月", "農曆日",
     "起卦時辰", "起卦干支時辰", "日辰", "日干", "日支", "月令", "旬名", "旬空",
-    "標題", "類別", "範圍", "體方名稱", "用方名稱",
+    "標題", "類別", "範圍", "輸入規格版本", "體方名稱", "用方名稱",
     "體方段字數", "體方除八餘數", "體卦", "體卦數", "體卦五行",
     "用方段字數", "用方除八餘數", "用卦", "用卦數", "用卦五行",
     "完整段落字數", "完整段落除六餘數", "本卦", "本卦六爻自下而上",
@@ -33,8 +33,14 @@ CASTING_COLUMNS = [
     "體方條件式卦義", "用方條件式卦義", "體方命中條件數", "用方命中條件數",
     "本卦體用關係代碼", "本卦體用關係", "變卦體用關係代碼", "變卦體用關係",
     "排卦計算版本", "排卦指紋", "完整排盤JSON", "報告檔案",
-    "體方原文", "用方原文", "完整中性原文", "補充資料",
+    "體方自述（起象）", "用方自述（起象）", "賽前中性介紹（動爻）", "補充資料",
 ]
+
+LEGACY_COLUMN_ALIASES = {
+    "體方原文": "體方自述（起象）",
+    "用方原文": "用方自述（起象）",
+    "完整中性原文": "賽前中性介紹（動爻）",
+}
 
 
 def safe_filename(value: str) -> str:
@@ -121,8 +127,16 @@ class CastingStore:
     def _normalize(rows: Sequence[Mapping[str, Any]] | None) -> list[dict[str, str]]:
         if not rows:
             return []
-        extras: list[str] = []
+        migrated_rows: list[dict[str, Any]] = []
         for row in rows:
+            migrated = dict(row)
+            for legacy, current in LEGACY_COLUMN_ALIASES.items():
+                if not migrated.get(current) and migrated.get(legacy):
+                    migrated[current] = migrated[legacy]
+                migrated.pop(legacy, None)
+            migrated_rows.append(migrated)
+        extras: list[str] = []
+        for row in migrated_rows:
             for column in row:
                 if column not in CASTING_COLUMNS and column not in extras:
                     extras.append(column)
@@ -132,7 +146,7 @@ class CastingStore:
                 column: "" if row.get(column) is None else str(row.get(column, ""))
                 for column in columns
             }
-            for row in rows
+            for row in migrated_rows
         ]
 
     @classmethod
@@ -258,6 +272,7 @@ def build_casting_row(
         "標題": result.title,
         "類別": casting.category,
         "範圍": casting.scope,
+        "輸入規格版本": casting.input_protocol_version,
         "體方名稱": result.body_name,
         "用方名稱": result.use_name,
         "體方段字數": result.body_count,
@@ -309,14 +324,14 @@ def build_casting_row(
         "排卦計算版本": result.calculation_version,
         "排卦指紋": fingerprint,
         "完整排盤JSON": json.dumps(
-            build_stored_casting_payload(result),
+            build_stored_casting_payload(casting, result),
             ensure_ascii=False,
             separators=(",", ":"),
         ),
         "報告檔案": report_path,
-        "體方原文": casting.body_text,
-        "用方原文": casting.use_text,
-        "完整中性原文": casting.full_text,
+        "體方自述（起象）": casting.body_text,
+        "用方自述（起象）": casting.use_text,
+        "賽前中性介紹（動爻）": casting.full_text,
         "補充資料": casting.context_notes,
     }
 

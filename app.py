@@ -8,6 +8,16 @@ import streamlit as st
 from config import load_config
 from casting_structure import build_casting_structure
 from html_report_builder import CLASSICAL_LABELS, FOOTBALL_LABELS, build_html_report
+from input_protocol import (
+    BODY_SECTION_LABEL,
+    NEUTRAL_MAX_COUNT,
+    NEUTRAL_MIN_COUNT,
+    NEUTRAL_SECTION_LABEL,
+    SELF_NARRATIVE_MAX_COUNT,
+    SELF_NARRATIVE_MIN_COUNT,
+    USE_SECTION_LABEL,
+    validate_input_protocol,
+)
 from knowledge_loader import (
     build_jiaoshi_yilin_reference,
     knowledge_completeness,
@@ -209,7 +219,10 @@ def _render_casting_result(config: Any, store: CastingStore) -> None:
     casting: CastingInput | None = st.session_state.get("casting_input")
     result: HexagramResult | None = st.session_state.get("casting_result")
     if casting is None or result is None:
-        st.info("填入三段內容後按「完整排卦」，這裡會顯示本卦、互卦、動爻與變卦。")
+        st.info(
+            "填入體方自述、用方自述與賽前中性介紹後按「完整排卦」，"
+            "這裡會顯示本卦、互卦、動爻與變卦。"
+        )
         return
 
     st.subheader("排卦結果")
@@ -237,9 +250,9 @@ def _render_casting_result(config: Any, store: CastingStore) -> None:
             [
                 "| 輸入 | 計數 | 取餘 | 排卦結果 |",
                 "|---|---:|---:|---|",
-                f"| 體方段落 | {result.body_count} | ÷8 餘 {_modulo(result.body_modulo, 8)} | {result.body_gua}，先天數{result.body_number}，{result.body_element} |",
-                f"| 用方段落 | {result.use_count} | ÷8 餘 {_modulo(result.use_modulo, 8)} | {result.use_gua}，先天數{result.use_number}，{result.use_element} |",
-                f"| 完整中性段落 | {result.total_count} | ÷6 餘 {_modulo(result.moving_modulo, 6)} | 第{result.moving_line}爻動，{result.moving_line_label} |",
+                f"| {BODY_SECTION_LABEL} | {result.body_count} | ÷8 餘 {_modulo(result.body_modulo, 8)} | {result.body_gua}，先天數{result.body_number}，{result.body_element} |",
+                f"| {USE_SECTION_LABEL} | {result.use_count} | ÷8 餘 {_modulo(result.use_modulo, 8)} | {result.use_gua}，先天數{result.use_number}，{result.use_element} |",
+                f"| {NEUTRAL_SECTION_LABEL} | {result.total_count} | ÷6 餘 {_modulo(result.moving_modulo, 6)} | 第{result.moving_line}爻動，{result.moving_line_label} |",
             ]
         )
     )
@@ -527,9 +540,52 @@ def run_app() -> None:
             )
             st.caption("事件名稱會自動組合為「體方名稱 vs 用方名稱」，不需要重複輸入。")
             category = st.text_input("內容類別", value="足球賽前內容")
-            body_text = st.text_area("體方段落（用來取體卦／下卦）", height=150)
-            use_text = st.text_area("用方段落（用來取用卦／上卦）", height=150)
-            full_text = st.text_area("完整賽前中性段落（用來取動爻）", height=190)
+            st.markdown("#### v2 起象輸入規格")
+            st.info(
+                "只使用賽前資訊，判斷範圍固定為九十分鐘，不含延長賽與PK。"
+                "兩隊自述聚焦同一股氣，避免大量球員姓名與枝節資料。"
+            )
+            with st.expander("查看自述固定結構"):
+                st.markdown(
+                    "我是XXX。  \n"
+                    "目前我的整體狀態……  \n"
+                    "我的士氣……  \n"
+                    "我的比賽策略……  \n"
+                    "我主要依靠……  \n"
+                    "我的進攻方式……  \n"
+                    "我的防守方式……  \n"
+                    "我最大的優勢……  \n"
+                    "我最需要注意……  \n"
+                    "我希望在九十分鐘內……"
+                )
+            body_text = st.text_area(
+                BODY_SECTION_LABEL,
+                height=230,
+                placeholder="我是體方隊伍。\n\n目前我的整體狀態……",
+                help=(
+                    f"第一人稱固定結構；依系統起卦計數法須為 "
+                    f"{SELF_NARRATIVE_MIN_COUNT}～{SELF_NARRATIVE_MAX_COUNT} 數，用來取體卦／下卦。"
+                ),
+            )
+            use_text = st.text_area(
+                USE_SECTION_LABEL,
+                height=230,
+                placeholder="我是用方隊伍。\n\n目前我的整體狀態……",
+                help=(
+                    f"第一人稱固定結構；依系統起卦計數法須為 "
+                    f"{SELF_NARRATIVE_MIN_COUNT}～{SELF_NARRATIVE_MAX_COUNT} 數，用來取用卦／上卦。"
+                ),
+            )
+            full_text = st.text_area(
+                NEUTRAL_SECTION_LABEL,
+                height=300,
+                placeholder="這場比賽……體方……用方……比賽關鍵……",
+                help=(
+                    f"第三人稱、雙方平衡；依系統起卦計數法須為 "
+                    f"{NEUTRAL_MIN_COUNT}～{NEUTRAL_MAX_COUNT} 數，用來取動爻。"
+                ),
+            )
+            st.caption("字數採系統固定計數法：中文字逐字計數，連續拉丁單字與數字各計一數，標點與空白不計。")
             submitted = st.form_submit_button("完整排卦", type="primary", width="stretch")
         if submitted:
             try:
@@ -543,6 +599,15 @@ def run_app() -> None:
                     full_text=full_text,
                     category=category.strip() or "未分類",
                 )
+                issues = validate_input_protocol(
+                    body_name,
+                    use_name,
+                    body_text,
+                    use_text,
+                    full_text,
+                )
+                if issues:
+                    raise ValueError("v2 起象輸入規格未通過：\n- " + "\n- ".join(issues))
                 result = calculate_casting(casting)
                 st.session_state["casting_input"] = casting
                 st.session_state["casting_result"] = result
