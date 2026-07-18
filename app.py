@@ -16,6 +16,7 @@ from input_protocol import (
     SELF_NARRATIVE_MAX_COUNT,
     SELF_NARRATIVE_MIN_COUNT,
     USE_SECTION_LABEL,
+    build_input_protocol_audit,
     validate_input_protocol,
 )
 from knowledge_loader import (
@@ -33,6 +34,11 @@ from meihua_engine import calculate_casting
 from models import CastingInput, HexagramResult
 from storage import CastingStore, build_casting_row, save_report
 from version import APP_TITLE, KNOWLEDGE_VERSION
+
+
+BODY_TEXT_KEY = "body_self_narrative"
+USE_TEXT_KEY = "use_self_narrative"
+NEUTRAL_TEXT_KEY = "neutral_match_introduction"
 
 
 def _secrets() -> dict[str, Any]:
@@ -54,6 +60,53 @@ def _normalize_parties(body_name: str, use_name: str) -> tuple[str, str, str]:
     if not body or not use:
         raise ValueError("請輸入體方名稱與用方名稱。")
     return body, use, f"{body} vs {use}"
+
+
+def _clear_casting_result() -> None:
+    st.session_state.pop("casting_input", None)
+    st.session_state.pop("casting_result", None)
+
+
+def _clear_text_widget(key: str) -> None:
+    st.session_state[key] = ""
+    _clear_casting_result()
+
+
+def _render_input_protocol_check(
+    body_name: str,
+    use_name: str,
+    body_text: str,
+    use_text: str,
+    full_text: str,
+) -> None:
+    audit = build_input_protocol_audit(
+        body_name,
+        use_name,
+        body_text,
+        use_text,
+        full_text,
+    )
+    st.markdown("#### v2 格式與計數檢查")
+    columns = st.columns(3)
+    for column, section in zip(columns, audit["sections"].values(), strict=True):
+        minimum, maximum = section["target_count"]
+        column.metric(
+            section["label"],
+            f"{section['actual_count']} 數",
+            "符合範圍" if section["count_in_range"] else f"須為 {minimum}～{maximum}",
+            delta_color="normal" if section["count_in_range"] else "inverse",
+        )
+    issues = validate_input_protocol(
+        body_name,
+        use_name,
+        body_text,
+        use_text,
+        full_text,
+    )
+    if issues:
+        st.error("v2 起象輸入規格未通過：\n- " + "\n- ".join(issues))
+    else:
+        st.success("三段內容的人稱、固定結構、雙方名稱與計數範圍全部通過，可以完整排卦。")
 
 
 def _render_html_table(rows: Sequence[Mapping[str, Any]], columns: Sequence[str]) -> None:
@@ -524,7 +577,7 @@ def run_app() -> None:
         ["完整排卦", "卦象資料庫", "易傳資料庫", "排卦紀錄", "方法與完整性"]
     )
     with casting_tab:
-        with st.form("casting_form", clear_on_submit=False):
+        with st.form("casting_form", clear_on_submit=False, enter_to_submit=False):
             st.markdown("#### 事件／比賽名稱")
             body_col, versus_col, use_col = st.columns([10, 1.5, 10])
             body_name = body_col.text_input(
@@ -561,32 +614,84 @@ def run_app() -> None:
             body_text = st.text_area(
                 BODY_SECTION_LABEL,
                 height=230,
+                key=BODY_TEXT_KEY,
                 placeholder="我是體方隊伍。\n\n目前我的整體狀態……",
                 help=(
                     f"第一人稱固定結構；依系統起卦計數法須為 "
                     f"{SELF_NARRATIVE_MIN_COUNT}～{SELF_NARRATIVE_MAX_COUNT} 數，用來取體卦／下卦。"
                 ),
             )
+            st.form_submit_button(
+                "清除體方自述",
+                key="clear_body_self_narrative",
+                type="tertiary",
+                icon="🗑️",
+                on_click=_clear_text_widget,
+                args=(BODY_TEXT_KEY,),
+            )
             use_text = st.text_area(
                 USE_SECTION_LABEL,
                 height=230,
+                key=USE_TEXT_KEY,
                 placeholder="我是用方隊伍。\n\n目前我的整體狀態……",
                 help=(
                     f"第一人稱固定結構；依系統起卦計數法須為 "
                     f"{SELF_NARRATIVE_MIN_COUNT}～{SELF_NARRATIVE_MAX_COUNT} 數，用來取用卦／上卦。"
                 ),
             )
+            st.form_submit_button(
+                "清除用方自述",
+                key="clear_use_self_narrative",
+                type="tertiary",
+                icon="🗑️",
+                on_click=_clear_text_widget,
+                args=(USE_TEXT_KEY,),
+            )
             full_text = st.text_area(
                 NEUTRAL_SECTION_LABEL,
                 height=300,
+                key=NEUTRAL_TEXT_KEY,
                 placeholder="這場比賽……體方……用方……比賽關鍵……",
                 help=(
                     f"第三人稱、雙方平衡；依系統起卦計數法須為 "
                     f"{NEUTRAL_MIN_COUNT}～{NEUTRAL_MAX_COUNT} 數，用來取動爻。"
                 ),
             )
+            st.form_submit_button(
+                "清除賽前中性介紹",
+                key="clear_neutral_match_introduction",
+                type="tertiary",
+                icon="🗑️",
+                on_click=_clear_text_widget,
+                args=(NEUTRAL_TEXT_KEY,),
+            )
             st.caption("字數採系統固定計數法：中文字逐字計數，連續拉丁單字與數字各計一數，標點與空白不計。")
-            submitted = st.form_submit_button("完整排卦", type="primary", width="stretch")
+            check_col, submit_col = st.columns(2)
+            check_only = check_col.form_submit_button(
+                "只檢查格式與計數",
+                key="check_input_protocol",
+                width="stretch",
+            )
+            submitted = submit_col.form_submit_button(
+                "完整排卦",
+                key="submit_casting",
+                type="primary",
+                width="stretch",
+            )
+        if check_only or submitted:
+            _clear_casting_result()
+        if check_only:
+            try:
+                checked_body_name, checked_use_name, _ = _normalize_parties(body_name, use_name)
+                _render_input_protocol_check(
+                    checked_body_name,
+                    checked_use_name,
+                    body_text,
+                    use_text,
+                    full_text,
+                )
+            except ValueError as exc:
+                st.error(str(exc))
         if submitted:
             try:
                 body_name, use_name, title = _normalize_parties(body_name, use_name)

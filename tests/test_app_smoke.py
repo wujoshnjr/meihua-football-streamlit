@@ -10,6 +10,18 @@ from meihua_engine import count_symbols
 APP = Path(__file__).resolve().parents[1] / "app.py"
 
 
+def _button(app: AppTest, label: str):
+    matches = [item for item in app.button if item.label == label]
+    assert len(matches) == 1
+    return matches[0]
+
+
+def _text_area(app: AppTest, label: str):
+    matches = [item for item in app.text_area if item.label == label]
+    assert len(matches) == 1
+    return matches[0]
+
+
 def _pad_to(text: str, target: int) -> str:
     return text + "穩" * (target - count_symbols(text))
 
@@ -36,7 +48,7 @@ def _neutral_introduction(body: str, use: str) -> str:
 def test_streamlit_app_loads_as_casting_only_product() -> None:
     app = AppTest.from_file(str(APP), default_timeout=30).run()
     assert not app.exception
-    assert app.title[0].value == "梅花易數完整排卦系統 v5.7.0"
+    assert app.title[0].value == "梅花易數完整排卦系統 v5.7.1"
     assert any("完整排卦與卦義資料" in item.value for item in app.success)
     labels = {item.label for item in app.text_input}
     assert "體方名稱（vs 前）" in labels
@@ -58,7 +70,7 @@ def test_streamlit_form_casts_without_score_or_ai_output() -> None:
         [_self_narrative("甲"), _self_narrative("乙"), _neutral_introduction("甲", "乙")]
     ):
         app.text_area[index].set_value(value)
-    app.button[0].click().run()
+    _button(app, "完整排卦").click().run()
 
     assert not app.exception
     assert any(message.value.startswith("排卦完成：") for message in app.success)
@@ -83,7 +95,7 @@ def test_streamlit_form_requires_both_party_names() -> None:
         app.text_input[index].set_value(value)
     for index, value in enumerate(["甲乙丙丁", "甲乙丙", "甲乙丙丁戊"]):
         app.text_area[index].set_value(value)
-    app.button[0].click().run()
+    _button(app, "完整排卦").click().run()
 
     assert not app.exception
     assert any("請輸入體方名稱與用方名稱" in item.value for item in app.error)
@@ -95,8 +107,50 @@ def test_streamlit_form_rejects_text_outside_v2_input_protocol() -> None:
         app.text_input[index].set_value(value)
     for index, value in enumerate(["我是甲。", "我是乙。", "這場比賽由甲對陣乙。"]):
         app.text_area[index].set_value(value)
-    app.button[0].click().run()
+    _button(app, "完整排卦").click().run()
 
     assert not app.exception
     assert any("v2 起象輸入規格未通過" in item.value for item in app.error)
     assert "casting_result" not in app.session_state
+
+
+def test_each_text_area_has_an_independent_one_click_clear_button() -> None:
+    app = AppTest.from_file(str(APP), default_timeout=30).run()
+    values = {
+        "體方自述（起象）": "體方測試內容",
+        "用方自述（起象）": "用方測試內容",
+        "賽前中性介紹（動爻）": "中性測試內容",
+    }
+    for label, value in values.items():
+        _text_area(app, label).set_value(value)
+
+    _button(app, "清除體方自述").click().run()
+    assert _text_area(app, "體方自述（起象）").value == ""
+    assert _text_area(app, "用方自述（起象）").value == values["用方自述（起象）"]
+    assert _text_area(app, "賽前中性介紹（動爻）").value == values["賽前中性介紹（動爻）"]
+
+    _button(app, "清除用方自述").click().run()
+    assert _text_area(app, "用方自述（起象）").value == ""
+    assert _text_area(app, "賽前中性介紹（動爻）").value == values["賽前中性介紹（動爻）"]
+
+    _button(app, "清除賽前中性介紹").click().run()
+    assert _text_area(app, "賽前中性介紹（動爻）").value == ""
+
+
+def test_protocol_check_reports_counts_without_casting() -> None:
+    app = AppTest.from_file(str(APP), default_timeout=30).run()
+    for index, value in enumerate(["甲", "乙", "足球賽前內容"]):
+        app.text_input[index].set_value(value)
+    values = [_self_narrative("甲"), _self_narrative("乙"), _neutral_introduction("甲", "乙")]
+    for index, value in enumerate(values):
+        app.text_area[index].set_value(value)
+
+    _button(app, "只檢查格式與計數").click().run()
+
+    assert not app.exception
+    assert any("全部通過" in item.value for item in app.success)
+    assert "casting_result" not in app.session_state
+    metrics = {item.label: item.value for item in app.metric}
+    assert metrics["體方自述（起象）"] == "180 數"
+    assert metrics["用方自述（起象）"] == "180 數"
+    assert metrics["賽前中性介紹（動爻）"] == "300 數"
