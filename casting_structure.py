@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from conditional_meanings import build_conditional_meanings
 from knowledge_loader import load_hexagram_interpretations, load_hexagrams
 from meihua_engine import CONTROLS, ELEMENTS, GENERATES, line_label
 from models import HexagramResult
@@ -226,13 +227,16 @@ def build_seasonal_strength(result: HexagramResult) -> dict[str, Any]:
 
 
 def build_casting_structure(result: HexagramResult) -> dict[str, Any]:
+    seasonal = build_seasonal_strength(result)
+    najia = build_najia_analysis(result)
     return {
         "hexagram_classics": build_hexagram_classics(result),
         "hexagram_meanings": build_hexagram_meanings(result),
         "moving_line_classics": build_moving_line_classics(result),
         "moving_line_dynamics": build_moving_line_dynamics(result),
-        "seasonal_strength": build_seasonal_strength(result),
-        "najia_analysis": build_najia_analysis(result),
+        "seasonal_strength": seasonal,
+        "najia_analysis": najia,
+        "conditional_meanings": build_conditional_meanings(result, seasonal, najia),
     }
 
 

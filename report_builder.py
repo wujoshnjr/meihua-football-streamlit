@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from knowledge_loader import build_jiaoshi_yilin_reference, load_hexagrams, load_trigrams
+from input_protocol import BODY_SECTION_LABEL, NEUTRAL_SECTION_LABEL, USE_SECTION_LABEL
 from models import CastingInput, HexagramResult
 from version import APP_VERSION, KNOWLEDGE_VERSION
 
@@ -56,6 +57,7 @@ def build_markdown_report(casting: CastingInput, result: HexagramResult) -> str:
 > 系統版本：{APP_VERSION}
 > 知識庫版本：{KNOWLEDGE_VERSION}
 > 範圍：只排卦，不解卦；不預測勝負、比分或任何結果。
+> 輸入規格：{casting.input_protocol_version}；兩隊自述為第一人稱，中性介紹為第三人稱。
 
 ## 一、起卦時間
 
@@ -73,9 +75,9 @@ def build_markdown_report(casting: CastingInput, result: HexagramResult) -> str:
 
 ## 三、取數計算
 
-- 體方段落：{result.body_count} 數；{result.body_count} ÷ 8 餘 {_modulo_text(result.body_modulo, 8)} → {result.body_gua}（先天數 {result.body_number}、五行 {result.body_element}）
-- 用方段落：{result.use_count} 數；{result.use_count} ÷ 8 餘 {_modulo_text(result.use_modulo, 8)} → {result.use_gua}（先天數 {result.use_number}、五行 {result.use_element}）
-- 完整中性段落：{result.total_count} 數；{result.total_count} ÷ 6 餘 {_modulo_text(result.moving_modulo, 6)} → 第 {result.moving_line} 爻動（{result.moving_line_label}）
+- {BODY_SECTION_LABEL}：{result.body_count} 數；{result.body_count} ÷ 8 餘 {_modulo_text(result.body_modulo, 8)} → {result.body_gua}（先天數 {result.body_number}、五行 {result.body_element}）
+- {USE_SECTION_LABEL}：{result.use_count} 數；{result.use_count} ÷ 8 餘 {_modulo_text(result.use_modulo, 8)} → {result.use_gua}（先天數 {result.use_number}、五行 {result.use_element}）
+- {NEUTRAL_SECTION_LABEL}：{result.total_count} 數；{result.total_count} ÷ 6 餘 {_modulo_text(result.moving_modulo, 6)} → 第 {result.moving_line} 爻動（{result.moving_line_label}）
 
 ## 四、八卦資料
 
@@ -117,17 +119,17 @@ def build_markdown_report(casting: CastingInput, result: HexagramResult) -> str:
 
 > 只列《焦氏易林》原典林辭，不作解釋，也不參與文字取數。
 
-## 九、原始文字
+## 九、起象原始文字
 
-### 體方段落
+### {BODY_SECTION_LABEL}
 
 {casting.body_text}
 
-### 用方段落
+### {USE_SECTION_LABEL}
 
 {casting.use_text}
 
-### 完整中性段落
+### {NEUTRAL_SECTION_LABEL}
 
 {casting.full_text}
 """

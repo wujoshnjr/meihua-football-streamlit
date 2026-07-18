@@ -4,6 +4,7 @@ from knowledge_loader import (
     build_jiaoshi_yilin_reference,
     knowledge_completeness,
     load_classics,
+    load_conditional_trigram_meanings,
     load_hexagrams,
     load_hexagram_interpretations,
     load_jiaoshi_yilin,
@@ -33,8 +34,33 @@ def test_database_covers_all_trigrams_hexagrams_and_lines() -> None:
         "interpretation_hexagrams": 64,
         "classical_meaning_fields": 384,
         "football_mapping_fields": 576,
+        "conditional_trigram_meanings": 64,
+        "conditional_trigram_rules": 48,
         "is_complete": True,
     }
+
+
+def test_conditional_library_covers_all_trigrams_with_meanings_and_rules() -> None:
+    payload = load_conditional_trigram_meanings()
+    assert set(payload["trigrams"]) == {"乾", "兌", "離", "震", "巽", "坎", "艮", "坤"}
+    assert sum(len(item["possible_meanings"]) for item in payload["trigrams"].values()) == 64
+    assert sum(len(item["rules"]) for item in payload["trigrams"].values()) == 48
+    assert all(len(item["possible_meanings"]) == 8 for item in payload["trigrams"].values())
+    assert all(len(item["rules"]) == 6 for item in payload["trigrams"].values())
+
+
+def test_gen_contains_the_requested_eight_meanings_and_six_conditions() -> None:
+    gen = load_conditional_trigram_meanings()["trigrams"]["艮"]
+    assert [item["name"] for item in gen["possible_meanings"]] == [
+        "封鎖", "停滯", "守成", "防守穩定", "攻勢中斷", "控制節奏", "單點屏障", "被困住",
+    ]
+    conditions = [item["condition_text"] for item in gen["rules"]]
+    assert "若艮方先前已取得優勢，而且變後仍旺或受生：優先解為守成。" in conditions
+    assert "若高動能卦變艮，且生剋由有利轉不利：優先解為攻勢停止。" in conditions
+    assert "若艮不變且受到生扶：優先解為穩定防守。" in conditions
+    assert "若艮受克、空破：優先解為被困或防線失效。" in conditions
+    assert "若整條卦線缺少破門通道：提高封鎖與低比分環境。" in conditions
+    assert "若另一方具強烈震、巽、離、夬、噬嗑訊號：艮可能成為被突破的屏障。" in conditions
 
 
 def test_all_64_hexagrams_have_complete_meaning_and_football_fields() -> None:

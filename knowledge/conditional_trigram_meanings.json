@@ -1,0 +1,217 @@
+{
+  "version": "conditional-trigram-meanings-v1.0.0",
+  "language": "zh-Hant",
+  "entry_count": 8,
+  "scope": "八經卦條件式卦義庫。古典核心依《說卦》與《梅花易數》八卦類象整理；足球義項、觸發條件與優先順序為本專案可回測的應用層，不是經典原文，也不直接指定勝負或比分。",
+  "evaluation_boundary": "先建立整條卦線的客觀訊號，再匹配條件；同一卦可同時命中多個義項。輸出只列優先解讀與相反可能，不把卦名機械換成進球數。",
+  "sources": [
+    {
+      "title": "《周易・說卦》",
+      "url": "https://ctext.org/book-of-changes/shuo-gua/zh",
+      "use": "八卦核心性質與傳統類象"
+    },
+    {
+      "title": "《梅花易數》卷一",
+      "url": "https://zh.wikisource.org/wiki/梅花易數/卷一",
+      "use": "卦數、五行生克、卦氣旺衰及八卦萬物屬類"
+    }
+  ],
+  "signal_definitions": {
+    "prior_advantage": "該方變前已具生克優勢，或旺衰明顯高於對方。",
+    "strong_before": "該方變前卦氣為旺或相。",
+    "strong_after": "該方變後卦氣為旺或相。",
+    "weak_after": "該方變後卦氣為囚或死。",
+    "supported_before": "變前由對方五行生扶。",
+    "supported_after": "變後由對方五行生扶。",
+    "controls_opponent_after": "變後五行克制對方。",
+    "controlled_after": "變後受到對方五行克制。",
+    "unchanged": "該方經卦在變卦中保持不變。",
+    "changed_into": "該卦是該方動爻變化後新形成的經卦。",
+    "changed_from": "該卦是該方變化前的經卦，動爻後已轉成別卦。",
+    "changed_from_high_energy": "變前是震、巽或離等高動能／滲透經卦。",
+    "changed_to_high_energy": "變後轉成震、巽或離。",
+    "moving_side": "動爻落在該方。",
+    "moving_effective": "動爻落在該方，且未逢旬空或月破。",
+    "moving_void_or_broken": "動爻落在該方，且逢旬空或月破。",
+    "early_or_middle_move": "該方動爻位於初至四爻，仍有發展時間。",
+    "late_move": "該方動爻位於五爻或上爻，變化時間窗口較短。",
+    "relation_improves": "該方五行關係由弱轉強。",
+    "relation_worsens": "該方五行關係由強轉弱。",
+    "low_breakthrough_path": "本、互、變整條卦線缺少明顯破口、滲透、危險轉換或爆發訊號。",
+    "high_breakthrough_path": "整條卦線同時出現至少兩個破口、滲透、危險轉換或爆發訊號。",
+    "opponent_breakthrough_signal": "對方或整條卦線具有震、巽、離、夬、噬嗑等強突破訊號。",
+    "many_clashes": "本卦納甲至少出現兩組六沖，結構較易被打開。",
+    "many_combinations": "本卦納甲至少出現兩組六合，結構較易黏合或收束。",
+    "same_trigram_opposition": "體用為同一經卦，可能共振，也可能鏡像抵消。"
+  },
+  "trigrams": {
+    "乾": {
+      "classical_core": "健、剛健、創始、運行不息。",
+      "possible_meanings": [
+        {"name": "主動進取", "football": "主動奪取球權與空間，不等待對手失誤。"},
+        {"name": "持續施壓", "football": "以體能、陣地與反覆進攻維持高壓。"},
+        {"name": "統御全局", "football": "由核心球員或整體體系控制比賽方向。"},
+        {"name": "高位控制", "football": "站位前壓且保持結構完整。"},
+        {"name": "強韌守成", "football": "取得優勢後以剛健秩序維持成果。"},
+        {"name": "直接決勝", "football": "減少迂迴，以高品質直接行動尋求結果。"},
+        {"name": "過剛冒進", "football": "投入過度、缺少轉圜，反而暴露身後。"},
+        {"name": "鏡像對消", "football": "雙方同樣強硬而互相抵銷，強度高但轉化未必高。"}
+      ],
+      "rules": [
+        {"id": "qian_control", "priority": 94, "all": ["prior_advantage", "strong_after"], "any": ["unchanged", "supported_after"], "none": [], "prefer": ["統御全局", "強韌守成"], "suppress": ["過剛冒進"], "condition_text": "若乾方先得勢且變後仍旺相，優先解為掌控與守住優勢。", "football_reading": "強度轉化為可持續控制，不必把乾直接等同多球。"},
+        {"id": "qian_pressure", "priority": 88, "all": ["unchanged", "strong_before"], "any": ["moving_effective", "high_breakthrough_path"], "none": [], "prefer": ["持續施壓", "高位控制"], "suppress": [], "condition_text": "若乾不變且旺相，又有有效動能或破門通道，優先解為持續高壓。", "football_reading": "進攻來源穩定，仍須另看終結效率。"},
+        {"id": "qian_direct", "priority": 82, "all": ["changed_into", "moving_effective"], "any": ["relation_improves", "early_or_middle_move"], "none": [], "prefer": ["直接決勝", "主動進取"], "suppress": [], "condition_text": "若有效動爻使該方轉乾且關係改善，優先解為轉向直接而有主導性的打法。", "football_reading": "比賽中段前轉乾，比上爻轉乾更可能形成實際成果。"},
+        {"id": "qian_overreach", "priority": 91, "all": ["controlled_after"], "any": ["weak_after", "relation_worsens", "moving_void_or_broken"], "none": [], "prefer": ["過剛冒進"], "suppress": ["統御全局"], "condition_text": "若乾受克且轉弱、空破或關係惡化，優先解為剛強失去支撐。", "football_reading": "場面強硬不等於有效，可能是壓上後被反擊。"},
+        {"id": "qian_mirror", "priority": 96, "all": ["same_trigram_opposition", "low_breakthrough_path"], "any": [], "none": [], "prefer": ["鏡像對消", "強韌守成"], "suppress": ["直接決勝"], "condition_text": "若雙乾同卦且整條卦線缺少破門通道，優先解為高強度鏡像僵持。", "football_reading": "高動能與高比分必須分開，需保留低轉化可能。"},
+        {"id": "qian_late", "priority": 75, "all": ["changed_into", "late_move"], "any": [], "none": [], "prefer": ["直接決勝"], "suppress": ["持續施壓"], "condition_text": "若五爻或上爻才轉乾，優先解為末段一次強力決斷，而非全場持續壓制。", "football_reading": "時間窗口限制其影響幅度。"}
+      ]
+    },
+    "兌": {
+      "classical_core": "說、悅、口舌、交流、上缺。",
+      "possible_meanings": [
+        {"name": "打開缺口", "football": "在禁區、邊路或站位之間找到可利用開口。"},
+        {"name": "快速交換", "football": "短傳、做球與近距離配合加快。"},
+        {"name": "進攻回應", "football": "一方行動後另一方迅速回應，形成來回。"},
+        {"name": "終結機會", "football": "把交流與開口轉化成射門或最後一傳。"},
+        {"name": "氣氛和悅", "football": "配合順暢、壓力較低，球員敢於處理球。"},
+        {"name": "防守缺口", "football": "自身結構上缺，被對方反覆利用。"},
+        {"name": "毀折受損", "football": "在受克或空破時代表防線、信心或連結受損。"},
+        {"name": "表面熱鬧", "football": "傳遞與射門不少，但缺少真正穿透與轉化。"}
+      ],
+      "rules": [
+        {"id": "dui_opening", "priority": 92, "all": ["strong_after"], "any": ["high_breakthrough_path", "many_clashes", "moving_effective"], "none": [], "prefer": ["打開缺口", "終結機會"], "suppress": ["表面熱鬧"], "condition_text": "若兌旺相並與沖開、突破或有效動爻同現，優先解為可被利用的進攻開口。", "football_reading": "有破口不代表固定一球，仍看能量歸屬。"},
+        {"id": "dui_exchange", "priority": 83, "all": ["unchanged"], "any": ["supported_after", "same_trigram_opposition"], "none": [], "prefer": ["快速交換", "進攻回應"], "suppress": [], "condition_text": "若兌保持不變並受生，或雙方同兌，優先解為持續交換與相互回應。", "football_reading": "雙兌也可能互相抵消，不自動等同雙方進球。"},
+        {"id": "dui_gap", "priority": 95, "all": ["controlled_after"], "any": ["weak_after", "moving_void_or_broken", "opponent_breakthrough_signal"], "none": [], "prefer": ["防守缺口", "毀折受損"], "suppress": ["終結機會"], "condition_text": "若兌受克、轉弱、空破或面對強突破訊號，優先解為自身缺口與受損。", "football_reading": "兌在受克時更可能表示被打開，而非自己得分。"},
+        {"id": "dui_surface", "priority": 86, "all": ["low_breakthrough_path"], "any": ["weak_after", "late_move"], "none": [], "prefer": ["表面熱鬧"], "suppress": ["終結機會"], "condition_text": "若卦線缺乏穿透且兌弱或變化太晚，優先解為表面交流而未完成破門。", "football_reading": "把機會量與實際轉化分開。"},
+        {"id": "dui_late_response", "priority": 78, "all": ["changed_into", "late_move"], "any": [], "none": [], "prefer": ["進攻回應", "打開缺口"], "suppress": ["快速交換"], "condition_text": "若末段才轉兌，優先解為最後一次回應或開口。", "football_reading": "可能只形成一次關鍵事件，也可能停在未轉化機會。"},
+        {"id": "dui_combine", "priority": 80, "all": ["many_combinations"], "any": ["unchanged", "strong_after"], "none": [], "prefer": ["氣氛和悅", "快速交換"], "suppress": [], "condition_text": "若多組六合且兌穩定，交流可能轉為黏合配合或節奏收束。", "football_reading": "六合既可能保護防守，也可能形成進攻配合。"}
+      ]
+    },
+    "離": {
+      "classical_core": "麗、明、火、顯現、附著、中虛。",
+      "possible_meanings": [
+        {"name": "火力顯現", "football": "進攻能力與射門威脅清楚呈現。"},
+        {"name": "終結效率", "football": "把有限機會轉成明確成果。"},
+        {"name": "視野判斷", "football": "看清空間、時機與傳球路線。"},
+        {"name": "附麗體系", "football": "依附核心球員、戰術或供應線運作。"},
+        {"name": "高熱節奏", "football": "攻守速度、情緒和對抗同時升高。"},
+        {"name": "中虛暴露", "football": "外在亮眼但中央保護不足。"},
+        {"name": "能量燃盡", "football": "前段過熱後效率或體能快速下降。"},
+        {"name": "被照見破解", "football": "弱點被對手看清並針對。"}
+      ],
+      "rules": [
+        {"id": "li_finish", "priority": 94, "all": ["strong_after"], "any": ["supported_after", "controls_opponent_after", "high_breakthrough_path"], "none": [], "prefer": ["火力顯現", "終結效率"], "suppress": ["能量燃盡"], "condition_text": "若離旺相並受生、克敵或有突破通道，優先解為火力與終結效率。", "football_reading": "離代表轉化通道時，才提高實際進球權重。"},
+        {"id": "li_system", "priority": 84, "all": ["unchanged"], "any": ["supported_before", "supported_after"], "none": [], "prefer": ["附麗體系", "視野判斷"], "suppress": [], "condition_text": "若離不變且持續受生，優先解為穩定依附於成熟進攻體系。", "football_reading": "火力有供應源，延續性高於一次爆發。"},
+        {"id": "li_hollow", "priority": 96, "all": ["controlled_after"], "any": ["weak_after", "relation_worsens", "moving_void_or_broken"], "none": [], "prefer": ["中虛暴露", "被照見破解"], "suppress": ["終結效率"], "condition_text": "若離受克並轉弱、空破或關係惡化，優先解為中虛與弱點被照見。", "football_reading": "外在攻勢仍可明顯，但核心保護可能失效。"},
+        {"id": "li_burnout", "priority": 88, "all": ["changed_from"], "any": ["relation_worsens", "weak_after"], "none": [], "prefer": ["能量燃盡"], "suppress": ["高熱節奏"], "condition_text": "若高熱的離動變後關係惡化或轉弱，優先解為火力燃盡、攻勢中斷。", "football_reading": "先有亮度，後續未必能維持。"},
+        {"id": "li_intensity", "priority": 82, "all": ["high_breakthrough_path"], "any": ["many_clashes", "same_trigram_opposition"], "none": [], "prefer": ["高熱節奏", "火力顯現"], "suppress": [], "condition_text": "若離與多個突破或六沖訊號共振，優先解為高熱比賽環境。", "football_reading": "高動能仍需由終結效率決定總進球。"},
+        {"id": "li_late", "priority": 76, "all": ["changed_into", "late_move"], "any": [], "none": [], "prefer": ["火力顯現", "視野判斷"], "suppress": ["高熱節奏"], "condition_text": "若末段才轉離，優先解為一次看清或終結窗口。", "football_reading": "較像末段關鍵機會，不代表全場高火力。"}
+      ]
+    },
+    "震": {
+      "classical_core": "動、雷、驚、起、決躁、反生。",
+      "possible_meanings": [
+        {"name": "突然爆發", "football": "短時間內加速、前插或形成高威脅事件。"},
+        {"name": "持續衝擊", "football": "反覆用速度與縱向跑動攻擊同一區域。"},
+        {"name": "先手啟動", "football": "較早主動改變比賽節奏。"},
+        {"name": "二次進攻", "football": "第一波後迅速爭取第二點或再攻。"},
+        {"name": "反擊動能", "football": "奪球後快速向前，縮短進攻路徑。"},
+        {"name": "擾亂結構", "football": "迫使對手站位和決策失序。"},
+        {"name": "驚慌失控", "football": "自己也可能因節奏過快而失誤。"},
+        {"name": "有動無果", "football": "跑動與射門很多，但缺少真正破門通道。"}
+      ],
+      "rules": [
+        {"id": "zhen_surge", "priority": 95, "all": ["moving_effective", "early_or_middle_move"], "any": ["strong_after", "supported_after", "relation_improves"], "none": [], "prefer": ["突然爆發", "先手啟動"], "suppress": ["有動無果"], "condition_text": "若震方早中段有效動、旺相受生或關係改善，優先解為可落地的爆發。", "football_reading": "動能有時間形成第一波與第二波成果。"},
+        {"id": "zhen_repeat", "priority": 88, "all": ["unchanged", "strong_after"], "any": ["high_breakthrough_path", "many_clashes"], "none": [], "prefer": ["持續衝擊", "二次進攻"], "suppress": [], "condition_text": "若震不變且旺相，並有破門或六沖訊號，優先解為反覆衝擊。", "football_reading": "不把震數直接當進球數，但提高多波攻勢。"},
+        {"id": "zhen_counter", "priority": 85, "all": ["controlled_after"], "any": ["moving_effective", "high_breakthrough_path"], "none": [], "prefer": ["反擊動能", "擾亂結構"], "suppress": [], "condition_text": "若震受克但仍有效活動且有通道，優先解為受壓中的快速反擊。", "football_reading": "受克不等於沒有自身進攻成果。"},
+        {"id": "zhen_futile", "priority": 97, "all": ["low_breakthrough_path"], "any": ["controlled_after", "weak_after", "moving_void_or_broken"], "none": [], "prefer": ["有動無果", "驚慌失控"], "suppress": ["突然爆發"], "condition_text": "若缺少破門通道且震受克、轉弱或空破，優先解為有動無果。", "football_reading": "明確把比賽強度與進球轉化分開。"},
+        {"id": "zhen_late", "priority": 80, "all": ["changed_into", "late_move"], "any": [], "none": [], "prefer": ["突然爆發", "二次進攻"], "suppress": ["持續衝擊"], "condition_text": "若五爻或上爻才轉震，優先解為末段一至兩次強烈衝擊。", "football_reading": "時間不足時不應放大成全場高比分。"},
+        {"id": "zhen_clash", "priority": 86, "all": ["many_clashes"], "any": ["high_breakthrough_path", "same_trigram_opposition"], "none": [], "prefer": ["擾亂結構", "驚慌失控"], "suppress": [], "condition_text": "若多組六沖與震共存，優先解為防守結構被擾亂，也保留雙方失控風險。", "football_reading": "先判能量歸屬，再判哪方取得成果。"}
+      ]
+    },
+    "巽": {
+      "classical_core": "入、風、木、滲透、進退、不果。",
+      "possible_meanings": [
+        {"name": "層層滲透", "football": "以傳導、跑位和反覆試探逐步進入危險區。"},
+        {"name": "邊路穿透", "football": "沿邊線、肋部或弱側形成持續入口。"},
+        {"name": "逐步累積", "football": "場面與機會不是一次爆發，而是逐段增加。"},
+        {"name": "傳導擴散", "football": "球權與壓力在多個區域流動。"},
+        {"name": "戰術適應", "football": "依對手站位持續微調進攻路線。"},
+        {"name": "進退猶疑", "football": "到關鍵區時缺乏決斷，反覆回傳。"},
+        {"name": "防線滲漏", "football": "自身站位縫隙被對方慢慢穿透。"},
+        {"name": "風散無主", "football": "移動很多但缺少核心與終結點。"}
+      ],
+      "rules": [
+        {"id": "xun_penetrate", "priority": 94, "all": ["strong_after"], "any": ["supported_after", "high_breakthrough_path", "moving_effective"], "none": [], "prefer": ["層層滲透", "邊路穿透"], "suppress": ["風散無主"], "condition_text": "若巽旺相並受生、有通道或有效動爻，優先解為可持續滲透。", "football_reading": "成果可能晚於場面優勢出現。"},
+        {"id": "xun_accumulate", "priority": 89, "all": ["unchanged"], "any": ["strong_before", "relation_improves"], "none": [], "prefer": ["逐步累積", "傳導擴散"], "suppress": [], "condition_text": "若巽不變且有力，優先解為整場逐步累積而非單次爆發。", "football_reading": "需要保留後段第二、第三次成果的可能。"},
+        {"id": "xun_adapt", "priority": 82, "all": ["changed_into", "moving_effective"], "any": ["early_or_middle_move", "relation_improves"], "none": [], "prefer": ["戰術適應", "層層滲透"], "suppress": [], "condition_text": "若早中段有效轉巽且關係不差，優先解為戰術調整後逐步找到入口。", "football_reading": "不是立即破門，而是改善後續進攻品質。"},
+        {"id": "xun_indecision", "priority": 92, "all": ["low_breakthrough_path"], "any": ["weak_after", "late_move", "moving_void_or_broken"], "none": [], "prefer": ["進退猶疑", "風散無主"], "suppress": ["邊路穿透"], "condition_text": "若巽弱、空破或太晚，且整線缺乏破口，優先解為進退不果。", "football_reading": "傳導很多但未必有最後一腳。"},
+        {"id": "xun_leak", "priority": 96, "all": ["controlled_after", "opponent_breakthrough_signal"], "any": ["weak_after", "relation_worsens"], "none": [], "prefer": ["防線滲漏"], "suppress": ["層層滲透"], "condition_text": "若巽受克轉弱，且對方具突破訊號，優先解為自身防線被滲透。", "football_reading": "需先判風作用在哪一方，不把巽一律當自己進攻。"},
+        {"id": "xun_clash", "priority": 85, "all": ["many_clashes"], "any": ["high_breakthrough_path", "moving_effective"], "none": [], "prefer": ["傳導擴散", "防線滲漏"], "suppress": [], "condition_text": "若多組六沖與巽共存，空間會被拉開，滲透與自身漏風可能同時存在。", "football_reading": "增加開放尾部，但不直接決定比分。"}
+      ]
+    },
+    "坎": {
+      "classical_core": "陷、險、水、流動、隱伏、通。",
+      "possible_meanings": [
+        {"name": "危險轉換", "football": "攻守切換中快速進入高風險區。"},
+        {"name": "反擊通道", "football": "在壓力下利用縱深或對方身後。"},
+        {"name": "隱伏機會", "football": "表面被動，實際保留突然出現的威脅。"},
+        {"name": "穿越險境", "football": "承受壓力後仍能把球帶出或傳出。"},
+        {"name": "反覆危機", "football": "防線與門前多次遭遇險情。"},
+        {"name": "陷阱防守", "football": "誘導對手進入預設區域後搶斷。"},
+        {"name": "陷落失誤", "football": "傳球、站位或門前處理進入連續錯誤。"},
+        {"name": "勞而受壓", "football": "長時間防守消耗，難以把球權留住。"}
+      ],
+      "rules": [
+        {"id": "kan_counter", "priority": 92, "all": ["moving_effective"], "any": ["supported_after", "relation_improves", "high_breakthrough_path"], "none": [], "prefer": ["危險轉換", "反擊通道"], "suppress": ["勞而受壓"], "condition_text": "若坎有效動且受生、關係改善或有通道，優先解為可轉化的危險反擊。", "football_reading": "坎不只代表失球，也可代表自己穿險得機。"},
+        {"id": "kan_hidden", "priority": 84, "all": ["unchanged"], "any": ["strong_after", "supported_after"], "none": [], "prefer": ["隱伏機會", "穿越險境"], "suppress": [], "condition_text": "若坎不變且有力，優先解為反覆穿險並保留隱伏威脅。", "football_reading": "即使場面被動，也不能輕易判零進球。"},
+        {"id": "kan_trap", "priority": 81, "all": ["prior_advantage"], "any": ["many_combinations", "strong_after"], "none": [], "prefer": ["陷阱防守", "反擊通道"], "suppress": [], "condition_text": "若坎方已有優勢且結構黏合或旺相，優先解為有計畫的陷阱防守。", "football_reading": "危險受到管理，不等於比賽失控。"},
+        {"id": "kan_fall", "priority": 97, "all": ["controlled_after"], "any": ["weak_after", "moving_void_or_broken", "relation_worsens"], "none": [], "prefer": ["陷落失誤", "勞而受壓"], "suppress": ["穿越險境"], "condition_text": "若坎受克並轉弱、空破或關係惡化，優先解為陷落與連續受壓。", "football_reading": "需要提高防線重複犯錯，而非只記一次危機。"},
+        {"id": "kan_clashes", "priority": 90, "all": ["many_clashes"], "any": ["high_breakthrough_path", "same_trigram_opposition"], "none": [], "prefer": ["反覆危機", "危險轉換"], "suppress": [], "condition_text": "若多組六沖且有坎，優先解為雙向危險轉換和反覆險情。", "football_reading": "先判哪方更能穿險，再分配成果。"},
+        {"id": "kan_late", "priority": 78, "all": ["changed_into", "late_move"], "any": [], "none": [], "prefer": ["隱伏機會", "反覆危機"], "suppress": ["穿越險境"], "condition_text": "若末段才轉坎，優先解為最後階段突然進入險境。", "football_reading": "可能形成晚球，也可能只是門前危機未兌現。"}
+      ]
+    },
+    "艮": {
+      "classical_core": "止、山、界限、成終成始、門闕。",
+      "possible_meanings": [
+        {"name": "封鎖", "football": "關閉中路、禁區或主要破門通道。"},
+        {"name": "停滯", "football": "比賽推進中斷，球權停在安全區或外圍。"},
+        {"name": "守成", "football": "已有優勢後收束風險並維持成果。"},
+        {"name": "防守穩定", "football": "站位、協防與門前保護保持一致。"},
+        {"name": "攻勢中斷", "football": "原有高動能在轉艮後無法延續。"},
+        {"name": "控制節奏", "football": "主動降低攻守轉換與比賽波動。"},
+        {"name": "單點屏障", "football": "由門將、中衛、後腰或特定區域形成關鍵阻擋。"},
+        {"name": "被困住", "football": "自身出球、推進或防線被壓在固定區域。"}
+      ],
+      "rules": [
+        {"id": "gen_holding", "priority": 98, "all": ["prior_advantage"], "any": ["strong_after", "supported_after"], "none": [], "prefer": ["守成", "控制節奏"], "suppress": ["被困住"], "condition_text": "若艮方先前已取得優勢，而且變後仍旺或受生：優先解為守成。", "football_reading": "止用來保護既有成果，不代表雙方都沒有進攻。"},
+        {"id": "gen_attack_stops", "priority": 100, "all": ["changed_into", "changed_from_high_energy", "relation_worsens"], "any": [], "none": [], "prefer": ["攻勢中斷", "停滯"], "suppress": ["守成"], "condition_text": "若高動能卦變艮，且生剋由有利轉不利：優先解為攻勢停止。", "football_reading": "原有衝擊力轉成邊界，需降低後續持續進攻權重。"},
+        {"id": "gen_stable_defense", "priority": 97, "all": ["unchanged"], "any": ["supported_before", "supported_after"], "none": [], "prefer": ["防守穩定", "單點屏障"], "suppress": ["被困住"], "condition_text": "若艮不變且受到生扶：優先解為穩定防守。", "football_reading": "防線基礎持續存在，可壓低對手轉化率。"},
+        {"id": "gen_trapped", "priority": 99, "all": ["controlled_after"], "any": ["weak_after", "moving_void_or_broken"], "none": [], "prefer": ["被困住", "停滯"], "suppress": ["防守穩定"], "condition_text": "若艮受克、空破：優先解為被困或防線失效。", "football_reading": "山不再是主動屏障，而可能是無法出球的固定困點。"},
+        {"id": "gen_blockade", "priority": 96, "all": ["low_breakthrough_path"], "any": [], "none": [], "prefer": ["封鎖", "控制節奏"], "suppress": ["攻勢中斷"], "condition_text": "若整條卦線缺少破門通道：提高封鎖與低比分環境。", "football_reading": "只提高低機會環境，不直接指定0:0。"},
+        {"id": "gen_barrier_broken", "priority": 100, "all": ["opponent_breakthrough_signal"], "any": ["controlled_after", "weak_after", "many_clashes"], "none": [], "prefer": ["單點屏障", "被困住"], "suppress": ["封鎖"], "condition_text": "若另一方具強烈震、巽、離、夬、噬嗑訊號：艮可能成為被突破的屏障。", "football_reading": "先把艮視為對方要突破的對象，不機械判低比分。"}
+      ]
+    },
+    "坤": {
+      "classical_core": "順、地、承載、包容、眾、均。",
+      "possible_meanings": [
+        {"name": "全面承載", "football": "以多人站位承受對方壓力並保護區域。"},
+        {"name": "集體鋪展", "football": "整隊同步移動，攻守覆蓋面擴大。"},
+        {"name": "低位防守", "football": "降低陣形、壓縮禁區與肋部。"},
+        {"name": "穩定供應", "football": "為另一方或己方前場持續提供球權與支援。"},
+        {"name": "順勢而行", "football": "不強行主導，依比賽節奏選擇回應。"},
+        {"name": "被動承壓", "football": "長時間讓出球權，主要任務是抵抗。"},
+        {"name": "全面鋪開進攻", "football": "由單點動能轉為多人參與與廣域壓迫。"},
+        {"name": "防線崩解", "football": "承載超過上限後多個區域同時失守。"}
+      ],
+      "rules": [
+        {"id": "kun_hold", "priority": 94, "all": ["strong_after"], "any": ["prior_advantage", "supported_after", "many_combinations"], "none": [], "prefer": ["全面承載", "低位防守"], "suppress": ["防線崩解"], "condition_text": "若坤旺相、受生或已有優勢，優先解為能承受壓力的集體防守。", "football_reading": "承載有上限，但不應先假設必然崩盤。"},
+        {"id": "kun_spread", "priority": 91, "all": ["changed_into", "moving_effective"], "any": ["relation_improves", "supported_after", "early_or_middle_move"], "none": [], "prefer": ["集體鋪展", "全面鋪開進攻"], "suppress": ["被動承壓"], "condition_text": "若有效動爻轉坤且關係改善或受生，優先解為由單點轉成集體鋪展。", "football_reading": "坤不只被動，也可能表示多人加入進攻。"},
+        {"id": "kun_supply", "priority": 86, "all": ["unchanged"], "any": ["supported_before", "supported_after"], "none": [], "prefer": ["穩定供應", "順勢而行"], "suppress": [], "condition_text": "若坤不變且處於生扶關係，優先解為持續供應與組織底座。", "football_reading": "需判能量最後流向自己還是對方。"},
+        {"id": "kun_absorb", "priority": 89, "all": ["controlled_after"], "any": ["strong_after", "prior_advantage"], "none": [], "prefer": ["被動承壓", "全面承載"], "suppress": [], "condition_text": "若坤受克但自身仍旺，優先解為長時間承壓而非立即崩解。", "football_reading": "可能守住，也可能反覆把第二波球權交還對方。"},
+        {"id": "kun_collapse", "priority": 100, "all": ["controlled_after", "opponent_breakthrough_signal"], "any": ["weak_after", "many_clashes", "relation_worsens"], "none": [], "prefer": ["防線崩解"], "suppress": ["低位防守"], "condition_text": "若坤受克轉弱，並面對強突破或多組六沖，優先解為承載超限、全面失守。", "football_reading": "此時坤的廣域性可能放大為多點防線被打開。"},
+        {"id": "kun_late", "priority": 79, "all": ["changed_into", "late_move"], "any": [], "none": [], "prefer": ["集體鋪展", "順勢而行"], "suppress": ["全面鋪開進攻"], "condition_text": "若末段才轉坤，優先解為最後階段集體壓上或集體退守。", "football_reading": "時間短，需由當時優劣勢判定是圍攻還是守成。"}
+      ]
+    }
+  }
+}

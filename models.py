@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-from version import CALCULATION_VERSION
+from version import CALCULATION_VERSION, INPUT_PROTOCOL_VERSION
 
 
 @dataclass(slots=True)
@@ -18,7 +18,8 @@ class CastingInput:
     full_text: str
     category: str = "足球賽前內容"
     context_notes: str = ""
-    scope: str = "完整排卦與卦義資料，不自動預測"
+    scope: str = "只使用賽前資訊，判斷九十分鐘；完整排卦與卦義資料，不自動預測"
+    input_protocol_version: str = INPUT_PROTOCOL_VERSION
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
