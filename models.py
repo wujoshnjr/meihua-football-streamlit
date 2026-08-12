@@ -20,6 +20,11 @@ class CastingInput:
     context_notes: str = ""
     scope: str = "只使用賽前資訊，判斷九十分鐘；完整排卦與卦義資料，不自動預測"
     input_protocol_version: str = INPUT_PROTOCOL_VERSION
+    event_at_iso: str = ""
+    event_timezone: str = ""
+    event_source_grade: str = ""
+    event_source_url: str = ""
+    sample_class: str = "CLEAN_BLIND"
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -54,7 +59,9 @@ class CastingMoment:
 
 @dataclass(slots=True)
 class HexagramResult:
+    event_moment: CastingMoment
     casting_moment: CastingMoment
+    freeze_at_iso: str
     title: str
     body_name: str
     use_name: str

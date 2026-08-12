@@ -22,6 +22,19 @@ def _text_area(app: AppTest, label: str):
     return matches[0]
 
 
+def _text_input(app: AppTest, label: str):
+    matches = [item for item in app.text_input if item.label == label]
+    assert len(matches) == 1
+    return matches[0]
+
+
+def _set_valid_event_lock(app: AppTest) -> None:
+    _text_input(app, "官方開球時間 event_at（ISO 8601）").set_value(
+        "2026-12-31T20:00:00+08:00"
+    )
+    _text_input(app, "開球時間來源網址").set_value("https://example.test/schedule")
+
+
 def _pad_to(text: str, target: int) -> str:
     return text + "穩" * (target - count_symbols(text))
 
@@ -58,7 +71,7 @@ def _neutral_introduction(body: str, use: str) -> str:
 def test_streamlit_app_loads_as_casting_only_product() -> None:
     app = AppTest.from_file(str(APP), default_timeout=30).run()
     assert not app.exception
-    assert app.title[0].value == "梅花易數完整排卦系統 v5.8.0"
+    assert app.title[0].value == "梅花易數完整排卦系統 v5.9.0"
     assert any("完整排卦與卦義資料" in item.value for item in app.success)
     labels = {item.label for item in app.text_input}
     assert "體方名稱（vs 前）" in labels
@@ -68,7 +81,7 @@ def test_streamlit_app_loads_as_casting_only_product() -> None:
     text_area_labels = {item.label for item in app.text_area}
     assert text_area_labels == {"體方自述（起象）", "用方自述（起象）", "賽前中性介紹（動爻）"}
     selectbox_labels = {item.label for item in app.selectbox}
-    assert {"本卦", "之卦"}.issubset(selectbox_labels)
+    assert {"本卦", "之卦", "開球時間來源等級", "樣本分類"}.issubset(selectbox_labels)
     assert any("4,096 條林辭" in item.value for item in app.caption)
 
 
@@ -76,6 +89,7 @@ def test_streamlit_form_casts_without_score_or_ai_output() -> None:
     app = AppTest.from_file(str(APP), default_timeout=30).run()
     for index, value in enumerate(["甲", "乙", "足球賽前內容"]):
         app.text_input[index].set_value(value)
+    _set_valid_event_lock(app)
     for index, value in enumerate(
         [_self_narrative("甲"), _self_narrative("乙"), _neutral_introduction("甲", "乙")]
     ):
@@ -92,7 +106,7 @@ def test_streamlit_form_casts_without_score_or_ai_output() -> None:
     assert len(app.text_area) == 3
     labels = {metric.label for metric in app.metric}
     assert {"體卦／下卦", "用卦／上卦", "本卦", "互卦", "變卦", "動爻"}.issubset(labels)
-    assert any("起卦農曆時間" in message.value for message in app.info)
+    assert any("卦理農曆時間" in message.value for message in app.info)
     rendered = "\n".join(item.value for item in app.markdown)
     assert "首選比分" not in rendered
     assert "Poisson" not in rendered
@@ -115,6 +129,7 @@ def test_streamlit_form_rejects_text_outside_v3_input_protocol() -> None:
     app = AppTest.from_file(str(APP), default_timeout=30).run()
     for index, value in enumerate(["甲", "乙", "足球賽前內容"]):
         app.text_input[index].set_value(value)
+    _set_valid_event_lock(app)
     for index, value in enumerate(["我是甲。", "我是乙。", "這場比賽由甲對陣乙。"]):
         app.text_area[index].set_value(value)
     _button(app, "完整排卦").click().run()

@@ -164,7 +164,7 @@ def build_input_protocol_audit(
         "scope": "只使用賽前資訊，判斷範圍固定為九十分鐘，不含延長賽與PK。",
         "counting_note": "字數採系統固定起卦計數法；標點與空白不計。",
         "purpose_boundary": "固定格式只降低文字噪音並提高一致性、可重複性與可回測性，不宣稱某種寫法能提高預測準確率。",
-        "freeze_policy": "建議開賽前六小時凍結；其後只有重大傷停或先發變化才重做，且體用雙方必須一起更新。",
+        "freeze_policy": "freeze_at 固定為 event_at 前六小時；其後只有重大傷停或先發變化才重做，且體用雙方必須一起更新。",
         "versioning_policy": "保存三段原文與輸入規格版本；起卦後不得因卦象不合直覺而替換同義詞、補句或重新計數。",
         "controlled_vocabulary": CONTROLLED_VOCABULARY,
         "hard_rules": [

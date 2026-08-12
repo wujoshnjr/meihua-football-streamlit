@@ -188,10 +188,10 @@ def _shift(before: str, after: str) -> str:
 
 
 def build_seasonal_strength(result: HexagramResult) -> dict[str, Any]:
-    month = result.casting_moment.lunar_month
+    month = result.event_moment.lunar_month
     month_branch = LUNAR_MONTH_BRANCHES[month]
     month_element = BRANCH_ELEMENTS[month_branch]
-    hour_branch = result.casting_moment.shichen
+    hour_branch = result.event_moment.shichen
     hour_element = BRANCH_ELEMENTS[hour_branch]
     body_before_element = result.body_element
     use_before_element = result.use_element
@@ -205,7 +205,7 @@ def build_seasonal_strength(result: HexagramResult) -> dict[str, Any]:
     use_shift = _shift(use_before, use_after)
     return {
         "lunar_month": month,
-        "is_leap_month": result.casting_moment.lunar_is_leap_month,
+        "is_leap_month": result.event_moment.lunar_is_leap_month,
         "month_branch": month_branch,
         "month_element": month_element,
         "hour_branch": hour_branch,

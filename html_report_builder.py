@@ -163,8 +163,10 @@ def build_html_report(casting: CastingInput, result: HexagramResult) -> str:
 <p>{escape(input_audit['purpose_boundary'])}</p>
 {_table(('區塊','敘述人稱','排卦用途','固定範圍','本次計數'), protocol_rows)}
 <p><small>{escape(input_audit['counting_note'])} {escape(input_audit['freeze_policy'])} {escape(input_audit['versioning_policy'])}</small></p></section>
-<section><h2>起卦時間與旬空</h2>{_table(('項目','內容'), (
-('國曆時間', result.casting_moment.gregorian_text), ('農曆時間', result.casting_moment.lunar_text),
+<section><h2>event_at 時間環境與旬空</h2>{_table(('項目','內容'), (
+('卦理時間 event_at', result.event_moment.gregorian_text), ('卦理農曆時間', result.event_moment.lunar_text),
+('事件時區', f"{result.event_moment.timezone}／{result.event_moment.utc_offset}"),
+('文字凍結 freeze_at', result.freeze_at_iso), ('實際執行 cast_at', result.casting_moment.gregorian_text),
 ('日辰', day['day_ganzhi']), ('日干五行', f"{day['day_stem']}／{day['day_stem_element']}"),
 ('月令', f"{day['month_branch']}月／{day['month_element']}"), ('旬', void['xun_name']), ('旬空', void['void_text'])))}</section>
 <section><h2>本、互、動、變</h2>{_table(('項目','內容'), (

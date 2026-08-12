@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import html
+from datetime import datetime
 from typing import Any, Mapping, Sequence
 
 import streamlit as st
@@ -60,6 +61,21 @@ def _normalize_parties(body_name: str, use_name: str) -> tuple[str, str, str]:
     if not body or not use:
         raise ValueError("請輸入體方名稱與用方名稱。")
     return body, use, f"{body} vs {use}"
+
+
+def _parse_event_at(value: str, timezone_name: str = "") -> datetime:
+    """Parse official kickoff time without silently guessing a timezone."""
+
+    normalized = value.strip().replace("Z", "+00:00")
+    if not normalized:
+        raise ValueError("請輸入官方排定開球時間 event_at。")
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as exc:
+        raise ValueError("event_at 必須使用 ISO 8601，例如 2026-07-16T19:30:00-04:00。") from exc
+    if (parsed.tzinfo is None or parsed.utcoffset() is None) and not timezone_name.strip():
+        raise ValueError("event_at 必須包含 UTC 位移，或另填 IANA 事件時區。")
+    return parsed
 
 
 def _clear_casting_result() -> None:
@@ -287,12 +303,15 @@ def _render_casting_result(config: Any, store: CastingStore) -> None:
 
     st.subheader("排卦結果")
     st.info(
-        f"**起卦國曆時間**：{result.casting_moment.gregorian_text} "
-        f"（{result.casting_moment.timezone}／{result.casting_moment.utc_offset}）  \n"
-        f"**起卦農曆時間**：{result.casting_moment.lunar_text}  \n"
-        f"**日辰**：{result.casting_moment.day_ganzhi}日"
+        f"**卦理時間 event_at**：{result.event_moment.gregorian_text} "
+        f"（{result.event_moment.timezone}／{result.event_moment.utc_offset}）  \n"
+        f"**卦理農曆時間**：{result.event_moment.lunar_text}  \n"
+        f"**日辰**：{result.event_moment.day_ganzhi}日  \n"
+        f"**文字凍結 freeze_at**：{result.freeze_at_iso}  \n"
+        f"**實際執行 cast_at**：{result.casting_moment.gregorian_text} "
+        f"（{result.casting_moment.timezone}／{result.casting_moment.utc_offset}）"
     )
-    st.caption("起卦時間在按下排卦時固定保存，只作排盤紀錄，不參與文字取數。")
+    st.caption("event_at 是日辰、月令、旬空、旺衰與時支的唯一時間基準；cast_at 只作稽核，不改變卦理。")
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("體卦／下卦", f"{result.body_gua} {result.body_number}")
     c2.metric("用卦／上卦", f"{result.use_gua} {result.use_number}")
@@ -536,7 +555,8 @@ def _render_records(store: CastingStore) -> None:
         st.info("尚無已儲存的排卦紀錄。")
         return
     columns = [
-        "排卦ID", "建立時間", "起卦農曆時間", "標題", "體方名稱", "用方名稱",
+        "排卦ID", "event_at", "freeze_at", "cast_at", "樣本分類", "起卦農曆時間",
+        "標題", "體方名稱", "用方名稱",
         "本卦", "互卦", "動爻爻名", "變卦", "體方條件式卦義", "用方條件式卦義",
     ]
     _render_html_table(rows, columns)
@@ -609,6 +629,28 @@ def run_app() -> None:
             )
             st.caption("事件名稱會自動組合為「體方名稱 vs 用方名稱」，不需要重複輸入。")
             category = st.text_input("內容類別", value="足球賽前內容")
+            st.markdown("#### 卦理時間與盲測鎖定")
+            event_at_text = st.text_input(
+                "官方開球時間 event_at（ISO 8601）",
+                placeholder="例如：2026-07-16T19:30:00-04:00",
+                help="必須包含 UTC 位移；event_at 是月令、日辰、旬空、旺衰與時支的唯一時間基準。",
+            )
+            event_timezone = st.text_input(
+                "事件 IANA 時區（選填）",
+                placeholder="例如：America/New_York",
+                help="若填寫，系統會用此地區時區驗證並保存事件當地民用時間。",
+            )
+            time_source_grade = st.selectbox(
+                "開球時間來源等級",
+                ("A｜官方明確陳述", "B｜可靠賽前報導", "C｜保守推論"),
+            )
+            time_source_url = st.text_input("開球時間來源網址")
+            sample_class = st.selectbox(
+                "樣本分類",
+                ("CLEAN_BLIND", "EXPOSED_BLIND", "POSTMATCH_ANALYSIS"),
+                help="主要準確率報告只納入在 freeze_at 前鎖定的 CLEAN_BLIND。",
+            )
+            st.caption("freeze_at 由系統固定計算為 event_at − 6 小時；cast_at 只保存實際執行時間。")
             st.markdown("#### v3 起象輸入規格")
             st.info(
                 "只使用賽前資訊，判斷範圍固定為九十分鐘，不含延長賽與PK。"
@@ -637,7 +679,7 @@ def run_app() -> None:
                     "- 狀態評級優先使用：明顯正面、略正面、中性、略負面、明顯負面。\n"
                     "- 主要策略優先使用：主動控球、快速轉換、直接推進、中低位防守。\n"
                     "- 避免必勝、取勝晉級、復仇、創造歷史等結果導向文字。\n"
-                    "- 建議開賽前六小時凍結；重大傷停或先發變化才重做，且雙方一起更新。\n"
+                    "- freeze_at 固定為 event_at 前六小時；重大傷停或先發變化才重做，且雙方一起更新。\n"
                     "- 起卦後保留原文，不因卦象不合直覺替換同義詞或補句。"
                 )
             body_text = st.text_area(
@@ -724,6 +766,10 @@ def run_app() -> None:
         if submitted:
             try:
                 body_name, use_name, title = _normalize_parties(body_name, use_name)
+                event_at = _parse_event_at(event_at_text, event_timezone)
+                source_grade = time_source_grade.split("｜", 1)[0]
+                if source_grade in {"A", "B"} and not time_source_url.strip():
+                    raise ValueError("A／B 級開球時間資料必須附來源網址。")
                 casting = CastingInput(
                     title=title,
                     body_name=body_name,
@@ -732,6 +778,11 @@ def run_app() -> None:
                     use_text=use_text,
                     full_text=full_text,
                     category=category.strip() or "未分類",
+                    event_at_iso=event_at.isoformat(timespec="seconds"),
+                    event_timezone=event_timezone.strip(),
+                    event_source_grade=source_grade,
+                    event_source_url=time_source_url.strip(),
+                    sample_class=sample_class,
                 )
                 issues = validate_input_protocol(
                     body_name,
@@ -742,7 +793,18 @@ def run_app() -> None:
                 )
                 if issues:
                     raise ValueError("v3 起象輸入規格未通過：\n- " + "\n- ".join(issues))
-                result = calculate_casting(casting)
+                result = calculate_casting(
+                    casting,
+                    event_at=event_at,
+                    event_timezone=event_timezone.strip(),
+                )
+                if sample_class == "CLEAN_BLIND" and datetime.fromisoformat(
+                    result.casting_moment.gregorian_iso
+                ) > datetime.fromisoformat(result.freeze_at_iso):
+                    raise ValueError(
+                        "本次 cast_at 已晚於 freeze_at，不能標記為 CLEAN_BLIND；"
+                        "請改用 EXPOSED_BLIND 或 POSTMATCH_ANALYSIS。"
+                    )
                 st.session_state["casting_input"] = casting
                 st.session_state["casting_result"] = result
                 st.success(

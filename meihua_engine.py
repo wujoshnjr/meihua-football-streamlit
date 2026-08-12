@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from casting_time import build_casting_moment
+from casting_time import CASTING_TIMEZONE, build_casting_moment, build_event_moment
 from models import CastingInput, HexagramResult
 
 
@@ -103,7 +103,13 @@ def _line_table(main_lines: str, changed_lines: str, moving_line: int) -> list[d
     return rows
 
 
-def calculate_casting(casting: CastingInput, *, cast_at: datetime | None = None) -> HexagramResult:
+def calculate_casting(
+    casting: CastingInput,
+    *,
+    event_at: datetime | None = None,
+    event_timezone: str = "",
+    cast_at: datetime | None = None,
+) -> HexagramResult:
     body_count = count_symbols(casting.body_text)
     use_count = count_symbols(casting.use_text)
     total_count = count_symbols(casting.full_text)
@@ -134,8 +140,23 @@ def calculate_casting(casting: CastingInput, *, cast_at: datetime | None = None)
     )
     moving_original = main_lines[moving_index]
 
+    casting_moment = build_casting_moment(cast_at)
+    # Backward-compatible library fallback: old callers that only supplied
+    # ``cast_at`` receive the same chart.  The Streamlit form requires an
+    # explicit official ``event_at`` and never uses this fallback.
+    if event_at is None:
+        fallback_event = cast_at or datetime.fromisoformat(casting_moment.gregorian_iso)
+        event_moment = build_event_moment(fallback_event, event_timezone or CASTING_TIMEZONE)
+    else:
+        event_moment = build_event_moment(event_at, event_timezone)
+    freeze_at_iso = (
+        datetime.fromisoformat(event_moment.gregorian_iso) - timedelta(hours=6)
+    ).isoformat(timespec="seconds")
+
     return HexagramResult(
-        casting_moment=build_casting_moment(cast_at),
+        event_moment=event_moment,
+        casting_moment=casting_moment,
+        freeze_at_iso=freeze_at_iso,
         title=casting.title.strip(),
         body_name=casting.body_name.strip(),
         use_name=casting.use_name.strip(),
