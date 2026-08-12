@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.9.0 — event_at 唯一時間基準與獨立盲測評估
+
+- 新增官方 `event_at`、事件時區、時間來源 A／B／C、來源網址與 `CLEAN_BLIND`／`EXPOSED_BLIND`／`POSTMATCH_ANALYSIS` 樣本分類。
+- 固定 `freeze_at = event_at − 6h`；日辰、月令、旬空、旺衰與時支全部改用 `event_at`，`cast_at` 僅保存實際執行稽核時間。
+- 排卦 CSV 與完整 JSON 同時保存 `event_at`、`freeze_at`、`cast_at` 及 `event-at-only-v1` 時間基準版本；資料結構版本升至 5.8。
+- 新增與排卦完全分離的 `forecast_evaluation.py` 與 `tools/evaluate_forecasts.py`，鎖定預測／賽果 SHA-256，防止事後修改。
+- 新增 1X2 Brier、log loss、Top-1、校準、精確比分、進球區間及 BTTS 評估；prequential baseline 只使用事件時間嚴格早於本場的賽果。
+- 主要報告預設只納入 `CLEAN_BLIND`；版本晉升門檻要求足夠樣本且 Brier、log loss 同時優於基準。
+- 新增完整研究規格、CSV 範例與標準函式庫單元測試；排卦主程式仍不讀取賽果、不輸出勝負或比分。
+
 ## v5.8.0 — 十一行防噪起象輸入 v3
 
 - 體、用自述由十行升級為十一行，新增獨立的「我目前最明顯的限制」，並把自身限制與對手威脅分開。

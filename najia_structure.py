@@ -257,13 +257,13 @@ def _hexagram_najia(
 
 
 def build_najia_analysis(result: HexagramResult) -> dict[str, Any]:
-    day_ganzhi = result.casting_moment.day_ganzhi
-    day_stem = result.casting_moment.day_stem
-    day_branch = result.casting_moment.day_branch
+    day_ganzhi = result.event_moment.day_ganzhi
+    day_stem = result.event_moment.day_stem
+    day_branch = result.event_moment.day_branch
     day_element = STEM_ELEMENTS[day_stem]
     void = xun_void(day_ganzhi)
     void_branches = set(void["void_branches"])
-    month_branch = LUNAR_MONTH_BRANCHES[result.casting_moment.lunar_month]
+    month_branch = LUNAR_MONTH_BRANCHES[result.event_moment.lunar_month]
     main = _hexagram_najia(
         result.main_hexagram,
         result.main_lines_bottom_up,
@@ -291,7 +291,7 @@ def build_najia_analysis(result: HexagramResult) -> dict[str, Any]:
             "day_stem": day_stem,
             "day_branch": day_branch,
             "day_stem_element": day_element,
-            "lunar_month": result.casting_moment.lunar_month,
+            "lunar_month": result.event_moment.lunar_month,
             "month_branch": month_branch,
             "month_element": BRANCH_ELEMENTS[month_branch],
         },

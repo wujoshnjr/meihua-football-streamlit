@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from casting_structure import (
     build_casting_structure,
@@ -91,6 +91,19 @@ def test_seasonal_strength_uses_one_frozen_month_command_rule() -> None:
     assert strength["body_after"] == "休"
     assert strength["use_after"] == "死"
     assert strength["strength_shift"] == "體方持平／用方轉弱"
+
+
+def test_event_at_is_the_only_time_environment_and_cast_at_is_audit_only() -> None:
+    event_at = datetime(2026, 1, 10, 20, 0, tzinfo=timezone.utc)
+    cast_at = datetime(2026, 7, 13, 15, 30)
+    result = calculate_casting(_casting(), event_at=event_at, cast_at=cast_at)
+    strength = build_casting_structure(result)["seasonal_strength"]
+
+    assert result.event_moment.gregorian_iso == "2026-01-10T20:00:00+00:00"
+    assert result.casting_moment.gregorian_iso == "2026-07-13T15:30:00+08:00"
+    assert result.freeze_at_iso == (event_at - timedelta(hours=6)).isoformat(timespec="seconds")
+    assert strength["lunar_month"] == result.event_moment.lunar_month
+    assert strength["lunar_month"] != result.casting_moment.lunar_month
 
 
 def test_correspondence_and_adjacent_relations_cover_all_six_positions() -> None:

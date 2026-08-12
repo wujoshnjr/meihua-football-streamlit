@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-from casting_time import CASTING_TIMEZONE, build_casting_moment
+from casting_time import CASTING_TIMEZONE, build_casting_moment, build_event_moment
 
 
 def test_casting_moment_converts_utc_to_taipei_lunar_time() -> None:
@@ -30,3 +30,21 @@ def test_casting_moment_uses_traditional_leap_month_label() -> None:
     assert moment.lunar_month == 6
     assert moment.lunar_month_text == "閏六"
     assert "閏六月初一" in moment.lunar_text
+
+
+def test_event_moment_preserves_official_local_civil_time_and_offset() -> None:
+    edt = timezone(-timedelta(hours=4))
+    moment = build_event_moment(datetime(2026, 7, 16, 19, 30, tzinfo=edt))
+
+    assert moment.timezone == "UTC-04:00"
+    assert moment.utc_offset == "UTC-04:00"
+    assert moment.gregorian_iso == "2026-07-16T19:30:00-04:00"
+
+
+def test_event_moment_rejects_a_timezone_free_value() -> None:
+    try:
+        build_event_moment(datetime(2026, 7, 16, 19, 30))
+    except ValueError as exc:
+        assert "event_at" in str(exc)
+    else:
+        raise AssertionError("timezone-free event_at should be rejected")

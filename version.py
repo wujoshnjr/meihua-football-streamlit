@@ -1,9 +1,10 @@
 """Single source of truth for the casting-only application."""
 
-APP_VERSION = "5.8.0"
+APP_VERSION = "5.9.0"
 APP_TITLE = f"梅花易數完整排卦系統 v{APP_VERSION}"
-SCHEMA_VERSION = "5.7"
+SCHEMA_VERSION = "5.8"
 CALCULATION_VERSION = "meihua-text-casting-v5.0.0"
 KNOWLEDGE_VERSION = "zhouyi-conditional-trigram-64x384-yilin4096-v1.0.0"
-RESEARCH_PROTOCOL_VERSION = "conditional-whole-line-meaning-no-fixed-score-v1"
+RESEARCH_PROTOCOL_VERSION = "locked-prequential-forecast-evaluation-v1"
 INPUT_PROTOCOL_VERSION = "team-self-narrative-v3"
+FORECAST_PROTOCOL_VERSION = "separate-locked-forecast-v1"

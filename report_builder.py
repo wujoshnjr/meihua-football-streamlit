@@ -59,12 +59,14 @@ def build_markdown_report(casting: CastingInput, result: HexagramResult) -> str:
 > 範圍：只排卦，不解卦；不預測勝負、比分或任何結果。
 > 輸入規格：{casting.input_protocol_version}；兩隊自述為第一人稱，中性介紹為第三人稱。
 
-## 一、起卦時間
+## 一、時間鎖定
 
-- 起卦國曆時間：{result.casting_moment.gregorian_text}
-- 起卦農曆時間：{result.casting_moment.lunar_text}
-- 時區：{result.casting_moment.timezone}／{result.casting_moment.utc_offset}
-- 使用規則：時間只作排盤紀錄，不參與三段文字取數
+- 卦理時間 event_at：{result.event_moment.gregorian_text}
+- 卦理農曆時間：{result.event_moment.lunar_text}
+- 事件時區：{result.event_moment.timezone}／{result.event_moment.utc_offset}
+- 文字凍結 freeze_at：{result.freeze_at_iso}
+- 實際執行 cast_at：{result.casting_moment.gregorian_text}（{result.casting_moment.timezone}／{result.casting_moment.utc_offset}）
+- 使用規則：event_at 是日辰、月令、旬空、旺衰與時支的唯一時間基準；cast_at 只作稽核
 
 ## 二、輸入角色
 

@@ -37,7 +37,7 @@ def test_report_contains_complete_casting_but_no_prediction_sections() -> None:
     assert "體方自述（起象）" in report
     assert "用方自述（起象）" in report
     assert "賽前中性介紹（動爻）" in report
-    assert "起卦農曆時間" in report
+    assert "卦理農曆時間" in report
     assert "農曆二〇二六年（丙午年）五月廿九 庚申時（申時）" in report
     assert "本卦六爻排盤" in report
     assert "本、互、動、變結構" in report
@@ -56,7 +56,7 @@ def test_html_report_is_a_complete_readable_table_without_raw_json() -> None:
     casting, result = fixture()
     report = build_html_report(casting, result)
     assert "<!doctype html>" in report
-    assert "起卦時間與旬空" in report
+    assert "event_at 時間環境與旬空" in report
     assert "本卦納甲" in report and "互卦納甲" in report and "變卦納甲" in report
     assert "完整卦義" in report and "足球比賽應用層" in report
     assert "條件式卦義" in report
@@ -88,6 +88,7 @@ def test_casting_storage_is_idempotent_and_persists_full_json(tmp_path: Path) ->
     assert payload["main_hexagram"] == result.main_hexagram
     assert len(payload["line_table"]) == 6
     assert payload["casting_moment"]["lunar_year_ganzhi"] == "丙午"
+    assert payload["event_moment"]["lunar_year_ganzhi"] == "丙午"
     assert payload["jiaoshi_yilin"]["entry_key"]
     assert payload["jiaoshi_yilin"]["text"].endswith(("。", "！", "？"))
     assert payload["jiaoshi_yilin"]["source"]["license"] == "CC-BY-SA-4.0"
@@ -105,7 +106,10 @@ def test_casting_storage_is_idempotent_and_persists_full_json(tmp_path: Path) ->
     assert payload["input_protocol"]["version"] == "team-self-narrative-v3"
     assert payload["input"]["body_text"] == casting.body_text
     assert second[0]["建立時間"] == "2026-07-13 15:30:00"
-    assert second[0]["起卦農曆時間"] == result.casting_moment.lunar_text
+    assert second[0]["時間基準版本"] == "event-at-only-v1"
+    assert second[0]["event_at"] == result.event_moment.gregorian_iso
+    assert second[0]["cast_at"] == result.casting_moment.gregorian_iso
+    assert second[0]["起卦農曆時間"] == result.event_moment.lunar_text
     assert second[0]["起卦時辰"] == "申時"
     assert second[0]["輸入規格版本"] == "team-self-narrative-v3"
     assert second[0]["體方自述（起象）"] == casting.body_text
@@ -126,7 +130,7 @@ def test_download_json_contains_punctuated_jiaoshi_yilin_entry() -> None:
     casting, result = fixture()
     payload = json.loads(json.dumps(build_casting_export(casting, result), ensure_ascii=False))
 
-    assert payload["schema_version"] == "5.7"
+    assert payload["schema_version"] == "5.8"
     assert payload["input_protocol"]["version"] == "team-self-narrative-v3"
     assert payload["casting"]["main_hexagram"] == result.main_hexagram
     assert payload["jiaoshi_yilin"]["entry_key"]
@@ -146,11 +150,13 @@ def test_recasting_same_text_gets_a_distinct_time_audit_record() -> None:
     casting, first = fixture()
     second = calculate_casting(
         casting,
+        event_at=datetime.fromisoformat(first.event_moment.gregorian_iso),
         cast_at=datetime.fromisoformat(first.casting_moment.gregorian_iso) + timedelta(minutes=1),
     )
 
     assert first.main_hexagram == second.main_hexagram
     assert first.moving_line == second.moving_line
+    assert first.event_moment.gregorian_iso == second.event_moment.gregorian_iso
     assert first.casting_moment.gregorian_iso != second.casting_moment.gregorian_iso
     assert casting_fingerprint(casting, first) != casting_fingerprint(casting, second)
 

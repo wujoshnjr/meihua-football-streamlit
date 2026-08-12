@@ -27,6 +27,23 @@ def test_app_startup_does_not_directly_import_native_data_stack() -> None:
     assert _imported_roots(ROOT / "storage.py").isdisjoint(forbidden)
 
 
+def test_casting_runtime_cannot_import_the_post_match_evaluator() -> None:
+    casting_runtime = (
+        "app.py",
+        "casting_structure.py",
+        "conditional_meanings.py",
+        "export_builder.py",
+        "html_report_builder.py",
+        "knowledge_loader.py",
+        "meihua_engine.py",
+        "najia_structure.py",
+        "report_builder.py",
+        "storage.py",
+    )
+    for filename in casting_runtime:
+        assert "forecast_evaluation" not in _imported_roots(ROOT / filename)
+
+
 def test_bare_app_startup_does_not_load_native_data_modules() -> None:
     probe = (
         "import sys; import app; "

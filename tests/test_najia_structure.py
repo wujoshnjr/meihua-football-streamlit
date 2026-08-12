@@ -16,7 +16,7 @@ def _example():
 def test_requested_date_day_cycle_and_void_are_exact() -> None:
     result = _example()
     analysis = build_najia_analysis(result)
-    assert result.casting_moment.day_ganzhi == "庚寅"
+    assert result.event_moment.day_ganzhi == "庚寅"
     assert analysis["day_cycle"]["month_branch"] == "未"
     assert analysis["xun_void"]["xun_name"] == "甲申旬"
     assert analysis["xun_void"]["void_branches"] == ["午", "未"]

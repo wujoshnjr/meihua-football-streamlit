@@ -23,16 +23,19 @@ def _traditional(value: str) -> str:
     return value.replace("闰", "閏").replace("腊", "臘")
 
 
-def build_casting_moment(value: datetime | None = None) -> CastingMoment:
-    """Capture one immutable Gregorian/lunar timestamp in Taiwan time."""
+def _utc_offset_text(value: datetime) -> str:
+    offset = value.utcoffset()
+    if offset is None:
+        raise ValueError("時間必須包含可解析的 UTC 位移。")
+    total_minutes = int(offset.total_seconds() // 60)
+    sign = "+" if total_minutes >= 0 else "-"
+    hours, minutes = divmod(abs(total_minutes), 60)
+    return f"UTC{sign}{hours:02d}:{minutes:02d}"
 
-    taipei = _taipei_timezone()
-    if value is None:
-        local = datetime.now(taipei)
-    elif value.tzinfo is None:
-        local = value.replace(tzinfo=taipei)
-    else:
-        local = value.astimezone(taipei)
+
+def _build_moment(local: datetime, timezone_name: str) -> CastingMoment:
+    """Build the shared Gregorian/lunar representation from one local civil time."""
+
     local = local.replace(microsecond=0)
 
     lunar = Solar.fromYmdHms(
@@ -58,8 +61,8 @@ def build_casting_moment(value: datetime | None = None) -> CastingMoment:
     )
 
     return CastingMoment(
-        timezone=CASTING_TIMEZONE,
-        utc_offset="UTC+08:00",
+        timezone=timezone_name,
+        utc_offset=_utc_offset_text(local),
         gregorian_iso=local.isoformat(timespec="seconds"),
         gregorian_text=local.strftime("%Y-%m-%d %H:%M:%S"),
         lunar_text=lunar_text,
@@ -79,4 +82,45 @@ def build_casting_moment(value: datetime | None = None) -> CastingMoment:
     )
 
 
-__all__ = ["CASTING_TIMEZONE", "build_casting_moment"]
+def build_casting_moment(value: datetime | None = None) -> CastingMoment:
+    """Capture the actual execution timestamp in Taiwan time for audit only."""
+
+    taipei = _taipei_timezone()
+    if value is None:
+        local = datetime.now(taipei)
+    elif value.tzinfo is None:
+        local = value.replace(tzinfo=taipei)
+    else:
+        local = value.astimezone(taipei)
+    return _build_moment(local, CASTING_TIMEZONE)
+
+
+def build_event_moment(value: datetime, timezone_name: str = "") -> CastingMoment:
+    """Build the sole divination-time environment from official ``event_at``.
+
+    ``event_at`` must be timezone-aware unless an IANA timezone is supplied.  Its
+    local civil clock is intentionally preserved because day, lunar month and
+    hour branch belong to the event environment, not to the later execution.
+    """
+
+    requested_timezone = timezone_name.strip()
+    if requested_timezone:
+        try:
+            event_timezone = ZoneInfo(requested_timezone)
+        except ZoneInfoNotFoundError as exc:
+            raise ValueError(f"無法辨識事件時區：{requested_timezone}") from exc
+        local = (
+            value.replace(tzinfo=event_timezone)
+            if value.tzinfo is None
+            else value.astimezone(event_timezone)
+        )
+        label = requested_timezone
+    else:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("event_at 必須包含 UTC 位移，或另填 IANA 事件時區。")
+        local = value
+        label = _utc_offset_text(local)
+    return _build_moment(local, label)
+
+
+__all__ = ["CASTING_TIMEZONE", "build_casting_moment", "build_event_moment"]
