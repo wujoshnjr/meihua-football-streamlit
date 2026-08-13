@@ -1,0 +1,73 @@
+{
+  "schema_version": "qimen-methods-v1.0.0",
+  "active_method": {
+    "family": "時家奇門",
+    "plate_method": "轉盤",
+    "ju_method": "拆補法",
+    "time_basis": "事件所在地 IANA 民用時；節氣瞬間以同一事件時刻換算",
+    "zi_hour_boundary": "晚子時換日（lunar-python sect=1）",
+    "center_policy": "中五寄坤二，天禽隨天芮",
+    "deity_policy": "八神同名制，陽遁順行、陰遁逆行",
+    "football_host_guest": "主隊取日干、客隊取時干；甲不裸露，取值符宮",
+    "version": "shijia-zhuanpan-chaibu-v1.0.0"
+  },
+  "families": [
+    {"name":"年家奇門","unit":"年","use":"長週期國運、趨勢或年度題。","status":"knowledge_only"},
+    {"name":"月家奇門","unit":"月","use":"月度趨勢與中期題。","status":"knowledge_only"},
+    {"name":"日家奇門","unit":"日","use":"日尺度擇時與事件。","status":"knowledge_only"},
+    {"name":"時家奇門","unit":"時辰","use":"事件、行動與賽前固定時刻。","status":"implemented"}
+  ],
+  "plate_methods": [
+    {"name":"轉盤奇門","description":"九星與八門沿洛書外八宮旋轉，中五依明示規則寄宮。","status":"implemented"},
+    {"name":"飛盤奇門","description":"符號按九宮數序飛布；細節與轉盤不同，不可在同張盤混算。","status":"knowledge_only"},
+    {"name":"轉飛合參","description":"部分現代傳承把轉盤與飛盤分層參照。","status":"knowledge_only","warning":"必須另建演算法版本，不能把單一符號任意替換。"}
+  ],
+  "ju_methods": [
+    {"name":"拆補法","description":"依節氣、符頭地支所屬上中下元取十八局表；五日一元。","status":"implemented"},
+    {"name":"置閏法","description":"以超神、接氣與置閏規則調整三元，常見於時家奇門另一系統。","status":"knowledge_only"},
+    {"name":"茅山法","description":"以節氣交接與日序連續換局的傳承之一。","status":"knowledge_only"},
+    {"name":"陰盤／報數等現代法","description":"起局依報數、外應或現代門派規則。","status":"knowledge_only","warning":"不以古法排盤結果冒充。"}
+  ],
+  "time_options": [
+    {"name":"民用時","description":"使用事件所在地法定時間與 IANA 時區，能處理夏令時間。","status":"implemented"},
+    {"name":"真太陽時","description":"依經度與均時差校正；需保存座標、演算法與校正分鐘。","status":"knowledge_only"},
+    {"name":"北京時統一排盤","description":"不論事件地點均使用 UTC+8 的現代實務選項。","status":"knowledge_only"}
+  ],
+  "center_options": [
+    {"name":"中五寄坤二","description":"本版地盤中五寄干放入坤二，天禽隨天芮。","status":"implemented"},
+    {"name":"陽寄艮八、陰寄坤二","description":"部分傳承依陰陽遁分寄。","status":"knowledge_only"},
+    {"name":"中五獨立／禽星單布","description":"飛盤或個別傳承的中宮處理。","status":"knowledge_only"}
+  ],
+  "host_guest_options": [
+    {"name":"日干／時干","description":"本足球層固定主隊為日干、客隊為時干，甲取值符宮。","status":"implemented"},
+    {"name":"地盤／天盤","description":"常以地盤為主、天盤為客或以靜動分配。","status":"knowledge_only"},
+    {"name":"值符／值使","description":"依題型把領導者、執行者或主客映射至值符值使。","status":"knowledge_only"},
+    {"name":"年命／方位／來去方向","description":"人物或空間占題常用，但需在看盤前固定。","status":"knowledge_only"}
+  ],
+  "eighteen_ju": {
+    "陽遁": {
+      "冬至":[1,7,4],"小寒":[2,8,5],"大寒":[3,9,6],"立春":[8,5,2],"雨水":[9,6,3],"驚蟄":[1,7,4],"春分":[3,9,6],"清明":[4,1,7],"穀雨":[5,2,8],"立夏":[4,1,7],"小滿":[5,2,8],"芒種":[6,3,9]
+    },
+    "陰遁": {
+      "夏至":[9,3,6],"小暑":[8,2,5],"大暑":[7,1,4],"立秋":[2,5,8],"處暑":[1,4,7],"白露":[9,3,6],"秋分":[7,1,4],"寒露":[6,9,3],"霜降":[5,8,2],"立冬":[6,9,3],"小雪":[5,8,2],"大雪":[4,7,1]
+    },
+    "array_order":"每個陣列依序為上元、中元、下元"
+  },
+  "six_xun": [
+    {"xun":"甲子旬","instrument":"戊","void":["戌","亥"]},
+    {"xun":"甲戌旬","instrument":"己","void":["申","酉"]},
+    {"xun":"甲申旬","instrument":"庚","void":["午","未"]},
+    {"xun":"甲午旬","instrument":"辛","void":["辰","巳"]},
+    {"xun":"甲辰旬","instrument":"壬","void":["寅","卯"]},
+    {"xun":"甲寅旬","instrument":"癸","void":["子","丑"]}
+  ],
+  "interpretation_order": [
+    "確認題目、事件時間、地點、時區與方法版本",
+    "盤前鎖定主客與用神，不得看盤後改換",
+    "核對陰陽遁、三元局數、旬首、值符、值使",
+    "讀九宮中的天盤干、地盤干、星、門、神",
+    "再看旺相休囚廢、空亡、驛馬、刑墓迫與格局",
+    "形成可被現實證據驗證的候選情境，保留反證條件",
+    "賽後只做評估，不把結果資訊回灌至賽前判讀"
+  ]
+}

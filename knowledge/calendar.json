@@ -1,0 +1,51 @@
+{
+  "schema_version": "qimen-calendar-v1.0.0",
+  "solar_terms": [
+    {"name":"冬至","dun":"陽遁","season":"冬","ju":[1,7,4]},
+    {"name":"小寒","dun":"陽遁","season":"冬","ju":[2,8,5]},
+    {"name":"大寒","dun":"陽遁","season":"冬","ju":[3,9,6]},
+    {"name":"立春","dun":"陽遁","season":"春","ju":[8,5,2]},
+    {"name":"雨水","dun":"陽遁","season":"春","ju":[9,6,3]},
+    {"name":"驚蟄","dun":"陽遁","season":"春","ju":[1,7,4]},
+    {"name":"春分","dun":"陽遁","season":"春","ju":[3,9,6]},
+    {"name":"清明","dun":"陽遁","season":"春","ju":[4,1,7]},
+    {"name":"穀雨","dun":"陽遁","season":"春","ju":[5,2,8]},
+    {"name":"立夏","dun":"陽遁","season":"夏","ju":[4,1,7]},
+    {"name":"小滿","dun":"陽遁","season":"夏","ju":[5,2,8]},
+    {"name":"芒種","dun":"陽遁","season":"夏","ju":[6,3,9]},
+    {"name":"夏至","dun":"陰遁","season":"夏","ju":[9,3,6]},
+    {"name":"小暑","dun":"陰遁","season":"夏","ju":[8,2,5]},
+    {"name":"大暑","dun":"陰遁","season":"夏","ju":[7,1,4]},
+    {"name":"立秋","dun":"陰遁","season":"秋","ju":[2,5,8]},
+    {"name":"處暑","dun":"陰遁","season":"秋","ju":[1,4,7]},
+    {"name":"白露","dun":"陰遁","season":"秋","ju":[9,3,6]},
+    {"name":"秋分","dun":"陰遁","season":"秋","ju":[7,1,4]},
+    {"name":"寒露","dun":"陰遁","season":"秋","ju":[6,9,3]},
+    {"name":"霜降","dun":"陰遁","season":"秋","ju":[5,8,2]},
+    {"name":"立冬","dun":"陰遁","season":"冬","ju":[6,9,3]},
+    {"name":"小雪","dun":"陰遁","season":"冬","ju":[5,8,2]},
+    {"name":"大雪","dun":"陰遁","season":"冬","ju":[4,7,1]}
+  ],
+  "earthly_branches": [
+    {"name":"子","element":"水","palace":1,"trine":"申子辰","horse":"寅"},
+    {"name":"丑","element":"土","palace":8,"trine":"巳酉丑","horse":"亥"},
+    {"name":"寅","element":"木","palace":8,"trine":"寅午戌","horse":"申"},
+    {"name":"卯","element":"木","palace":3,"trine":"亥卯未","horse":"巳"},
+    {"name":"辰","element":"土","palace":4,"trine":"申子辰","horse":"寅"},
+    {"name":"巳","element":"火","palace":4,"trine":"巳酉丑","horse":"亥"},
+    {"name":"午","element":"火","palace":9,"trine":"寅午戌","horse":"申"},
+    {"name":"未","element":"土","palace":2,"trine":"亥卯未","horse":"巳"},
+    {"name":"申","element":"金","palace":2,"trine":"申子辰","horse":"寅"},
+    {"name":"酉","element":"金","palace":7,"trine":"巳酉丑","horse":"亥"},
+    {"name":"戌","element":"土","palace":6,"trine":"寅午戌","horse":"申"},
+    {"name":"亥","element":"水","palace":6,"trine":"亥卯未","horse":"巳"}
+  ],
+  "five_elements": [
+    {"name":"木","generates":"火","controls":"土","season":"春"},
+    {"name":"火","generates":"土","controls":"金","season":"夏"},
+    {"name":"土","generates":"金","controls":"水","season":"四季土／季末"},
+    {"name":"金","generates":"水","controls":"木","season":"秋"},
+    {"name":"水","generates":"木","controls":"火","season":"冬"}
+  ],
+  "seasonal_strength_rule": "本版以當令五行為旺、當令所生為相、生當令者為休、克當令者為囚、受當令所克者為廢；這是程式化比較規則，讀者應保留土旺與月令細分的傳承差異。"
+}

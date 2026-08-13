@@ -1,0 +1,51 @@
+{
+  "schema_version": "qimen-patterns-v1.0.0",
+  "scope_note": "收錄時家轉盤常用的奇儀組合、三遁三詐五假、庚格與盤勢狀態。名稱與成立條件在不同傳承可能有差異；程式只自動判定已在演算法版本中鎖定者，其餘作為知識條目，不混算。",
+  "patterns": [
+    {"name":"青龍返首","category":"奇儀吉格","condition":"天盤戊加地盤丙。","reading":"資源回流、事情轉圜、主動權有回復條件。","caution":"仍須查門迫、入墓、擊刑、空亡與旺衰。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"飛鳥跌穴","category":"奇儀吉格","condition":"天盤丙加地盤戊。","reading":"機會落實、行動較易找到著力點。","caution":"不可脫離門、星、宮與時令單獨斷成。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"三奇得使","category":"奇儀吉格","condition":"乙、丙、丁三奇之一臨值使門，且不受嚴重刑墓迫制；細則依傳承。","reading":"才能與行動通道相接，較容易把條件落實。","caution":"不同抄本對旬、門與干組合的限制不同，本版只展示知識，不自動命中。","automation":"knowledge_only","source_id":"qimen-daquan"},
+    {"name":"三奇升殿","category":"奇儀吉格","condition":"乙奇臨震三、丙奇臨離九、丁奇臨兌七。","reading":"三奇得本位，才能、資源與可見度較易顯用。","caution":"旬空、入墓、門迫或宮迫會削弱。","automation":"implemented","source_id":"qimen-daquan"},
+    {"name":"玉女守門","category":"奇儀吉格","condition":"丁奇與值使門同宮；部分傳承另加特定時格條件。","reading":"利精細部署、文書、隱密協作與柔性突破。","caution":"本版保留流派差異，不自動命中。","automation":"knowledge_only","source_id":"qimen-daquan"},
+
+    {"name":"天遁","category":"三遁","condition":"常用條件為丙奇、生門、丁奇同宮；另有版本差異。","reading":"利公開推進、職位、遠行與擴張。","caution":"須以採用傳承的原文條件為準。","automation":"knowledge_only","source_id":"qimen-daquan"},
+    {"name":"地遁","category":"三遁","condition":"常用條件為乙奇、開門、己儀同宮；另有版本差異。","reading":"利部署、隱蔽、土地場域與穩固執行。","caution":"不可只見乙或開門即命名地遁。","automation":"knowledge_only","source_id":"qimen-daquan"},
+    {"name":"人遁","category":"三遁","condition":"常用條件為丁奇、休門、太陰同宮。","reading":"利人和、協商、精密合作與低調推進。","caution":"仍須辨空墓迫制及題目用神。","automation":"knowledge_only","source_id":"qimen-daquan"},
+
+    {"name":"真詐","category":"三詐","condition":"三奇、開休生三吉門之一與太陰同宮。","reading":"以隱密、精準與柔性策略取得空間。","caution":"詐指策略與虛實，不等於鼓勵欺騙。","automation":"knowledge_only","source_id":"qimen-daquan"},
+    {"name":"重詐","category":"三詐","condition":"三奇、三吉門之一與九地同宮。","reading":"利沉著、守勢、長期布置與深層執行。","caution":"可能過慢或過守，需看任務時限。","automation":"knowledge_only","source_id":"qimen-daquan"},
+    {"name":"休詐","category":"三詐","condition":"三奇、三吉門之一與六合同宮。","reading":"利協作、媒合、談判與關係網絡。","caution":"避免因求和而失去原定目標。","automation":"knowledge_only","source_id":"qimen-daquan"},
+
+    {"name":"天假","category":"五假","condition":"景門與三奇、九天同宮；傳本細節不一。","reading":"利展示、傳播、聲勢與高位展開。","caution":"景象可能大於實質。","automation":"knowledge_only","source_id":"qimen-daquan"},
+    {"name":"地假","category":"五假","condition":"杜門與三奇、九地同宮；傳本細節不一。","reading":"利隱蔽、防守、技術與地下部署。","caution":"閉塞也可能阻斷資訊。","automation":"knowledge_only","source_id":"qimen-daquan"},
+    {"name":"人假","category":"五假","condition":"驚門與三奇、六合同宮；傳本細節不一。","reading":"利聲勢、交涉、快速連結與出其不意。","caution":"同時放大口舌與驚擾。","automation":"knowledge_only","source_id":"qimen-daquan"},
+    {"name":"神假","category":"五假","condition":"傷門與三奇、九天同宮；傳本細節不一。","reading":"利競技、追擊、快速施壓。","caution":"傷損、犯規與過度用力風險同步上升。","automation":"knowledge_only","source_id":"qimen-daquan"},
+    {"name":"鬼假","category":"五假","condition":"死門與三奇、九地同宮；傳本細節不一。","reading":"利收尾、隱伏、固定與處理積弊。","caution":"不宜神秘化；在賽事只作停滯或體能風險象。","automation":"knowledge_only","source_id":"qimen-daquan"},
+
+    {"name":"青龍逃走","category":"奇儀凶格","condition":"天盤乙加地盤辛。","reading":"助力離散、進展反覆或資源難留。","caution":"吉門旺相時也可能表示策略性撤退。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"白虎猖狂","category":"奇儀凶格","condition":"天盤辛加地盤乙。","reading":"衝突、壓力、傷損或突發阻力增加。","caution":"醫療與法律題只能作風險提示。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"朱雀投江","category":"奇儀凶格","condition":"天盤丁加地盤癸。","reading":"訊息、文書、口舌或承諾容易失真。","caution":"先核對資料來源與溝通鏈。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"螣蛇夭矯","category":"奇儀凶格","condition":"天盤癸加地盤丁。","reading":"反覆纏繞、虛驚與方案難定。","caution":"表示高不確定性，不作神秘化擴張。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"熒入太白","category":"戰格","condition":"天盤丙加地盤庚。","reading":"主動壓力上升、交鋒加劇。","caution":"轉用賽事時只作攻守壓力象。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"太白入熒","category":"戰格","condition":"天盤庚加地盤丙。","reading":"阻力主動來犯、對抗性增加。","caution":"必須與盤前鎖定的主客規則合看。","automation":"implemented","source_id":"dunjia-yanyi"},
+
+    {"name":"大格","category":"庚格","condition":"天盤庚加地盤癸。","reading":"阻礙較重、活動空間受限。","caution":"不直接推定失敗或災禍。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"刑格","category":"庚格","condition":"天盤庚加地盤己。","reading":"規則壓力、內部錯位或執行受制。","caution":"各傳承另有細分，不外推法律結論。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"上格","category":"庚格","condition":"天盤庚加地盤壬。","reading":"進退反覆、推進受阻。","caution":"需合看吉門、旺衰與空墓。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"飛干格","category":"庚格","condition":"日干落宮的天盤見庚；主客與天地盤定義依占題鎖定。","reading":"主動面遭遇直接阻力。","caution":"用神定位未鎖定時不得自動命名。","automation":"knowledge_only","source_id":"qimen-daquan"},
+    {"name":"伏干格","category":"庚格","condition":"日干落宮的地盤見庚；細則依傳承。","reading":"內部或底層條件藏有阻力。","caution":"不得看結果後改換日干角色。","automation":"knowledge_only","source_id":"qimen-daquan"},
+    {"name":"飛宮格","category":"庚格","condition":"天盤庚臨日干所在之宮；細則依傳承。","reading":"外來壓力進入核心位置。","caution":"與飛干格名稱在部分資料中互見。","automation":"knowledge_only","source_id":"qimen-daquan"},
+    {"name":"伏宮格","category":"庚格","condition":"地盤庚與日干用神構成伏宮條件；細則依傳承。","reading":"環境底層的阻力較難立即移除。","caution":"保留版本標記，避免跨書混用。","automation":"knowledge_only","source_id":"qimen-daquan"},
+
+    {"name":"五不遇時","category":"時格","condition":"時干剋日干且陰陽相同：甲日庚時、乙日辛時、丙日壬時、丁日癸時、戊日甲時、己日乙時、庚日丙時、辛日丁時、壬日戊時、癸日己時。","reading":"時機與主體協調度偏低。","caution":"跨日與子時規則錯誤會造成誤判。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"三奇入墓","category":"狀態格","condition":"本版採乙入坤二、丙入乾六、丁入乾六；傳承有細分。","reading":"機會或能力被收藏，暫時難顯。","caution":"入墓不等於消失，仍看旺衰與沖填。","automation":"implemented","source_id":"qimen-daquan"},
+    {"name":"六儀擊刑","category":"狀態格","condition":"本版採戊震三、己坤二、庚艮八、辛離九、壬巽四、癸巽四。","reading":"執行結構受刑，易卡在規則、協作或負荷。","caution":"必須按旬首與宮位計算。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"天網四張","category":"狀態格","condition":"本版以天盤癸加地盤癸標示；古籍與傳承另有高低網細分。","reading":"局面受困、網羅或可行空間縮小。","caution":"成立版本已綁定，不跨本擴大。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"伏吟","category":"盤勢","condition":"星或門回到本宮；程式分為星伏吟、門伏吟。","reading":"停滯、重複、守成、內部循環。","caution":"守成題未必凶。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"反吟","category":"盤勢","condition":"星或門全臨對宮；程式分為星反吟、門反吟。","reading":"對沖、變動、反覆、快速翻轉。","caution":"不等於結果必然反轉。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"門迫","category":"宮門關係","condition":"本版定義為門五行剋所在宮五行。","reading":"門的功能與環境衝突，發用費力。","caution":"部分傳承用語相反，讀盤前先查版本。","automation":"implemented","source_id":"qimen-daquan"},
+    {"name":"宮迫","category":"宮門關係","condition":"本版定義為所在宮五行剋門五行。","reading":"環境壓住門的功能，能力難伸。","caution":"部分傳承稱制門或門受制。","automation":"implemented","source_id":"qimen-daquan"},
+    {"name":"旬空","category":"時空狀態","condition":"六十甲子每旬缺兩支；由所用干支之旬計算空亡，再映射宮位。","reading":"暫不受力、延遲、名實未合或需要填實。","caution":"不能一律解作不存在。","automation":"implemented","source_id":"dunjia-yanyi"},
+    {"name":"驛馬","category":"時空狀態","condition":"申子辰馬寅、寅午戌馬申、亥卯未馬巳、巳酉丑馬亥；本版以時支取馬。","reading":"移動、速度、遠行、換位與變陣。","caution":"快慢吉凶取決於題目與同宮結構。","automation":"implemented","source_id":"qimen-daquan"}
+  ]
+}

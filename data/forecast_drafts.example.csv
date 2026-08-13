@@ -1,2 +1,0 @@
-forecast_id,casting_id,method_version,sample_class,event_at,freeze_at,locked_at,body_name,use_name,p_body,p_draw,p_use,top1_score,goal_band,btts,signal_key,source_grade,source_urls,forecast_sha256
-F-EXAMPLE-001,CAST-EXAMPLE-001,interpretation-v1,CLEAN_BLIND,2026-12-31T20:00:00+08:00,,2026-12-31T13:00:00+08:00,甲隊,乙隊,0.46,0.29,0.25,1-0,0-1,NO,乾為天|初九|天風姤,A,https://example.test/prematch,

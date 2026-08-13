@@ -1,2 +1,0 @@
-forecast_id,result_recorded_at,body_goals,use_goals,result_source_url,result_sha256
-F-EXAMPLE-001,2026-12-31T23:00:00+08:00,1,0,https://example.test/result,

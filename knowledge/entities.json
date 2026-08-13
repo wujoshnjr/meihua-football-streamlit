@@ -1,0 +1,75 @@
+{
+  "schema_version": "qimen-entities-v1.0.0",
+  "palaces": [
+    {"key":"坎一宮","number":1,"trigram":"坎 ☵","direction":"正北","element":"水","home_door":"休門","home_star":"天蓬","body":"腎、耳、泌尿","image":"流動、風險、隱伏、寒","football":"回收、退守、節奏放慢；也觀旅途與隱性傷情。"},
+    {"key":"坤二宮","number":2,"trigram":"坤 ☷","direction":"西南","element":"土","home_door":"死門","home_star":"天芮","body":"腹、脾胃、肌肉","image":"承載、群眾、場地、遲滯","football":"場地、集體執行、疲勞與慢性傷勢。"},
+    {"key":"震三宮","number":3,"trigram":"震 ☳","direction":"正東","element":"木","home_door":"傷門","home_star":"天沖","body":"足、肝膽、神經","image":"啟動、震動、速度、突發","football":"開局衝擊、快速反擊、碰撞與突發事件。"},
+    {"key":"巽四宮","number":4,"trigram":"巽 ☴","direction":"東南","element":"木","home_door":"杜門","home_star":"天輔","body":"股、呼吸、筋","image":"滲透、傳播、策略、風","football":"傳控滲透、教練部署、邊路與資訊封鎖。"},
+    {"key":"中五宮","number":5,"trigram":"中宮","direction":"中央","element":"土","home_door":null,"home_star":"天禽","body":"中焦、核心","image":"統攝、樞紐、平衡","football":"整體結構與比賽中樞；必須先聲明寄宮規則。"},
+    {"key":"乾六宮","number":6,"trigram":"乾 ☰","direction":"西北","element":"金","home_door":"開門","home_star":"天心","body":"頭、肺、骨","image":"權威、決斷、制度、天","football":"教練權威、核心球員、正式名單與破局能力。"},
+    {"key":"兌七宮","number":7,"trigram":"兌 ☱","direction":"正西","element":"金","home_door":"驚門","home_star":"天柱","body":"口、肺、牙","image":"言說、喜悅、缺口、聲勢","football":"輿論、球迷聲勢、口舌、定位球與心理震盪。"},
+    {"key":"艮八宮","number":8,"trigram":"艮 ☶","direction":"東北","element":"土","home_door":"生門","home_star":"天任","body":"手、背、關節","image":"停止、門檻、山、積累","football":"防線屏障、體能儲備、穩定收益與恢復。"},
+    {"key":"離九宮","number":9,"trigram":"離 ☲","direction":"正南","element":"火","home_door":"景門","home_star":"天英","body":"目、心、血","image":"顯現、名聲、影像、熱","football":"曝光、攻勢觀感、技術亮點、VAR 與躁進。"}
+  ],
+  "doors": [
+    {"key":"休門","element":"水","baseline":"吉門","keywords":["休養","和合","退讓","流動"],"constructive":"修復、休整、協商、遠行與接應。","shadow":"怠慢、拖延、退縮；旺衰與迫制會改變表現。","football":"降低節奏、控球消耗、恢復與防守轉換。"},
+    {"key":"生門","element":"土","baseline":"吉門","keywords":["生長","利益","資源","恢復"],"constructive":"增益、養成、補給、健康與可持續成長。","shadow":"貪取、負荷過重；入墓或受迫不能只作大吉。","football":"體能、可用人手、替補深度與高品質機會。"},
+    {"key":"傷門","element":"木","baseline":"凶門／功能門","keywords":["競爭","損傷","衝擊","執法"],"constructive":"競技、追討、以壓力破局。","shadow":"傷病、犯規、衝突、急躁。","football":"高壓逼搶、身體碰撞、黃紅牌與傷停風險。"},
+    {"key":"杜門","element":"木","baseline":"中平／功能門","keywords":["閉塞","隱藏","技術","保密"],"constructive":"封鎖、研究、專業技術、保守機密。","shadow":"機會受阻、溝通不暢、過度封閉。","football":"低位封堵、戰術保密、對手難以滲透。"},
+    {"key":"景門","element":"火","baseline":"中吉","keywords":["景象","名聲","文書","影像"],"constructive":"展示、宣傳、資訊可視與技術表現。","shadow":"華而不實、躁熱、誤判表象。","football":"精彩進攻、轉播焦點、VAR；數據漂亮但效率未必高。"},
+    {"key":"死門","element":"土","baseline":"凶門／功能門","keywords":["終止","固定","衰敗","不動"],"constructive":"收尾、埋藏、處理終局與穩固防線。","shadow":"僵化、疲乏、傷病惡化、氣勢枯竭。","football":"比賽被鎖死、攻勢停滯、體能耗竭。"},
+    {"key":"驚門","element":"金","baseline":"凶門／功能門","keywords":["驚恐","聲音","口舌","突變"],"constructive":"製造聲勢、警示、辯論、奇襲。","shadow":"失誤、慌亂、爭議、消息擾動。","football":"球迷壓力、門將失誤、突發比分與裁判爭議。"},
+    {"key":"開門","element":"金","baseline":"吉門","keywords":["開展","職位","通達","公開"],"constructive":"任事、開局、決策、公開合作。","shadow":"暴露空間、過度進取；受制則開而不成。","football":"撕開防線、創造通道、主帥決策與先發名單。"}
+  ],
+  "stars": [
+    {"key":"天蓬","element":"水","baseline":"大盜星","keywords":["膽識","風險","暗流"],"constructive":"敢闖、善用風險、競爭本能。","shadow":"冒險、欲望、失序。","football":"高風險打法、地下資訊、粗獷衝擊。"},
+    {"key":"天任","element":"土","baseline":"吉星","keywords":["承擔","穩健","耐力"],"constructive":"責任、耐力、務實積累。","shadow":"沉重、保守、速度不足。","football":"防守中樞、耐力、可靠執行。"},
+    {"key":"天沖","element":"木","baseline":"次吉／武星","keywords":["迅速","衝鋒","雷動"],"constructive":"行動快、敢先發制人。","shadow":"躁進、碰撞、缺乏耐心。","football":"反擊速度、前場壓迫、快攻。"},
+    {"key":"天輔","element":"木","baseline":"吉星","keywords":["教育","輔助","條理"],"constructive":"謀略、技術、教練與學習。","shadow":"紙上談兵、依賴理論。","football":"戰術設計、助攻組織、教練團。"},
+    {"key":"天英","element":"火","baseline":"中平","keywords":["英華","光明","暴烈"],"constructive":"才華、可見度、文化表現。","shadow":"躁熱、虛榮、爆發後衰。","football":"明星表現、遠射、技術亮點與過熱。"},
+    {"key":"天芮","element":"土","baseline":"病星","keywords":["疾病","教習","細務"],"constructive":"醫療、學習、照護、發現問題。","shadow":"病弱、瑣碎、拖累。","football":"傷病名單、醫療團隊、疲勞與戰術漏洞。"},
+    {"key":"天柱","element":"金","baseline":"凶星","keywords":["支柱","破壞","口舌"],"constructive":"敢言、支撐、打破僵局。","shadow":"阻礙、爭執、崩裂。","football":"定位球支點、輿論壓力、結構性失誤。"},
+    {"key":"天心","element":"金","baseline":"吉星","keywords":["心智","醫藥","治理"],"constructive":"判斷精準、管理、療癒。","shadow":"計算過度、冷硬控制。","football":"核心指揮、臨場調整、決策品質。"},
+    {"key":"天禽","element":"土","baseline":"大吉／中樞","keywords":["統攝","忠信","中和"],"constructive":"協調全局、居中調度。","shadow":"寄宮規則不明會造成重複解讀。","football":"全隊結構、攻守平衡、場上樞紐。"}
+  ],
+  "deities": [
+    {"key":"值符","baseline":"首神","keywords":["權威","主導","統率"],"constructive":"得勢、有人主持、正規資源。","shadow":"高位壓力、驕矜、主導者失準。","football":"主將、隊長、教練與比賽敘事中心。"},
+    {"key":"螣蛇","baseline":"虛詐神","keywords":["纏繞","夢幻","反覆"],"constructive":"想像、靈活、虛實變化。","shadow":"假訊息、焦慮、反覆失誤。","football":"煙霧戰術、假動作、傳聞與心理波動。"},
+    {"key":"太陰","baseline":"蔭護神","keywords":["隱密","精細","協助"],"constructive":"暗助、周密、柔性資源。","shadow":"過度隱藏、被動、資訊不足。","football":"隱性貢獻、幕後教練、精細部署。"},
+    {"key":"六合","baseline":"和合神","keywords":["合作","媒合","關係"],"constructive":"協同、連結、交易與配合。","shadow":"牽絆、妥協過多、內耗。","football":"默契、傳接網絡、雙人配合。"},
+    {"key":"白虎","baseline":"威猛神","keywords":["力量","刑傷","急烈"],"constructive":"決斷、硬度、震懾。","shadow":"傷病、犯規、暴烈、手術。","football":"身體對抗、紅牌、急性傷勢。"},
+    {"key":"玄武","baseline":"隱欺神","keywords":["隱伏","智謀","盜耗"],"constructive":"情報、潛行、迂迴。","shadow":"欺瞞、失竊、來源不明。","football":"情報落差、假新聞、隱藏陣型。"},
+    {"key":"九地","baseline":"沉厚神","keywords":["低守","穩固","持久"],"constructive":"紮根、防守、長期蓄力。","shadow":"沉滯、過守、難以推進。","football":"低位防守、陣地穩固、拖慢節奏。"},
+    {"key":"九天","baseline":"高揚神","keywords":["高遠","擴張","速度"],"constructive":"主動、高位、快速展開。","shadow":"浮躁、空泛、後場暴露。","football":"高位壓迫、長傳、邊翼推進。"}
+  ],
+  "stems": [
+    {"key":"甲","element":"木","role":"遁藏主帥","meaning":"六甲不直接裸露於地盤，以六儀代理；甲作日／時干時依本庫規則取值符宮。"},
+    {"key":"乙","element":"木","role":"日奇","meaning":"柔木、曲折、生長、醫藥與人際；得地柔克剛，受迫則纏繞。"},
+    {"key":"丙","element":"火","role":"月奇","meaning":"陽火、權威、顯達與猛烈；能照明也可能躁烈。"},
+    {"key":"丁","element":"火","role":"星奇","meaning":"陰火、精微、文書、機巧；利細節與技術，失位則虛耗。"},
+    {"key":"戊","element":"土","role":"甲子戊／六儀","meaning":"資本、厚重、承載；為甲子旬代理。"},
+    {"key":"己","element":"土","role":"甲戌己／六儀","meaning":"田土、彎曲、私欲、策劃；須辨刑墓。"},
+    {"key":"庚","element":"金","role":"甲申庚／六儀","meaning":"阻隔、對手、武力、改革；是重要阻力符號。"},
+    {"key":"辛","element":"金","role":"甲午辛／六儀","meaning":"錯誤、刑獄、顆粒、革新；精細而尖銳。"},
+    {"key":"壬","element":"水","role":"甲辰壬／六儀","meaning":"流動、困境、網羅、變動；可通達亦可漫溢。"},
+    {"key":"癸","element":"水","role":"甲寅癸／六儀","meaning":"陰私、閉藏、雨露、終結；隱微且重情緒。"}
+  ],
+  "glossary": [
+    {"key":"遁甲","meaning":"甲為主帥，藏於戊己庚辛壬癸六儀之下。"},
+    {"key":"三奇","meaning":"乙、丙、丁，分稱日奇、月奇、星奇。"},
+    {"key":"六儀","meaning":"戊、己、庚、辛、壬、癸，代理六甲旬首。"},
+    {"key":"值符","meaning":"旬首所在之九星；也可指八神之首，須依語境區分。"},
+    {"key":"值使","meaning":"旬首所在宮的八門，依時序轉布。"},
+    {"key":"旬首","meaning":"六十甲子每旬以甲起首，奇門用六儀代理六甲。"},
+    {"key":"陰遁／陽遁","meaning":"以冬至、夏至為大界，決定三奇六儀順逆布宮。"},
+    {"key":"局","meaning":"陰陽遁各九局，共十八局；局數決定戊起宮位。"},
+    {"key":"上中下元","meaning":"每節氣分三元，各配一局；本庫以拆補符頭法定元。"},
+    {"key":"四盤","meaning":"地盤三奇六儀、天盤九星、人盤八門、神盤八神。"},
+    {"key":"用神","meaning":"針對題目預先指定的代表符號或宮位，不得看盤後更換。"},
+    {"key":"主客","meaning":"事情兩方的角色配置；依動靜、天地盤或干支法在盤前固定。"},
+    {"key":"旺相休囚廢","meaning":"五行隨季節的強弱序列，用以修正符號可用程度。"},
+    {"key":"門迫／宮迫","meaning":"門克宮與宮克門的功能衝突；傳承用語可能略異。"},
+    {"key":"擊刑／入墓／空亡","meaning":"結構受刑、力量收藏、暫不受力等狀態。"},
+    {"key":"伏吟／反吟","meaning":"同位重疊與對沖反置，常見停滯與變動兩種盤勢。"}
+  ]
+}
