@@ -12,6 +12,7 @@ KNOWLEDGE_FILES = (
     "calendar.json",
     "patterns.json",
     "methods.json",
+    "football_ontology.json",
     "sources.json",
 )
 
@@ -31,7 +32,16 @@ def load_knowledge() -> dict[str, Any]:
 
 
 def _flatten_payload(filename: str, payload: dict[str, Any]) -> Iterable[dict[str, Any]]:
-    skip = {"schema_version", "scope_note", "source_policy", "interpretation_order"}
+    skip = {
+        "schema_version",
+        "mapping_version",
+        "scope_note",
+        "source_policy",
+        "interpretation_order",
+        "boundaries",
+        "composition_order",
+        "coverage_contract",
+    }
     for section, value in payload.items():
         if section in skip:
             continue
@@ -48,6 +58,19 @@ def _flatten_payload(filename: str, payload: dict[str, Any]) -> Iterable[dict[st
                         continue
                     for term, ju in terms.items():
                         yield _record(filename, section, {"name": f"{dun}・{term}", "ju": ju})
+            elif section == "mappings":
+                for mapping_section, items in value.items():
+                    if not isinstance(items, list):
+                        continue
+                    for item in items:
+                        if isinstance(item, dict):
+                            yield _record(filename, f"football_{mapping_section}", item)
+            elif section == "event_taxonomy":
+                for taxonomy, items in value.items():
+                    if not isinstance(items, list):
+                        continue
+                    for item in items:
+                        yield _record(filename, f"football_{taxonomy}", {"name": item})
 
 
 def _record(filename: str, section: str, item: dict[str, Any]) -> dict[str, Any]:
@@ -57,6 +80,7 @@ def _record(filename: str, section: str, item: dict[str, Any]) -> dict[str, Any]
     record["_title"] = str(
         item.get("name")
         or item.get("key")
+        or item.get("id")
         or item.get("title")
         or item.get("family")
         or section

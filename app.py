@@ -8,6 +8,13 @@ import streamlit as st
 from qimen.calendar import LocalTimeError, aware_local_datetime
 from qimen.engine import cast_qimen
 from qimen.football import interpret_football
+from qimen.football_ontology import (
+    compose_football_meaning,
+    football_dimensions,
+    football_ontology_stats,
+    load_football_ontology,
+    search_football_meanings,
+)
 from qimen.knowledge import knowledge_stats, load_knowledge, search_knowledge
 from qimen.protocol import EvidenceItem, MatchInput
 from qimen.reporting import build_bundle, render_html, render_markdown
@@ -99,6 +106,24 @@ def _require_board() -> bool:
     return True
 
 
+def _render_football_meaning(meaning, *, reading_limit: int | None = None) -> None:
+    layer_readings = meaning.layer_readings[:reading_limit] if reading_limit else meaning.layer_readings
+    st.write("重點足球維度：" + "、".join(meaning.football_dimensions))
+    st.markdown("**分層可能表現**")
+    st.markdown("\n".join(f"- {item}" for item in layer_readings))
+    left, right = st.columns(2)
+    with left:
+        st.markdown("**可觀察訊號**")
+        st.markdown("\n".join(f"- {item}" for item in meaning.observable_signals))
+    with right:
+        st.markdown("**反證條件**")
+        st.markdown("\n".join(f"- {item}" for item in meaning.counter_signals))
+    if meaning.interactions:
+        st.markdown("**五行層間關係**")
+        st.markdown("\n".join(f"- {item}" for item in meaning.interactions))
+    st.caption(f"可信度標籤：{meaning.confidence}｜{meaning.boundary}")
+
+
 st.title("奇門遁甲足球賽前研究系統")
 st.caption(f"時家奇門・轉盤・拆補法｜版本 {__version__}")
 st.markdown(
@@ -151,8 +176,8 @@ with st.sidebar:
     st.write("主隊日干｜客隊時干")
 
 
-tab_board, tab_reading, tab_knowledge, tab_protocol, tab_export = st.tabs(
-    ["九宮排盤", "賽事研究", "奇門知識庫", "資料協議", "匯出與稽核"]
+tab_board, tab_reading, tab_football_knowledge, tab_knowledge, tab_protocol, tab_export = st.tabs(
+    ["九宮排盤", "賽事研究", "足球義理庫", "奇門知識庫", "資料協議", "匯出與稽核"]
 )
 
 with tab_board:
@@ -210,6 +235,8 @@ with tab_reading:
                     st.write(f"季節狀態：{profile.seasonal_state}")
                     st.success("有利條件：" + ("、".join(profile.strengths) or "未標示"))
                     st.warning("風險條件：" + ("、".join(profile.risks) or "未標示"))
+                    with st.expander("完整足球義、可觀察訊號與反證"):
+                        _render_football_meaning(profile.football_meaning)
 
         st.subheader("候選情境排序")
         st.dataframe(pd.DataFrame([{
@@ -222,14 +249,123 @@ with tab_reading:
         st.warning(reading.disclaimer, icon="⚠️")
         st.caption("足球映射版本：" + reading.mapping_version + "。此層是本專案規約，不是古籍原有的足球公式。")
 
+with tab_football_knowledge:
+    ontology = load_football_ontology()
+    ontology_stats = football_ontology_stats()
+    o1, o2, o3, o4 = st.columns(4)
+    o1.metric("足球分析維度", ontology_stats["dimensions"])
+    o2.metric("完整基礎語義", ontology_stats["atomic_units"])
+    o3.metric("核心組合覆蓋", f"{ontology_stats['core_combinations']:,}")
+    o4.metric("含天地盤干", f"{ontology_stats['visible_stem_extended_combinations']:,}")
+    st.info(ontology_stats["claim_boundary"])
+
+    st.subheader("按足球情境反查奇門義")
+    dimension_options = {"全部維度": None, **{item["name"]: item["id"] for item in football_dimensions()}}
+    section_options = {
+        "全部符號": None,
+        "九宮": "palaces",
+        "八門": "doors",
+        "九星": "stars",
+        "八神": "deities",
+        "天干": "stems",
+        "地支": "branches",
+        "旺衰": "seasonal_states",
+        "結構狀態": "structural_states",
+        "格局": "patterns",
+    }
+    fq1, fq2, fq3 = st.columns([2, 1, 1])
+    with fq1:
+        football_query = st.text_input(
+            "搜尋足球義",
+            placeholder="例如：高位逼搶、VAR、傷停、門將、定位球、反擊",
+            key="football_meaning_query",
+        )
+    with fq2:
+        dimension_label = st.selectbox("足球維度", list(dimension_options), key="football_dimension_filter")
+    with fq3:
+        football_section_label = st.selectbox("奇門層", list(section_options), key="football_section_filter")
+    football_results = search_football_meanings(
+        football_query,
+        dimension=dimension_options[dimension_label],
+        section=section_options[football_section_label],
+    )
+    st.caption(f"找到 {len(football_results)} 個基礎語義；每筆都含可觀察訊號與反證。")
+    if football_results:
+        st.dataframe(pd.DataFrame([{
+            "符號": item["key"],
+            "奇門層": item["section_label"],
+            "足球維度": "、".join(item["dimension_names"]),
+            "可能表現": "；".join(item["possible_meanings"]),
+            "可觀察訊號": "；".join(item["observable_signals"]),
+            "反證": "；".join(item["counter_signals"]),
+        } for item in football_results]), hide_index=True, use_container_width=True)
+
+    st.subheader("全組合解讀器")
+    st.write("依固定層次把任意宮、門、星、神、天地盤干、旺衰與格局組合成足球候選情境。")
+    mappings = ontology["mappings"]
+    core1, core2, core3, core4 = st.columns(4)
+    with core1:
+        selected_palace = st.selectbox("宮位環境", [item["key"] for item in mappings["palaces"]], key="compose_palace")
+    with core2:
+        selected_door = st.selectbox("八門行動", [item["key"] for item in mappings["doors"]], key="compose_door")
+    with core3:
+        selected_star = st.selectbox("九星能力", [item["key"] for item in mappings["stars"]], key="compose_star")
+    with core4:
+        selected_deity = st.selectbox("八神表現", [item["key"] for item in mappings["deities"]], key="compose_deity")
+
+    visible_stems = ["不指定", *list("戊己庚辛壬癸丁丙乙")]
+    extra1, extra2, extra3 = st.columns(3)
+    with extra1:
+        selected_heaven_stem = st.selectbox("天盤干觸發", visible_stems, key="compose_heaven_stem")
+    with extra2:
+        selected_earth_stem = st.selectbox("地盤干底層", visible_stems, key="compose_earth_stem")
+    with extra3:
+        selected_season = st.selectbox(
+            "旺衰",
+            ["不指定", *[item["key"] for item in mappings["seasonal_states"]]],
+            key="compose_season",
+        )
+    selected_states = st.multiselect(
+        "結構狀態（可複選）",
+        [item["key"] for item in mappings["structural_states"]],
+        key="compose_states",
+    )
+    selected_patterns = st.multiselect(
+        "格局（可複選）",
+        [item["key"] for item in mappings["patterns"]],
+        key="compose_patterns",
+    )
+    composed = compose_football_meaning(
+        palace=selected_palace,
+        door=selected_door,
+        stars=(selected_star,),
+        deity=selected_deity,
+        heaven_stems=() if selected_heaven_stem == "不指定" else (selected_heaven_stem,),
+        earth_stem=None if selected_earth_stem == "不指定" else selected_earth_stem,
+        seasonal_state=None if selected_season == "不指定" else selected_season,
+        states=selected_states,
+        patterns=selected_patterns,
+    )
+    with st.container(border=True):
+        _render_football_meaning(composed)
+    with st.expander("映射來源、層次與版本"):
+        st.markdown("\n".join(f"- {item}" for item in composed.provenance))
+        st.json({
+            "mapping_version": composed.mapping_version,
+            "symbols": composed.symbols,
+            "composition_order": ontology["composition_order"],
+            "coverage_formula": ontology["coverage_contract"]["formula"],
+        })
+
 with tab_knowledge:
     stats = knowledge_stats()
-    k1, k2, k3, k4, k5 = st.columns(5)
+    k1, k2, k3, k4, k5, k6 = st.columns(6)
     k1.metric("知識條目", stats["total"])
     k2.metric("九宮／門星神干", sum(stats.get(k, 0) for k in ("palaces", "doors", "stars", "deities", "stems")))
     k3.metric("格局與狀態", stats.get("patterns", 0))
     k4.metric("節氣", stats.get("solar_terms", 0))
-    k5.metric("來源", stats.get("sources", 0))
+    k5.metric("足球義", football_ontology_stats()["atomic_units"])
+    k6.metric("來源", stats.get("sources", 0))
 
     sections = sorted({row["_section"] for row in load_knowledge()["records"]})
     col_query, col_section = st.columns([2, 1])

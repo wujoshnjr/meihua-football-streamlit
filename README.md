@@ -1,6 +1,6 @@
 # 奇門遁甲足球賽前研究系統
 
-這是原「梅花易數足球資訊專案」的完整重構版。版本 6.0.0 已移除梅花起卦、互卦、變卦、納甲、爻辭與易林資料，改為可重現的**時家奇門・轉盤・拆補法**排盤核心，以及與足球研究明確分層的奇門知識庫。
+這是原「梅花易數足球資訊專案」的完整重構版。版本 6.1.0 已移除梅花起卦、互卦、變卦、納甲、爻辭與易林資料，改為可重現的**時家奇門・轉盤・拆補法**排盤核心，以及與足球研究明確分層的奇門知識庫。
 
 > 奇門遁甲是傳統術數。本專案只供研究與教育，不把盤內排序索引宣稱為統計機率，也不自動產生勝負、固定比分、期望進球或投注建議。
 
@@ -12,7 +12,10 @@
 - 地盤三奇六儀、天盤九星、人盤八門、神盤八神。
 - 六旬旬首、值符、值使、旬空、時馬、中五寄坤二、天禽隨天芮。
 - 可測試的奇儀組合、三奇升殿／入墓、六儀擊刑、門宮迫、伏吟反吟、五不遇時。
-- 196 筆結構化知識索引：九宮、門星神干支、節氣局表、常用格局、方法流派與來源。
+- 384 筆結構化搜尋索引：九宮、門星神干支、節氣局表、常用格局、足球事件分類、方法流派與來源。
+- 108 個完整足球語義單元，逐筆保存可能表現、可觀察訊號與反證條件。
+- 20 個足球分析維度，可用「高位逼搶、VAR、傷停、門將、定位球、反擊」反向搜尋奇門符號。
+- 全組合解讀器覆蓋 5,184 個宮門星神核心組合；加入天地盤可見干後覆蓋 419,904 個基礎結構。
 - 足球應用層固定「主隊日干、客隊時干，甲取值符宮」，只做候選情境排序。
 - 賽前 `freeze_at`、對稱更新、90 分鐘口徑、JSON／Markdown／HTML 稽核匯出。
 
@@ -47,6 +50,7 @@ app.py                     Streamlit 入口
 qimen/calendar.py          時區、四柱、節氣、六旬
 qimen/engine.py            轉盤拆補排盤引擎
 qimen/football.py          足球用神與候選情境層
+qimen/football_ontology.py 足球語義搜尋、全組合解讀與覆蓋統計
 qimen/protocol.py          賽前資料凍結與對稱更新規約
 qimen/reporting.py         JSON／Markdown／HTML 稽核匯出
 qimen/evaluation.py        賽前鎖定後的定性評估
@@ -59,7 +63,7 @@ tests/                     演算法不變量與規約測試
 
 本版只執行一套明示方法：時家、轉盤、拆補、事件所在地民用時、晚子時換日、中五寄坤二。飛盤、置閏、茅山、真太陽時、陰盤等內容收錄於知識庫，但不混入計算。這是為了讓每張盤都可重建、可測試、可比較，而不是宣稱其他傳承無效。
 
-詳見 [排盤方法](docs/QIMEN_METHOD.md)、[資料協議](docs/FOOTBALL_PROTOCOL.md)、[架構](docs/ARCHITECTURE.md)、[部署操作](docs/OPERATIONS.md) 與 [來源](docs/SOURCES.md)。
+詳見 [排盤方法](docs/QIMEN_METHOD.md)、[足球語義庫](docs/FOOTBALL_MEANINGS.md)、[資料協議](docs/FOOTBALL_PROTOCOL.md)、[架構](docs/ARCHITECTURE.md)、[部署操作](docs/OPERATIONS.md) 與 [來源](docs/SOURCES.md)。
 
 ## 測試
 
@@ -71,4 +75,4 @@ python tools/validate_knowledge.py
 
 ## 版本
 
-目前版本：`6.0.0`。重大轉換內容見 [CHANGELOG.md](CHANGELOG.md) 與 [MIGRATION.md](docs/MIGRATION.md)。
+目前版本：`6.1.0`。重大轉換內容見 [CHANGELOG.md](CHANGELOG.md) 與 [MIGRATION.md](docs/MIGRATION.md)。

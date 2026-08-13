@@ -20,6 +20,10 @@ def test_fixed_home_away_mapping_and_boundaries(calendar_context):
     assert "不自動產生" in reading.disclaimer
     assert "勝率" in reading.disclaimer
     assert "固定比分" in reading.disclaimer
+    assert reading.mapping_version == "football-semantic-composition-v2.0.0"
+    assert reading.home.football_meaning.observable_signals
+    assert reading.home.football_meaning.counter_signals
+    assert reading.away.football_meaning.observable_signals
 
 
 def test_every_visible_stem_can_be_located(calendar_context):

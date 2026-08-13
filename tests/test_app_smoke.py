@@ -13,6 +13,8 @@ def test_streamlit_app_starts_and_casts_default_chart():
     assert not app.exception
     assert any("奇門遁甲足球賽前研究系統" in item.value for item in app.title)
     assert any("不自動輸出勝率" in item.value for item in app.markdown)
+    assert any(item.label == "完整基礎語義" and item.value == "108" for item in app.metric)
+    assert any(item.label == "核心組合覆蓋" and item.value == "5,184" for item in app.metric)
 
     cast_button = next(item for item in app.button if item.label == "建立／重建奇門盤")
     cast_button.click().run(timeout=30)

@@ -14,7 +14,9 @@ def test_knowledge_base_has_complete_core_sets():
     assert stats["solar_terms"] == 24
     assert stats["six_xun"] == 6
     assert stats["patterns"] >= 39
-    assert stats["total"] >= 190
+    assert stats["football_patterns"] == 39
+    assert stats["dimensions"] == 20
+    assert stats["total"] >= 380
 
 
 def test_search_crosses_files_and_sections():

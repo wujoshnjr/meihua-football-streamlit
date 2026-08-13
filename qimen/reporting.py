@@ -25,7 +25,7 @@ def build_bundle(
     """Return one audit-friendly export with data, method and integrity status."""
 
     core = {
-        "schema_version": "qimen-football-bundle-v1.0.0",
+        "schema_version": "qimen-football-bundle-v1.1.0",
         "match": match.to_dict(),
         "board": board.to_dict(),
         "football_reading": reading.to_dict(),
@@ -70,6 +70,23 @@ def render_markdown(match: MatchInput, board: QimenBoard, reading: FootballReadi
         for hit in board.patterns
     ] or ["- 本盤未命中目前版本可自動判定的格局。"]
 
+    def semantic_lines(label, profile):
+        meaning = profile.football_meaning
+        return [
+            f"### {label}完整足球義",
+            "",
+            f"重點維度：{'、'.join(meaning.football_dimensions)}。",
+            "",
+            *[f"- {item}" for item in meaning.layer_readings],
+            "",
+            "可觀察訊號：" + "；".join(meaning.observable_signals) + "。",
+            "",
+            "反證條件：" + "；".join(meaning.counter_signals) + "。",
+            "",
+            f"> {meaning.confidence}。{meaning.boundary}",
+            "",
+        ]
+
     return "\n".join([
         "# 奇門遁甲足球賽前研究報告",
         "",
@@ -106,6 +123,10 @@ def render_markdown(match: MatchInput, board: QimenBoard, reading: FootballReadi
         "",
         f"主隊固定取日干：{reading.home.stem}／{reading.home.palace_name}；"
         f"客隊固定取時干：{reading.away.stem}／{reading.away.palace_name}。",
+        "",
+        *semantic_lines("主隊／日干", reading.home),
+        *semantic_lines("客隊／時干", reading.away),
+        "### 候選情境排序",
         "",
         *scenario_lines,
         "",
