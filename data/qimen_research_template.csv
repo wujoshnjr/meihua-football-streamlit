@@ -1,0 +1,2 @@
+match_id,home_team,away_team,competition,event_at,timezone_name,venue,city,method_version,scope
+QIMEN-EXAMPLE-001,Home Team,Away Team,Competition,2026-08-14T20:00:00+08:00,Asia/Taipei,Example Stadium,Taipei,shijia-zhuanpan-chaibu-v1.0.0,90 分鐘＋補時，不含延長賽與點球

@@ -1,125 +1,74 @@
-# 梅花易數完整排卦系統 v5.9.0
+# 奇門遁甲足球賽前研究系統
 
-這是一個負責「文字取數、完整排卦與條件式卦義」的 Streamlit 系統。除本卦、互卦、動爻與變卦外，也固定提供日辰、月令、旬空、三卦納甲、八宮世應、雙軌六親、六沖六合、經傳與足球應用參考。
+這是原「梅花易數足球資訊專案」的完整重構版。版本 6.0.0 已移除梅花起卦、互卦、變卦、納甲、爻辭與易林資料，改為可重現的**時家奇門・轉盤・拆補法**排盤核心，以及與足球研究明確分層的奇門知識庫。
 
-> v5 不解卦，不預測足球勝負或比分，不呼叫 AI，也不使用足球實力、Poisson、歷史賽果或賽後資料。
+> 奇門遁甲是傳統術數。本專案只供研究與教育，不把盤內排序索引宣稱為統計機率，也不自動產生勝負、固定比分、期望進球或投注建議。
 
-v5.9 另提供一個不被排卦程式載入的離線盲測評估工具。它鎖定外部解卦室產生的機率預測，並在獨立賽果檔上做時間順序評估；賽果不會回流到起卦文字、卦盤或知識庫。
+## 已完成的範圍
 
-## 輸入
+- 事件所在地 IANA 時區與夏令時間檢查。
+- `lunar_python==1.4.8` 四柱與精確節氣接口。
+- 二十四節氣、陰陽遁、拆補三元與十八局。
+- 地盤三奇六儀、天盤九星、人盤八門、神盤八神。
+- 六旬旬首、值符、值使、旬空、時馬、中五寄坤二、天禽隨天芮。
+- 可測試的奇儀組合、三奇升殿／入墓、六儀擊刑、門宮迫、伏吟反吟、五不遇時。
+- 196 筆結構化知識索引：九宮、門星神干支、節氣局表、常用格局、方法流派與來源。
+- 足球應用層固定「主隊日干、客隊時干，甲取值符宮」，只做候選情境排序。
+- 賽前 `freeze_at`、對稱更新、90 分鐘口徑、JSON／Markdown／HTML 稽核匯出。
 
-1. 體方與用方名稱：畫面中央固定顯示 `vs`，事件／比賽名稱自動組合為「體方名稱 vs 用方名稱」。
-2. 官方開球時間 `event_at`：使用含 UTC 位移的 ISO 8601；可另存 IANA 事件時區、A／B／C 來源等級、來源網址與樣本分類。系統固定計算 `freeze_at = event_at − 6h`。
-3. 體方自述（起象）：以獨立一行「我是體方。」開始，使用第一人稱十一行固定結構，180～220 數；計數後除以八取體卦，固定放在下卦。
-4. 用方自述（起象）：以獨立一行「我是用方。」開始，使用同一套第一人稱十一行固定結構，180～220 數；計數後除以八取用卦，固定放在上卦。
-5. 賽前中性介紹（動爻）：使用第三人稱平衡介紹雙方，300～450 數；計數後除以六取動爻。
-
-三段只使用賽前資訊，判斷範圍固定為九十分鐘，不含延長賽與 PK。兩隊自述依序記錄客觀狀態、士氣與比賽壓力、預計策略、組織支點、主要進攻通道、主要防守結構、相對優勢、自身限制、需要防範的對手威脅及九十分鐘可執行目標。每項各自成為一個非空行；自身限制不得與對手威脅混寫。字數採下方固定起卦計數法，不含標點與空白。
-
-v3 格式的用途是降低同義詞、姓名長短與自由作文造成的文字噪音，提高不同場次的一致性、可重複性與可回測性；沒有公開實證足以宣稱某一種自述文字本身能提高梅花易數足球預測準確率。詳細欄位與防噪規則見 [INPUT_PROTOCOL_V3.md](docs/INPUT_PROTOCOL_V3.md)。
-
-每個文字框都有獨立清除按鈕；「只檢查格式與計數」會顯示三段實際計數與需修正項目，不起卦、不儲存。完整排卦前先檢查一次，可避免只差一數或超出上限後才發現。
-
-## 排卦輸出
-
-- `event_at` 的當地國曆時間、完整農曆年月日、干支年與干支時辰；日辰、月令、旬空、旺衰與時支只使用 `event_at`。
-- `cast_at` 另以台北時間保存實際執行紀錄，不參與文字取數，也不覆寫卦理時間環境。
-- 三段文字的實際計數、除數、餘數與零餘數處理。
-- 八卦名稱、先天數、五行、卦象與三爻結構。
-- 本卦六爻，自下而上保存、由上而下顯示。
-- 互卦：二三四爻成下卦，三四五爻成上卦。
-- 動爻爻名、原陰陽、變後陰陽、體／用歸屬。
-- 變卦、體卦轉象、用卦轉象。
-- 本卦與變卦的體用五行關係名稱。
-- 主卦與變卦的卦辭、彖傳與大象，以及本次動爻的爻辭與小象。
-- 動爻得位、得中、相應、乘承比等結構化欄位。
-- 依農曆月建固定換算的體用旺相休囚死與轉強／轉弱結果；時支五行獨立列出。
-- 《焦氏易林》對應「本卦之變卦」的完整標點林辭；只顯示，不自動解釋。
-- 可直接開啟及列印的完整 HTML 排卦表；畫面與下載不顯示原始 JSON 程式資料。
-- 本機或 GitHub Contents 後台保留完整稽核資料；使用者下載的 UTF-8 CSV 排除原始 JSON 與指紋。
-- 起卦日日辰、農曆月令、六甲旬名與兩個旬空地支。
-- 本卦、互卦、變卦六爻完整納甲，以及本卦八宮世應位置。
-- 依日干五行計算的六親主欄，另列依卦宮五行計算的常見口徑，避免混用。
-- 動爻、世應及全卦爻間的地支六沖六合。
-- 體方與用方各自的連續卦線、全部可能義項、本次命中條件與前三個優先義項。
-- 條件式規則分只排序同一卦的多義選項，不是進球數、機率或勝負信心。
-
-## 完整知識庫
-
-`knowledge/` 目前包含：
-
-- 8/8 經卦完整結構與傳統類象欄位。
-- 64/64 六十四卦：卦序、卦畫、上下卦、卦義提要、卦辭、彖傳、大象。
-- 384/384 爻：爻名、爻辭與小象。
-- 乾坤的用九／用六與《文言》。
-- 《說卦》《繫辭》《序卦》《雜卦》。
-- 《焦氏易林》64×64 共 4,096 條完整標點林辭，含本卦／之卦索引、版本來源與校勘紀錄。
-- 每卦互卦、錯卦、綜卦索引。
-- 64/64 卦各六項完整卦義與九項足球比賽應用參考，共 384＋576 個非空欄位。
-- 8/8 經卦各八個條件式義項與六條判斷規則，共 64 個義項、48 條規則。
-- 梅花易數文字計數、先天八卦數、體用、互卦、變卦與五行關係規格。
-
-應用啟動時會驗證 8 卦、64 個條件義項、48 條條件規則、64 卦、384 爻、960 個卦義／足球欄位與《焦氏易林》4,096 條林辭是否齊全；缺欄位會直接報錯，不會靜默顯示不完整資料。
-
-## 固定計數法
-
-- 每個中日韓統一表意文字計一數。
-- 連續拉丁字母單字計一數；連字號與撇號可位於單字內。
-- 連續阿拉伯數字計一數。
-- 標點、符號與空白不計。
-- 除八餘零作坤八；除六餘零作上爻。
-
-詳細定義見 [meihua_principles.json](knowledge/meihua_principles.json)。
-
-## 安裝與執行
+## 快速開始
 
 ```bash
-python -m pip install -r requirements.txt
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 streamlit run app.py
 ```
 
-## 獨立盲測評估
+Windows PowerShell 啟用虛擬環境：
 
-外部解卦室可將 1X2 機率、精確比分 Top 1、進球區間及 BTTS 寫入預測草稿，再由工具鎖定 SHA-256。比賽後的九十分鐘賽果放在另一份檔案：
-
-```bash
-python tools/evaluate_forecasts.py lock --input data/forecast_drafts.example.csv --output /tmp/forecasts_locked.csv
-python tools/evaluate_forecasts.py lock-results --input data/result_drafts.example.csv --output /tmp/results_locked.csv
-python tools/evaluate_forecasts.py evaluate --forecasts /tmp/forecasts_locked.csv --results /tmp/results_locked.csv --sample-class CLEAN_BLIND
+```powershell
+.venv\Scripts\Activate.ps1
 ```
 
-報告包含 Top-1 命中率、1X2 Brier、log loss、類別校準、精確比分／進球區間／BTTS 命中率，以及只使用更早賽果的 prequential baseline。完整規格、欄位與研究來源見 [FORECAST_EVALUATION.md](docs/FORECAST_EVALUATION.md)。
+## 使用流程
 
-## GitHub 後台儲存
+1. 在左側輸入比賽所在地的日期、時間與 IANA 時區。
+2. 在「資料協議」加入賽前來源；時間需含 UTC 偏移。
+3. 按「建立／重建奇門盤」。
+4. 先檢查方法、四柱、節氣、遁局、旬首、值符值使，再讀九宮。
+5. 足球頁只顯示盤內候選情境；外部資料用來驗證或反證，不改寫排盤。
+6. 匯出含方法版本、資料完整性與 SHA-256 指紋的研究檔。
 
-複製 `.streamlit/secrets.toml.example` 為 `.streamlit/secrets.toml`，設定：
+## 專案結構
 
-```toml
-GITHUB_TOKEN = "Contents 讀寫 Token"
-GITHUB_REPO = "owner/repository"
-GITHUB_BRANCH = "main"
-GITHUB_CASTINGS_PATH = "data/meihua_castings.csv"
-GITHUB_REPORTS_DIR = "casting_reports"
-REQUEST_TIMEOUT_SECONDS = 45
+```text
+app.py                     Streamlit 入口
+qimen/calendar.py          時區、四柱、節氣、六旬
+qimen/engine.py            轉盤拆補排盤引擎
+qimen/football.py          足球用神與候選情境層
+qimen/protocol.py          賽前資料凍結與對稱更新規約
+qimen/reporting.py         JSON／Markdown／HTML 稽核匯出
+qimen/evaluation.py        賽前鎖定後的定性評估
+knowledge/*.json           奇門結構化知識庫
+docs/                      方法、架構、資料結構與來源
+tests/                     演算法不變量與規約測試
 ```
 
-未設定 GitHub Token 時，系統仍可在本機使用並保存到 `data/meihua_castings.csv`。
+## 方法邊界
 
-## 驗證
+本版只執行一套明示方法：時家、轉盤、拆補、事件所在地民用時、晚子時換日、中五寄坤二。飛盤、置閏、茅山、真太陽時、陰盤等內容收錄於知識庫，但不混入計算。這是為了讓每張盤都可重建、可測試、可比較，而不是宣稱其他傳承無效。
+
+詳見 [排盤方法](docs/QIMEN_METHOD.md)、[資料協議](docs/FOOTBALL_PROTOCOL.md)、[架構](docs/ARCHITECTURE.md)、[部署操作](docs/OPERATIONS.md) 與 [來源](docs/SOURCES.md)。
+
+## 測試
 
 ```bash
-pip check
-python -m compileall -q .
-ruff check --select E9,F63,F7,F82 .
+pip install -r requirements-dev.txt
 pytest -q
+python tools/validate_knowledge.py
 ```
 
-測試涵蓋 v3 十一行起象輸入規格、`event_at`／`freeze_at`／`cast_at` 邊界、時區與農曆／閏月換算、文字計數、384 種體卦×用卦×動爻組合、條件式多義判斷、64 卦／384 爻／4,096 林辭資料完整性、動爻得位／得中／相應／乘承比、月令旺衰、預測／賽果指紋、時間順序評分、報告、儲存與 Streamlit 表單。
+## 版本
 
-## 舊資料
-
-舊版 `data/meihua_cases.csv` 與 `reports/` 保留為歷史檔案。v5 不讀取、不更新，也不以其中比分或賽果影響排卦。
-
-## 資料來源與授權
-
-古典經文屬公有領域；結構化繁體資料來源與授權詳見 [knowledge/SOURCES.md](knowledge/SOURCES.md) 與 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。現代「卦義提要」為本專案的簡要索引，不是針對任何具體事件的解卦。
+目前版本：`6.0.0`。重大轉換內容見 [CHANGELOG.md](CHANGELOG.md) 與 [MIGRATION.md](docs/MIGRATION.md)。

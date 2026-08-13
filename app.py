@@ -1,827 +1,325 @@
 from __future__ import annotations
 
-import html
-from datetime import datetime
-from typing import Any, Mapping, Sequence
-
+import json
+from datetime import date, datetime, time, timedelta
+import pandas as pd
 import streamlit as st
 
-from config import load_config
-from casting_structure import build_casting_structure
-from html_report_builder import CLASSICAL_LABELS, FOOTBALL_LABELS, build_html_report
-from input_protocol import (
-    BODY_SECTION_LABEL,
-    NEUTRAL_MAX_COUNT,
-    NEUTRAL_MIN_COUNT,
-    NEUTRAL_SECTION_LABEL,
-    SELF_NARRATIVE_MAX_COUNT,
-    SELF_NARRATIVE_MIN_COUNT,
-    USE_SECTION_LABEL,
-    build_input_protocol_audit,
-    validate_input_protocol,
+from qimen.calendar import LocalTimeError, aware_local_datetime
+from qimen.engine import cast_qimen
+from qimen.football import interpret_football
+from qimen.knowledge import knowledge_stats, load_knowledge, search_knowledge
+from qimen.protocol import EvidenceItem, MatchInput
+from qimen.reporting import build_bundle, render_html, render_markdown
+from version import __version__
+
+
+st.set_page_config(
+    page_title="奇門遁甲足球賽前研究系統",
+    page_icon="🧭",
+    layout="wide",
 )
-from knowledge_loader import (
-    build_jiaoshi_yilin_reference,
-    knowledge_completeness,
-    load_classics,
-    load_conditional_trigram_meanings,
-    load_hexagrams,
-    load_hexagram_interpretations,
-    load_jiaoshi_yilin,
-    load_meihua_principles,
-    load_trigrams,
+
+st.markdown(
+    """
+    <style>
+      .block-container {padding-top: 1.4rem; padding-bottom: 3rem;}
+      [data-testid="stMetricValue"] {font-size: 1.45rem;}
+      .qimen-note {border-left: 4px solid #a56b2a; padding: .7rem 1rem; background: #faf6ed; border-radius: 0 8px 8px 0;}
+      .small-muted {color: #6f6b63; font-size: .9rem;}
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
-from meihua_engine import calculate_casting
-from models import CastingInput, HexagramResult
-from storage import CastingStore, build_casting_row, save_report
-from version import APP_TITLE, KNOWLEDGE_VERSION
 
 
-BODY_TEXT_KEY = "body_self_narrative"
-USE_TEXT_KEY = "use_self_narrative"
-NEUTRAL_TEXT_KEY = "neutral_match_introduction"
+def _evidence_from_state() -> list[EvidenceItem]:
+    rows = st.session_state.get("evidence_rows", [])
+    evidence: list[EvidenceItem] = []
+    for row_number, row in enumerate(rows, 1):
+        if not str(row.get("title", "")).strip():
+            continue
+        try:
+            published = datetime.fromisoformat(str(row.get("published_at", "")))
+            retrieved = datetime.fromisoformat(str(row.get("retrieved_at", "")))
+        except ValueError as exc:
+            raise ValueError(f"證據表第 {row_number} 列時間須為 ISO 8601，並包含時區偏移") from exc
+        evidence.append(EvidenceItem(
+            title=str(row.get("title", "")).strip(),
+            url=str(row.get("url", "")).strip(),
+            published_at=published,
+            retrieved_at=retrieved,
+            category=str(row.get("category", "other")),
+            team=str(row.get("team", "neutral")),
+            material_update=bool(row.get("material_update", False)),
+            reliability=str(row.get("reliability", "中")),
+        ))
+    return evidence
 
 
-def _secrets() -> dict[str, Any]:
-    try:
-        return dict(st.secrets)
-    except (FileNotFoundError, RuntimeError):
-        return {}
-
-
-def _modulo(value: int, divisor: int) -> str:
-    return str(value) if value else f"0 → 作{divisor}"
-
-
-def _normalize_parties(body_name: str, use_name: str) -> tuple[str, str, str]:
-    """Return cleaned party names and the single canonical event title."""
-
-    body = body_name.strip()
-    use = use_name.strip()
-    if not body or not use:
-        raise ValueError("請輸入體方名稱與用方名稱。")
-    return body, use, f"{body} vs {use}"
-
-
-def _parse_event_at(value: str, timezone_name: str = "") -> datetime:
-    """Parse official kickoff time without silently guessing a timezone."""
-
-    normalized = value.strip().replace("Z", "+00:00")
-    if not normalized:
-        raise ValueError("請輸入官方排定開球時間 event_at。")
-    try:
-        parsed = datetime.fromisoformat(normalized)
-    except ValueError as exc:
-        raise ValueError("event_at 必須使用 ISO 8601，例如 2026-07-16T19:30:00-04:00。") from exc
-    if (parsed.tzinfo is None or parsed.utcoffset() is None) and not timezone_name.strip():
-        raise ValueError("event_at 必須包含 UTC 位移，或另填 IANA 事件時區。")
-    return parsed
-
-
-def _clear_casting_result() -> None:
-    st.session_state.pop("casting_input", None)
-    st.session_state.pop("casting_result", None)
-
-
-def _clear_text_widget(key: str) -> None:
-    st.session_state[key] = ""
-    _clear_casting_result()
-
-
-def _render_input_protocol_check(
-    body_name: str,
-    use_name: str,
-    body_text: str,
-    use_text: str,
-    full_text: str,
-) -> None:
-    audit = build_input_protocol_audit(
-        body_name,
-        use_name,
-        body_text,
-        use_text,
-        full_text,
+def _build_match(event_at: datetime) -> MatchInput:
+    return MatchInput(
+        match_id=st.session_state.match_id.strip(),
+        home_team=st.session_state.home_team.strip(),
+        away_team=st.session_state.away_team.strip(),
+        competition=st.session_state.competition.strip(),
+        event_at=event_at,
+        timezone_name=st.session_state.timezone_name.strip(),
+        venue=st.session_state.venue.strip(),
+        city=st.session_state.city.strip(),
+        evidence=_evidence_from_state(),
+        both_teams_refreshed_after_material_update=st.session_state.get("both_refreshed", False),
     )
-    st.markdown("#### v3 格式與計數檢查")
-    columns = st.columns(3)
-    for column, section in zip(columns, audit["sections"].values(), strict=True):
-        minimum, maximum = section["target_count"]
-        column.metric(
-            section["label"],
-            f"{section['actual_count']} 數",
-            "符合範圍" if section["count_in_range"] else f"須為 {minimum}～{maximum}",
-            delta_color="normal" if section["count_in_range"] else "inverse",
+
+
+def _palace_card(number: int) -> None:
+    state = st.session_state.board.palaces[number]
+    flags = []
+    if state.is_void:
+        flags.append("旬空")
+    if state.is_horse:
+        flags.append("驛馬")
+    with st.container(border=True):
+        st.markdown(f"#### {state.name} · {state.direction}")
+        st.caption(f"{state.trigram}｜{state.element}｜{' · '.join(flags) if flags else '—'}")
+        st.markdown(
+            f"**神**　{state.deity or '—'}  \n"
+            f"**星**　{'・'.join(state.stars) or '—'}  \n"
+            f"**門**　{state.door or '—'}  \n"
+            f"**天盤**　{'・'.join(state.heaven_stems) or '—'}  \n"
+            f"**地盤**　{state.earth_stem}"
+            f"{('（寄 ' + '・'.join(state.earth_hidden_stems) + '）') if state.earth_hidden_stems else ''}"
         )
-    issues = validate_input_protocol(
-        body_name,
-        use_name,
-        body_text,
-        use_text,
-        full_text,
-    )
-    if issues:
-        st.error("v3 起象輸入規格未通過：\n- " + "\n- ".join(issues))
-    else:
-        st.success("三段內容的人稱、十一行結構、雙方名稱與計數範圍全部通過，可以完整排卦。")
-    warnings = [
-        warning
-        for key in ("body", "use")
-        for warning in audit["sections"][key]["quality_warnings"]
-    ]
-    if warnings:
-        st.warning("文字品質提醒：\n- " + "\n- ".join(warnings))
 
 
-def _render_html_table(rows: Sequence[Mapping[str, Any]], columns: Sequence[str]) -> None:
-    """Render tabular text without importing pandas/NumPy/PyArrow at app startup."""
-
-    cell_style = (
-        "border-bottom:1px solid rgba(128,128,128,.25);padding:.55rem .7rem;"
-        "text-align:left;vertical-align:top;white-space:pre-wrap;"
-    )
-    header = "".join(
-        f'<th style="{cell_style}font-weight:700;position:sticky;top:0;'
-        f'background:var(--background-color);">{html.escape(str(column))}</th>'
-        for column in columns
-    )
-    body = "".join(
-        "<tr>"
-        + "".join(
-            f'<td style="{cell_style}">{html.escape(str(row.get(column, "")))}</td>'
-            for column in columns
-        )
-        + "</tr>"
-        for row in rows
-    )
-    st.markdown(
-        '<div style="overflow:auto;max-height:34rem;border:1px solid '
-        'rgba(128,128,128,.22);border-radius:.5rem;">'
-        '<table style="width:100%;border-collapse:collapse;font-size:.92rem;">'
-        f"<thead><tr>{header}</tr></thead><tbody>{body}</tbody></table></div>",
-        unsafe_allow_html=True,
-    )
+def _require_board() -> bool:
+    if "board" not in st.session_state:
+        st.info("請先在左側填入事件所在地時間，按「建立／重建奇門盤」。")
+        return False
+    return True
 
 
-def _render_line_table(result: HexagramResult) -> None:
-    rows = []
-    for row in reversed(result.line_table):
-        rows.append(
-            {
-                "爻位": f"{row['position_name']}／{row['line_label']}",
-                "本卦爻": f"{row['original_symbol']} {row['original_type']}",
-                "動爻": row["moving_marker"],
-                "變卦爻": f"{row['changed_symbol']} {row['changed_type']}",
-                "所屬": row["layer"],
-            }
-        )
-    _render_html_table(rows, ["爻位", "本卦爻", "動爻", "變卦爻", "所屬"])
-    st.caption("畫面由上爻往初爻顯示；程式計算與資料庫一律自下而上儲存。○＝陽爻動，×＝陰爻動。")
+st.title("奇門遁甲足球賽前研究系統")
+st.caption(f"時家奇門・轉盤・拆補法｜版本 {__version__}")
+st.markdown(
+    '<div class="qimen-note">本系統把古典奇門知識與足球應用規約分層。盤內索引只排序候選情境，不自動輸出勝率、固定比分、期望進球或投注建議。</div>',
+    unsafe_allow_html=True,
+)
 
+if "evidence_rows" not in st.session_state:
+    st.session_state.evidence_rows = []
 
-def _render_hexagram_reference(label: str, name: str, moving_line: int | None = None) -> None:
-    item = load_hexagrams()[name]
-    interpretation = load_hexagram_interpretations()["hexagrams"][name]
-    st.markdown(f"#### {label}：{item['unicode']} {name}（第 {item['sequence']} 卦）")
-    st.caption(
-        f"上卦 {item['upper']}｜下卦 {item['lower']}｜六爻自下而上 {item['binary_bottom_up']}｜"
-        f"互卦 {item['related_hexagrams']['nuclear']}｜錯卦 {item['related_hexagrams']['opposite']}｜"
-        f"綜卦 {item['related_hexagrams']['reversed']}"
-    )
-    st.write(f"**卦義提要（資料庫索引）**：{item['meaning_overview']}")
-    st.write(f"**卦辭**：{item['judgment_text']}")
-    st.markdown("##### 完整卦義")
-    _render_html_table(
-        [{"欄位": CLASSICAL_LABELS[key], "內容": value} for key, value in interpretation["classical_meaning"].items()],
-        ["欄位", "內容"],
-    )
-    st.markdown("##### 足球比賽應用參考")
-    _render_html_table(
-        [{"欄位": FOOTBALL_LABELS[key], "內容": value} for key, value in interpretation["football_mapping"].items()],
-        ["欄位", "內容"],
-    )
-    st.caption("足球欄位是本專案的應用層，不是經典原文，也不是固定比分公式。")
-    with st.expander("彖傳與大象", expanded=(label == "本卦")):
-        st.write(f"**彖傳**：{item['tuan_text']}")
-        st.write(f"**大象**：{item['great_image_text']}")
-    line_rows = []
-    for line in item["lines"]:
-        position = f"第{line['position']}爻"
-        if moving_line == line["position"]:
-            position += "（本次動爻）"
-        line_rows.append(
-            {
-                "爻位": position,
-                "爻辭": line["classic_text"],
-                "小象": line["small_image_text"],
-            }
-        )
-    special = item.get("special_line")
-    if special:
-        line_rows.append({"爻位": "用爻", "爻辭": special["classic_text"], "小象": special["small_image_text"]})
-    _render_html_table(line_rows, ["爻位", "爻辭", "小象"])
-    if item.get("wenyan_text"):
-        with st.expander("文言全文"):
-            st.write(item["wenyan_text"])
+with st.sidebar:
+    st.header("事件資料")
+    st.text_input("研究編號", value="QIMEN-DEMO-001", key="match_id")
+    st.text_input("主隊", value="主隊", key="home_team")
+    st.text_input("客隊", value="客隊", key="away_team")
+    st.text_input("賽事", value="賽前研究", key="competition")
+    event_date = st.date_input("開賽日期", value=date.today() + timedelta(days=1))
+    event_time = st.time_input("開賽時間", value=time(20, 0), step=300)
+    st.text_input("IANA 時區", value="Asia/Taipei", key="timezone_name", help="例如 Asia/Taipei、Europe/London")
+    st.text_input("場館", value="待確認", key="venue")
+    st.text_input("城市", value="Taipei", key="city")
+    cast_button = st.button("建立／重建奇門盤", type="primary", use_container_width=True)
 
-
-def _render_jiaoshi_reference(main_name: str, changed_name: str) -> None:
-    reference = build_jiaoshi_yilin_reference(main_name, changed_name)
-    main = reference["main_hexagram"]
-    changed = reference["changed_hexagram"]
-    st.markdown(
-        f"#### {main['unicode']} {main_name} 之 {changed['unicode']} {changed_name}"
-    )
-    st.caption(
-        f"《焦氏易林》{reference['entry_key']}｜{reference['text_style']}｜"
-        f"本卦第 {main['sequence']} 卦，之卦第 {changed['sequence']} 卦"
-    )
-    st.write(reference["text"])
-    st.caption("只顯示《焦氏易林》原典林辭，不自動解釋，也不參與本次文字取數。")
-
-
-def _render_conditional_path(path: Mapping[str, Any]) -> None:
-    st.write(
-        f"**{path['party_name']}／{path['side']}：{path['transition']}**｜"
-        f"旺衰 {path['strength_before']}→{path['strength_after']}｜"
-        f"生克 {path['relation_before']}→{path['relation_after']}"
-    )
-    st.caption(
-        f"六沖 {path['clash_count']} 組｜六合 {path['combination_count']} 組｜"
-        f"破門／突破訊號 {path['breakthrough_signal_count']} 個｜"
-        f"動爻旬空：{'是' if path['moving_line_void'] else '否'}｜"
-        f"動爻月破：{'是' if path['moving_line_month_broken'] else '否'}"
-    )
-    for stage in path["stages"]:
-        st.markdown(f"#### {stage['stage']}：{stage['trigram']}｜優先義項：{stage['primary_summary']}")
-        _render_html_table(
-            [
-                {
-                    "排序": item["rank"],
-                    "優先義項": item["meaning"],
-                    "規則分": item["rule_score"],
-                    "足球含義": item["football"],
-                }
-                for item in stage["prioritized_meanings"]
-            ],
-            ["排序", "優先義項", "規則分", "足球含義"],
-        )
-        with st.expander(f"{stage['trigram']}全部可能含義與本次命中條件", expanded=True):
-            _render_html_table(
-                [
-                    {"可能含義": item["name"], "足球含義": item["football"]}
-                    for item in stage["possible_meanings"]
-                ],
-                ["可能含義", "足球含義"],
+    if cast_button:
+        try:
+            local_event = aware_local_datetime(
+                datetime.combine(event_date, event_time),
+                st.session_state.timezone_name.strip(),
             )
-            if stage["matched_rules"]:
-                _render_html_table(
-                    [
-                        {
-                            "優先級": item["priority"],
-                            "判斷條件": item["condition"],
-                            "優先解為": "、".join(item["preferred_meanings"]),
-                            "足球判讀": item["football_reading"],
-                        }
-                        for item in stage["matched_rules"]
-                    ],
-                    ["優先級", "判斷條件", "優先解為", "足球判讀"],
-                )
+            match = _build_match(local_event)
+            errors = match.validate()
+            if errors:
+                for error in errors:
+                    st.error(error)
             else:
-                st.caption("本次沒有命中特定條件，保留全部可能義項，不強行選義。")
-        st.caption(stage["rule_note"])
+                with st.spinner("按固定方法起局…"):
+                    board = cast_qimen(local_event, match.timezone_name)
+                    reading = interpret_football(board)
+                st.session_state.match = match
+                st.session_state.board = board
+                st.session_state.reading = reading
+                st.success("奇門盤已建立")
+        except (ValueError, LocalTimeError, RuntimeError) as exc:
+            st.error(str(exc))
+
+    st.divider()
+    st.caption("方法鎖定")
+    st.write("時家｜轉盤｜拆補")
+    st.write("中五寄坤二｜天禽隨天芮")
+    st.write("主隊日干｜客隊時干")
 
 
-def _render_casting_result(config: Any, store: CastingStore) -> None:
-    casting: CastingInput | None = st.session_state.get("casting_input")
-    result: HexagramResult | None = st.session_state.get("casting_result")
-    if casting is None or result is None:
-        st.info(
-            "填入體方自述、用方自述與賽前中性介紹後按「完整排卦」，"
-            "這裡會顯示本卦、互卦、動爻與變卦。"
-        )
-        return
+tab_board, tab_reading, tab_knowledge, tab_protocol, tab_export = st.tabs(
+    ["九宮排盤", "賽事研究", "奇門知識庫", "資料協議", "匯出與稽核"]
+)
 
-    st.subheader("排卦結果")
-    st.info(
-        f"**卦理時間 event_at**：{result.event_moment.gregorian_text} "
-        f"（{result.event_moment.timezone}／{result.event_moment.utc_offset}）  \n"
-        f"**卦理農曆時間**：{result.event_moment.lunar_text}  \n"
-        f"**日辰**：{result.event_moment.day_ganzhi}日  \n"
-        f"**文字凍結 freeze_at**：{result.freeze_at_iso}  \n"
-        f"**實際執行 cast_at**：{result.casting_moment.gregorian_text} "
-        f"（{result.casting_moment.timezone}／{result.casting_moment.utc_offset}）"
-    )
-    st.caption("event_at 是日辰、月令、旬空、旺衰與時支的唯一時間基準；cast_at 只作稽核，不改變卦理。")
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("體卦／下卦", f"{result.body_gua} {result.body_number}")
-    c2.metric("用卦／上卦", f"{result.use_gua} {result.use_number}")
-    c3.metric("本卦", result.main_hexagram)
-    c4.metric("動爻", f"{result.moving_line_label}（第{result.moving_line}爻）")
-
-    h1, h2, h3 = st.columns(3)
-    h1.metric("本卦", result.main_hexagram)
-    h2.metric("互卦", result.mutual_hexagram)
-    h3.metric("變卦", result.changed_hexagram)
-
-    st.markdown("### 取數明細")
-    st.markdown(
-        "\n".join(
-            [
-                "| 輸入 | 計數 | 取餘 | 排卦結果 |",
-                "|---|---:|---:|---|",
-                f"| {BODY_SECTION_LABEL} | {result.body_count} | ÷8 餘 {_modulo(result.body_modulo, 8)} | {result.body_gua}，先天數{result.body_number}，{result.body_element} |",
-                f"| {USE_SECTION_LABEL} | {result.use_count} | ÷8 餘 {_modulo(result.use_modulo, 8)} | {result.use_gua}，先天數{result.use_number}，{result.use_element} |",
-                f"| {NEUTRAL_SECTION_LABEL} | {result.total_count} | ÷6 餘 {_modulo(result.moving_modulo, 6)} | 第{result.moving_line}爻動，{result.moving_line_label} |",
-            ]
-        )
-    )
-
-    st.markdown("### 六爻排盤")
-    _render_line_table(result)
-
-    st.markdown("### 本、互、動、變完整結構")
-    st.markdown(
-        "\n".join(
-            [
-                "| 項目 | 結構資料 |",
-                "|---|---|",
-                f"| 體卦 | {result.body_name}＝{result.body_gua}，數{result.body_number}，{result.body_element}，下卦 |",
-                f"| 用卦 | {result.use_name}＝{result.use_gua}，數{result.use_number}，{result.use_element}，上卦 |",
-                f"| 本卦 | {result.main_hexagram}，六爻自下而上 `{result.main_lines_bottom_up}` |",
-                f"| 互卦 | 二三四爻成{result.mutual_lower_gua}，三四五爻成{result.mutual_upper_gua} → {result.mutual_hexagram} |",
-                f"| 動爻 | 第{result.moving_line}爻，{result.moving_line_label}，{result.moving_original_type}變{result.moving_changed_type}，在{result.moving_side}／{result.moving_layer} |",
-                f"| 體卦轉象 | {result.body_transition} |",
-                f"| 用卦轉象 | {result.use_transition} |",
-                f"| 變卦 | {result.changed_hexagram}，六爻自下而上 `{result.changed_lines_bottom_up}` |",
-                f"| 本卦五行關係 | {result.relation} |",
-                f"| 變卦五行關係 | {result.changed_relation} |",
-            ]
-        )
-    )
-    structure = build_casting_structure(result)
-    najia = structure["najia_analysis"]
-    day = najia["day_cycle"]
-    void = najia["xun_void"]
-    st.markdown("### 日辰、月令、旬空與完整納甲")
-    st.info(
-        f"日辰 **{day['day_ganzhi']}日**（日干 {day['day_stem']}／{day['day_stem_element']}）｜"
-        f"月令 **{day['month_branch']}月**（{day['month_element']}）｜"
-        f"{void['xun_name']}｜旬空 **{void['void_text']}**"
-    )
-    st.caption("六親主欄依日干五行計算；另列八宮卦宮五行口徑。旬空是暫受限制，不代表永久無效。")
-    chart_tabs = st.tabs(["本卦納甲", "互卦納甲", "變卦納甲"])
-    for tab, key in zip(chart_tabs, ("main_hexagram", "mutual_hexagram", "changed_hexagram"), strict=True):
-        with tab:
-            chart = najia[key]
-            st.write(
-                f"**{chart['palace']}宮（{chart['palace_element']}）／{chart['palace_stage']}**｜"
-                f"世爻第 {chart['world_line']} 爻｜應爻第 {chart['response_line']} 爻"
-            )
-            rows = [
-                {
-                    "爻位": line["position_name"], "爻名": line["line_label"], "經卦": line["trigram"],
-                    "納甲": line["gan_zhi"], "世應": "、".join(line["roles"]) or "—",
-                    "六親（日干）": line["six_relative_by_day_stem"],
-                    "六親（卦宮）": line["six_relative_by_palace"], "旬空": line["void_status"],
-                    "動爻": "是" if line["is_original_moving_position"] else "否",
-                }
-                for line in reversed(chart["lines"])
-            ]
-            _render_html_table(rows, ["爻位", "爻名", "經卦", "納甲", "世應", "六親（日干）", "六親（卦宮）", "旬空", "動爻"])
-            relations = chart["branch_interactions"]
-            if relations:
-                _render_html_table(
-                    [{"關係": x["relation"], "爻組": f"第{x['first_line']}爻{x['first_branch']}－第{x['second_line']}爻{x['second_branch']}", "提醒": x["football_note"]} for x in relations],
-                    ["關係", "爻組", "提醒"],
-                )
-            else:
-                st.caption("此卦未檢出爻間六沖或六合。")
-    st.warning("以上完整呈現排卦與卦義資料，但不自動預測勝負或固定比分。")
-
-    st.markdown("### 條件式卦義：沿整條卦線選義")
-    st.info(structure["conditional_meanings"]["whole_line_note"])
-    conditional_tabs = st.tabs(["體方條件式卦義", "用方條件式卦義"])
-    with conditional_tabs[0]:
-        _render_conditional_path(structure["conditional_meanings"]["body_path"])
-    with conditional_tabs[1]:
-        _render_conditional_path(structure["conditional_meanings"]["use_path"])
-    st.caption(structure["conditional_meanings"]["evaluation_boundary"])
-
-    st.markdown("### 本次涉及的經文資料")
-    tabs = st.tabs(["本卦", "互卦", "變卦"])
-    with tabs[0]:
-        _render_hexagram_reference("本卦", result.main_hexagram, result.moving_line)
-    with tabs[1]:
-        _render_hexagram_reference("互卦", result.mutual_hexagram)
-    with tabs[2]:
-        _render_hexagram_reference("變卦", result.changed_hexagram)
-
-    st.markdown("### 焦氏易林原典")
-    _render_jiaoshi_reference(result.main_hexagram, result.changed_hexagram)
-
-    report = build_html_report(casting, result)
-    d1, d2 = st.columns(2)
-    d1.download_button(
-        "下載完整排卦表 HTML",
-        report,
-        file_name=f"{result.title or 'casting'}.html",
-        mime="text/html",
-        width="stretch",
-    )
-    if d2.button("儲存本次排卦", width="stretch"):
-        row = build_casting_row(casting, result)
-        report_path = save_report(config, row, report)
-        row["報告檔案"] = report_path
-        _, action = store.upsert(row)
-        st.success(f"{action}完成：{row['排卦ID']}")
-
-
-def _render_database() -> None:
-    trigrams = load_trigrams()
-    conditional = load_conditional_trigram_meanings()
-    hexagrams = load_hexagrams()
-    yilin = load_jiaoshi_yilin()
-    trigram_tab, hexagram_tab, yilin_tab = st.tabs(
-        ["八卦資料", "六十四卦與三百八十四爻", "焦氏易林 4096 林辭"]
-    )
-    with trigram_tab:
-        selected = st.selectbox("選擇經卦", list(trigrams), key="database_trigram")
-        item = trigrams[selected]
-        conditional_item = conditional["trigrams"][selected]
-        st.subheader(f"{item['unicode']} {selected}｜先天數 {item['number']}")
-        _render_html_table(
-            [
-                {"欄位": "五行", "內容": item["element"]},
-                {"欄位": "陰陽結構", "內容": item["yin_yang"]},
-                {"欄位": "自然象", "內容": item["natural_image"]},
-                {"欄位": "古典核心", "內容": conditional_item["classical_core"]},
-                {"欄位": "方向／季節", "內容": f"{item['direction']}／{item['season']}"},
-                {"欄位": "卦畫（自下而上）", "內容": item["lines_bottom_up"]},
-            ],
-            ["欄位", "內容"],
-        )
-        st.markdown("#### 全部可能含義")
-        _render_html_table(
-            [
-                {"可能含義": meaning["name"], "足球含義": meaning["football"]}
-                for meaning in conditional_item["possible_meanings"]
-            ],
-            ["可能含義", "足球含義"],
-        )
-        st.markdown("#### 判斷條件")
-        _render_html_table(
-            [
-                {
-                    "優先級": rule["priority"],
-                    "判斷條件": rule["condition_text"],
-                    "優先解為": "、".join(rule["prefer"]),
-                    "降低權重": "、".join(rule["suppress"]) or "—",
-                    "足球判讀": rule["football_reading"],
-                }
-                for rule in sorted(conditional_item["rules"], key=lambda value: -value["priority"])
-            ],
-            ["優先級", "判斷條件", "優先解為", "降低權重", "足球判讀"],
-        )
-        st.caption(conditional["evaluation_boundary"])
-    with hexagram_tab:
-        ordered = sorted(hexagrams, key=lambda name: int(hexagrams[name]["sequence"]))
-        selected = st.selectbox(
-            "選擇六十四卦",
-            ordered,
-            format_func=lambda name: f"{int(hexagrams[name]['sequence']):02d} {hexagrams[name]['unicode']} {name}",
-            key="database_hexagram",
-        )
-        _render_hexagram_reference("資料庫", selected)
-    with yilin_tab:
-        ordered = sorted(hexagrams, key=lambda name: int(hexagrams[name]["sequence"]))
-        main_col, changed_col = st.columns(2)
-        main_name = main_col.selectbox(
-            "本卦",
-            ordered,
-            format_func=lambda name: (
-                f"{int(hexagrams[name]['sequence']):02d} {hexagrams[name]['unicode']} {name}"
-            ),
-            key="yilin_main_hexagram",
-        )
-        changed_name = changed_col.selectbox(
-            "之卦",
-            ordered,
-            format_func=lambda name: (
-                f"{int(hexagrams[name]['sequence']):02d} {hexagrams[name]['unicode']} {name}"
-            ),
-            key="yilin_changed_hexagram",
-        )
+with tab_board:
+    if _require_board():
+        board = st.session_state.board
+        match = st.session_state.match
+        a, b, c, d, e = st.columns(5)
+        a.metric("遁局", board.ju_label)
+        b.metric("三元", board.yuan)
+        c.metric("值符", f"{board.chief_star}・{board.chief_star_palace}宮")
+        d.metric("值使", f"{board.chief_door}・{board.chief_door_palace}宮")
+        e.metric("節氣", board.calendar.solar_term)
         st.caption(
-            f"已完整收錄 {yilin['entry_count']:,} 條林辭；可查任一「本卦 → 之卦」組合。"
+            f"事件：{match.event_at.isoformat()}｜四柱：{board.calendar.year_ganzhi} "
+            f"{board.calendar.month_ganzhi} {board.calendar.day_ganzhi} {board.calendar.hour_ganzhi}｜"
+            f"時旬：{board.hour_xun}（{board.xun_head_instrument}）"
         )
-        _render_jiaoshi_reference(main_name, changed_name)
-        with st.expander("版本、來源與標題校正紀錄"):
-            st.write(f"版本：{yilin['edition']}｜作者標示：{yilin['author']}")
-            st.json(yilin["source"], expanded=False)
-            st.json(yilin["source_label_corrections"], expanded=False)
 
+        for row in ((4, 9, 2), (3, 5, 7), (8, 1, 6)):
+            columns = st.columns(3)
+            for column, palace_number in zip(columns, row):
+                with column:
+                    _palace_card(palace_number)
 
-def _render_classic_content(payload: Any) -> None:
-    if isinstance(payload, str):
-        st.write(payload)
-    elif isinstance(payload, list):
-        for item in payload:
-            _render_classic_content(item)
-    elif isinstance(payload, dict):
-        if payload.get("title"):
-            st.subheader(str(payload["title"]))
-        if payload.get("subtitle"):
-            st.markdown(f"#### {payload['subtitle']}")
-        if "content" in payload:
-            _render_classic_content(payload["content"])
+        st.subheader("自動命中的結構")
+        if board.patterns:
+            st.dataframe(pd.DataFrame([{
+                "格局／狀態": hit.name,
+                "類別": hit.category,
+                "宮位": hit.palace or "全盤／時格",
+                "成立條件": hit.condition,
+                "判讀": hit.reading,
+                "注意": hit.caution,
+            } for hit in board.patterns]), hide_index=True, use_container_width=True)
         else:
-            st.json(payload, expanded=False)
+            st.info("未命中目前方法版本可自動判定的格局；不代表盤中沒有可讀結構。")
 
+        with st.expander("方法與可重現性"):
+            st.json({"method": board.to_dict()["method"], "warnings": board.warnings})
 
-def _render_classics() -> None:
-    classics = load_classics()
-    selected = st.selectbox("選擇易傳資料", list(classics), key="classic_document")
-    st.caption("這些是獨立經典資料，不會自動套用到本次排卦，也不產生事件解讀。")
-    _render_classic_content(classics[selected])
+with tab_reading:
+    if _require_board():
+        reading = st.session_state.reading
+        left, right = st.columns(2)
+        for column, label, team_name, profile in (
+            (left, "主隊／日干", st.session_state.match.home_team, reading.home),
+            (right, "客隊／時干", st.session_state.match.away_team, reading.away),
+        ):
+            with column:
+                with st.container(border=True):
+                    st.subheader(f"{label}：{team_name}")
+                    st.metric("盤內排序索引", profile.signal_index)
+                    st.write(f"用神：**{profile.stem}**｜{profile.palace_name}")
+                    st.write(f"星門神：{'・'.join(profile.stars)}｜{profile.door or '—'}｜{profile.deity or '—'}")
+                    st.write(f"季節狀態：{profile.seasonal_state}")
+                    st.success("有利條件：" + ("、".join(profile.strengths) or "未標示"))
+                    st.warning("風險條件：" + ("、".join(profile.risks) or "未標示"))
 
+        st.subheader("候選情境排序")
+        st.dataframe(pd.DataFrame([{
+            "排序": item.rank,
+            "候選情境": item.title,
+            "盤內索引": item.signal_index,
+            "依據": "；".join(item.basis),
+            "邊界": item.boundary,
+        } for item in reading.scenarios]), hide_index=True, use_container_width=True)
+        st.warning(reading.disclaimer, icon="⚠️")
+        st.caption("足球映射版本：" + reading.mapping_version + "。此層是本專案規約，不是古籍原有的足球公式。")
 
-def _render_records(store: CastingStore) -> None:
-    try:
-        rows = store.load()
-    except Exception as exc:
-        st.error(f"讀取排卦紀錄失敗：{exc}")
-        return
-    if not rows:
-        st.info("尚無已儲存的排卦紀錄。")
-        return
-    columns = [
-        "排卦ID", "event_at", "freeze_at", "cast_at", "樣本分類", "起卦農曆時間",
-        "標題", "體方名稱", "用方名稱",
-        "本卦", "互卦", "動爻爻名", "變卦", "體方條件式卦義", "用方條件式卦義",
-    ]
-    _render_html_table(rows, columns)
-    st.download_button(
-        "下載排卦紀錄 CSV",
-        store.public_csv_bytes(rows),
-        file_name="meihua_castings.csv",
-        mime="text/csv",
+with tab_knowledge:
+    stats = knowledge_stats()
+    k1, k2, k3, k4, k5 = st.columns(5)
+    k1.metric("知識條目", stats["total"])
+    k2.metric("九宮／門星神干", sum(stats.get(k, 0) for k in ("palaces", "doors", "stars", "deities", "stems")))
+    k3.metric("格局與狀態", stats.get("patterns", 0))
+    k4.metric("節氣", stats.get("solar_terms", 0))
+    k5.metric("來源", stats.get("sources", 0))
+
+    sections = sorted({row["_section"] for row in load_knowledge()["records"]})
+    col_query, col_section = st.columns([2, 1])
+    with col_query:
+        query = st.text_input("搜尋知識庫", placeholder="例如：值符、三奇、門迫、拆補、驛馬")
+    with col_section:
+        section = st.selectbox("資料分類", ["全部", *sections])
+    results = search_knowledge(query, section)
+    st.caption(f"找到 {len(results)} 筆；以下最多顯示 200 筆。")
+    if results:
+        labels = [f"{row['_title']}｜{row['_section']}｜{index + 1}" for index, row in enumerate(results[:200])]
+        selected_label = st.selectbox("選擇條目查看完整內容", labels)
+        selected = results[labels.index(selected_label)]
+        st.json({key: value for key, value in selected.items() if not key.startswith("_")}, expanded=True)
+        st.dataframe(pd.DataFrame([{
+            "名稱": row["_title"],
+            "分類": row["_section"],
+            "資料檔": row["_file"],
+        } for row in results[:200]]), hide_index=True, use_container_width=True)
+
+    with st.expander("來源與編纂政策"):
+        source_data = load_knowledge()["files"]["sources.json"]
+        for source in source_data["sources"]:
+            st.markdown(f"- [{source['title']}]({source['url']})：{source['use']}")
+        st.markdown("\n".join(f"- {policy}" for policy in source_data["source_policy"]))
+
+with tab_protocol:
+    st.subheader("賽前證據表")
+    st.write("所有時間請填含偏移的 ISO 8601，例如 `2026-08-14T12:30:00+08:00`。空表仍可起局，但代表沒有外部賽事證據。")
+    evidence_df = pd.DataFrame(st.session_state.evidence_rows, columns=[
+        "title", "url", "published_at", "retrieved_at", "category", "team", "material_update", "reliability"
+    ])
+    edited = st.data_editor(
+        evidence_df,
+        num_rows="dynamic",
+        hide_index=True,
+        use_container_width=True,
+        column_config={
+            "title": st.column_config.TextColumn("標題"),
+            "url": st.column_config.LinkColumn("URL"),
+            "published_at": st.column_config.TextColumn("發布時間"),
+            "retrieved_at": st.column_config.TextColumn("擷取時間"),
+            "category": st.column_config.SelectboxColumn(
+                "類別", options=["official_schedule", "official_lineup", "injury", "suspension", "team_form", "travel", "venue", "weather", "other"]
+            ),
+            "team": st.column_config.SelectboxColumn("隊伍", options=["home", "away", "neutral"]),
+            "material_update": st.column_config.CheckboxColumn("重大更新"),
+            "reliability": st.column_config.SelectboxColumn("可靠度", options=["高", "中", "低"]),
+        },
+        key="evidence_editor",
     )
+    st.session_state.evidence_rows = edited.fillna("").to_dict("records")
+    st.checkbox("freeze_at 後如有重大更新，已對兩隊同步刷新", key="both_refreshed")
 
-
-def _render_method() -> None:
-    completeness = knowledge_completeness()
-    st.subheader("v3 起象輸入的研究邊界")
-    st.info(
-        "十一行固定格式只降低文字噪音並提高一致性、可重複性與可回測性；"
-        "目前沒有公開實證能證明某種球隊自述寫法本身會提高梅花易數足球預測準確率。"
+    st.subheader("固定資料規約")
+    st.markdown(
+        """
+        - `freeze_at = event_at - 6 hours`。
+        - 僅可使用開賽前已發布、且開賽前已擷取的資料。
+        - freeze_at 後只接受重大先發、傷病或停賽更新，並必須對兩隊同步刷新。
+        - 結果口徑固定為 90 分鐘加補時，不含延長賽與點球。
+        - 賽後資訊只能進評估層，不得回灌或重寫賽前研究。
+        """
     )
-    st.write(
-        "系統保存三段原文、輸入規格版本與排卦指紋。起卦後不得因卦象不合直覺替換同義詞、"
-        "補句或重新計數；本版維持只排卦，不加入比分、賠率或足球先驗模型。"
-    )
-    st.subheader("知識庫完整性")
-    m1, m2, m3, m4, m5, m6, m7 = st.columns(7)
-    m1.metric("八卦", f"{completeness['trigrams']}/8")
-    m2.metric("六十四卦", f"{completeness['hexagrams']}/64")
-    m3.metric("六爻資料", f"{completeness['line_records']}/384")
-    m4.metric("易傳附錄", completeness["classic_appendices"])
-    m5.metric("焦氏易林", f"{completeness['yilin_entries']}/4096")
-    m6.metric("卦義／足球欄位", f"{completeness['classical_meaning_fields']}／{completeness['football_mapping_fields']}")
-    m7.metric("條件義項／規則", f"{completeness['conditional_trigram_meanings']}／{completeness['conditional_trigram_rules']}")
-    if completeness["is_complete"]:
-        st.success("六十四卦完整卦義、八經卦條件式義項與規則、經傳、384 條爻辭與小象，以及 4,096 條焦氏易林林辭全部通過完整性檢查。")
-    st.subheader("固定排卦方法")
-    st.json(load_meihua_principles(), expanded=True)
+    if "match" in st.session_state:
+        match = st.session_state.match
+        st.write(f"目前 freeze_at：`{match.freeze_at.isoformat()}`")
+        st.json({"integrity": match.integrity_status(), "errors": match.validate()})
+    st.info("更新證據表後，請按左側「建立／重建奇門盤」，讓完整性檢查重新執行。")
 
+with tab_export:
+    if _require_board():
+        match = st.session_state.match
+        board = st.session_state.board
+        reading = st.session_state.reading
+        markdown_report = render_markdown(match, board, reading)
+        bundle = build_bundle(match, board, reading)
+        bundle_json = json.dumps(bundle, ensure_ascii=False, indent=2)
+        html_report = render_html(markdown_report)
 
-def run_app() -> None:
-    st.set_page_config(page_title=APP_TITLE, page_icon="☯", layout="wide")
-    config = load_config(_secrets())
-    store = CastingStore(config)
+        st.subheader("可重現研究檔")
+        st.code(f"SHA-256：{bundle['fingerprint_sha256']}", language=None)
+        d1, d2, d3 = st.columns(3)
+        d1.download_button("下載 JSON 稽核包", bundle_json, f"{match.match_id}-qimen.json", "application/json", use_container_width=True)
+        d2.download_button("下載 Markdown 報告", markdown_report, f"{match.match_id}-qimen.md", "text/markdown", use_container_width=True)
+        d3.download_button("下載 HTML 報告", html_report, f"{match.match_id}-qimen.html", "text/html", use_container_width=True)
+        with st.expander("報告預覽"):
+            st.markdown(markdown_report)
+        with st.expander("原始 JSON"):
+            st.json(bundle)
 
-    st.title(APP_TITLE)
-    st.caption(
-        "輸入賽前文字後，產生可重現的完整排卦、經傳、納甲與卦義資料；不自動預測勝負或固定比分。"
-    )
-    st.sidebar.markdown("### 系統範圍")
-    st.sidebar.success("完整排卦與卦義資料，不自動預測")
-    st.sidebar.write("本卦、互卦、動爻、變卦、納甲、世應、六親、旬空、沖合與完整經文")
-    st.sidebar.caption(f"知識庫：{KNOWLEDGE_VERSION}")
-    st.sidebar.write("儲存位置：" + ("GitHub 後台" if config.use_github_backend else "本機資料夾"))
-
-    casting_tab, database_tab, classics_tab, records_tab, method_tab = st.tabs(
-        ["完整排卦", "卦象資料庫", "易傳資料庫", "排卦紀錄", "方法與完整性"]
-    )
-    with casting_tab:
-        with st.form("casting_form", clear_on_submit=False, enter_to_submit=False):
-            st.markdown("#### 事件／比賽名稱")
-            body_col, versus_col, use_col = st.columns([10, 1.5, 10])
-            body_name = body_col.text_input(
-                "體方名稱（vs 前）", placeholder="例如：A隊", key="body_name"
-            )
-            versus_col.markdown(
-                '<div style="text-align:center;padding-top:2.35rem;'
-                'font-weight:700;font-size:1rem;">vs</div>',
-                unsafe_allow_html=True,
-            )
-            use_name = use_col.text_input(
-                "用方名稱（vs 後）", placeholder="例如：B隊", key="use_name"
-            )
-            st.caption("事件名稱會自動組合為「體方名稱 vs 用方名稱」，不需要重複輸入。")
-            category = st.text_input("內容類別", value="足球賽前內容")
-            st.markdown("#### 卦理時間與盲測鎖定")
-            event_at_text = st.text_input(
-                "官方開球時間 event_at（ISO 8601）",
-                placeholder="例如：2026-07-16T19:30:00-04:00",
-                help="必須包含 UTC 位移；event_at 是月令、日辰、旬空、旺衰與時支的唯一時間基準。",
-            )
-            event_timezone = st.text_input(
-                "事件 IANA 時區（選填）",
-                placeholder="例如：America/New_York",
-                help="若填寫，系統會用此地區時區驗證並保存事件當地民用時間。",
-            )
-            time_source_grade = st.selectbox(
-                "開球時間來源等級",
-                ("A｜官方明確陳述", "B｜可靠賽前報導", "C｜保守推論"),
-            )
-            time_source_url = st.text_input("開球時間來源網址")
-            sample_class = st.selectbox(
-                "樣本分類",
-                ("CLEAN_BLIND", "EXPOSED_BLIND", "POSTMATCH_ANALYSIS"),
-                help="主要準確率報告只納入在 freeze_at 前鎖定的 CLEAN_BLIND。",
-            )
-            st.caption("freeze_at 由系統固定計算為 event_at − 6 小時；cast_at 只保存實際執行時間。")
-            st.markdown("#### v3 起象輸入規格")
-            st.info(
-                "只使用賽前資訊，判斷範圍固定為九十分鐘，不含延長賽與PK。"
-                "固定格式用來降低文字噪音並提高一致性、可重複性與可回測性，"
-                "不宣稱某種寫法本身會提高預測準確率。"
-            )
-            with st.expander("查看十一行自述固定結構"):
-                st.markdown(
-                    "我是XXX。  \n"
-                    "目前我的客觀狀態……  \n"
-                    "我的士氣與比賽壓力……  \n"
-                    "我的預計比賽策略……  \n"
-                    "我主要依靠的組織支點……  \n"
-                    "我的主要進攻通道……  \n"
-                    "我的主要防守結構……  \n"
-                    "我最大的相對優勢……  \n"
-                    "我目前最明顯的限制……  \n"
-                    "我最需要防範對手的……  \n"
-                    "我希望在九十分鐘內……"
-                )
-                st.caption("每一項必須各自成為一個非空行，固定開頭與順序不可調換。")
-            with st.expander("查看防噪寫作規則"):
-                st.markdown(
-                    "- 體用雙方使用完全相同的十一行結構。\n"
-                    "- 每行只寫一個主要訊號；自己的限制與對手威脅分開。\n"
-                    "- 狀態評級優先使用：明顯正面、略正面、中性、略負面、明顯負面。\n"
-                    "- 主要策略優先使用：主動控球、快速轉換、直接推進、中低位防守。\n"
-                    "- 避免必勝、取勝晉級、復仇、創造歷史等結果導向文字。\n"
-                    "- freeze_at 固定為 event_at 前六小時；重大傷停或先發變化才重做，且雙方一起更新。\n"
-                    "- 起卦後保留原文，不因卦象不合直覺替換同義詞或補句。"
-                )
-            body_text = st.text_area(
-                BODY_SECTION_LABEL,
-                height=340,
-                key=BODY_TEXT_KEY,
-                placeholder="我是體方隊伍。\n\n目前我的客觀狀態……",
-                help=(
-                    f"第一人稱十一行固定結構；依系統起卦計數法須為 "
-                    f"{SELF_NARRATIVE_MIN_COUNT}～{SELF_NARRATIVE_MAX_COUNT} 數，用來取體卦／下卦。"
-                ),
-            )
-            st.form_submit_button(
-                "清除體方自述",
-                key="clear_body_self_narrative",
-                type="tertiary",
-                icon="🗑️",
-                on_click=_clear_text_widget,
-                args=(BODY_TEXT_KEY,),
-            )
-            use_text = st.text_area(
-                USE_SECTION_LABEL,
-                height=340,
-                key=USE_TEXT_KEY,
-                placeholder="我是用方隊伍。\n\n目前我的客觀狀態……",
-                help=(
-                    f"第一人稱十一行固定結構；依系統起卦計數法須為 "
-                    f"{SELF_NARRATIVE_MIN_COUNT}～{SELF_NARRATIVE_MAX_COUNT} 數，用來取用卦／上卦。"
-                ),
-            )
-            st.form_submit_button(
-                "清除用方自述",
-                key="clear_use_self_narrative",
-                type="tertiary",
-                icon="🗑️",
-                on_click=_clear_text_widget,
-                args=(USE_TEXT_KEY,),
-            )
-            full_text = st.text_area(
-                NEUTRAL_SECTION_LABEL,
-                height=300,
-                key=NEUTRAL_TEXT_KEY,
-                placeholder="這場比賽……體方……用方……比賽關鍵……",
-                help=(
-                    f"第三人稱、雙方平衡；依系統起卦計數法須為 "
-                    f"{NEUTRAL_MIN_COUNT}～{NEUTRAL_MAX_COUNT} 數，用來取動爻。"
-                ),
-            )
-            st.form_submit_button(
-                "清除賽前中性介紹",
-                key="clear_neutral_match_introduction",
-                type="tertiary",
-                icon="🗑️",
-                on_click=_clear_text_widget,
-                args=(NEUTRAL_TEXT_KEY,),
-            )
-            st.caption("字數採系統固定計數法：中文字逐字計數，連續拉丁單字與數字各計一數，標點與空白不計。")
-            check_col, submit_col = st.columns(2)
-            check_only = check_col.form_submit_button(
-                "只檢查格式與計數",
-                key="check_input_protocol",
-                width="stretch",
-            )
-            submitted = submit_col.form_submit_button(
-                "完整排卦",
-                key="submit_casting",
-                type="primary",
-                width="stretch",
-            )
-        if check_only or submitted:
-            _clear_casting_result()
-        if check_only:
-            try:
-                checked_body_name, checked_use_name, _ = _normalize_parties(body_name, use_name)
-                _render_input_protocol_check(
-                    checked_body_name,
-                    checked_use_name,
-                    body_text,
-                    use_text,
-                    full_text,
-                )
-            except ValueError as exc:
-                st.error(str(exc))
-        if submitted:
-            try:
-                body_name, use_name, title = _normalize_parties(body_name, use_name)
-                event_at = _parse_event_at(event_at_text, event_timezone)
-                source_grade = time_source_grade.split("｜", 1)[0]
-                if source_grade in {"A", "B"} and not time_source_url.strip():
-                    raise ValueError("A／B 級開球時間資料必須附來源網址。")
-                casting = CastingInput(
-                    title=title,
-                    body_name=body_name,
-                    use_name=use_name,
-                    body_text=body_text,
-                    use_text=use_text,
-                    full_text=full_text,
-                    category=category.strip() or "未分類",
-                    event_at_iso=event_at.isoformat(timespec="seconds"),
-                    event_timezone=event_timezone.strip(),
-                    event_source_grade=source_grade,
-                    event_source_url=time_source_url.strip(),
-                    sample_class=sample_class,
-                )
-                issues = validate_input_protocol(
-                    body_name,
-                    use_name,
-                    body_text,
-                    use_text,
-                    full_text,
-                )
-                if issues:
-                    raise ValueError("v3 起象輸入規格未通過：\n- " + "\n- ".join(issues))
-                result = calculate_casting(
-                    casting,
-                    event_at=event_at,
-                    event_timezone=event_timezone.strip(),
-                )
-                if sample_class == "CLEAN_BLIND" and datetime.fromisoformat(
-                    result.casting_moment.gregorian_iso
-                ) > datetime.fromisoformat(result.freeze_at_iso):
-                    raise ValueError(
-                        "本次 cast_at 已晚於 freeze_at，不能標記為 CLEAN_BLIND；"
-                        "請改用 EXPOSED_BLIND 或 POSTMATCH_ANALYSIS。"
-                    )
-                st.session_state["casting_input"] = casting
-                st.session_state["casting_result"] = result
-                st.success(
-                    f"排卦完成：本卦 {result.main_hexagram}｜互卦 {result.mutual_hexagram}｜"
-                    f"{result.moving_line_label}動｜變卦 {result.changed_hexagram}"
-                )
-            except ValueError as exc:
-                st.error(str(exc))
-        _render_casting_result(config, store)
-    with database_tab:
-        _render_database()
-    with classics_tab:
-        _render_classics()
-    with records_tab:
-        _render_records(store)
-    with method_tab:
-        _render_method()
-
-
-run_app()
+st.divider()
+st.caption("研究／教育用途。奇門遁甲屬傳統術數；不得替代醫療、法律、財務或投注專業判斷。")
