@@ -16,7 +16,10 @@ def test_knowledge_base_has_complete_core_sets():
     assert stats["patterns"] >= 39
     assert stats["football_patterns"] == 39
     assert stats["dimensions"] == 20
-    assert stats["total"] >= 380
+    assert stats["precast_checklist"] == 10
+    assert stats["reading_layers"] == 10
+    assert stats["focus_topics"] == 12
+    assert stats["total"] >= 450
 
 
 def test_search_crosses_files_and_sections():

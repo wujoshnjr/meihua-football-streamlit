@@ -6,6 +6,10 @@
 - `calendar.json`：二十四節氣、陰陽遁十八局、十二地支、驛馬與五行。
 - `patterns.json`：常見奇儀格、三遁、三詐、五假、庚格及盤勢狀態。
 - `methods.json`：時家／日家等尺度、轉盤／飛盤、拆補／置閏、時間及寄宮差異。
+- `interpretation.json`：盤前校驗、10 層判讀、主客版本、12 個足球焦點、應期邊界、時間基準與錯誤防護。
+- `football_ontology.json`：108 個奇門符號／狀態的足球義、可觀察訊號、反證與組合規約。
 - `sources.json`：古籍、官方天文資料與曆法程式來源。
 
 `automation=implemented` 表示目前引擎有確定且可測試的成立條件；`knowledge_only` 表示條件在傳承間有顯著差異，知識庫保留說明但不擅自混入排盤結果。
+
+`qimen.interpretation` 依 `relation_contract` 生成 306 組關係槽位。古籍有固定格名者另列名稱；其餘只顯示五行方向與權威層級，不把演算法生成摘要偽裝成古訣。

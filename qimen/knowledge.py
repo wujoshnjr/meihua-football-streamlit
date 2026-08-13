@@ -12,6 +12,7 @@ KNOWLEDGE_FILES = (
     "calendar.json",
     "patterns.json",
     "methods.json",
+    "interpretation.json",
     "football_ontology.json",
     "sources.json",
 )

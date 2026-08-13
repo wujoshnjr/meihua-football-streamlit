@@ -1,0 +1,619 @@
+{
+  "schema_version": "qimen-interpretation-v1.0.0",
+  "mapping_version": "qimen-reading-guide-v1.0.0",
+  "scope_note": "本檔保存起局前稽核、逐層解盤、主客／用神版本、足球觀察焦點、應期邊界與常見錯誤。古籍明載、五行組合推導與本專案足球類比均分欄標示。",
+  "source_policy": [
+    "先固定問題、事件時刻、地點、方法、主客與用神，再生成盤面。",
+    "單一符號不作結論；至少同看宮、門、星、神、天地盤干、旺衰及結構狀態。",
+    "應期只列候選觸發條件，不自動承諾日期、比分或事件必然發生。",
+    "足球焦點是觀察鏡頭，不取代固定的主隊日干與客隊時干。"
+  ],
+  "precast_checklist": [
+    {
+      "id": "single_question",
+      "name": "一事一問",
+      "requirement": "用可驗證的完整句子固定本次問題，避免同一盤同時追問互不相干的事項。",
+      "why": "問題範圍決定用神、證據與反證；題目漂移會讓看盤後選答案變得不可稽核。",
+      "status": "implemented",
+      "source_ids": ["project-reading-protocol"]
+    },
+    {
+      "id": "cast_basis",
+      "name": "起局時點",
+      "requirement": "先聲明採事件時、問事時或其他方法；本足球版固定採官方開賽事件時。",
+      "why": "同一問題若換時點就會生成不同四柱與局盤。",
+      "status": "implemented",
+      "source_ids": ["dunjia-yanyi", "project-reading-protocol"]
+    },
+    {
+      "id": "location_timezone",
+      "name": "地點與 IANA 時區",
+      "requirement": "保存城市、場館、IANA 時區名稱與含偏移的事件時刻。",
+      "why": "IANA 規則可處理歷史 UTC 偏移、夏令時間以及不存在或重複的民用時刻。",
+      "status": "implemented",
+      "source_ids": ["iana-tzdb", "python-zoneinfo", "project-reading-protocol"]
+    },
+    {
+      "id": "method_lock",
+      "name": "方法版本鎖定",
+      "requirement": "固定時家、轉盤、拆補、子時換日、中五寄宮與八神順逆規則。",
+      "why": "轉盤／飛盤、拆補／置閏及不同寄宮法不能在同一盤臨時拼接。",
+      "status": "implemented",
+      "source_ids": ["dunjia-yanyi", "project-reading-protocol"]
+    },
+    {
+      "id": "role_lock",
+      "name": "主客角色鎖定",
+      "requirement": "本足球版固定主隊取日干、客隊取時干，甲取值符宮。",
+      "why": "古籍存在天地盤、先後動靜等不同主客法；盤後換角會導致選擇性解讀。",
+      "status": "implemented",
+      "source_ids": ["qimen-daquan-host-guest", "project-football-ontology", "project-reading-protocol"]
+    },
+    {
+      "id": "focus_lock",
+      "name": "焦點用神鎖定",
+      "requirement": "先選整場、進攻、防守、傷停、裁判等觀察焦點；焦點只作第二層鏡頭。",
+      "why": "避免看到某個吉凶符號後才改稱它是本題用神。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology", "project-reading-protocol"]
+    },
+    {
+      "id": "scope_lock",
+      "name": "賽果口徑鎖定",
+      "requirement": "固定為 90 分鐘加補時，不含延長賽與點球。",
+      "why": "不同賽果口徑會使同一場賽事出現相互矛盾的評估標籤。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology", "project-reading-protocol"]
+    },
+    {
+      "id": "evidence_cutoff",
+      "name": "資料截止點",
+      "requirement": "保存發布與擷取時間；開賽後資訊不得回灌賽前判讀。",
+      "why": "防止後見之明及不可重現的敘事重寫。",
+      "status": "implemented",
+      "source_ids": ["project-reading-protocol"]
+    },
+    {
+      "id": "counterevidence",
+      "name": "反證預先登記",
+      "requirement": "每個候選情境至少指定一項可觀察訊號與一項反證。",
+      "why": "沒有反證條件的說法無法區分預測、解釋與事後合理化。",
+      "status": "implemented",
+      "source_ids": ["project-reading-protocol"]
+    },
+    {
+      "id": "lock_timestamp",
+      "name": "鎖定時間與指紋",
+      "requirement": "匯出問題、盤、證據、方法版本與 SHA-256 指紋。",
+      "why": "保留當時版本，後續知識更新不應悄悄改寫既有研究。",
+      "status": "implemented",
+      "source_ids": ["project-reading-protocol"]
+    }
+  ],
+  "reading_layers": [
+    {
+      "id": "verify_input",
+      "name": "一、核對輸入",
+      "instruction": "重讀問題、事件時間、時區、地點、賽果口徑與鎖定時間。",
+      "failure_mode": "時間或題目錯誤時，後面所有判讀都失去同一盤的前提。",
+      "source_ids": ["project-reading-protocol"]
+    },
+    {
+      "id": "verify_cast",
+      "name": "二、核對局盤",
+      "instruction": "依序核對四柱、節氣、陰陽遁、上中下元、局數、旬首、值符和值使。",
+      "failure_mode": "只看盤面文案而不核對演算法身份，無法重建。",
+      "source_ids": ["dunjia-yanyi", "project-reading-protocol"]
+    },
+    {
+      "id": "global_state",
+      "name": "三、讀全局氣候",
+      "instruction": "先看值符、值使、伏吟反吟、五不遇時及全盤性格局，建立節奏與限制。",
+      "failure_mode": "直接從局部符號跳到事件結論。",
+      "source_ids": ["dunjia-yanyi", "qimen-daquan"]
+    },
+    {
+      "id": "locked_roles",
+      "name": "四、定位主客用神",
+      "instruction": "按盤前版本定位雙方用神宮；甲不裸露時依本版取值符宮。",
+      "failure_mode": "用吉處代表偏好的隊伍、凶處代表另一隊。",
+      "source_ids": ["qimen-daquan-host-guest", "project-reading-protocol"]
+    },
+    {
+      "id": "palace_stack",
+      "name": "五、拆讀用神宮",
+      "instruction": "逐層記錄宮環境、門行動、星能力、神表現、天盤觸發與地盤底層。",
+      "failure_mode": "把八門或九星的基礎吉凶當成完整結論。",
+      "source_ids": ["dunjia-yanyi", "qimen-daquan"]
+    },
+    {
+      "id": "element_relations",
+      "name": "六、讀層間生剋",
+      "instruction": "檢查天地盤干、星門、門宮與星宮的比和、生、被生、剋及受剋。",
+      "failure_mode": "忽略同一符號在不同宮位與組合中的功能變形。",
+      "source_ids": ["qimen-daquan-ten-stems", "qimen-daquan-star-door", "qimen-daquan-door-pressure"]
+    },
+    {
+      "id": "strength_modifiers",
+      "name": "七、加入旺衰與結構修飾",
+      "instruction": "再看旺相休囚廢、旬空、驛馬、入墓、擊刑、門迫、宮迫與格局。",
+      "failure_mode": "有吉格便忽略空墓迫制，或有凶格便宣稱必敗。",
+      "source_ids": ["dunjia-yanyi", "qimen-daquan"]
+    },
+    {
+      "id": "football_hypotheses",
+      "name": "八、翻譯為足球假說",
+      "instruction": "按所選焦點生成可觀察的攻守、陣容、裁判或環境情境；不得直接變成比分或機率。",
+      "failure_mode": "把古典象義宣稱為現代足球統計模型。",
+      "source_ids": ["project-football-ontology", "project-reading-protocol"]
+    },
+    {
+      "id": "competing_explanations",
+      "name": "九、列競爭解釋與反證",
+      "instruction": "至少保留兩種可能機制，列出支持資料、反證與仍未知事項。",
+      "failure_mode": "只保留符合第一印象的訊號。",
+      "source_ids": ["project-reading-protocol"]
+    },
+    {
+      "id": "timing_and_archive",
+      "name": "十、條件式應期與封存",
+      "instruction": "若使用應期，只列所採流派、觸發條件與時間單位；完成後封存，不用賽後資訊回寫。",
+      "failure_mode": "把空亡、驛馬或沖合機械換算成唯一日期。",
+      "source_ids": ["project-reading-protocol"]
+    }
+  ],
+  "classic_principles": [
+    {
+      "id": "hour_event_cast",
+      "name": "時家以時刻立局",
+      "summary": "《遁甲演義》詳列年、月、日、時等法，時家盤須保留實際時刻與方法身份。",
+      "authority": "古籍明載／本版已實作",
+      "status": "implemented",
+      "source_ids": ["dunjia-yanyi"]
+    },
+    {
+      "id": "urgent_deity_slow_door",
+      "name": "急從神、緩從門",
+      "summary": "古訣把急迫情境與八神、較緩進程與八門分層觀察；本站只作閱讀順序提示，不作自動吉凶。",
+      "authority": "古籍明載／流派語境",
+      "status": "knowledge_only",
+      "source_ids": ["dunjia-yanyi"]
+    },
+    {
+      "id": "star_middle_door_late",
+      "name": "星門分段觀察",
+      "summary": "《奇門遁甲秘笈大全》一系有奇應初、星應中、門應末的分段說法；不能視為所有傳承唯一時間軸。",
+      "authority": "古籍明載／傳承限定",
+      "status": "knowledge_only",
+      "source_ids": ["qimen-daquan"]
+    },
+    {
+      "id": "seasonal_strength",
+      "name": "吉凶須乘旺衰",
+      "summary": "《遁甲演義》明示九星需合旺相休囚判輕重，基礎吉凶標籤不能脫離時令。",
+      "authority": "古籍明載／本版已實作部分",
+      "status": "implemented",
+      "source_ids": ["dunjia-yanyi"]
+    },
+    {
+      "id": "door_palace_pressure",
+      "name": "門宮生剋修飾功能",
+      "summary": "門與所在宮的五行關係可形成門迫、宮迫等衝突；本版完整列出 72 組並明示方向。",
+      "authority": "古籍概念＋五行組合推導",
+      "status": "implemented",
+      "source_ids": ["qimen-daquan-door-pressure", "project-reading-protocol"]
+    },
+    {
+      "id": "host_guest_variants",
+      "name": "主客法不只一種",
+      "summary": "古籍可按天地盤、先後與動靜分主客；本足球版另立日干／時干規約，兩者不可盤後混換。",
+      "authority": "古籍明載＋專案固定版本",
+      "status": "implemented",
+      "source_ids": ["qimen-daquan-host-guest", "project-reading-protocol"]
+    },
+    {
+      "id": "patterns_are_modifiers",
+      "name": "格局仍須合門星旺衰",
+      "summary": "古籍對伏吟、反吟、刑、墓及奇儀格均附條件；本站把格局定位為修飾器而非單獨判決。",
+      "authority": "古籍摘要＋專案防過度宣稱規則",
+      "status": "implemented",
+      "source_ids": ["dunjia-yanyi", "qimen-daquan", "project-reading-protocol"]
+    },
+    {
+      "id": "external_omens_context",
+      "name": "外應須保存觀察脈絡",
+      "summary": "古籍含大量方位、聲色與時刻克應；本站不自動套用，只允許盤前具時地紀錄的觀察作附加證據。",
+      "authority": "古籍明載／現代稽核限制",
+      "status": "knowledge_only",
+      "source_ids": ["dunjia-yanyi", "project-reading-protocol"]
+    }
+  ],
+  "role_models": [
+    {
+      "id": "football_day_hour",
+      "name": "足球日干／時干",
+      "assignment": "主隊＝日干；客隊＝時干；甲＝值符宮。",
+      "use": "本專案所有足球賽前盤。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology", "project-reading-protocol"]
+    },
+    {
+      "id": "earth_heaven",
+      "name": "地盤／天盤主客",
+      "assignment": "常見傳統之一以地盤為主、天盤為客。",
+      "use": "只供比較流派；不得替換本足球版固定角色。",
+      "status": "knowledge_only",
+      "source_ids": ["qimen-daquan-host-guest"]
+    },
+    {
+      "id": "static_moving",
+      "name": "靜／動與先／後",
+      "assignment": "部分傳統按先動、後應或靜守、主動分主客。",
+      "use": "必須在起局前描述事件機制並鎖定。",
+      "status": "knowledge_only",
+      "source_ids": ["qimen-daquan-host-guest"]
+    },
+    {
+      "id": "leader_executor",
+      "name": "值符／值使",
+      "assignment": "可把值符視為統率或主體、值使視為行動通道或執行。",
+      "use": "作全局領導與執行層，不取代雙方用神。",
+      "status": "knowledge_only",
+      "source_ids": ["dunjia-yanyi", "qimen-daquan"]
+    }
+  ],
+  "focus_topics": [
+    {
+      "id": "whole_match",
+      "name": "整場攻守結構",
+      "question_prompt": "本場在 90 分鐘加補時內，雙方最可能呈現哪些可觀察的攻守結構？",
+      "primary_symbols": ["主隊日干", "客隊時干", "值符", "值使"],
+      "secondary_lenses": ["雙方用神宮全層", "全盤格局", "旺衰空馬"],
+      "evidence_categories": ["official_schedule", "official_lineup", "team_form"],
+      "observable": "先發與陣型、持球／無球結構、壓迫高度、轉換方式及換人。",
+      "counterevidence": "實際陣型與盤內主要候選情境相反，且不是紅牌或傷退等重大干擾造成。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology", "project-reading-protocol"]
+    },
+    {
+      "id": "attack_creation",
+      "name": "進攻與機會創造",
+      "question_prompt": "雙方最可能用甚麼通道創造機會，哪些條件會使攻勢只好看而低效？",
+      "primary_symbols": ["主隊日干", "客隊時干"],
+      "secondary_lenses": ["開門", "景門", "傷門", "天沖", "天英", "九天"],
+      "evidence_categories": ["official_lineup", "team_form"],
+      "observable": "禁區進入、推進通道、快速反擊、射門位置與最後一傳。",
+      "counterevidence": "有控球或射門外觀但缺少禁區威脅，或主要機會來自與候選通道無關的偶發事件。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology"]
+    },
+    {
+      "id": "control_progression",
+      "name": "控球、組織與推進",
+      "question_prompt": "哪一方較能建立可持續的控球與推進，阻塞點可能在哪裡？",
+      "primary_symbols": ["主隊日干", "客隊時干"],
+      "secondary_lenses": ["休門", "杜門", "天輔", "六合", "巽四宮"],
+      "evidence_categories": ["official_lineup", "team_form"],
+      "observable": "出球路線、中場接應、傳球網絡、回收球權後的第一選擇。",
+      "counterevidence": "控球率雖高但推進品質低，或對手主動讓出無威脅區域。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology"]
+    },
+    {
+      "id": "defense_goalkeeper",
+      "name": "防守、門將與禁區保護",
+      "question_prompt": "雙方防守屏障與門將決策在哪些條件下穩定或失去作用？",
+      "primary_symbols": ["主隊日干", "客隊時干"],
+      "secondary_lenses": ["杜門", "死門", "艮八宮", "九地", "天任", "天心", "驚門"],
+      "evidence_categories": ["official_lineup", "injury", "team_form"],
+      "observable": "防線高度、禁區清理、第二點、門將出擊與傳中處理。",
+      "counterevidence": "失球主要由不可重複的折射或個別世界波造成，整體防守結構仍符合相反假說。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology"]
+    },
+    {
+      "id": "fitness_injury",
+      "name": "傷停、體能與恢復",
+      "question_prompt": "哪些已知傷停與負荷可能改變雙方原定結構，證據可靠度如何？",
+      "primary_symbols": ["主隊日干", "客隊時干"],
+      "secondary_lenses": ["傷門", "死門", "天芮", "白虎", "坤二宮", "生門"],
+      "evidence_categories": ["official_lineup", "injury", "suspension"],
+      "observable": "官方名單、復出分鐘限制、連續賽程、熱身退賽與被迫換人。",
+      "counterevidence": "只有未具名傳聞，或球員完整出場且動作品質未見負荷限制。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology"]
+    },
+    {
+      "id": "coaching_substitutions",
+      "name": "教練、部署與換人",
+      "question_prompt": "雙方教練最可能如何啟動、修正或延遲戰術變化？",
+      "primary_symbols": ["值符", "值使", "主隊日干", "客隊時干"],
+      "secondary_lenses": ["天輔", "天心", "開門", "太陰", "六合"],
+      "evidence_categories": ["official_lineup", "team_form"],
+      "observable": "首發結構、針對性站位、換人時點、換形及場邊指令。",
+      "counterevidence": "戰術變化主要由紅牌、急性傷退或比分偶發衝擊被迫觸發。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology"]
+    },
+    {
+      "id": "discipline_var",
+      "name": "犯規、裁判與 VAR",
+      "question_prompt": "哪些對抗或影像覆核情境值得盤前列為風險，而非事後套象？",
+      "primary_symbols": ["主隊日干", "客隊時干"],
+      "secondary_lenses": ["傷門", "驚門", "景門", "白虎", "辛", "離九宮"],
+      "evidence_categories": ["suspension", "other"],
+      "observable": "危險犯規、累積黃牌、高爭議禁區事件、VAR 合法介入類型。",
+      "counterevidence": "比賽對抗低、犯規少，且影像覆核沒有改變任何場上判決。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology", "ifab-law-12", "ifab-var"]
+    },
+    {
+      "id": "set_pieces",
+      "name": "定位球與第二落點",
+      "question_prompt": "定位球、傳中與第二落點可能如何成為結構性機會或風險？",
+      "primary_symbols": ["主隊日干", "客隊時干"],
+      "secondary_lenses": ["驚門", "天柱", "兌七宮", "開門", "天心"],
+      "evidence_categories": ["official_lineup", "team_form"],
+      "observable": "角球與自由球設計、爭頂、落點保護、二次進攻及門將指揮。",
+      "counterevidence": "定位球數量或落點品質不足，主要威脅全部來自開放式進攻。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology", "ifab-laws"]
+    },
+    {
+      "id": "pressing_transition",
+      "name": "逼搶與攻守轉換",
+      "question_prompt": "雙方的逼搶與轉換速度何時能形成優勢，何時會暴露身後？",
+      "primary_symbols": ["主隊日干", "客隊時干"],
+      "secondary_lenses": ["傷門", "天沖", "九天", "驛馬", "震三宮", "休門"],
+      "evidence_categories": ["official_lineup", "team_form"],
+      "observable": "壓迫起點、奪回球權位置、反擊人數、回防速度與身後空間。",
+      "counterevidence": "雙方主動降速或長傳繞開壓迫，使原先的中場轉換假說沒有發生。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology", "statsbomb-playing-style"]
+    },
+    {
+      "id": "travel_venue_weather",
+      "name": "旅途、場地與天候",
+      "question_prompt": "旅途、場地或天候是否有可驗證資料足以修飾盤內候選情境？",
+      "primary_symbols": ["主隊日干", "客隊時干"],
+      "secondary_lenses": ["驛馬", "坎一宮", "坤二宮", "九地", "玄武"],
+      "evidence_categories": ["travel", "venue", "weather"],
+      "observable": "旅行距離與休息日、草皮狀態、溫濕度、風雨及場地公告。",
+      "counterevidence": "缺少所在地與時點相符的資料，或實際條件落在正常範圍。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology"]
+    },
+    {
+      "id": "information_uncertainty",
+      "name": "消息可靠度與不確定性",
+      "question_prompt": "哪些賽前消息是已確認事實，哪些只是需要保留反證的傳聞？",
+      "primary_symbols": ["主隊日干", "客隊時干"],
+      "secondary_lenses": ["杜門", "螣蛇", "玄武", "旬空", "景門"],
+      "evidence_categories": ["official_lineup", "injury", "other"],
+      "observable": "官方聲明、記者署名、原始發布時間、跨來源一致性與更正紀錄。",
+      "counterevidence": "消息只有互相轉載的單一源頭，或其後被官方名單直接否定。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology", "project-reading-protocol"]
+    },
+    {
+      "id": "late_game_state",
+      "name": "末段節奏與比賽狀態",
+      "question_prompt": "在不同比分狀態下，哪些末段節奏或換人情境值得作為候選，而不是固定劇本？",
+      "primary_symbols": ["值使", "主隊日干", "客隊時干"],
+      "secondary_lenses": ["死門", "生門", "九地", "九天", "伏吟", "反吟"],
+      "evidence_categories": ["official_lineup", "team_form"],
+      "observable": "領先後防守深度、替補配置、最後十五分鐘推進與球權管理。",
+      "counterevidence": "早段紅牌或大比分使比賽狀態遠離盤前假設，不能再拿原假說硬套。",
+      "status": "implemented",
+      "source_ids": ["project-football-ontology"]
+    }
+  ],
+  "timing_rules": [
+    {
+      "id": "event_time_is_cast_time",
+      "name": "事件時只決定本盤",
+      "rule": "本版以官方開賽時刻起局；這不等於所有盤內符號都在開賽瞬間應驗。",
+      "automation": "implemented",
+      "caution": "不得把起局時點本身當成唯一應期。",
+      "source_ids": ["dunjia-yanyi", "project-reading-protocol"]
+    },
+    {
+      "id": "void_trigger",
+      "name": "旬空的沖空／填實候選",
+      "rule": "部分傳承以空亡被沖或填實作候選觸發；須另存採用規則與時間單位。",
+      "automation": "knowledge_only",
+      "caution": "本版不自動換算日期，也不把旬空等同事件不發生。",
+      "source_ids": ["qimen-daquan", "project-reading-protocol"]
+    },
+    {
+      "id": "horse_trigger",
+      "name": "驛馬作移動觸發",
+      "rule": "驛馬可提示移動、換位、旅行或變陣的時點候選。",
+      "automation": "knowledge_only",
+      "caution": "足球層需由旅行資料、換人或陣型變化驗證。",
+      "source_ids": ["dunjia-yanyi", "project-reading-protocol"]
+    },
+    {
+      "id": "door_phase",
+      "name": "值使／八門作進程層",
+      "rule": "部分傳承把門視為事之末或行動通道，可用於描述後段進程。",
+      "automation": "knowledge_only",
+      "caution": "不是固定比賽分鐘；若轉成時段必須另立可驗證規約。",
+      "source_ids": ["qimen-daquan", "project-reading-protocol"]
+    },
+    {
+      "id": "fu_yin_fan_yin_tempo",
+      "name": "伏吟／反吟作節奏修飾",
+      "rule": "伏吟偏重停滯與重複，反吟偏重來回與變動，可作節奏候選。",
+      "automation": "knowledge_only",
+      "caution": "只描述機制，不承諾慢局、逆轉或特定比分。",
+      "source_ids": ["dunjia-yanyi", "project-reading-protocol"]
+    },
+    {
+      "id": "timing_requires_registration",
+      "name": "應期規則需預先登記",
+      "rule": "任何支、宮、沖合、填實或門星分段規則都必須在看結果前保存版本。",
+      "automation": "implemented",
+      "caution": "未登記的賽後對時只能列探索觀察，不計入命中。",
+      "source_ids": ["project-reading-protocol"]
+    }
+  ],
+  "time_basis_options": [
+    {
+      "id": "iana_civil_time",
+      "name": "事件地 IANA 民用時",
+      "definition": "採場館所在地法定時間、歷史 UTC 偏移與夏令時間規則。",
+      "status": "implemented",
+      "required_fields": ["event_at", "timezone_name", "city", "venue"],
+      "source_ids": ["iana-tzdb", "python-zoneinfo"]
+    },
+    {
+      "id": "apparent_solar_time",
+      "name": "真太陽時",
+      "definition": "需有經度、時區中央經線與均時差；NOAA 公式可算天文校正，但是否用於奇門屬另一路方法選擇。",
+      "status": "knowledge_only",
+      "required_fields": ["latitude", "longitude", "civil_offset", "equation_of_time", "algorithm_version"],
+      "source_ids": ["noaa-solar-time", "project-reading-protocol"]
+    },
+    {
+      "id": "fixed_utc8",
+      "name": "統一 UTC+8／北京時",
+      "definition": "不論事件地均換成 UTC+8 的現代實務選項。",
+      "status": "knowledge_only",
+      "required_fields": ["event_instant", "fixed_offset", "method_version"],
+      "source_ids": ["project-reading-protocol"]
+    },
+    {
+      "id": "question_time",
+      "name": "問事時",
+      "definition": "以問題被明確提出的時刻而非事件發生時刻起局。",
+      "status": "knowledge_only",
+      "required_fields": ["asked_at", "asker_timezone", "question_lock"],
+      "source_ids": ["project-reading-protocol"]
+    }
+  ],
+  "external_evidence_protocol": [
+    {
+      "id": "record_before_reading",
+      "name": "盤前記錄",
+      "rule": "外應、消息與現實資料須保存觀察／發布／擷取時間，不能在看完結果後補寫。",
+      "source_ids": ["dunjia-yanyi", "project-reading-protocol"]
+    },
+    {
+      "id": "record_context",
+      "name": "保存時地與觀察者",
+      "rule": "外應至少記錄時間、地點、方向、原始描述與誰先觀察到。",
+      "source_ids": ["dunjia-yanyi", "project-reading-protocol"]
+    },
+    {
+      "id": "separate_observation_inference",
+      "name": "觀察與解釋分欄",
+      "rule": "先保存原始事實，再另欄寫奇門類比，避免把解釋改寫成發生過的事。",
+      "source_ids": ["project-reading-protocol"]
+    },
+    {
+      "id": "independent_sources",
+      "name": "辨識獨立來源",
+      "rule": "多篇轉載若源自同一消息，只算一個來源；優先官方賽程、名單與原始報導。",
+      "source_ids": ["project-reading-protocol"]
+    },
+    {
+      "id": "symmetric_refresh",
+      "name": "雙方對稱刷新",
+      "rule": "freeze_at 後若接收一方重大名單／傷停更新，必須同步刷新另一方。",
+      "source_ids": ["project-reading-protocol"]
+    },
+    {
+      "id": "postmatch_separation",
+      "name": "賽後層隔離",
+      "rule": "賽後事件只用於評估事前候選，不能修改已封存問題、盤或判讀。",
+      "source_ids": ["project-reading-protocol"]
+    }
+  ],
+  "error_traps": [
+    {
+      "id": "posthoc_question",
+      "name": "看盤後改題",
+      "symptom": "原問勝負，看到傷門後改稱本來是在問傷病。",
+      "prevention": "固定問題句與焦點 ID，重新提問就另起研究紀錄。",
+      "source_ids": ["project-reading-protocol"]
+    },
+    {
+      "id": "posthoc_roles",
+      "name": "看盤後換主客",
+      "symptom": "把較吉的宮改配給偏好的隊伍。",
+      "prevention": "主隊日干、客隊時干在起局前固化並匯出。",
+      "source_ids": ["qimen-daquan-host-guest", "project-reading-protocol"]
+    },
+    {
+      "id": "mixed_methods",
+      "name": "混用流派",
+      "symptom": "排盤採拆補，遇不合預期的符號又臨時套置閏、飛盤或另一寄宮法。",
+      "prevention": "每張盤只允許一個方法版本；比較方法須生成獨立盤。",
+      "source_ids": ["project-reading-protocol"]
+    },
+    {
+      "id": "fixed_offset_only",
+      "name": "只記 UTC 偏移",
+      "symptom": "用 +01:00 取代 Europe/London，無法重建夏令時間。",
+      "prevention": "同時保存事件瞬間、IANA 名稱與當時偏移。",
+      "source_ids": ["iana-tzdb", "python-zoneinfo"]
+    },
+    {
+      "id": "dst_gap_fold",
+      "name": "忽略 DST 不存在／重複時刻",
+      "symptom": "把跳時缺口或回撥重複時刻自動猜成某一瞬間。",
+      "prevention": "拒絕不存在時刻；重複時刻要求明確偏移或 fold。",
+      "source_ids": ["python-zoneinfo", "project-reading-protocol"]
+    },
+    {
+      "id": "single_symbol_verdict",
+      "name": "單符號定論",
+      "symptom": "只因開門或白虎就宣稱必勝、紅牌或傷病。",
+      "prevention": "至少合看宮門星神干、旺衰、空墓迫制及現實證據。",
+      "source_ids": ["dunjia-yanyi", "project-reading-protocol"]
+    },
+    {
+      "id": "classical_modern_blur",
+      "name": "古義與足球類比混寫",
+      "symptom": "把現代足球映射稱為古籍已有的比賽公式。",
+      "prevention": "每筆顯示古籍來源、組合推導或專案應用的權威層級。",
+      "source_ids": ["project-football-ontology", "project-reading-protocol"]
+    },
+    {
+      "id": "index_as_probability",
+      "name": "把排序索引當機率",
+      "symptom": "將盤內加減分直接說成勝率或投注信心。",
+      "prevention": "索引只排序同盤候選，禁止百分比與固定比分輸出。",
+      "source_ids": ["project-football-ontology", "project-reading-protocol"]
+    },
+    {
+      "id": "automatic_timing",
+      "name": "機械指定應期",
+      "symptom": "看到旬空、驛馬或某支就直接指定唯一分鐘或日期。",
+      "prevention": "應期規則須預先登記，並保留多個觸發候選及未命中。",
+      "source_ids": ["project-reading-protocol"]
+    },
+    {
+      "id": "postmatch_rewrite",
+      "name": "賽後重寫",
+      "symptom": "只保留命中的句子，刪除反證或把模糊描述改得更精確。",
+      "prevention": "用鎖定時間、原始匯出與指紋評估，不覆寫舊版本。",
+      "source_ids": ["project-reading-protocol"]
+    }
+  ],
+  "relation_contract": {
+    "visible_stem_pairs": 81,
+    "star_door_pairs": 72,
+    "door_palace_pairs": 72,
+    "star_palace_pairs": 81,
+    "total_relations": 306,
+    "formula": "9×9 天地盤可見干 + 9×8 星門 + 8×9 門宮 + 9×9 星宮",
+    "authority_layers": {
+      "classical_named": "古籍有固定格名或明確條件；仍只作全盤修飾。",
+      "classical_concept_composed": "古籍支持合參概念，本站以五行方向完整生成矩陣。",
+      "project_application": "翻譯成可驗證足球假說，不是古代足球公式。"
+    },
+    "claim_boundary": "306 表示本 schema 關係槽位全覆蓋，不表示窮盡所有奇門傳承或斷法。"
+  }
+}
