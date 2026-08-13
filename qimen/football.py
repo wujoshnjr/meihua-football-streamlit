@@ -10,6 +10,7 @@ from .constants import (
     SEASON_ELEMENT,
     STAR_ELEMENT,
 )
+from .football_ontology import CompositeFootballMeaning, compose_palace_state
 from .models import PalaceState, QimenBoard
 
 
@@ -31,6 +32,7 @@ class TeamProfile:
     signal_index: int
     strengths: tuple[str, ...]
     risks: tuple[str, ...]
+    football_meaning: CompositeFootballMeaning
 
 
 @dataclass(frozen=True)
@@ -119,6 +121,18 @@ def _profile(role: str, stem: str, board: QimenBoard) -> TeamProfile:
         else:
             risks.append(pattern.name)
 
+    applicable_patterns = [
+        pattern.name
+        for pattern in board.patterns
+        if pattern.palace in {None, palace_number}
+    ]
+    football_meaning = compose_palace_state(
+        state,
+        pattern_names=applicable_patterns,
+        seasonal_state=season_name,
+        branch=board.calendar.hour_ganzhi[1],
+    )
+
     return TeamProfile(
         role=role,
         stem=_visible_stem(stem, board),
@@ -131,6 +145,7 @@ def _profile(role: str, stem: str, board: QimenBoard) -> TeamProfile:
         signal_index=index,
         strengths=tuple(dict.fromkeys(strength)),
         risks=tuple(dict.fromkeys(risks)),
+        football_meaning=football_meaning,
     )
 
 
@@ -138,8 +153,8 @@ def _scenario_candidates(home: TeamProfile, away: TeamProfile, board: QimenBoard
     diff = home.signal_index - away.signal_index
     risk_patterns = tuple(p.name for p in board.patterns if p.category in {"凶格", "庚格", "戰格"})
     candidates = [
-        ("主隊結構較能發用", diff, (f"主隊訊號索引 {home.signal_index}", f"客隊訊號索引 {away.signal_index}", *home.strengths[:2])),
-        ("客隊結構較能發用", -diff, (f"客隊訊號索引 {away.signal_index}", f"主隊訊號索引 {home.signal_index}", *away.strengths[:2])),
+        ("主隊結構較能發用", diff, (f"主隊訊號索引 {home.signal_index}", f"客隊訊號索引 {away.signal_index}", *home.strengths[:2], f"主題：{'、'.join(home.football_meaning.football_dimensions[:2])}")),
+        ("客隊結構較能發用", -diff, (f"客隊訊號索引 {away.signal_index}", f"主隊訊號索引 {home.signal_index}", *away.strengths[:2], f"主題：{'、'.join(away.football_meaning.football_dimensions[:2])}")),
         ("攻守膠著、先看失誤觸發", 3 - abs(diff), (f"雙方索引差 {abs(diff)}", f"值使為{board.chief_door}", "索引接近時不強行分勝負")),
         ("高波動與牌傷風險", len(risk_patterns), ("、".join(risk_patterns[:4]) or "未見主要戰凶格", "白虎／傷門／驚門需與賽前傷停核對")),
         ("速度或陣型變動成為關鍵", 1 + int(board.palaces[board.horse_palace].door in {"開門", "傷門", "驚門"}), (f"驛馬在{board.palaces[board.horse_palace].name}", f"值符在{board.chief_star_palace}宮", f"值使在{board.chief_door_palace}宮")),
@@ -168,7 +183,7 @@ def interpret_football(board: QimenBoard) -> FootballReading:
         f"驛馬：{board.horse_branch}／{board.horse_palace}宮",
     )
     return FootballReading(
-        mapping_version="football-day-hour-v1.0.0",
+        mapping_version=home.football_meaning.mapping_version,
         home=home,
         away=away,
         scenarios=scenarios,

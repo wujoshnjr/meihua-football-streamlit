@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from qimen.constants import SOLAR_TERM_JU  # noqa: E402
+from qimen.football_ontology import football_ontology_stats  # noqa: E402
 from qimen.knowledge import KNOWLEDGE_FILES, load_knowledge  # noqa: E402
 
 
@@ -52,7 +53,46 @@ def main() -> int:
         if item["source_id"] not in sources:
             raise AssertionError(f"格局 {item['name']} 來源不存在")
 
-    print(f"OK: {sum(len(v) for v in entities.values() if isinstance(v, list))} 個核心實體、{len(patterns)} 個格局、24 節氣。")
+    ontology = data["football_ontology.json"]
+    expected_mappings = {
+        "palaces": 9,
+        "doors": 8,
+        "stars": 9,
+        "deities": 8,
+        "stems": 10,
+        "branches": 12,
+        "seasonal_states": 5,
+        "structural_states": 8,
+        "patterns": len(patterns),
+    }
+    dimensions = {item["id"] for item in ontology["dimensions"]}
+    for section, count in expected_mappings.items():
+        mappings = ontology["mappings"][section]
+        if len(mappings) != count:
+            raise AssertionError(f"football {section} 應有 {count} 筆")
+        require_unique(mappings, "key", f"football {section}")
+        for item in mappings:
+            if not set(item["dimensions"]).issubset(dimensions):
+                raise AssertionError(f"足球義 {item['key']} 使用不存在的維度")
+            for field in ("possible_meanings", "observable_signals", "counter_signals"):
+                if not item.get(field):
+                    raise AssertionError(f"足球義 {item['key']} 缺少 {field}")
+    dimension_sources = {
+        source_id
+        for item in ontology["dimensions"]
+        for source_id in item["source_ids"]
+    }
+    if not dimension_sources.issubset(sources):
+        raise AssertionError(f"足球維度來源不存在：{sorted(dimension_sources - sources)}")
+    stats = football_ontology_stats()
+    if stats["atomic_units"] != ontology["coverage_contract"]["mapped_atomic_units"]:
+        raise AssertionError("足球義原子條目數與 coverage_contract 不一致")
+
+    print(
+        f"OK: {sum(len(v) for v in entities.values() if isinstance(v, list))} 個核心實體、"
+        f"{len(patterns)} 個格局、24 節氣、{stats['atomic_units']} 個足球義單元、"
+        f"{stats['core_combinations']:,} 個核心組合。"
+    )
     return 0
 
 

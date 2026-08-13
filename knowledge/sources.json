@@ -1,5 +1,5 @@
 {
-  "schema_version": "qimen-sources-v1.0.0",
+  "schema_version": "qimen-sources-v1.1.0",
   "sources": [
     {
       "id":"dunjia-yanyi",
@@ -32,12 +32,70 @@
       "url":"https://github.com/6tail/lunar-python",
       "use":"由事件時刻計算八字干支、前後精確節氣；固定版本 1.4.8。",
       "license_note":"MIT；程式依官方 API 使用。"
+    },
+    {
+      "id":"statsbomb-open-data",
+      "title":"Hudl StatsBomb Open Data",
+      "type":"football_data_primary_source",
+      "url":"https://github.com/hudl/open-data",
+      "use":"定義可觀察的比賽事件、比賽階段、射門結果與守門事件標籤。",
+      "license_note":"依官方儲存庫授權與引用要求使用；本站只保存分類摘要。"
+    },
+    {
+      "id":"statsbomb-playing-style",
+      "title":"StatsBomb：Modelling Team Playing Style",
+      "type":"football_method_primary_source",
+      "url":"https://blogarchive.statsbomb.com/articles/soccer/modelling-team-playing-style/",
+      "use":"區分持球事件與無球事件，支援控球、推進、施壓與轉換等足球維度。",
+      "license_note":"僅連結與摘要。"
+    },
+    {
+      "id":"fifa-football-language",
+      "title":"FIFA Football Language",
+      "type":"official_football_framework",
+      "url":"https://inside.fifa.com/innovation/football-data",
+      "use":"提供跨賽事分析的共同足球語言與事件框架背景。",
+      "license_note":"僅連結與摘要。"
+    },
+    {
+      "id":"ifab-laws",
+      "title":"IFAB Laws of the Game",
+      "type":"official_rules",
+      "url":"https://www.theifab.com/laws-of-the-game-documents/",
+      "use":"界定重新開始、比賽狀態及官方規則語境。",
+      "license_note":"僅連結與摘要；規則變更時需更新版本。"
+    },
+    {
+      "id":"ifab-law-12",
+      "title":"IFAB Law 12：Fouls and Misconduct",
+      "type":"official_rules",
+      "url":"https://www.theifab.com/laws/latest/fouls-and-misconduct/",
+      "use":"界定犯規、不當行為、紀律處分與相關比賽事件。",
+      "license_note":"僅連結與摘要；規則變更時需更新版本。"
+    },
+    {
+      "id":"ifab-var",
+      "title":"IFAB VAR Protocol",
+      "type":"official_rules",
+      "url":"https://www.theifab.com/laws/latest/video-assistant-referee-var-protocol/",
+      "use":"界定 VAR 可介入事件與覆核語境。",
+      "license_note":"僅連結與摘要；規則變更時需更新版本。"
+    },
+    {
+      "id":"project-football-ontology",
+      "title":"本專案足球語義規約 v2",
+      "type":"project_application_spec",
+      "url":"https://github.com/wujoshnjr/meihua-football-streamlit/blob/main/docs/FOOTBALL_MEANINGS.md",
+      "use":"保存奇門符號到足球情境的類比規則、組合順序、反證要求與宣稱邊界。",
+      "license_note":"專案應用規約；不冒充古籍內容或統計模型。"
     }
   ],
   "source_policy": [
     "古籍用來追溯概念與條件，不把單一抄本宣稱為所有流派唯一標準。",
     "天文與曆法優先使用官方資料或所採套件的一手程式碼。",
     "每個自動判定必須能追到方法版本與條件；傳承有爭議者標為 knowledge_only。",
-    "足球映射屬本專案應用規約，不偽稱古籍原有足球勝負算法。"
+    "足球映射屬本專案應用規約，不偽稱古籍原有足球勝負算法。",
+    "足球事件標籤優先採官方規則或資料供應者一手文件；應用類比與外部事件分類分欄保存。",
+    "來源或規則更新不會回寫既有排盤；必須提升 schema／mapping 版本並保留歷史匯出。"
   ]
 }

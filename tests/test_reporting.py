@@ -25,4 +25,7 @@ def test_bundle_fingerprint_and_markdown(calendar_context):
     report = render_markdown(match, board, reading)
     assert "奇門遁甲足球賽前研究報告" in report
     assert "九宮盤" in report
+    assert "完整足球義" in report
+    assert "可觀察訊號" in report
+    assert "反證條件" in report
     assert "不是勝率" in report
