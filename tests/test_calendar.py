@@ -26,7 +26,7 @@ def test_sexagenary_cycle_is_complete_and_unique():
         ("甲子", "甲子旬", "戊", ("戌", "亥"), 0),
         ("癸酉", "甲子旬", "戊", ("戌", "亥"), 9),
         ("甲戌", "甲戌旬", "己", ("申", "酉"), 0),
-        ("癸丑", "甲寅旬", "癸", ("子", "丑"), 9),
+        ("癸亥", "甲寅旬", "癸", ("子", "丑"), 9),
     ],
 )
 def test_xun_lookup(ganzhi, xun, instrument, void, offset):
