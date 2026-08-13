@@ -60,3 +60,11 @@
 - 門宮相剋的術語在部分傳承互換；本版明定「門剋宮＝門迫，宮剋門＝宮迫」。
 
 因此報告永遠顯示方法版本，不能只保存一張沒有規則資訊的盤圖。
+
+## 時間基準的技術邊界
+
+本版使用 [IANA Time Zone Database](https://www.iana.org/time-zones) 名稱，而不是只保存 `UTC+8` 等固定偏移；這讓歷史夏令時間、法定偏移更動及重複／不存在的民用時刻可被檢查。Python 實作依 [`zoneinfo`](https://docs.python.org/3/library/zoneinfo.html) 語義。
+
+真太陽時至少需要經度、時區中央經線與均時差。[NOAA 太陽位置公式](https://gml.noaa.gov/grad/solcalc/solareqns.PDF)可提供天文校正，但它只回答「如何算太陽時」，不回答「哪個奇門流派應否採太陽時」。因此真太陽時仍標為 `knowledge_only`；若實作必須新增方法 ID、保存座標與校正分鐘，並用邊界盤例測試。
+
+起局後的判讀、主客與 306 組關係矩陣詳見 [起局與解盤指南](READING_GUIDE.md)。

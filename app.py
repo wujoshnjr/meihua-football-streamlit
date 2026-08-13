@@ -15,6 +15,14 @@ from qimen.football_ontology import (
     load_football_ontology,
     search_football_meanings,
 )
+from qimen.interpretation import (
+    RELATION_TYPES,
+    build_interpretation_guide,
+    focus_topics,
+    interpretation_stats,
+    load_interpretation_knowledge,
+    search_relation_readings,
+)
 from qimen.knowledge import knowledge_stats, load_knowledge, search_knowledge
 from qimen.protocol import EvidenceItem, MatchInput
 from qimen.reporting import build_bundle, render_html, render_markdown
@@ -124,6 +132,19 @@ def _render_football_meaning(meaning, *, reading_limit: int | None = None) -> No
     st.caption(f"可信度標籤：{meaning.confidence}｜{meaning.boundary}")
 
 
+def _relation_rows(relations) -> list[dict[str, str]]:
+    return [{
+        "類型": item.relation_label,
+        "組合": f"{item.first}（{item.first_element}）→ {item.second}（{item.second_element}）",
+        "五行方向": item.element_relation,
+        "古典格名": item.classical_pattern or "—",
+        "摘要": item.summary,
+        "權威層級": item.authority,
+        "注意": item.caution,
+        "來源": item.source_id,
+    } for item in relations]
+
+
 st.title("奇門遁甲足球賽前研究系統")
 st.caption(f"時家奇門・轉盤・拆補法｜版本 {__version__}")
 st.markdown(
@@ -145,6 +166,21 @@ with st.sidebar:
     st.text_input("IANA 時區", value="Asia/Taipei", key="timezone_name", help="例如 Asia/Taipei、Europe/London")
     st.text_input("場館", value="待確認", key="venue")
     st.text_input("城市", value="Taipei", key="city")
+    focus_items = focus_topics()
+    focus_names = {item["id"]: item["name"] for item in focus_items}
+    with st.expander("起局前鎖定", expanded=True):
+        st.text_area(
+            "固定問題",
+            value=focus_items[0]["question_prompt"],
+            key="question_input",
+            help="問題與焦點會在按下建立盤面時封存；之後修改須重建盤面。",
+        )
+        st.selectbox(
+            "解盤焦點",
+            [item["id"] for item in focus_items],
+            format_func=lambda item_id: focus_names[item_id],
+            key="focus_id",
+        )
     cast_button = st.button("建立／重建奇門盤", type="primary", use_container_width=True)
 
     if cast_button:
@@ -155,6 +191,9 @@ with st.sidebar:
             )
             match = _build_match(local_event)
             errors = match.validate()
+            locked_question = st.session_state.question_input.strip()
+            if not locked_question:
+                errors.append("固定問題不可空白")
             if errors:
                 for error in errors:
                     st.error(error)
@@ -162,10 +201,21 @@ with st.sidebar:
                 with st.spinner("按固定方法起局…"):
                     board = cast_qimen(local_event, match.timezone_name)
                     reading = interpret_football(board)
+                    locked_at = datetime.now(tz=local_event.tzinfo)
+                    guide = build_interpretation_guide(
+                        board,
+                        question=locked_question,
+                        focus_id=st.session_state.focus_id,
+                        match=match,
+                        locked_at=locked_at,
+                        locked_before_cast=True,
+                    )
                 st.session_state.match = match
                 st.session_state.board = board
                 st.session_state.reading = reading
-                st.success("奇門盤已建立")
+                st.session_state.interpretation_guide = guide
+                st.session_state.question_locked_at = locked_at
+                st.success("奇門盤與解盤問題已鎖定")
         except (ValueError, LocalTimeError, RuntimeError) as exc:
             st.error(str(exc))
 
@@ -176,8 +226,8 @@ with st.sidebar:
     st.write("主隊日干｜客隊時干")
 
 
-tab_board, tab_reading, tab_football_knowledge, tab_knowledge, tab_protocol, tab_export = st.tabs(
-    ["九宮排盤", "賽事研究", "足球義理庫", "奇門知識庫", "資料協議", "匯出與稽核"]
+tab_board, tab_guide, tab_reading, tab_football_knowledge, tab_knowledge, tab_protocol, tab_export = st.tabs(
+    ["九宮排盤", "起局／解盤助手", "賽事研究", "足球義理庫", "奇門知識庫", "資料協議", "匯出與稽核"]
 )
 
 with tab_board:
@@ -217,6 +267,125 @@ with tab_board:
 
         with st.expander("方法與可重現性"):
             st.json({"method": board.to_dict()["method"], "warnings": board.warnings})
+
+with tab_guide:
+    guide_stats = interpretation_stats()
+    g1, g2, g3, g4, g5 = st.columns(5)
+    g1.metric("盤前校驗", guide_stats["precast_checks"])
+    g2.metric("逐層判讀", guide_stats["reading_layers"])
+    g3.metric("足球焦點", guide_stats["focus_topics"])
+    g4.metric("關係矩陣", guide_stats["total_relations"])
+    g5.metric("天地盤干", guide_stats["relation_counts"]["stem_pair"])
+    st.caption(guide_stats["claim_boundary"])
+
+    if "interpretation_guide" in st.session_state:
+        guide = st.session_state.interpretation_guide
+        st.subheader("已鎖定的問題與盤前稽核")
+        st.info(f"問題：{guide.question}\n\n焦點：{guide.focus_name}｜鎖定：{guide.locked_at}")
+        if (
+            st.session_state.question_input.strip() != guide.question
+            or st.session_state.focus_id != guide.focus_id
+        ):
+            st.warning("側欄的問題或焦點已變更，但目前盤仍使用上次鎖定值；請重建盤面才會生效。")
+        audit_rows = [{
+            "狀態": item.status,
+            "校驗": item.name,
+            "內容": item.detail,
+        } for item in guide.audit.checks]
+        st.dataframe(pd.DataFrame(audit_rows), hide_index=True, use_container_width=True)
+        if guide.audit.overall == "FAIL":
+            st.error("盤前稽核有阻斷項：" + "；".join(guide.audit.blockers))
+        elif guide.audit.overall == "WARN":
+            st.warning("盤前稽核可繼續，但仍有警告；最常見原因是尚未加入外部賽前證據。")
+        else:
+            st.success("盤前稽核全部通過。")
+
+        left, right = st.columns(2)
+        with left:
+            st.markdown("**焦點鏡頭（不取代雙方固定用神）**")
+            st.write("主符號：" + "、".join(guide.focus["primary_symbols"]))
+            st.write("第二層：" + "、".join(guide.focus["secondary_lenses"]))
+            st.write("先驗證：" + guide.focus["observable"])
+            st.write("反證：" + guide.focus["counterevidence"])
+        with right:
+            st.markdown("**全局訊號**")
+            st.markdown("\n".join(f"- {item}" for item in guide.global_signals))
+        with st.expander("十層解盤順序", expanded=True):
+            st.markdown("\n".join(f"- {item}" for item in guide.reading_order))
+
+        st.subheader("本盤逐宮關係")
+        palace_labels = {
+            item.palace_name: item for item in guide.palace_guides
+        }
+        selected_palace_guide = palace_labels[
+            st.selectbox("選擇宮位", list(palace_labels), key="guide_palace")
+        ]
+        st.write(selected_palace_guide.stack)
+        st.caption(
+            "結構修飾："
+            + ("、".join(selected_palace_guide.structural_modifiers) or "—")
+        )
+        if selected_palace_guide.relations:
+            st.dataframe(
+                pd.DataFrame(_relation_rows(selected_palace_guide.relations)),
+                hide_index=True,
+                use_container_width=True,
+            )
+        else:
+            st.info("中五依本版寄坤二；本宮沒有獨立門、星、神關係，請查看坤二宮。")
+        st.markdown("\n".join(f"- {item}" for item in selected_palace_guide.verification_questions))
+    else:
+        st.info("先在側欄固定問題與焦點並建立盤面；下方 306 組關係知識仍可先查詢。")
+
+    st.subheader("完整關係矩陣查詢")
+    rq1, rq2 = st.columns([2, 1])
+    with rq1:
+        relation_query = st.text_input(
+            "搜尋組合、格名或五行方向",
+            placeholder="例如：青龍返首、門迫、天沖、後生前",
+            key="relation_query",
+        )
+    with rq2:
+        relation_type_label = st.selectbox(
+            "關係類型",
+            ["全部", *RELATION_TYPES.values()],
+            key="relation_type_filter",
+        )
+    relation_type = next(
+        (key for key, label in RELATION_TYPES.items() if label == relation_type_label),
+        None,
+    )
+    relation_results = search_relation_readings(relation_query, relation_type=relation_type)
+    st.caption(f"找到 {len(relation_results)} 組；矩陣總覆蓋 306 組。")
+    if relation_results:
+        st.dataframe(
+            pd.DataFrame(_relation_rows(relation_results)),
+            hide_index=True,
+            use_container_width=True,
+        )
+
+    interpretation_data = load_interpretation_knowledge()
+    with st.expander("應期候選、時間基準與常見錯誤"):
+        st.markdown("**應期候選（不自動指定日期或分鐘）**")
+        st.dataframe(pd.DataFrame([{
+            "名稱": item["name"],
+            "規則": item["rule"],
+            "狀態": item["automation"],
+            "注意": item["caution"],
+        } for item in interpretation_data["timing_rules"]]), hide_index=True, use_container_width=True)
+        st.markdown("**時間基準版本**")
+        st.dataframe(pd.DataFrame([{
+            "名稱": item["name"],
+            "定義": item["definition"],
+            "狀態": item["status"],
+            "必要欄位": "、".join(item["required_fields"]),
+        } for item in interpretation_data["time_basis_options"]]), hide_index=True, use_container_width=True)
+        st.markdown("**高風險錯誤**")
+        st.dataframe(pd.DataFrame([{
+            "錯誤": item["name"],
+            "症狀": item["symptom"],
+            "預防": item["prevention"],
+        } for item in interpretation_data["error_traps"]]), hide_index=True, use_container_width=True)
 
 with tab_reading:
     if _require_board():
@@ -441,8 +610,15 @@ with tab_export:
         match = st.session_state.match
         board = st.session_state.board
         reading = st.session_state.reading
-        markdown_report = render_markdown(match, board, reading)
-        bundle = build_bundle(match, board, reading)
+        guide = st.session_state.interpretation_guide
+        markdown_report = render_markdown(match, board, reading, guide=guide)
+        bundle = build_bundle(
+            match,
+            board,
+            reading,
+            guide=guide,
+            locked_at=st.session_state.question_locked_at,
+        )
         bundle_json = json.dumps(bundle, ensure_ascii=False, indent=2)
         html_report = render_html(markdown_report)
 

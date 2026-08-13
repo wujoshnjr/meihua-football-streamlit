@@ -10,6 +10,7 @@ sys.path.insert(0, str(ROOT))
 
 from qimen.constants import SOLAR_TERM_JU  # noqa: E402
 from qimen.football_ontology import football_ontology_stats  # noqa: E402
+from qimen.interpretation import interpretation_stats  # noqa: E402
 from qimen.knowledge import KNOWLEDGE_FILES, load_knowledge  # noqa: E402
 
 
@@ -88,10 +89,44 @@ def main() -> int:
     if stats["atomic_units"] != ontology["coverage_contract"]["mapped_atomic_units"]:
         raise AssertionError("足球義原子條目數與 coverage_contract 不一致")
 
+    interpretation = data["interpretation.json"]
+    interpretation_sections = (
+        "precast_checklist",
+        "reading_layers",
+        "classic_principles",
+        "role_models",
+        "focus_topics",
+        "timing_rules",
+        "time_basis_options",
+        "external_evidence_protocol",
+        "error_traps",
+    )
+    for section in interpretation_sections:
+        items = interpretation[section]
+        require_unique(items, "id", section)
+        for item in items:
+            if not item.get("source_ids"):
+                raise AssertionError(f"解盤條目 {item['id']} 缺少 source_ids")
+            unknown_sources = set(item["source_ids"]) - sources
+            if unknown_sources:
+                raise AssertionError(f"解盤條目 {item['id']} 來源不存在：{sorted(unknown_sources)}")
+    reading_stats = interpretation_stats()
+    contract = interpretation["relation_contract"]
+    if reading_stats["total_relations"] != contract["total_relations"]:
+        raise AssertionError("解盤關係矩陣與 relation_contract 不一致")
+    expected_relations = {
+        "stem_pair": contract["visible_stem_pairs"],
+        "star_door": contract["star_door_pairs"],
+        "door_palace": contract["door_palace_pairs"],
+        "star_palace": contract["star_palace_pairs"],
+    }
+    if reading_stats["relation_counts"] != expected_relations:
+        raise AssertionError("解盤關係類型筆數不完整")
+
     print(
         f"OK: {sum(len(v) for v in entities.values() if isinstance(v, list))} 個核心實體、"
         f"{len(patterns)} 個格局、24 節氣、{stats['atomic_units']} 個足球義單元、"
-        f"{stats['core_combinations']:,} 個核心組合。"
+        f"{stats['core_combinations']:,} 個核心組合、{reading_stats['total_relations']} 組解盤關係。"
     )
     return 0
 

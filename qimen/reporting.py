@@ -7,6 +7,7 @@ from html import escape
 from typing import Any
 
 from .football import FootballReading
+from .interpretation import InterpretationGuide
 from .models import QimenBoard
 from .protocol import MatchInput
 
@@ -20,18 +21,21 @@ def build_bundle(
     board: QimenBoard,
     reading: FootballReading,
     *,
+    guide: InterpretationGuide | None = None,
     locked_at: datetime | None = None,
 ) -> dict[str, Any]:
     """Return one audit-friendly export with data, method and integrity status."""
 
     core = {
-        "schema_version": "qimen-football-bundle-v1.1.0",
+        "schema_version": "qimen-football-bundle-v1.2.0",
         "match": match.to_dict(),
         "board": board.to_dict(),
         "football_reading": reading.to_dict(),
+        "interpretation_guide": guide.to_dict() if guide else None,
         "locked_at": locked_at.isoformat() if locked_at else None,
         "boundaries": {
             "knowledge_application_separation": True,
+            "question_locked_before_cast": bool(guide and guide.audit.checks[-1].status == "PASS"),
             "automatic_winner": False,
             "automatic_fixed_score": False,
             "probability_claim": False,
@@ -44,7 +48,13 @@ def build_bundle(
     return core
 
 
-def render_markdown(match: MatchInput, board: QimenBoard, reading: FootballReading) -> str:
+def render_markdown(
+    match: MatchInput,
+    board: QimenBoard,
+    reading: FootballReading,
+    *,
+    guide: InterpretationGuide | None = None,
+) -> str:
     rows = []
     for palace in (4, 9, 2, 3, 5, 7, 8, 1, 6):
         state = board.palaces[palace]
@@ -69,6 +79,31 @@ def render_markdown(match: MatchInput, board: QimenBoard, reading: FootballReadi
         f"- {hit.name}｜{hit.condition}｜{hit.reading}｜注意：{hit.caution}"
         for hit in board.patterns
     ] or ["- 本盤未命中目前版本可自動判定的格局。"]
+
+    guide_lines: list[str] = []
+    if guide:
+        guide_lines = [
+            "## 起局／解盤鎖定",
+            "",
+            f"- 固定問題：{guide.question}",
+            f"- 足球焦點：{guide.focus_name}（`{guide.focus_id}`）",
+            f"- 起局時點：{guide.cast_basis}",
+            f"- 鎖定時間：{guide.locked_at or '未提供'}",
+            f"- 盤前稽核：{guide.audit.overall}",
+            f"- 主隊用神：{guide.home_use_god.original_stem}／{guide.home_use_god.palace_name}",
+            f"- 客隊用神：{guide.away_use_god.original_stem}／{guide.away_use_god.palace_name}",
+            "",
+            "### 全局訊號",
+            "",
+            *[f"- {item}" for item in guide.global_signals],
+            "",
+            "### 十層判讀順序",
+            "",
+            *[f"- {item}" for item in guide.reading_order],
+            "",
+            f"> {guide.boundary}",
+            "",
+        ]
 
     def semantic_lines(label, profile):
         meaning = profile.football_meaning
@@ -109,6 +144,7 @@ def render_markdown(match: MatchInput, board: QimenBoard, reading: FootballReadi
         f"值符：{board.chief_star}落{board.chief_star_palace}宮；"
         f"值使：{board.chief_door}落{board.chief_door_palace}宮。",
         "",
+        *guide_lines,
         "## 九宮盤",
         "",
         "| 宮 | 天盤干 | 地盤干 | 九星 | 八門 | 八神 | 狀態 |",
