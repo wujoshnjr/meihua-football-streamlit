@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pytest
 
-from qimen.models import CalendarContext
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from qimen.models import CalendarContext  # noqa: E402
 
 
 @pytest.fixture
