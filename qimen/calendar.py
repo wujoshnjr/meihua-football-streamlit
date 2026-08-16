@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
+from importlib import metadata
+from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .constants import BRANCHES, STEMS, TERM_NORMALIZATION, XUN_HEADS
@@ -17,6 +19,33 @@ class LocalTimeError(ValueError):
 
 def normalize_term(name: str) -> str:
     return TERM_NORMALIZATION.get(name, name)
+
+
+def detect_tzdb_version() -> str:
+    """Record the timezone ruleset actually available to Python.
+
+    Python may use the ``tzdata`` wheel or the operating system database. We
+    report what is installed and never claim the latest IANA release merely
+    because it exists upstream.
+    """
+
+    try:
+        return f"tzdata-wheel-{metadata.version('tzdata')}"
+    except metadata.PackageNotFoundError:
+        pass
+
+    for candidate in (
+        Path("/usr/share/zoneinfo/tzdata.zi"),
+        Path("/usr/share/lib/zoneinfo/tzdata.zi"),
+    ):
+        try:
+            first_line = candidate.read_text(encoding="utf-8").splitlines()[0]
+        except (OSError, IndexError):
+            continue
+        marker = "# version "
+        if first_line.startswith(marker):
+            return f"system-{first_line.removeprefix(marker).strip()}"
+    return "system-unpinned"
 
 
 def sexagenary_cycle() -> tuple[str, ...]:
@@ -131,4 +160,5 @@ def build_calendar_context(local_datetime: datetime, timezone_name: str) -> Cale
         hour_ganzhi=local_bazi.getTime(),
         day_xun=day_xun,
         day_void_branches=day_void,
+        tzdb_version=detect_tzdb_version(),
     )

@@ -35,6 +35,7 @@ class CalendarContext:
     day_xun: str
     day_void_branches: tuple[str, str]
     source: str = "lunar_python==1.4.8"
+    tzdb_version: str = "unknown"
 
 
 @dataclass

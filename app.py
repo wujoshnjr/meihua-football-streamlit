@@ -7,6 +7,7 @@ import streamlit as st
 
 from qimen.calendar import LocalTimeError, aware_local_datetime
 from qimen.engine import cast_qimen
+from qimen.evaluation import lock_prediction
 from qimen.football import interpret_football
 from qimen.football_ontology import (
     compose_football_meaning,
@@ -24,13 +25,14 @@ from qimen.interpretation import (
     search_relation_readings,
 )
 from qimen.knowledge import knowledge_stats, load_knowledge, search_knowledge
+from qimen.prediction import PrematchModelInput, TeamForm, build_prediction
 from qimen.protocol import EvidenceItem, MatchInput
 from qimen.reporting import build_bundle, render_html, render_markdown
 from version import __version__
 
 
 st.set_page_config(
-    page_title="奇門遁甲足球賽前研究系統",
+    page_title="奇門遁甲足球研究系統・JARVIS",
     page_icon="🧭",
     layout="wide",
 )
@@ -145,10 +147,10 @@ def _relation_rows(relations) -> list[dict[str, str]]:
     } for item in relations]
 
 
-st.title("奇門遁甲足球賽前研究系統")
-st.caption(f"時家奇門・轉盤・拆補法｜版本 {__version__}")
+st.title("奇門遁甲足球研究系統・JARVIS")
+st.caption(f"時家奇門・轉盤・拆補法｜JARVIS Phase 2.1｜版本 {__version__}")
 st.markdown(
-    '<div class="qimen-note">本系統把古典奇門知識與足球應用規約分層。盤內索引只排序候選情境，不自動輸出勝率、固定比分、期望進球或投注建議。</div>',
+    '<div class="qimen-note">奇門層只排序候選情境，不自動輸出勝率；JARVIS 機率層是獨立、尚未校準的 Poisson 基準。奇門特徵目前只記錄、不調整機率，直到時間序列盲測證明有增量。</div>',
     unsafe_allow_html=True,
 )
 
@@ -208,14 +210,21 @@ with st.sidebar:
                         focus_id=st.session_state.focus_id,
                         match=match,
                         locked_at=locked_at,
-                        locked_before_cast=True,
                     )
                 st.session_state.match = match
                 st.session_state.board = board
                 st.session_state.reading = reading
                 st.session_state.interpretation_guide = guide
                 st.session_state.question_locked_at = locked_at
-                st.success("奇門盤與解盤問題已鎖定")
+                st.session_state.pop("prediction", None)
+                st.session_state.pop("prediction_lock", None)
+                st.session_state.pop("prediction_generated_at", None)
+                st.session_state.pop("jarvis_data_as_of", None)
+                st.session_state.pop("jarvis_prematch_confirmed", None)
+                if locked_at < match.event_at:
+                    st.success("奇門盤與解盤問題已在開賽前鎖定")
+                else:
+                    st.warning("奇門盤已建立為回溯／探索盤；不具盤前命中資格。")
         except (ValueError, LocalTimeError, RuntimeError) as exc:
             st.error(str(exc))
 
@@ -226,8 +235,17 @@ with st.sidebar:
     st.write("主隊日干｜客隊時干")
 
 
-tab_board, tab_guide, tab_reading, tab_football_knowledge, tab_knowledge, tab_protocol, tab_export = st.tabs(
-    ["九宮排盤", "起局／解盤助手", "賽事研究", "足球義理庫", "奇門知識庫", "資料協議", "匯出與稽核"]
+(
+    tab_board,
+    tab_guide,
+    tab_reading,
+    tab_prediction,
+    tab_football_knowledge,
+    tab_knowledge,
+    tab_protocol,
+    tab_export,
+) = st.tabs(
+    ["九宮排盤", "起局／解盤助手", "賽事研究", "JARVIS 模型", "足球義理庫", "奇門知識庫", "資料協議", "匯出與稽核"]
 )
 
 with tab_board:
@@ -417,6 +435,277 @@ with tab_reading:
         } for item in reading.scenarios]), hide_index=True, use_container_width=True)
         st.warning(reading.disclaimer, icon="⚠️")
         st.caption("足球映射版本：" + reading.mapping_version + "。此層是本專案規約，不是古籍原有的足球公式。")
+        st.caption("九星旺衰依月支計算；規則版本：" + reading.seasonal_rule_version)
+
+with tab_prediction:
+    st.subheader("JARVIS Phase 2.1：時序訓練、校準與挑戰模型")
+    st.info(
+        "獨立 Poisson 是 champion；Dixon–Coles 只作未驗證 challenger。每筆輸出必須註冊 EARLY 或 LINEUP，"
+        "rho 只能引用 TRAIN artifact，溫度校準只能引用 CALIBRATION artifact；"
+        "並保存來源、資料、足球特徵、奇門特徵、模型規格與 Git commit。奇門權重仍固定為零。"
+    )
+    if _require_board():
+        match = st.session_state.match
+        board = st.session_state.board
+        reading = st.session_state.reading
+        model_now = datetime.now(tz=match.event_at.tzinfo)
+
+        st.markdown("#### 資料時間與聯盟基準")
+        horizon_col, lineup_col = st.columns(2)
+        with horizon_col:
+            forecast_horizon = st.selectbox(
+                "預測時點",
+                ["EARLY", "LINEUP"],
+                format_func=lambda value: "EARLY（最晚 T−6h）" if value == "EARLY" else "LINEUP（最晚 T−30m）",
+                key="jarvis_forecast_horizon",
+            )
+        with lineup_col:
+            lineup_status = st.selectbox(
+                "官方先發狀態",
+                ["UNAVAILABLE", "PARTIAL", "OFFICIAL_BOTH"],
+                key="jarvis_lineup_status",
+                help="LINEUP 時點必須為 OFFICIAL_BOTH，且證據表需有可覆蓋雙方的官方來源。",
+            )
+        horizon_cutoff = match.cutoff_for(forecast_horizon)
+        default_data_as_of = min(model_now, horizon_cutoff).replace(microsecond=0).isoformat()
+        st.caption(f"本時點最晚封盤界線：{horizon_cutoff.isoformat()}")
+
+        source_col, cutoff_col = st.columns(2)
+        with source_col:
+            data_source = st.text_input(
+                "統計資料來源／版本",
+                value="手動輸入；來源 URL 請另存於資料協議",
+                key="jarvis_data_source",
+            )
+        with cutoff_col:
+            data_as_of_text = st.text_input(
+                "統計資料截至時間（ISO 8601）",
+                value=default_data_as_of,
+                key="jarvis_data_as_of",
+                help="必須含時區，且不可晚於預測鎖定時間。",
+            )
+
+        model_col, rho_col = st.columns(2)
+        with model_col:
+            score_model = st.selectbox(
+                "比分模型",
+                ["INDEPENDENT_POISSON", "DIXON_COLES"],
+                format_func=lambda value: "獨立 Poisson（champion）" if value == "INDEPENDENT_POISSON" else "Dixon–Coles（challenger）",
+                key="jarvis_score_model",
+            )
+        dixon_coles_rho = 0.0
+        rho_source = ""
+        with rho_col:
+            if score_model == "DIXON_COLES":
+                dixon_coles_rho = float(st.number_input(
+                    "Dixon–Coles rho", min_value=-0.25, max_value=0.25, value=0.0, step=0.01,
+                    key="jarvis_dc_rho",
+                    help="必須由歷史訓練窗估計；不可按本場已知比分調整。",
+                ))
+                rho_source = st.text_input(
+                    "rho TRAIN artifact",
+                    value="",
+                    key="jarvis_dc_rho_source",
+                    placeholder="dc-rho-fit:<64 位 SHA-256>",
+                )
+            else:
+                st.caption("champion 不使用低比分相依校正；rho 固定為 0。")
+
+        use_calibration = st.checkbox(
+            "套用已由獨立 CALIBRATION split 擬合的 temperature artifact",
+            key="jarvis_use_temperature_calibration",
+        )
+        calibration_temperature = 1.0
+        calibration_source = ""
+        if use_calibration:
+            calibration_col, calibration_source_col = st.columns(2)
+            with calibration_col:
+                calibration_temperature = float(st.number_input(
+                    "Calibration temperature",
+                    min_value=0.25,
+                    max_value=4.0,
+                    value=1.0,
+                    step=0.01,
+                    key="jarvis_calibration_temperature",
+                    help="只能貼入 qimen.training.fit_temperature_scaler 產生的值。",
+                ))
+            with calibration_source_col:
+                calibration_source = st.text_input(
+                    "CALIBRATION artifact",
+                    value="",
+                    key="jarvis_calibration_source",
+                    placeholder="temperature-fit:<64 位 SHA-256>",
+                )
+
+        league_1, league_2, league_3, league_4 = st.columns(4)
+        with league_1:
+            league_home_mean = st.number_input(
+                "聯盟主場場均進球", min_value=0.10, max_value=5.00, value=1.50, step=0.05,
+                key="jarvis_league_home_mean",
+            )
+        with league_2:
+            league_away_mean = st.number_input(
+                "聯盟客場場均進球", min_value=0.10, max_value=5.00, value=1.20, step=0.05,
+                key="jarvis_league_away_mean",
+            )
+        with league_3:
+            prior_matches = st.number_input(
+                "先驗等效場次", min_value=0.0, max_value=30.0, value=5.0, step=1.0,
+                key="jarvis_prior_matches",
+                help="樣本越少，越向聯盟平均收縮。",
+            )
+        with league_4:
+            xg_weight = st.number_input(
+                "xG 權重", min_value=0.0, max_value=1.0, value=0.65, step=0.05,
+                key="jarvis_xg_weight",
+            )
+
+        home_col, away_col = st.columns(2)
+        team_values: dict[str, dict[str, object]] = {}
+        for column, prefix, label, default_for, default_against in (
+            (home_col, "home", f"主隊：{match.home_team}", 1.50, 1.20),
+            (away_col, "away", f"客隊：{match.away_team}", 1.20, 1.50),
+        ):
+            with column:
+                with st.container(border=True):
+                    st.markdown(f"#### {label}")
+                    matches = st.number_input(
+                        "盤前樣本場次", min_value=0, max_value=100, value=10, step=1,
+                        key=f"jarvis_{prefix}_matches",
+                    )
+                    goals_for = st.number_input(
+                        "場均進球", min_value=0.0, max_value=8.0, value=default_for, step=0.05,
+                        key=f"jarvis_{prefix}_gf",
+                    )
+                    goals_against = st.number_input(
+                        "場均失球", min_value=0.0, max_value=8.0, value=default_against, step=0.05,
+                        key=f"jarvis_{prefix}_ga",
+                    )
+                    use_xg = st.checkbox("提供 xG／xGA", key=f"jarvis_{prefix}_use_xg")
+                    xg_for = xg_against = None
+                    if use_xg:
+                        xg_1, xg_2 = st.columns(2)
+                        with xg_1:
+                            xg_for = st.number_input(
+                                "場均 xG", min_value=0.0, max_value=8.0, value=default_for, step=0.05,
+                                key=f"jarvis_{prefix}_xg",
+                            )
+                        with xg_2:
+                            xg_against = st.number_input(
+                                "場均 xGA", min_value=0.0, max_value=8.0, value=default_against, step=0.05,
+                                key=f"jarvis_{prefix}_xga",
+                            )
+                    team_values[prefix] = {
+                        "matches": int(matches),
+                        "goals_for_per_match": float(goals_for),
+                        "goals_against_per_match": float(goals_against),
+                        "xg_for_per_match": None if xg_for is None else float(xg_for),
+                        "xg_against_per_match": None if xg_against is None else float(xg_against),
+                    }
+
+        prematch_confirmed = st.checkbox(
+            "我確認以上統計只使用截至所填時間、且當時已知的盤前資料",
+            key="jarvis_prematch_confirmed",
+        )
+        if st.button("建立／鎖定 JARVIS 預測", type="primary", key="build_jarvis_prediction"):
+            try:
+                data_as_of = datetime.fromisoformat(data_as_of_text.strip())
+                if data_as_of.tzinfo is None:
+                    raise ValueError("統計資料截至時間必須含時區")
+                generated_at = datetime.now(tz=match.event_at.tzinfo)
+                if data_as_of > generated_at:
+                    raise ValueError("統計資料截至時間不可晚於目前預測鎖定時間")
+                if data_as_of >= match.event_at:
+                    raise ValueError("統計資料截至時間必須早於開賽")
+                model_input = PrematchModelInput(
+                    home=TeamForm(**team_values["home"]),
+                    away=TeamForm(**team_values["away"]),
+                    league_home_goals_per_match=float(league_home_mean),
+                    league_away_goals_per_match=float(league_away_mean),
+                    prior_match_equivalent=float(prior_matches),
+                    xg_weight=float(xg_weight),
+                    data_as_of=data_as_of,
+                    data_source=data_source.strip(),
+                    score_model=score_model,
+                    dixon_coles_rho=dixon_coles_rho,
+                    rho_source=rho_source.strip(),
+                    forecast_horizon=forecast_horizon,
+                    lineup_status=lineup_status,
+                    calibration_temperature=calibration_temperature,
+                    calibration_source=calibration_source.strip(),
+                )
+                prediction = build_prediction(model_input, board, reading, match=match)
+                prediction_lock = None
+                if generated_at < match.event_at and prematch_confirmed:
+                    iso_year, iso_week, _ = match.event_at.date().isocalendar()
+                    prediction_lock = lock_prediction(
+                        match.match_id,
+                        match.event_at,
+                        generated_at,
+                        prediction,
+                        competition=match.competition,
+                        evaluation_block=f"{iso_year}-W{iso_week:02d}",
+                    )
+                st.session_state.prediction = prediction
+                st.session_state.prediction_lock = prediction_lock
+                st.session_state.prediction_generated_at = generated_at
+                if prediction_lock:
+                    st.success("JARVIS 預測已在開賽前鎖定並建立 SHA-256 指紋。")
+                elif generated_at >= match.event_at:
+                    st.warning("比賽已開始或結束：已建立回溯預測，但不會計入盤前準確率。")
+                else:
+                    st.warning("尚未確認盤前資料聲明：已建立探索預測，但未取得盲測鎖定資格。")
+            except (TypeError, ValueError) as exc:
+                st.error(str(exc))
+
+        if "prediction" in st.session_state:
+            prediction = st.session_state.prediction
+            prediction_lock = st.session_state.get("prediction_lock")
+            st.divider()
+            st.markdown("#### 已建立的機率輸出")
+            e1, e2, e3, e4 = st.columns(4)
+            e1.metric("主隊期望進球", f"{prediction.expected_home_goals:.2f}")
+            e2.metric("客隊期望進球", f"{prediction.expected_away_goals:.2f}")
+            e3.metric("1X2 首選", prediction.predicted_result)
+            e4.metric("前兩名差距", f"{prediction.decision_margin:.1%}")
+            st.caption(
+                f"{prediction.forecast_horizon}｜{prediction.score_model}｜"
+                f"{prediction.model_status}｜{prediction.calibration_status}｜先發 {prediction.lineup_status}"
+            )
+            p1, p2, p3 = st.columns(3)
+            p1.metric("主勝", f"{prediction.home_win_probability:.1%}")
+            p2.metric("和局", f"{prediction.draw_probability:.1%}")
+            p3.metric("客勝", f"{prediction.away_win_probability:.1%}")
+            if prediction.calibration_status.startswith("CALIBRATED"):
+                st.caption(
+                    "校準前 1X2："
+                    f"主勝 {prediction.raw_home_win_probability:.1%}｜"
+                    f"和局 {prediction.raw_draw_probability:.1%}｜"
+                    f"客勝 {prediction.raw_away_win_probability:.1%}。"
+                    "比分候選仍取自未校準比分矩陣。"
+                )
+            st.dataframe(pd.DataFrame([{
+                "排名": rank,
+                "比分候選": f"{item.home_goals}–{item.away_goals}",
+                "機率": item.probability,
+            } for rank, item in enumerate(prediction.top_scorelines, 1)]), hide_index=True, use_container_width=True)
+            if prediction_lock:
+                st.success(
+                    f"盤前鎖定 PASS｜{prediction_lock.locked_at.isoformat()}｜"
+                    f"指紋 {prediction_lock.fingerprint_sha256}"
+                )
+            else:
+                st.warning("此輸出沒有合格的盤前鎖定，僅供探索，不得列入正式命中率。")
+            for warning in prediction.data_warnings:
+                st.caption("⚠ " + warning)
+            with st.expander("模型輸入快照與奇門 shadow features"):
+                st.json({
+                    "model_input": prediction.model_input,
+                    "qimen_features": prediction.qimen_features,
+                    "provenance": prediction.provenance,
+                    "score_grid_tail_mass": prediction.score_grid_tail_mass,
+                })
+            st.warning(prediction.disclaimer)
 
 with tab_football_knowledge:
     ontology = load_football_ontology()
@@ -592,8 +881,11 @@ with tab_protocol:
     st.subheader("固定資料規約")
     st.markdown(
         """
-        - `freeze_at = event_at - 6 hours`。
-        - 僅可使用開賽前已發布、且開賽前已擷取的資料。
+        - `EARLY`：資料與預測最晚在 `event_at - 6 hours` 鎖定。
+        - `LINEUP`：資料與預測最晚在 `event_at - 30 minutes` 鎖定，且必須有雙方官方先發來源。
+        - 每筆來源必須符合 `published_at <= retrieved_at <= data_as_of <= locked_at < event_at`。
+        - 歷史資料固定依時間分成 `TRAIN → VALIDATION → CALIBRATION → TEST_UNTOUCHED`，不得隨機打散。
+        - `rho` 只可由 TRAIN artifact 取得；temperature 只可由 CALIBRATION artifact 取得。
         - freeze_at 後只接受重大先發、傷病或停賽更新，並必須對兩隊同步刷新。
         - 結果口徑固定為 90 分鐘加補時，不含延長賽與點球。
         - 賽後資訊只能進評估層，不得回灌或重寫賽前研究。
@@ -611,13 +903,24 @@ with tab_export:
         board = st.session_state.board
         reading = st.session_state.reading
         guide = st.session_state.interpretation_guide
-        markdown_report = render_markdown(match, board, reading, guide=guide)
+        prediction = st.session_state.get("prediction")
+        prediction_lock = st.session_state.get("prediction_lock")
+        markdown_report = render_markdown(
+            match,
+            board,
+            reading,
+            guide=guide,
+            prediction=prediction,
+            prediction_lock=prediction_lock,
+        )
         bundle = build_bundle(
             match,
             board,
             reading,
             guide=guide,
             locked_at=st.session_state.question_locked_at,
+            prediction=prediction,
+            prediction_lock=prediction_lock,
         )
         bundle_json = json.dumps(bundle, ensure_ascii=False, indent=2)
         html_report = render_html(markdown_report)

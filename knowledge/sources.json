@@ -1,5 +1,5 @@
 {
-  "schema_version": "qimen-sources-v1.2.0",
+  "schema_version": "qimen-sources-v1.3.0",
   "sources": [
     {
       "id":"dunjia-yanyi",
@@ -8,6 +8,14 @@
       "url":"https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9",
       "use":"陰陽十八局、九宮、值符值使、星門格局及傳統判讀的文獻依據。",
       "license_note":"公版古籍；本站以結構化摘要為主。"
+    },
+    {
+      "id":"dunjia-yanyi-volume-3",
+      "title":"遁甲演義（四庫全書本）卷三・九星旺相休囚",
+      "type":"primary_classic",
+      "url":"https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9_(%E5%9B%9B%E5%BA%AB%E5%85%A8%E6%9B%B8%E6%9C%AC)/%E5%8D%B73",
+      "use":"逐月支核對九星旺、相、廢、休、囚表；避免以一般四季五行旺衰替代奇門九星規則。",
+      "license_note":"公版古籍；本站只實作結構化月支表。"
     },
     {
       "id":"qimen-daquan",
@@ -96,6 +104,30 @@
       "url":"https://github.com/hudl/open-data",
       "use":"定義可觀察的比賽事件、比賽階段、射門結果與守門事件標籤。",
       "license_note":"依官方儲存庫授權與引用要求使用；本站只保存分類摘要。"
+    },
+    {
+      "id":"dixon-coles-1997",
+      "title":"Dixon & Coles (1997)：Modelling Association Football Scores",
+      "type":"peer_reviewed_method",
+      "url":"https://doi.org/10.1111/1467-9876.00065",
+      "use":"JARVIS 足球基準與後續動態 Poisson／低比分相關修正的研究依據。",
+      "license_note":"僅保存方法摘要與 DOI；不重製論文。"
+    },
+    {
+      "id":"sklearn-time-series-split",
+      "title":"scikit-learn TimeSeriesSplit",
+      "type":"software_primary_source",
+      "url":"https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html",
+      "use":"規範按時間順序切分訓練與測試，防止用未來比賽訓練過去預測。",
+      "license_note":"官方文件；本專案目前依其原則實作評估規約。"
+    },
+    {
+      "id":"sklearn-probability-calibration",
+      "title":"scikit-learn Probability calibration",
+      "type":"software_primary_source",
+      "url":"https://scikit-learn.org/stable/modules/calibration.html",
+      "use":"定義可靠度圖、校準曲線與校準器須使用獨立資料的評估原則。",
+      "license_note":"官方文件；本專案目前先標記機率為未校準。"
     },
     {
       "id":"statsbomb-playing-style",

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 from qimen.engine import cast_qimen
 from qimen.interpretation import (
     all_relation_readings,
@@ -69,7 +71,7 @@ def test_board_guide_locks_question_focus_roles_and_relations(calendar_context):
         question="雙方的逼搶與攻守轉換最可能如何展開？",
         focus_id="pressing_transition",
         match=match,
-        locked_at=calendar_context.local_datetime,
+        locked_at=calendar_context.local_datetime - timedelta(hours=8),
     )
     assert guide.focus_name == "逼搶與攻守轉換"
     assert guide.home_use_god.role == "主隊／日干"
@@ -80,3 +82,29 @@ def test_board_guide_locks_question_focus_roles_and_relations(calendar_context):
     assert len(guide.palace_guides) == 9
     assert any(palace.relations for palace in guide.palace_guides)
     assert "不宣稱窮盡" in guide.boundary
+    lock_check = next(item for item in guide.audit.checks if item.id == "lock_timestamp")
+    assert lock_check.status == "PASS"
+
+
+def test_historical_guide_is_not_mislabelled_as_prematch(calendar_context):
+    match = MatchInput(
+        "HISTORICAL",
+        "Home",
+        "Away",
+        "League",
+        calendar_context.local_datetime,
+        calendar_context.timezone_name,
+        "Stadium",
+        "Taipei",
+    )
+    board = cast_qimen(match.event_at, match.timezone_name, calendar=calendar_context)
+    guide = build_interpretation_guide(
+        board,
+        question="本場雙方最可能呈現哪些可觀察的攻守結構？",
+        match=match,
+        locked_at=calendar_context.local_datetime + timedelta(hours=1),
+        locked_before_cast=True,
+    )
+    lock_check = next(item for item in guide.audit.checks if item.id == "lock_timestamp")
+    assert lock_check.status == "WARN"
+    assert "回溯" in lock_check.detail

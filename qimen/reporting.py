@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-import hashlib
-import json
 from datetime import datetime
 from html import escape
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from .football import FootballReading
+from .integrity import canonical_json as canonical_json, sha256_payload
 from .interpretation import InterpretationGuide
 from .models import QimenBoard
+from .prediction import PredictionResult
 from .protocol import MatchInput
 
-
-def canonical_json(payload: dict[str, Any]) -> str:
-    return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+if TYPE_CHECKING:
+    from .evaluation import LockedPrediction
 
 
 def build_bundle(
@@ -23,28 +22,43 @@ def build_bundle(
     *,
     guide: InterpretationGuide | None = None,
     locked_at: datetime | None = None,
+    prediction: PredictionResult | None = None,
+    prediction_lock: LockedPrediction | None = None,
 ) -> dict[str, Any]:
     """Return one audit-friendly export with data, method and integrity status."""
 
+    lock_check = next(
+        (check for check in guide.audit.checks if check.id == "lock_timestamp"),
+        None,
+    ) if guide else None
     core = {
-        "schema_version": "qimen-football-bundle-v1.2.0",
+        "schema_version": "qimen-football-bundle-v2.2.0",
         "match": match.to_dict(),
         "board": board.to_dict(),
         "football_reading": reading.to_dict(),
         "interpretation_guide": guide.to_dict() if guide else None,
+        "prediction": prediction.to_dict() if prediction else None,
+        "prediction_lock": prediction_lock.to_dict() if prediction_lock else None,
         "locked_at": locked_at.isoformat() if locked_at else None,
         "boundaries": {
             "knowledge_application_separation": True,
-            "question_locked_before_cast": bool(guide and guide.audit.checks[-1].status == "PASS"),
-            "automatic_winner": False,
+            "question_locked_before_cast": bool(lock_check and lock_check.status == "PASS"),
+            "prediction_layer_present": prediction is not None,
+            "prediction_locked_before_kickoff": prediction_lock is not None,
+            "automatic_1x2_argmax": prediction is not None,
+            "automatic_winner": prediction is not None,
             "automatic_fixed_score": False,
-            "probability_claim": False,
+            "probability_claim": prediction is not None,
+            "probability_calibrated": bool(
+                prediction and prediction.calibration_status.startswith("CALIBRATED")
+            ),
+            "qimen_changes_probability": bool(
+                prediction and prediction.qimen_mode != "SHADOW_ONLY"
+            ),
             "scope": match.scope,
         },
     }
-    core["fingerprint_sha256"] = hashlib.sha256(
-        canonical_json(core).encode("utf-8")
-    ).hexdigest()
+    core["fingerprint_sha256"] = sha256_payload(core)
     return core
 
 
@@ -54,6 +68,8 @@ def render_markdown(
     reading: FootballReading,
     *,
     guide: InterpretationGuide | None = None,
+    prediction: PredictionResult | None = None,
+    prediction_lock: LockedPrediction | None = None,
 ) -> str:
     rows = []
     for palace in (4, 9, 2, 3, 5, 7, 8, 1, 6):
@@ -105,6 +121,44 @@ def render_markdown(
             "",
         ]
 
+    prediction_lines: list[str] = []
+    if prediction:
+        score_lines = [
+            f"- {item.home_goals}–{item.away_goals}：{item.probability:.1%}"
+            for item in prediction.top_scorelines
+        ]
+        prediction_lines = [
+            "## JARVIS 機率基準",
+            "",
+            f"- 模型：`{prediction.model_version}`（{prediction.model_status}）",
+            f"- 比分模型：{prediction.score_model}",
+            f"- 預測時點：{prediction.forecast_horizon}｜先發狀態：{prediction.lineup_status}",
+            f"- 校準：{prediction.calibration_status}",
+            f"- 校準 artifact：{prediction.calibration_source or '—'}",
+            f"- 奇門模式：{prediction.qimen_mode}（目前不改動機率）",
+            f"- 期望進球：主隊 {prediction.expected_home_goals:.2f}｜客隊 {prediction.expected_away_goals:.2f}",
+            f"- 1X2：主勝 {prediction.home_win_probability:.1%}｜和局 {prediction.draw_probability:.1%}｜客勝 {prediction.away_win_probability:.1%}",
+            f"- 未校準 1X2：主勝 {prediction.raw_home_win_probability:.1%}｜和局 {prediction.raw_draw_probability:.1%}｜客勝 {prediction.raw_away_win_probability:.1%}",
+            f"- 機率最高結果：{prediction.predicted_result}｜前兩名差距 {prediction.decision_margin:.1%}",
+            f"- 比分矩陣截尾質量：{prediction.score_grid_tail_mass:.6f}",
+            f"- 預測鎖定：{'PASS｜' + prediction_lock.locked_at.isoformat() if prediction_lock else '未通過／回溯模式'}",
+            f"- 預測指紋：{prediction_lock.fingerprint_sha256 if prediction_lock else '—'}",
+            f"- 資料快照指紋：{prediction.provenance['data_snapshot_sha256']}",
+            f"- 足球／奇門特徵指紋：{prediction.provenance['football_feature_sha256']}／{prediction.provenance['qimen_feature_sha256']}",
+            f"- Git commit：{prediction.provenance['git_commit']}",
+            "",
+            "### 機率最高的比分候選",
+            "",
+            *score_lines,
+            "",
+            "### 資料警告",
+            "",
+            *[f"- {warning}" for warning in prediction.data_warnings],
+            "",
+            f"> {prediction.disclaimer}",
+            "",
+        ]
+
     def semantic_lines(label, profile):
         meaning = profile.football_meaning
         return [
@@ -145,6 +199,7 @@ def render_markdown(
         f"值使：{board.chief_door}落{board.chief_door_palace}宮。",
         "",
         *guide_lines,
+        *prediction_lines,
         "## 九宮盤",
         "",
         "| 宮 | 天盤干 | 地盤干 | 九星 | 八門 | 八神 | 狀態 |",
@@ -159,6 +214,7 @@ def render_markdown(
         "",
         f"主隊固定取日干：{reading.home.stem}／{reading.home.palace_name}；"
         f"客隊固定取時干：{reading.away.stem}／{reading.away.palace_name}。",
+        f"九星旺衰：依月支計算；規則版本 `{reading.seasonal_rule_version}`。",
         "",
         *semantic_lines("主隊／日干", reading.home),
         *semantic_lines("客隊／時干", reading.away),
