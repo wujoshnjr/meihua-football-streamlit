@@ -27,6 +27,14 @@ def test_freeze_at_is_six_hours(calendar_context):
     assert match.integrity_status()["overall"] == "PASS"
 
 
+def test_invalid_venue_mode_is_rejected(calendar_context):
+    match = _match(calendar_context)
+    match.venue_mode = "UNKNOWN"  # type: ignore[assignment]
+    errors = match.validate()
+    assert any("venue_mode" in error for error in errors)
+    assert match.integrity_status()["venue_mode"] == "FAIL"
+
+
 def test_postmatch_evidence_is_rejected(calendar_context):
     event = calendar_context.local_datetime
     item = EvidenceItem(

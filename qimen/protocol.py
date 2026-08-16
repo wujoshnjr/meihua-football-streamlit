@@ -9,6 +9,7 @@ EvidenceCategory = Literal[
     "official_schedule", "official_lineup", "injury", "suspension",
     "team_form", "travel", "venue", "weather", "other",
 ]
+VenueMode = Literal["TRUE_HOME", "NEUTRAL"]
 
 
 @dataclass(frozen=True)
@@ -35,8 +36,9 @@ class MatchInput:
     city: str
     evidence: list[EvidenceItem] = field(default_factory=list)
     both_teams_refreshed_after_material_update: bool = False
+    venue_mode: VenueMode = "TRUE_HOME"
     scope: str = "90 分鐘＋補時，不含延長賽與點球"
-    protocol_version: str = "qimen-football-prematch-v1.1.0"
+    protocol_version: str = "qimen-football-prematch-v1.2.0"
 
     @property
     def freeze_at(self) -> datetime:
@@ -59,6 +61,8 @@ class MatchInput:
             errors.append("主客隊名稱不可空白")
         if self.home_team.strip() == self.away_team.strip():
             errors.append("主隊與客隊不可相同")
+        if self.venue_mode not in {"TRUE_HOME", "NEUTRAL"}:
+            errors.append("venue_mode 必須為 TRUE_HOME 或 NEUTRAL")
         if self.scope != "90 分鐘＋補時，不含延長賽與點球":
             errors.append("勝負口徑必須鎖定為 90 分鐘＋補時，不含延長賽與點球")
 
@@ -93,6 +97,7 @@ class MatchInput:
             "source_chronology": "PASS" if not any("晚於擷取時間" in e for e in errors) else "FAIL",
             "freeze_policy": "PASS" if not any("freeze_at" in e for e in errors) else "FAIL",
             "symmetric_update": "PASS" if not any("同步刷新" in e for e in errors) else "FAIL",
+            "venue_mode": "PASS" if not any("venue_mode" in e for e in errors) else "FAIL",
             "scope_lock": "PASS" if not any("勝負口徑" in e for e in errors) else "FAIL",
             "overall": "PASS" if not errors else "FAIL",
         }
