@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from math import exp, isfinite, log
+from math import exp, isfinite
 from typing import Any, Iterable, Mapping
 
 import numpy as np
