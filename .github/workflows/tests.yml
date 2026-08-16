@@ -1,10 +1,23 @@
 name: tests
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main, "agent/**"]
+  pull_request:
+
+permissions:
+  contents: read
 
 jobs:
-  payload-staging:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "v7.2.0 payload staging"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: python -m pytest -q
+      - run: python tools/validate_knowledge.py
