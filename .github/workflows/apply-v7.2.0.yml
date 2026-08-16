@@ -60,6 +60,22 @@ jobs:
           set -euo pipefail
           rsync -a --delete --exclude='.git' /tmp/v720/meihua-football-streamlit/ ./
 
+      - name: Apply targeted Ruff F401 fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("qimen/reporting.py")
+          text = path.read_text(encoding="utf-8")
+          old = "from .integrity import canonical_json, sha256_payload"
+          new = "from .integrity import sha256_payload"
+          if old not in text:
+              raise SystemExit("Expected Ruff F401 import was not found")
+          path.write_text(text.replace(old, new, 1), encoding="utf-8")
+          PY
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
