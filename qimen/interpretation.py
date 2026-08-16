@@ -291,7 +291,8 @@ def build_precast_audit(
     question: str,
     focus_id: str,
     match: MatchInput | None = None,
-    locked_before_cast: bool = True,
+    locked_at: datetime | None = None,
+    locked_before_cast: bool | None = None,
 ) -> PrecastAudit:
     focus = focus_topic(focus_id)
     checks: list[AuditCheck] = []
@@ -361,11 +362,33 @@ def build_precast_audit(
         "PASS" if focus.get("counterevidence") else "FAIL",
         focus.get("counterevidence", "缺少反證。"),
     ))
+    event_at = match.event_at if match else board.calendar.local_datetime
+    if locked_before_cast is False:
+        lock_status = "WARN"
+        lock_detail = "明確標記為盤後指南；僅供探索，不計入事前命中。"
+    elif locked_at is None:
+        lock_status = "WARN"
+        lock_detail = "未保存鎖定時間；無法證明在開賽前完成，不計入盲測。"
+    elif locked_at.tzinfo is None:
+        lock_status = "FAIL"
+        lock_detail = "鎖定時間缺少時區，無法與開賽時間可靠比較。"
+    elif event_at.tzinfo is None:
+        lock_status = "FAIL"
+        lock_detail = "開賽時間缺少時區，無法驗證盤前鎖定。"
+    elif locked_at < event_at:
+        lock_status = "PASS"
+        lock_detail = f"鎖定 {locked_at.isoformat()}，早於開賽 {event_at.isoformat()}。"
+    else:
+        lock_status = "WARN"
+        lock_detail = (
+            f"鎖定 {locked_at.isoformat()} 不早於開賽 {event_at.isoformat()}；"
+            "這是回溯／探索盤，不計入事前準確率。"
+        )
     checks.append(AuditCheck(
         "lock_timestamp",
         "鎖定時間與指紋",
-        "PASS" if locked_before_cast else "WARN",
-        "問題與焦點已在建立盤面時鎖定。" if locked_before_cast else "此指南在盤後建立，僅供探索，不計入事前命中。",
+        lock_status,
+        lock_detail,
     ))
 
     blockers = tuple(check.detail for check in checks if check.status == "FAIL")
@@ -380,7 +403,7 @@ def build_interpretation_guide(
     focus_id: str = "whole_match",
     match: MatchInput | None = None,
     locked_at: datetime | None = None,
-    locked_before_cast: bool = True,
+    locked_before_cast: bool | None = None,
 ) -> InterpretationGuide:
     focus = focus_topic(focus_id)
     home = _use_god_summary("主隊／日干", board.calendar.day_ganzhi[0], board)
@@ -390,6 +413,7 @@ def build_interpretation_guide(
         question=question,
         focus_id=focus_id,
         match=match,
+        locked_at=locked_at,
         locked_before_cast=locked_before_cast,
     )
     reading_order = tuple(

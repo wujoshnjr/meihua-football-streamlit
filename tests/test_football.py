@@ -1,7 +1,12 @@
 from __future__ import annotations
 
 from qimen.engine import cast_qimen
-from qimen.football import interpret_football, locate_use_stem
+from qimen.football import (
+    SEASONAL_RULE_VERSION,
+    interpret_football,
+    locate_use_stem,
+    seasonal_state,
+)
 
 
 def test_fixed_home_away_mapping_and_boundaries(calendar_context):
@@ -24,6 +29,7 @@ def test_fixed_home_away_mapping_and_boundaries(calendar_context):
     assert reading.home.football_meaning.observable_signals
     assert reading.home.football_meaning.counter_signals
     assert reading.away.football_meaning.observable_signals
+    assert reading.seasonal_rule_version == SEASONAL_RULE_VERSION
 
 
 def test_every_visible_stem_can_be_located(calendar_context):
@@ -34,3 +40,10 @@ def test_every_visible_stem_can_be_located(calendar_context):
     )
     for stem in "乙丙丁戊己庚辛壬癸":
         assert locate_use_stem(board, stem) in range(1, 10)
+
+
+def test_nine_star_season_uses_month_branch_classical_table():
+    assert seasonal_state("水", "未") == ("囚", -1)
+    assert seasonal_state("土", "未") == ("旺", 2)
+    assert seasonal_state("水", "寅") == ("相", 1)
+    assert seasonal_state("水", "申") == ("廢", -2)

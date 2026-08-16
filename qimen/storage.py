@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .reporting import canonical_json
+from .integrity import canonical_json
 
 
 def append_jsonl(path: str | Path, bundle: dict[str, Any]) -> Path:

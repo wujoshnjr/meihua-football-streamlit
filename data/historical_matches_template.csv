@@ -1,0 +1,2 @@
+match_id,competition,event_at,available_at,home_team_id,away_team_id,home_goals,away_goals,home_xg,away_xg,source_payload_sha256
+EXAMPLE-HISTORY-001,Example League,2025-01-01T20:00:00+00:00,2025-01-01T23:00:00+00:00,TEAM-A,TEAM-C,2,1,1.80,0.90,aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa

@@ -1,5 +1,63 @@
 # Changelog
 
+## 7.2.0 — JARVIS 時序訓練與獨立校準
+
+### 新增
+
+- 四層 chronological manifest：TRAIN、VALIDATION、CALIBRATION、TEST_UNTOUCHED；拒絕反向界線、重複 match ID 與任何空層。
+- TRAIN-only Dixon–Coles rho 擬合器，含時間半衰期、profile likelihood 95% 區間、邊界警告及 artifact SHA-256。
+- CALIBRATION-only temperature scaling，保存校準前後 log loss、模型規格指紋與資料指紋。
+- 預測端只接受 `dc-rho-fit:<SHA-256>`／`temperature-fit:<SHA-256>`，不接受手動文字冒充訓練來源。
+- 同時輸出 raw 與 calibrated 1X2；比分矩陣維持 raw，避免把類別校準誤套成精確比分校準。
+- provenance 新增部署 `git_commit`；奇門解禁 gate 要求 champion／challenger 使用相同且正式的 40–64 位 commit。
+- cutoff-only TeamForm builder：固定同聯賽最近 N 場、`available_at <= cutoff`、時間半衰期、有效樣本權重、xG 覆蓋門檻、聯盟基準與來源指紋。
+- `experiment-manifest.schema.json` 及完整訓練／校準測試。
+
+### 邊界
+
+- 已知的邁阿密 3–2、法國 0–2、挪威 1–1 沒有進入 TRAIN、VALIDATION 或 CALIBRATION，也沒有用來選 rho 或 temperature。
+- 新元件建立的是可驗證的準確率改善路徑；沒有真實歷史資料 rolling backtest 前，仍不宣稱準確率已提高。
+
+## 7.1.0 — JARVIS 時序與增量驗證核心
+
+### 新增
+
+- `EARLY`（T−6h）及 `LINEUP`（T−30m）雙封盤；LINEUP 必須確認並連結雙方官方先發來源。
+- `published_at <= retrieved_at <= data_as_of <= locked_at < event_at` 完整時間鏈驗證。
+- 來源清單、資料快照、足球特徵、奇門特徵及模型規格的獨立 SHA-256 指紋，並保存實際 tzdb 版本。
+- Dixon–Coles 低比分 challenger；rho 必須附歷史訓練窗來源，無效校正係數會被拒絕。
+- Macro-F1、和局召回、coverage、top-label／classwise ECE，以及 competition／matchweek 配對區塊 bootstrap。
+- 5,000 場 untouched blind sample、95% CI、多聯賽、多時窗與校準條件組成的奇門解禁閘門；只輸出人工審查資格，永不自動啟用。
+- StatsBomb Open Data 本地快照 provider 與 Draft 2020-12 預測鎖 JSON Schema。
+
+### 邊界
+
+- 本版沒有用邁阿密 3–2 或任何已知賽果估計 rho、模型權重或奇門方向。
+- Dixon–Coles 尚未成為 champion；在完整時序回測與獨立校準前仍標為 `CHALLENGER_UNVALIDATED`。
+
+## 7.0.0 — JARVIS 可稽核預測基準
+
+### 新增
+
+- 獨立於奇門語義的 JARVIS Poisson 足球基準：攻防率收縮、可選 xG／xGA、主客場聯盟均值、期望進球、1X2 與前五比分候選。
+- `data_as_of`、資料來源、盤前聲明、`locked_at < event_at` 驗證及預測 SHA-256 指紋。
+- 奇門盤轉為版本化 shadow features；本版權重固定為零，不以單場賽果回填權重。
+- 賽後 log loss、Brier、RPS、1X2 top-1 與正確比分 top-1／top-3 評估接口及彙總函式。
+- JARVIS Streamlit 操作頁、模型輸入快照、資料警告、鎖定狀態與 JSON／Markdown／HTML 匯出。
+- `docs/JARVIS_MODEL.md` 模型卡與 `data/jarvis_prediction_template.csv` 批次資料模板。
+- Dixon–Coles、時間序列切分、機率校準與 StatsBomb 開放資料方法來源。
+
+### 修正
+
+- 九星旺衰不再用一般四季五行粗分，改按《遁甲演義》卷三的月支旺、相、廢、休、囚表，規則版本為 `qimen-nine-star-month-branch-v1.0.0`。
+- 盤前稽核不再接受硬編碼布林值冒充鎖定；改為實際比較帶時區的鎖定時間與開賽時間。
+- 歷史／盤後建立的指南與預測明確標為回溯探索，不納入正式準確率。
+
+### 邊界
+
+- JARVIS v0.1 尚未校準，只是建立後續 Dixon–Coles、情境資料與奇門增量實驗的可比較基準。
+- 機率最高比分只是候選，不是固定比分；所有輸出仍非投注建議。
+
 ## 6.2.0 — 起局與解盤助手
 
 ### 新增

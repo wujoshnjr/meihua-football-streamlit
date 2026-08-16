@@ -1,0 +1,2 @@
+match_id,event_at,competition,evaluation_block,payload_sha256
+EXAMPLE-001,2020-01-01T20:00:00+00:00,Example League,2020-W01,aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa

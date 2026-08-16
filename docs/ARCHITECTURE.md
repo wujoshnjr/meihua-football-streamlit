@@ -18,9 +18,23 @@ flowchart TD
     P[賽前證據協議] --> F
     P --> Q
     F --> G[候選情境排序]
+    P --> M[JARVIS champion／challenger]
+    O[StatsBomb 本地快照] --> M
+    O --> T[四層 chronological manifest]
+    O --> FS[cutoff-only TeamForm snapshot]
+    T --> R[TRAIN-only rho artifact]
+    T --> C2[CALIBRATION-only temperature artifact]
+    R --> M
+    C2 --> M
+    FS --> M
+    D --> X[奇門 shadow features]
+    X -. 權重為零 .-> M
+    M --> V[盤前預測鎖與賽後評分]
     D --> H[稽核匯出]
     P --> H
     G --> H
+    M --> H
+    V --> H
 ```
 
 ## 模組責任
@@ -33,13 +47,18 @@ flowchart TD
 | `qimen.football_ontology` | 足球義反查、層次組合、五行關係與覆蓋統計 | 勝負或統計機率 |
 | `qimen.interpretation` | 盤前稽核、固定焦點、306 組關係矩陣、逐宮／逐層指南 | 改動排盤、杜撰古訣或自動應期 |
 | `qimen.football` | 盤前固定主客用神、盤內情境排序 | 統計機率或賠率 |
-| `qimen.protocol` | freeze_at、資料時點、對稱更新、賽果口徑 | 網路抓取 |
+| `qimen.prediction` | 盤前足球輸入、獨立 Poisson／Dixon–Coles、1X2、provenance、奇門 shadow features | 自我校準或投注決策 |
+| `qimen.training` | 四層時序 manifest、TRAIN-only rho、CALIBRATION-only temperature artifacts | 讀取 TEST_UNTOUCHED 調參 |
+| `qimen.features` | 同 cutoff、同聯賽、時間衰減 TeamForm／xG／聯盟基準 snapshots | 主觀挑選場次或讀取 cutoff 後結果 |
+| `qimen.runtime` | 讀取部署環境提供的 Git commit | 猜測或偽造 commit |
+| `qimen.providers` | 唯讀本地資料快照正規化與來源檔雜湊 | 猜測時區、靜默下載或改寫上游資料 |
+| `qimen.protocol` | EARLY／LINEUP、來源時序、對稱更新、賽果口徑 | 網路抓取 |
 | `qimen.reporting` | 可重現匯出與指紋 | 永久雲端儲存 |
-| `qimen.evaluation` | 賽前鎖定情境的賽後一致性評估 | 回訓或回灌賽前報告 |
+| `qimen.evaluation` | 賽前鎖定、完整指標、配對區塊 bootstrap 與奇門治理閘門 | 回訓、回灌賽前報告或自動啟用奇門 |
 
 ## 可重現性
 
-一張盤的身份至少包含：事件 ISO 時刻、IANA 時區、節氣時刻、四柱、方法版本、寄宮規則、子時規則與足球映射版本。研究身份另外包含固定問題、足球焦點、鎖定時間與盤前稽核。足球義按固定順序由宮、門、星、神、干支、旺衰、狀態與格局組成；匯出包會連同解盤指南與完整足球義計算 SHA-256，內容一旦變更，指紋也會改變。
+一張盤的身份至少包含：事件 ISO 時刻、IANA 時區、節氣時刻、四柱、方法版本、寄宮規則、子時規則、月支旺衰規則與足球映射版本。研究身份另外包含固定問題、足球焦點、鎖定時間與盤前稽核。JARVIS 預測另保存資料截至時間、來源、完整模型輸入、raw／calibrated 機率、模型／特徵版本、artifact 引用、Git commit 與預測鎖。足球義按固定順序由宮、門、星、神、干支、旺衰、狀態與格局組成；匯出包會計算 SHA-256，內容一旦變更，指紋也會改變。
 
 ## 錯誤邊界
 
@@ -50,3 +69,5 @@ flowchart TD
 - 沒有古典固定名稱的關係只標示為五行組合推導，不偽裝成古訣。
 - 應期候選只供查詢，沒有預先登記的時間映射不自動指定日期或分鐘。
 - 證據時間缺時區、在開賽後發布／擷取，或違反 freeze 規則時禁止建立研究檔。
+- 統計資料截止晚於預測鎖、預測鎖不早於開賽，或未確認盤前資料時，不建立正式預測鎖。
+- 奇門特徵未通過時間序列增量測試前固定為 `SHADOW_ONLY`，不能調整機率。

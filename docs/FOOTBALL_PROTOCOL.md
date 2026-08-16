@@ -1,6 +1,6 @@
 # 足球賽前研究規約
 
-版本：`qimen-football-prematch-v1.0.0`
+版本：`qimen-football-prematch-v1.1.0`
 
 ## 研究對象
 
@@ -8,12 +8,16 @@
 
 ## 時間凍結
 
-`freeze_at = event_at - 6 hours`
+系統註冊兩個不可混用的預測時點：
 
-- 一般資料必須在開賽前發布、開賽前擷取，且最晚在 freeze_at 納入。
+- `EARLY`：`cutoff = event_at - 6 hours`。
+- `LINEUP`：`cutoff = event_at - 30 minutes`，只接受雙方官方先發都已取得的版本。
+
+- 一般資料必須在開賽前發布、開賽前擷取，且 EARLY 最晚在 freeze_at 納入。
 - freeze_at 後只接受重大官方先發、傷病或停賽更新。
 - 有重大更新時，主客兩隊都必須以同一時間窗重新整理，避免單邊資訊新鮮度偏差。
 - 開賽後發布或取得的資料不能出現在歷史盲測輸入。
+- 每筆正式來源都要通過 `published_at <= retrieved_at <= data_as_of <= locked_at < event_at`。
 
 ## 主客與用神
 
@@ -38,6 +42,23 @@
 
 研究者應以賽前陣容、傷停、賽程負荷、旅途、場地與天氣驗證或反證候選情境。
 
+## JARVIS 機率層
+
+JARVIS 與上述奇門情境層分離。獨立 Poisson champion 與 Dixon–Coles challenger 只用盤前足球數據；奇門盤轉成 `SHADOW_ONLY` 特徵，權重固定為零。模型輸出可以包含 1X2、期望進球與比分候選，這些數值不得倒推成盤內索引的機率。
+
+可計入正式準確率的輸出必須同時保存：
+
+- 模型輸入與資料來源；
+- 含時區的 `data_as_of`；
+- 含時區且早於開賽的 `locked_at`；
+- 模型、奇門特徵及九星旺衰規則版本；
+- 預測 SHA-256 指紋。
+- 部署 Git commit；正式解禁實驗要求 champion 與 challenger 為相同 commit。
+
+歷史樣本必須先封存四層 chronological manifest。`rho` 只能讀 TRAIN，模型／超參數選擇只能讀 VALIDATION，temperature scaling 只能讀 CALIBRATION，TEST_UNTOUCHED 不得參與任何擬合或選擇。
+
+歷史賽事可以重建盤與模型輸出，但一律標成回溯探索。完整設計與奇門特徵升級條件見 [JARVIS 足球模型](JARVIS_MODEL.md)。
+
 足球焦點只改變第二層觀察鏡頭，不改變雙方用神。完整盤前稽核與 10 層閱讀流程見 [起局與解盤指南](READING_GUIDE.md)；20 個足球維度、108 個基礎語義與組合覆蓋方式見 [奇門符號的足球語義庫](FOOTBALL_MEANINGS.md)。
 
 ## 稽核欄位
@@ -46,4 +67,4 @@
 
 ## 賽後評估
 
-候選情境必須在開賽前鎖定。賽後以事先定義的事件標籤做 top-k 一致性評估；結果只進評估層，不修改原報告、排序或輸入來源。
+候選情境必須在開賽前鎖定。賽後以事先定義的事件標籤做 top-k 一致性評估；JARVIS 機率另計算 1X2 accuracy、log loss、Brier、RPS 與正確比分 top-1／top-3。結果只進評估層，不修改原報告、排序、機率或輸入來源。
