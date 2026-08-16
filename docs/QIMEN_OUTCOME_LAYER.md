@@ -112,6 +112,6 @@ The research path has the following deliberate constraints:
 ## Research references
 
 - Dixon, M. J. & Coles, S. G. (1997), *Modelling Association Football Scores and Inefficiencies in the Football Betting Market*, Journal of the Royal Statistical Society Series C, 46(2), 265–280. DOI: 10.1111/1467-9876.00065.
-- Zhou et al. (2022), *The influence of removing home advantage on the Chinese Football Super League*, BMC Sports Science, Medicine and Rehabilitation. DOI: 10.1186/s13102-022-00604-0.
+- Zhou et al. (2022), *The influence of removing home advantage on the Chinese Football Super League*, BMC Sports Science, Medicine and Rehabilitation, 14:208. DOI: 10.1186/s13102-022-00604-0.
 
 These sources support the football modelling and venue-context rationale. They do not validate any Qimen-to-football predictive mapping; those mappings remain research hypotheses that must be tested prospectively or on untouched chronological data.
