@@ -61,6 +61,23 @@ def _result_probabilities(
     return home, draw, away
 
 
+def _brier_and_rps(
+    probabilities: tuple[float, float, float],
+    actual_result: str,
+) -> tuple[float, float]:
+    labels = ("主勝", "和局", "客勝")
+    observed = tuple(1.0 if label == actual_result else 0.0 for label in labels)
+    brier = sum((probability - target) ** 2 for probability, target in zip(probabilities, observed))
+    rps = sum(
+        (
+            sum(probabilities[: index + 1])
+            - sum(observed[: index + 1])
+        ) ** 2
+        for index in range(len(labels) - 1)
+    ) / (len(labels) - 1)
+    return brier, rps
+
+
 def build_qimen_hybrid_prediction(
     model_input: PrematchModelInput,
     board: QimenBoard,
@@ -153,6 +170,19 @@ def evaluate_paired_hybrid(
         baseline_probability = prediction.baseline.prediction.draw_probability
         hybrid_probability = prediction.draw_probability
 
+    baseline_vector = (
+        prediction.baseline.prediction.home_win_probability,
+        prediction.baseline.prediction.draw_probability,
+        prediction.baseline.prediction.away_win_probability,
+    )
+    hybrid_vector = (
+        prediction.home_win_probability,
+        prediction.draw_probability,
+        prediction.away_win_probability,
+    )
+    baseline_brier, baseline_rps = _brier_and_rps(baseline_vector, actual_result)
+    hybrid_brier, hybrid_rps = _brier_and_rps(hybrid_vector, actual_result)
+
     baseline_exact_probability = exact_score_probability(
         prediction.baseline.score_grid,
         actual_home_goals,
@@ -184,6 +214,12 @@ def evaluate_paired_hybrid(
         "baseline_result_log_loss": baseline_result_log_loss,
         "hybrid_result_log_loss": hybrid_result_log_loss,
         "result_log_loss_delta": hybrid_result_log_loss - baseline_result_log_loss,
+        "baseline_brier_score": baseline_brier,
+        "hybrid_brier_score": hybrid_brier,
+        "brier_score_delta": hybrid_brier - baseline_brier,
+        "baseline_ranked_probability_score": baseline_rps,
+        "hybrid_ranked_probability_score": hybrid_rps,
+        "ranked_probability_score_delta": hybrid_rps - baseline_rps,
         "baseline_exact_score_probability": baseline_exact_probability,
         "hybrid_exact_score_probability": hybrid_exact_probability,
         "baseline_exact_score_nll": baseline_exact_nll,
