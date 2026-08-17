@@ -9,7 +9,7 @@ import numpy as np
 
 from jarvis.provenance import detect_git_commit, sha256_payload
 
-GENERIC_RESIDUAL_FIT_VERSION = "jarvis-generic-lambda-residual-v0.2.0"
+GENERIC_RESIDUAL_FIT_VERSION = "jarvis-generic-lambda-residual-v0.3.0"
 
 
 @dataclass(frozen=True)
@@ -226,9 +226,17 @@ def apply_residual_lambda_adjustment(
     *,
     feature_family: str,
     feature_schema_version: str,
+    shrinkage_alpha: float = 1.0,
     lower_bound: float = 0.15,
     upper_bound: float = 4.5,
 ) -> tuple[float, float]:
+    """Apply a fitted residual with optional validation-selected global shrinkage.
+
+    ``shrinkage_alpha=0`` exactly reproduces the registered Football baseline;
+    ``1`` applies the full fitted residual. Intermediate values shrink the learned
+    log-lambda shift toward zero without changing the TRAIN-estimated coefficients.
+    """
+
     if not fit.converged_home or not fit.converged_away:
         raise ValueError("residual fit 尚未收斂，不可套用")
     if (feature_family, feature_schema_version) != (fit.feature_family, fit.feature_schema_version):
@@ -239,6 +247,8 @@ def apply_residual_lambda_adjustment(
     ):
         if not isfinite(value) or value <= 0:
             raise ValueError(f"{label} 必須為有限正數")
+    if not isfinite(shrinkage_alpha) or not 0 <= shrinkage_alpha <= 1:
+        raise ValueError("shrinkage_alpha 必須為 0 至 1 的有限數")
     if not 0 < lower_bound < upper_bound:
         raise ValueError("lambda bounds 無效")
     for name, value in features.items():
@@ -250,8 +260,8 @@ def apply_residual_lambda_adjustment(
     if len(fit.home_coefficients) != len(fit.feature_names) or len(fit.away_coefficients) != len(fit.feature_names):
         raise ValueError("residual fit coefficient schema 損壞")
     vector = [float(features.get(name, 0.0)) for name in fit.feature_names]
-    home_shift = sum(value * beta for value, beta in zip(vector, fit.home_coefficients))
-    away_shift = sum(value * beta for value, beta in zip(vector, fit.away_coefficients))
+    home_shift = shrinkage_alpha * sum(value * beta for value, beta in zip(vector, fit.home_coefficients))
+    away_shift = shrinkage_alpha * sum(value * beta for value, beta in zip(vector, fit.away_coefficients))
     return (
         min(upper_bound, max(lower_bound, baseline_home_lambda * exp(home_shift))),
         min(upper_bound, max(lower_bound, baseline_away_lambda * exp(away_shift))),
