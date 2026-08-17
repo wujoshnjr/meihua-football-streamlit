@@ -7,7 +7,7 @@ from typing import Iterable
 
 import numpy as np
 
-DYNAMIC_STRENGTH_VERSION = "jarvis-opponent-adjusted-strength-v0.1.0"
+DYNAMIC_STRENGTH_VERSION = "jarvis-opponent-adjusted-strength-v0.2.0"
 
 
 @dataclass(frozen=True)
@@ -80,6 +80,7 @@ class DynamicStrengthFit:
     converged: bool
     iterations: int
     selected_match_ids: tuple[str, ...]
+    identifiability_constraint: str = "SUM_TO_ZERO_ATTACK_AND_DEFENCE"
 
     def team(self, team_id: str) -> TeamStrength | None:
         return next((team for team in self.teams if team.team_id == team_id), None)
@@ -96,24 +97,35 @@ class DynamicStrengthPrediction:
     cold_start_teams: tuple[str, ...]
 
 
+def _sum_to_zero_contrast(team_count: int) -> np.ndarray:
+    """Map K-1 free parameters to K effects whose arithmetic sum is exactly zero."""
+
+    if team_count < 2:
+        raise ValueError("動態攻防至少需要兩支隊伍")
+    contrast = np.zeros((team_count, team_count - 1), dtype=float)
+    contrast[:-1, :] = np.eye(team_count - 1, dtype=float)
+    contrast[-1, :] = -1.0
+    return contrast
+
+
 def _fit_weighted_poisson(
     matrix: np.ndarray,
     offsets: np.ndarray,
     goals: np.ndarray,
     weights: np.ndarray,
+    penalty_matrix: np.ndarray,
     *,
     l2_penalty: float,
     max_iter: int,
     tolerance: float,
 ) -> tuple[np.ndarray, bool, int]:
     coefficients = np.zeros(matrix.shape[1], dtype=float)
-    identity = np.eye(matrix.shape[1], dtype=float)
     for iteration in range(1, max_iter + 1):
         linear = np.clip(offsets + matrix @ coefficients, -12.0, 6.0)
         mean = np.exp(linear)
         residual = weights * (mean - goals)
-        gradient = matrix.T @ residual + l2_penalty * coefficients
-        hessian = matrix.T @ (matrix * (weights * mean)[:, None]) + l2_penalty * identity
+        gradient = matrix.T @ residual + l2_penalty * (penalty_matrix @ coefficients)
+        hessian = matrix.T @ (matrix * (weights * mean)[:, None]) + l2_penalty * penalty_matrix
         try:
             step = np.linalg.solve(hessian, gradient)
         except np.linalg.LinAlgError:
@@ -138,8 +150,10 @@ def fit_dynamic_strength(
 
     For match i vs j, the two score intensities are modelled as
     ``baseline_home * exp(attack_i + defence_weakness_j)`` and
-    ``baseline_away * exp(attack_j + defence_weakness_i)``. Baselines are supplied
-    per observation so neutral-site matches do not inherit home advantage silently.
+    ``baseline_away * exp(attack_j + defence_weakness_i)``. Attack and defence
+    effects are each constrained to sum to zero across fitted teams. This makes
+    them relative strengths instead of allowing the team-effect layer to absorb a
+    free global recalibration of the registered scoring baseline.
     """
 
     if cutoff_at.tzinfo is None:
@@ -150,6 +164,10 @@ def fit_dynamic_strength(
         raise ValueError("l2_penalty 必須為有限正數")
     if min_matches < 1:
         raise ValueError("min_matches 必須為正整數")
+    if isinstance(max_iter, bool) or not isinstance(max_iter, int) or max_iter < 1:
+        raise ValueError("max_iter 必須為正整數")
+    if not isfinite(tolerance) or tolerance <= 0:
+        raise ValueError("tolerance 必須為有限正數")
 
     all_rows = list(observations)
     errors = [error for row in all_rows for error in row.validate()]
@@ -167,7 +185,9 @@ def fit_dynamic_strength(
     teams = tuple(sorted({row.home_team_id for row in rows} | {row.away_team_id for row in rows}))
     team_index = {team_id: index for index, team_id in enumerate(teams)}
     team_count = len(teams)
-    matrix = np.zeros((2 * len(rows), 2 * team_count), dtype=float)
+    contrast = _sum_to_zero_contrast(team_count)
+    effect_dimension = team_count - 1
+    matrix = np.zeros((2 * len(rows), 2 * effect_dimension), dtype=float)
     offsets = np.zeros(2 * len(rows), dtype=float)
     goals = np.zeros(2 * len(rows), dtype=float)
     weights = np.zeros(2 * len(rows), dtype=float)
@@ -181,10 +201,10 @@ def fit_dynamic_strength(
         home_score_row = 2 * match_index
         away_score_row = home_score_row + 1
 
-        matrix[home_score_row, home_index] = 1.0
-        matrix[home_score_row, team_count + away_index] = 1.0
-        matrix[away_score_row, away_index] = 1.0
-        matrix[away_score_row, team_count + home_index] = 1.0
+        matrix[home_score_row, :effect_dimension] = contrast[home_index]
+        matrix[home_score_row, effect_dimension:] = contrast[away_index]
+        matrix[away_score_row, :effect_dimension] = contrast[away_index]
+        matrix[away_score_row, effect_dimension:] = contrast[home_index]
         offsets[home_score_row] = log(row.baseline_home_goals_per_match)
         offsets[away_score_row] = log(row.baseline_away_goals_per_match)
         goals[home_score_row] = float(row.home_goals)
@@ -194,20 +214,27 @@ def fit_dynamic_strength(
         effective_matches[row.home_team_id] += weight
         effective_matches[row.away_team_id] += weight
 
+    effect_penalty = contrast.T @ contrast
+    penalty_matrix = np.zeros((2 * effect_dimension, 2 * effect_dimension), dtype=float)
+    penalty_matrix[:effect_dimension, :effect_dimension] = effect_penalty
+    penalty_matrix[effect_dimension:, effect_dimension:] = effect_penalty
     coefficients, converged, iterations = _fit_weighted_poisson(
         matrix,
         offsets,
         goals,
         weights,
+        penalty_matrix,
         l2_penalty=l2_penalty,
         max_iter=max_iter,
         tolerance=tolerance,
     )
+    attack_effects = contrast @ coefficients[:effect_dimension]
+    defence_effects = contrast @ coefficients[effect_dimension:]
     team_strengths = tuple(
         TeamStrength(
             team_id=team_id,
-            attack_log_effect=float(coefficients[index]),
-            defence_weakness_log_effect=float(coefficients[team_count + index]),
+            attack_log_effect=float(attack_effects[index]),
+            defence_weakness_log_effect=float(defence_effects[index]),
             effective_matches=effective_matches[team_id],
         )
         for index, team_id in enumerate(teams)
@@ -239,6 +266,8 @@ def predict_dynamic_lambdas(
 
     if not fit.converged:
         raise ValueError("dynamic strength fit 尚未收斂")
+    if fit.identifiability_constraint != "SUM_TO_ZERO_ATTACK_AND_DEFENCE":
+        raise ValueError("dynamic strength fit 缺少已註冊的 identifiability constraint")
     for label, value in (
         ("baseline_home_goals_per_match", baseline_home_goals_per_match),
         ("baseline_away_goals_per_match", baseline_away_goals_per_match),
