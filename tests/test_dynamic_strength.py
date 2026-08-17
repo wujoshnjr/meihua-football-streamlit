@@ -38,13 +38,16 @@ def _synthetic_rows():
     return rows
 
 
-def test_fit_learns_opponent_adjusted_attack_strength():
+def test_fit_learns_opponent_adjusted_attack_strength_with_zero_sum_constraints():
     cutoff = datetime(2025, 1, 1, tzinfo=timezone.utc)
     fit = fit_dynamic_strength(_synthetic_rows(), cutoff_at=cutoff, half_life_days=365.0, l2_penalty=2.0)
     assert fit.converged
+    assert fit.identifiability_constraint == "SUM_TO_ZERO_ATTACK_AND_DEFENCE"
     assert fit.team("A") is not None
     assert fit.team("B") is not None
     assert fit.team("A").attack_multiplier > fit.team("B").attack_multiplier
+    assert sum(team.attack_log_effect for team in fit.teams) == pytest.approx(0.0, abs=1e-10)
+    assert sum(team.defence_weakness_log_effect for team in fit.teams) == pytest.approx(0.0, abs=1e-10)
 
 
 def test_future_unavailable_rows_are_not_used():
