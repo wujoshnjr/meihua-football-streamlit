@@ -36,6 +36,7 @@ from .runner import (
     fit_model_family,
     predict_model_family,
 )
+from .stability import STABILITY_SCHEMA_VERSION, paired_block_bootstrap, rolling_block_stability
 from .tuning import (
     RESIDUAL_TUNING_VERSION,
     ResidualTuningResult,
@@ -63,6 +64,7 @@ __all__ = [
     "ResidualLambdaFit",
     "ResidualLambdaObservation",
     "ResidualTuningResult",
+    "STABILITY_SCHEMA_VERSION",
     "SnapshotRef",
     "TuningCandidate",
     "aggregate_evaluations",
@@ -73,8 +75,10 @@ __all__ = [
     "fit_model_family",
     "fit_research_calibration",
     "fit_residual_lambda_adjustment",
+    "paired_block_bootstrap",
     "paired_model_comparison",
     "predict_model_family",
+    "rolling_block_stability",
     "tune_model_family",
     "validate_chronological_dataset",
 ]
