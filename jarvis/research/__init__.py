@@ -30,6 +30,12 @@ from .runner import (
     fit_model_family,
     predict_model_family,
 )
+from .tuning import (
+    RESIDUAL_TUNING_VERSION,
+    ResidualTuningResult,
+    TuningCandidate,
+    tune_model_family,
+)
 
 __all__ = [
     "BaselineLambdaSnapshot",
@@ -45,9 +51,12 @@ __all__ = [
     "MultiSignalDatasetRow",
     "MultiSignalFitBundle",
     "PrematchExperimentRecord",
+    "RESIDUAL_TUNING_VERSION",
     "ResidualLambdaFit",
     "ResidualLambdaObservation",
+    "ResidualTuningResult",
     "SnapshotRef",
+    "TuningCandidate",
     "aggregate_evaluations",
     "apply_residual_lambda_adjustment",
     "build_multisignal_dataset_row",
@@ -56,5 +65,6 @@ __all__ = [
     "fit_residual_lambda_adjustment",
     "paired_model_comparison",
     "predict_model_family",
+    "tune_model_family",
     "validate_chronological_dataset",
 ]
