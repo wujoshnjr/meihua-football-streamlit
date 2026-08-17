@@ -23,17 +23,27 @@ from .residual import (
     apply_residual_lambda_adjustment,
     fit_residual_lambda_adjustment,
 )
+from .runner import (
+    MULTISIGNAL_RUNNER_VERSION,
+    BaselineLambdaSnapshot,
+    MultiSignalFitBundle,
+    fit_model_family,
+    predict_model_family,
+)
 
 __all__ = [
+    "BaselineLambdaSnapshot",
     "EXPERIMENT_SCHEMA_VERSION",
     "ForecastEvaluation",
     "GENERIC_RESIDUAL_FIT_VERSION",
     "HistoricalFixture",
     "MARKET_BENCHMARK_VERSION",
     "MULTISIGNAL_DATASET_VERSION",
+    "MULTISIGNAL_RUNNER_VERSION",
     "MarketBenchmarkSnapshot",
     "ModelForecast",
     "MultiSignalDatasetRow",
+    "MultiSignalFitBundle",
     "PrematchExperimentRecord",
     "ResidualLambdaFit",
     "ResidualLambdaObservation",
@@ -42,7 +52,9 @@ __all__ = [
     "apply_residual_lambda_adjustment",
     "build_multisignal_dataset_row",
     "evaluate_forecast",
+    "fit_model_family",
     "fit_residual_lambda_adjustment",
     "paired_model_comparison",
+    "predict_model_family",
     "validate_chronological_dataset",
 ]
