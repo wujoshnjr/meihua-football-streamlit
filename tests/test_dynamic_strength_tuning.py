@@ -73,7 +73,10 @@ def test_validation_tuning_can_select_xg_when_goals_are_noisy():
     assert result.validation_matches == 4
     assert len(result.candidates) == 2
     assert len(result.artifact_sha256) == 64
+    assert result.score_model == "INDEPENDENT_POISSON"
+    assert result.dixon_coles_rho == 0.0
     assert result.candidates[0].mean_log_loss < result.candidates[1].mean_log_loss
+    assert result.candidates[0].mean_exact_score_nll > 0
 
 
 def test_tuning_requires_goals_only_fallback():
@@ -123,3 +126,66 @@ def test_tuning_is_deterministic():
     first = tune_dynamic_strength(_history(), _validation(), **kwargs)
     second = tune_dynamic_strength(reversed(_history()), reversed(_validation()), **kwargs)
     assert first.to_dict() == second.to_dict()
+
+
+def test_dixon_coles_tuning_uses_registered_low_score_distribution():
+    common = dict(
+        half_life_days_grid=(365.0,),
+        l2_penalty_grid=(2.0,),
+        xg_weight_grid=(0.0,),
+        min_matches=80,
+    )
+    poisson = tune_dynamic_strength(_history(), _validation(), **common)
+    dixon_coles = tune_dynamic_strength(
+        _history(),
+        _validation(),
+        score_model="DIXON_COLES",
+        dixon_coles_rho=-0.10,
+        **common,
+    )
+
+    assert dixon_coles.score_model == "DIXON_COLES"
+    assert dixon_coles.dixon_coles_rho == -0.10
+    assert dixon_coles.candidates[0].mean_exact_score_nll != pytest.approx(
+        poisson.candidates[0].mean_exact_score_nll
+    )
+    assert dixon_coles.artifact_sha256 != poisson.artifact_sha256
+
+
+def test_independent_poisson_tuning_rejects_dixon_coles_rho():
+    with pytest.raises(ValueError, match="不可夾帶"):
+        tune_dynamic_strength(
+            _history(),
+            _validation(),
+            half_life_days_grid=(365.0,),
+            l2_penalty_grid=(2.0,),
+            xg_weight_grid=(0.0,),
+            min_matches=80,
+            score_model="INDEPENDENT_POISSON",
+            dixon_coles_rho=-0.10,
+        )
+
+
+def test_tuning_rejects_score_outside_registered_grid():
+    fixture = _validation()[0]
+    invalid = DynamicStrengthValidationFixture(
+        match_id=fixture.match_id,
+        event_at=fixture.event_at,
+        cutoff_at=fixture.cutoff_at,
+        home_team_id=fixture.home_team_id,
+        away_team_id=fixture.away_team_id,
+        baseline_home_goals_per_match=fixture.baseline_home_goals_per_match,
+        baseline_away_goals_per_match=fixture.baseline_away_goals_per_match,
+        actual_home_goals=6,
+        actual_away_goals=0,
+    )
+    with pytest.raises(ValueError, match="超過 max_goals"):
+        tune_dynamic_strength(
+            _history(),
+            (invalid,),
+            half_life_days_grid=(365.0,),
+            l2_penalty_grid=(2.0,),
+            xg_weight_grid=(0.0,),
+            min_matches=80,
+            max_goals=5,
+        )
