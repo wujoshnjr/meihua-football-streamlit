@@ -10,15 +10,15 @@ JARVIS v8 is an incremental research architecture. It does **not** replace the v
 - `M3`: Football + Qimen + Meihua residual/fusion challenger.
 - `M4`: preregistered interaction research only after M3 has shown stable validation gains.
 
-Every challenger must use the same prematch football snapshot and chronological dataset role. `TEST_UNTOUCHED` is never used to choose features or penalties.
+Every challenger must use the same prematch football snapshot and chronological dataset role. `TEST_UNTOUCHED` is never used to choose features, penalties, shrinkage or calibration parameters.
 
-## Meihua v0.2 scope
+## Meihua scope
 
 The Meihua implementation deliberately supports only the deterministic year-month-day-hour method. The event-location civil clock is used as the project convention. The lunar year branch, lunar month, lunar day and branch-hour are converted to the upper trigram, lower trigram and moving line with the traditional modulo-eight/modulo-six arithmetic.
 
 The engine records original, mutual and changed trigrams plus body/use and five-element relations. These are **raw research features**. No relation is assigned a football goal bonus, 1X2 weight or fixed score.
 
-All one-of-K Meihua categorical features now use reference coding rather than complete one-hot groups. Moving-line position is categorical rather than a numeric 1-to-6 slope. The reference-coding rule is statistical only: it prevents the signal design matrix from recreating a constant intercept and does not assign any traditional category a privileged football meaning.
+All one-of-K Meihua categorical features use reference coding rather than complete one-hot groups. Moving-line position is categorical rather than a numeric 1-to-6 slope. The reference-coding rule is statistical only: it prevents the signal design matrix from recreating a constant intercept and does not assign any traditional category a privileged football meaning.
 
 ## Qimen design integrity
 
@@ -41,15 +41,29 @@ This contract is enforced twice:
 
 Generic residual artifacts record the feature family/schema, training time range, deployment Git commit, training-data SHA-256 and artifact SHA-256. Unconverged artifacts cannot be applied.
 
+Validation-only tuning selects L2 and global residual shrinkage `alpha`. Every alpha grid must include zero, so a signal family that does not add value can collapse exactly back to the Football baseline. CALIBRATION and TEST_UNTOUCHED labels are excluded from this selection.
+
 ## Dynamic football identifiability
 
 The dynamic opponent-adjusted football challenger estimates relative attack and defence-weakness effects. Attack effects and defence effects are each constrained to sum to zero over fitted teams. This keeps the registered venue/competition baseline as the global scoring level instead of letting team effects act as an unregistered league-wide recalibration term.
 
-## Next steps
+## CALIBRATION-only probability layer
 
-1. Re-run the full repository test suite with the v0.2 encoders and fitters.
-2. Generate Qimen and Meihua snapshots from the same immutable prematch event records.
-3. Fit M1 and M2 independently on TRAIN.
-4. Select penalties/features on VALIDATION only.
-5. Compare M0/M1/M2/M3 with paired chronological evaluation.
-6. Add cross-family interactions only after M3 demonstrates stable incremental value.
+After TRAIN has fitted coefficients and VALIDATION has selected model/shrinkage hyperparameters, each fixed M0/M1/M2/M3 specification may fit one scalar temperature using **CALIBRATION rows only**.
+
+Temperature scaling acts on the three 1X2 probabilities. It does not change expected goals or the Poisson/Dixon-Coles score grid. This separation is deliberate: exact-score NLL continues to evaluate the underlying score model, while 1X2 Log Loss/Brier/RPS can evaluate the calibrated outcome probabilities.
+
+A calibration bundle is bound to one model family and one uncalibrated model version. If CALIBRATION log loss does not improve, the applied temperature is forced back to `1.0`. TEST_UNTOUCHED labels never participate in fitting the temperature.
+
+This follows the general post-hoc calibration principle of fitting a simple calibration map on data that were not used to estimate the underlying model parameters. It is a research layer only and does not alter the production champion.
+
+## Current experiment order
+
+1. Build immutable chronological rows from reproducible historical sources.
+2. Fit Football and residual parameters on TRAIN only.
+3. Select L2/shrinkage on VALIDATION only.
+4. Fit 1X2 temperature scaling on CALIBRATION only.
+5. Freeze all artifacts.
+6. Compare M0/M1/M2/M3 on TEST_UNTOUCHED with Log Loss, Brier, RPS, exact-score NLL and calibration diagnostics.
+7. Add rolling-block stability and paired bootstrap confidence intervals before any promotion decision.
+8. Add cross-family interactions only after M3 demonstrates stable incremental value.
