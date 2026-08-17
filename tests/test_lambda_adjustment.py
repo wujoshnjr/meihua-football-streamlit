@@ -4,11 +4,14 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from jarvis.research.residual import fit_residual_lambda_adjustment
 from qimen.lambda_adjustment import (
+    QIMEN_FEATURE_FAMILY,
     QimenLambdaObservation,
     apply_qimen_lambda_adjustment,
     fit_qimen_lambda_adjustment,
 )
+from qimen.outcome_design import QIMEN_OUTCOME_DESIGN_VERSION
 
 
 def _rows(count: int = 60):
@@ -40,6 +43,8 @@ def test_fit_learns_incremental_home_shift_without_free_intercept():
 
     assert fit.converged_home
     assert fit.converged_away
+    assert fit.feature_schema_version == QIMEN_OUTCOME_DESIGN_VERSION
+    assert len(fit.generic_artifact_sha256) == 64
     assert fit.feature_names == ("boost",)
     assert fit.home_coefficients[0] > 0
     assert fit.away_coefficients[0] == pytest.approx(0.0, abs=1e-8)
@@ -49,6 +54,21 @@ def test_fit_learns_incremental_home_shift_without_free_intercept():
     assert unchanged == pytest.approx((1.2, 0.9))
     assert adjusted[0] > unchanged[0]
     assert adjusted[1] == pytest.approx(unchanged[1], abs=1e-8)
+
+
+def test_qimen_wrapper_matches_generic_optimizer():
+    rows = _rows(60)
+    qimen_fit = fit_qimen_lambda_adjustment(rows, l2_penalty=0.5, min_matches=20)
+    generic_fit = fit_residual_lambda_adjustment(
+        (row.to_generic() for row in rows),
+        l2_penalty=0.5,
+        min_matches=20,
+    )
+
+    assert generic_fit.feature_family == QIMEN_FEATURE_FAMILY
+    assert qimen_fit.generic_artifact_sha256 == generic_fit.artifact_sha256
+    assert qimen_fit.home_coefficients == pytest.approx(generic_fit.home_coefficients)
+    assert qimen_fit.away_coefficients == pytest.approx(generic_fit.away_coefficients)
 
 
 def test_fit_rejects_non_train_rows():
