@@ -17,7 +17,7 @@ from .residual import (
 )
 
 
-MULTISIGNAL_RUNNER_VERSION = "jarvis-m0-m3-runner-v0.1.0"
+MULTISIGNAL_RUNNER_VERSION = "jarvis-m0-m3-runner-v0.2.0"
 ScoreModel = Literal["INDEPENDENT_POISSON", "DIXON_COLES"]
 
 
@@ -57,6 +57,11 @@ class BaselineLambdaSnapshot:
 class MultiSignalFitBundle:
     model_family: ModelFamily
     residual_fit: ResidualLambdaFit
+    shrinkage_alpha: float = 1.0
+
+    def __post_init__(self) -> None:
+        if not isfinite(self.shrinkage_alpha) or not 0 <= self.shrinkage_alpha <= 1:
+            raise ValueError("shrinkage_alpha 必須為 0 至 1 的有限數")
 
     @property
     def artifact_source(self) -> str:
@@ -232,6 +237,7 @@ def predict_model_family(
             fit_bundle.residual_fit,
             feature_family=family,
             feature_schema_version=schema,
+            shrinkage_alpha=fit_bundle.shrinkage_alpha,
         )
         artifacts.append(fit_bundle.artifact_source)
     elif fit_bundle is not None:
@@ -247,7 +253,10 @@ def predict_model_family(
     home_probability = sum(probability for home, away, probability in grid if home > away)
     draw_probability = sum(probability for home, away, probability in grid if home == away)
     away_probability = sum(probability for home, away, probability in grid if home < away)
-    model_version = f"{MULTISIGNAL_RUNNER_VERSION}:{model_family}:{baseline.score_model}"
+    model_version = (
+        f"{MULTISIGNAL_RUNNER_VERSION}:{model_family}:{baseline.score_model}:"
+        f"alpha={fit_bundle.shrinkage_alpha if fit_bundle else 0.0:.6f}"
+    )
     return ModelForecast(
         match_id=row.record.match_id,
         model_family=model_family,
