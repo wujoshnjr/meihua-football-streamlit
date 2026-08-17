@@ -1,8 +1,8 @@
-# 奇門遁甲足球賽前研究系統
+# JARVIS 足球賽前研究系統
 
-這是原「梅花易數足球資訊專案」的完整重構版。版本 7.2.0 已移除梅花起卦、互卦、變卦、納甲、爻辭與易林資料，改為可重現的**時家奇門・轉盤・拆補法**排盤核心、起局／解盤助手、奇門知識庫，以及代號 **JARVIS** 的可稽核足球機率研究框架。
+這是原「梅花易數足球資訊專案」的完整重構版。正式應用版本仍以 v7.2.0 的可重現**時家奇門・轉盤・拆補法**排盤核心、起局／解盤助手、奇門知識庫與 JARVIS 足球機率框架為基礎；v8 研究線則重新加入一個**全新、極簡、確定性的梅花易數 challenger**，並建立通用 residual 與動態足球實力模組。這不是把舊版梅花人工勝負／比分邏輯復活。
 
-> 奇門遁甲是傳統術數。奇門盤內索引不是統計機率；JARVIS 的 1X2 與期望進球來自獨立 Poisson 足球模型，現階段尚未校準，奇門特徵保持 shadow mode、權重為零。本專案只供研究與教育，不是投注建議。
+> 奇門遁甲與梅花易數都是傳統術數。兩者的盤／卦特徵都不是統計機率，也不得由人工規則直接轉成固定比分或 1X2。Production 的 1X2 與期望進球目前仍由足球統計模型產生；奇門、梅花與 v8 動態攻防模型在通過時序盲測與治理門檻前都只屬 research challenger。本專案只供研究與教育，不是投注建議。
 
 ## 已完成的範圍
 
@@ -35,6 +35,10 @@
 - 真正比較 `data_as_of <= locked_at < event_at` 的盤前預測鎖、SHA-256 指紋與回溯模式隔離。
 - log loss、Brier、RPS、1X2 accuracy 及正確比分 top-1／top-3 評估接口。
 - 奇門盤完整轉為版本化 shadow features；在時間序列盲測證明增量前不調整足球機率。
+- JARVIS v8 research foundation：新增確定性的梅花「年月日時」起卦 engine、體用／互卦／變卦 raw features；不寫入人工足球方向權重。
+- 通用 TRAIN-only residual lambda fitter：`log(mu) = log(football_baseline_lambda) + X beta`，L2 正則化且無 intercept；可分別承接 Qimen／Meihua feature family。
+- 動態對手調整 Football challenger：以時間衰減的聯合 Poisson 估計各隊 attack 與 defence-weakness effects，並保留明示場地 baseline 與 cold-start 回退。
+- v8 模型家族預先定義：`M0=Football`、`M1=Football+Qimen`、`M2=Football+Meihua`、`M3=Football+Qimen+Meihua`；interaction 只在 M3 有穩定增量後研究。
 
 ## 快速開始
 
@@ -61,34 +65,39 @@ Windows PowerShell 啟用虛擬環境：
 6. 在「JARVIS 模型」輸入同一截止時間的雙方進失球／xG 與聯盟基準，確認資料為盤前資訊後建立預測鎖。
 7. 匯出含固定問題、焦點、方法版本、模型輸入、機率、鎖定資格、資料完整性與 SHA-256 指紋的研究檔。
 
+目前 Streamlit production UI 仍以 v7.2 奇門＋Football 流程為主；v8 的梅花、通用 residual 與動態攻防元件目前是 research API，尚未冒充正式 production 輸出。
+
 ## 專案結構
 
 ```text
-app.py                     Streamlit 入口
-qimen/calendar.py          時區、四柱、節氣、六旬
-qimen/engine.py            轉盤拆補排盤引擎
-qimen/football.py          足球用神與候選情境層
-qimen/prediction.py        JARVIS Poisson 基準、輸入收縮與奇門 shadow features
-qimen/training.py          四層時序切分、rho 擬合與 temperature calibration artifacts
-qimen/features.py          cutoff-only 時間衰減 TeamForm／聯盟基準 snapshots
-qimen/runtime.py           唯讀部署 Git commit provenance
-qimen/providers/           StatsBomb Open Data 本地快照正規化介面
-qimen/football_ontology.py 足球語義搜尋、全組合解讀與覆蓋統計
-qimen/interpretation.py    盤前稽核、用神鎖定、306 組關係矩陣與逐層指南
-qimen/protocol.py          賽前資料凍結與對稱更新規約
-qimen/reporting.py         JSON／Markdown／HTML 稽核匯出
-qimen/evaluation.py        賽前鎖定、定性情境與機率預測的賽後評估
-knowledge/*.json           奇門結構化知識庫
-docs/                      方法、架構、資料結構與來源
-tests/                     演算法不變量與規約測試
-schemas/                   正式預測鎖 JSON Schema
+app.py                          Streamlit production 入口
+qimen/calendar.py               時區、四柱、節氣、六旬
+qimen/engine.py                 轉盤拆補排盤引擎
+qimen/football.py               足球用神與候選情境層
+qimen/prediction.py             既有 JARVIS Poisson 基準與奇門 shadow features
+qimen/training.py               四層時序切分、rho 擬合與 temperature calibration artifacts
+qimen/features.py               cutoff-only 時間衰減 TeamForm／聯盟基準 snapshots
+qimen/providers/                StatsBomb Open Data 本地快照正規化介面
+qimen/hybrid_prediction.py      Football vs fitted-Qimen paired research comparison
+meihua/engine.py                v8 確定性年月日時梅花起卦 research engine
+meihua/outcome_features.py      v8 梅花 raw outcome feature encoder
+jarvis/research/residual.py     通用無 intercept Poisson-offset residual fitter
+jarvis/football/strength.py     動態、對手調整 attack／defence research challenger
+knowledge/*.json                奇門結構化知識庫
+docs/JARVIS_V8.md               v8 多訊號研究架構
+docs/DYNAMIC_STRENGTH.md        動態攻防 challenger 方法與邊界
+docs/                           其他方法、架構、資料結構與來源
+tests/                          演算法不變量與規約測試
+schemas/                        正式預測鎖 JSON Schema
 ```
 
 ## 方法邊界
 
-本版只執行一套明示方法：時家、轉盤、拆補、事件所在地民用時、晚子時換日、中五寄坤二。飛盤、置閏、茅山、真太陽時、陰盤等內容收錄於知識庫，但不混入計算。這是為了讓每張盤都可重建、可測試、可比較，而不是宣稱其他傳承無效。
+奇門 production 仍只執行一套明示方法：時家、轉盤、拆補、事件所在地民用時、晚子時換日、中五寄坤二。飛盤、置閏、茅山、真太陽時、陰盤等內容收錄於知識庫，但不混入計算。
 
-詳見 [JARVIS 模型](docs/JARVIS_MODEL.md)、[排盤方法](docs/QIMEN_METHOD.md)、[起局與解盤指南](docs/READING_GUIDE.md)、[足球語義庫](docs/FOOTBALL_MEANINGS.md)、[資料協議](docs/FOOTBALL_PROTOCOL.md)、[架構](docs/ARCHITECTURE.md)、[部署操作](docs/OPERATIONS.md) 與 [來源](docs/SOURCES.md)。
+梅花 v8 research engine 只執行可重現的「年月日時」起例，事件所在地民用時是 JARVIS 為實驗一致性採用的 convention；不把其他傳統起卦法混入同一實驗，也不把體用生剋人工指定成足球勝負或比分。
+
+詳見 [JARVIS 模型](docs/JARVIS_MODEL.md)、[JARVIS v8](docs/JARVIS_V8.md)、[動態足球實力](docs/DYNAMIC_STRENGTH.md)、[排盤方法](docs/QIMEN_METHOD.md)、[起局與解盤指南](docs/READING_GUIDE.md)、[足球語義庫](docs/FOOTBALL_MEANINGS.md)、[資料協議](docs/FOOTBALL_PROTOCOL.md)、[架構](docs/ARCHITECTURE.md)、[部署操作](docs/OPERATIONS.md) 與 [來源](docs/SOURCES.md)。
 
 ## 測試
 
@@ -100,4 +109,4 @@ python tools/validate_knowledge.py
 
 ## 版本
 
-目前版本：`7.2.0`。重大轉換內容見 [CHANGELOG.md](CHANGELOG.md) 與 [MIGRATION.md](docs/MIGRATION.md)。
+Production app 版本仍為 `7.2.0`。JARVIS v8 multi-signal research foundation 已進入 `main`，但在 chronological paired evaluation 通過前不取代 production champion。重大轉換內容見 [CHANGELOG.md](CHANGELOG.md)、[MIGRATION.md](docs/MIGRATION.md) 與 [JARVIS_V8.md](docs/JARVIS_V8.md)。
