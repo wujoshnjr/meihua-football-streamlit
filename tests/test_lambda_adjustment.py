@@ -69,3 +69,21 @@ def test_apply_rejects_unknown_feature_schema():
             {"boost": 1.0, "unregistered": 1.0},
             fit,
         )
+
+
+def test_fit_rejects_hidden_intercept_from_complete_one_hot():
+    rows = _rows(20)
+    rows = [
+        QimenLambdaObservation(
+            **{
+                **row.__dict__,
+                "features": {
+                    "door::A": 1.0 if index % 2 == 0 else 0.0,
+                    "door::B": 1.0 if index % 2 == 1 else 0.0,
+                },
+            }
+        )
+        for index, row in enumerate(rows)
+    ]
+    with pytest.raises(ValueError, match="hidden intercept"):
+        fit_qimen_lambda_adjustment(rows, min_matches=20)
