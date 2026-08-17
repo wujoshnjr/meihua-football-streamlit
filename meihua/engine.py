@@ -3,9 +3,10 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Any
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-MEIHUA_ENGINE_VERSION = "jarvis-meihua-year-month-day-hour-v0.1.0"
+from jarvis.time import aware_event_local_datetime
+
+MEIHUA_ENGINE_VERSION = "jarvis-meihua-year-month-day-hour-v0.2.0"
 
 TRIGRAM_BY_NUMBER = {
     1: "乾",
@@ -217,16 +218,12 @@ def build_meihua_snapshot(event_at: datetime, timezone_name: str) -> MeihuaSnaps
     """Build a Meihua snapshot from an official event instant and IANA zone.
 
     ``lunar_python`` is used only to obtain the lunar month/day and year/hour
-    branches from the event-location civil clock. This is a JARVIS research
-    convention chosen for reproducibility; it is not presented as the only
-    traditional Meihua timing convention.
+    branches from the validated event-location civil clock. This is a JARVIS
+    research convention chosen for reproducibility; it is not presented as the
+    only traditional Meihua timing convention.
     """
 
-    try:
-        zone = ZoneInfo(timezone_name)
-    except ZoneInfoNotFoundError as exc:
-        raise ValueError(f"找不到 IANA 時區：{timezone_name}") from exc
-    local = event_at.astimezone(zone) if event_at.tzinfo is not None else event_at.replace(tzinfo=zone)
+    local = aware_event_local_datetime(event_at, timezone_name)
     try:
         from lunar_python import Solar
     except ImportError as exc:
