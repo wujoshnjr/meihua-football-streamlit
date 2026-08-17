@@ -7,7 +7,9 @@ from typing import Any, Iterable, Mapping
 
 import numpy as np
 
-GENERIC_RESIDUAL_FIT_VERSION = "jarvis-generic-lambda-residual-v0.1.0"
+from jarvis.provenance import detect_git_commit, sha256_payload
+
+GENERIC_RESIDUAL_FIT_VERSION = "jarvis-generic-lambda-residual-v0.2.0"
 
 
 @dataclass(frozen=True)
@@ -74,6 +76,22 @@ class ResidualLambdaFit:
     converged_away: bool
     iterations_home: int
     iterations_away: int
+    training_started_at: datetime
+    training_ended_at: datetime
+    git_commit: str
+    training_data_sha256: str
+    artifact_sha256: str
+
+    @property
+    def artifact_source(self) -> str:
+        return f"residual-lambda-fit:{self.artifact_sha256}"
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = asdict(self)
+        payload["training_started_at"] = self.training_started_at.isoformat()
+        payload["training_ended_at"] = self.training_ended_at.isoformat()
+        payload["artifact_source"] = self.artifact_source
+        return payload
 
 
 def _fit_poisson_offset(
@@ -102,6 +120,15 @@ def _fit_poisson_offset(
     return coefficients, False, max_iter
 
 
+def _contains_constant_direction(matrix: np.ndarray, *, tolerance: float = 1e-10) -> bool:
+    """Return whether the design span can reproduce an all-ones intercept vector."""
+
+    target = np.ones(matrix.shape[0], dtype=float)
+    coefficients, *_ = np.linalg.lstsq(matrix, target, rcond=None)
+    reconstruction = matrix @ coefficients
+    return bool(np.max(np.abs(reconstruction - target)) <= tolerance)
+
+
 def fit_residual_lambda_adjustment(
     observations: Iterable[ResidualLambdaObservation],
     *,
@@ -113,6 +140,13 @@ def fit_residual_lambda_adjustment(
     rows = sorted(observations, key=lambda row: (row.event_at, row.match_id))
     if len(rows) < min_matches:
         raise ValueError(f"residual 擬合至少需要 {min_matches} 場 TRAIN 樣本")
+    if not isfinite(l2_penalty) or l2_penalty <= 0:
+        raise ValueError("l2_penalty 必須為有限正數")
+    if isinstance(max_iter, bool) or not isinstance(max_iter, int) or max_iter < 1:
+        raise ValueError("max_iter 必須為正整數")
+    if not isfinite(tolerance) or tolerance <= 0:
+        raise ValueError("tolerance 必須為有限正數")
+
     errors = [error for row in rows for error in row.validate()]
     if errors:
         raise ValueError("；".join(errors))
@@ -121,8 +155,6 @@ def fit_residual_lambda_adjustment(
     families = {(row.feature_family, row.feature_schema_version) for row in rows}
     if len(families) != 1:
         raise ValueError("同一 residual fit 不可混用 feature family/schema")
-    if not isfinite(l2_penalty) or l2_penalty <= 0:
-        raise ValueError("l2_penalty 必須為有限正數")
 
     feature_names = tuple(sorted({name for row in rows for name in row.features}))
     if not feature_names:
@@ -131,6 +163,9 @@ def fit_residual_lambda_adjustment(
         [[float(row.features.get(name, 0.0)) for name in feature_names] for row in rows],
         dtype=float,
     )
+    if _contains_constant_direction(matrix):
+        raise ValueError("feature design 含常數方向，會形成 hidden intercept；請使用 reference/effect coding")
+
     home_baseline = np.asarray([row.baseline_home_lambda for row in rows], dtype=float)
     away_baseline = np.asarray([row.baseline_away_lambda for row in rows], dtype=float)
     home_goals = np.asarray([row.actual_home_goals for row in rows], dtype=float)
@@ -142,19 +177,44 @@ def fit_residual_lambda_adjustment(
         matrix, away_baseline, away_goals, l2_penalty=l2_penalty, max_iter=max_iter, tolerance=tolerance
     )
     family, schema = next(iter(families))
+    training_data = [row.to_dict() for row in rows]
+    core = {
+        "schema_version": GENERIC_RESIDUAL_FIT_VERSION,
+        "feature_family": family,
+        "feature_schema_version": schema,
+        "feature_names": feature_names,
+        "home_coefficients": tuple(float(value) for value in home_beta),
+        "away_coefficients": tuple(float(value) for value in away_beta),
+        "l2_penalty": l2_penalty,
+        "matches": len(rows),
+        "converged_home": converged_home,
+        "converged_away": converged_away,
+        "iterations_home": iterations_home,
+        "iterations_away": iterations_away,
+        "training_started_at": rows[0].event_at.isoformat(),
+        "training_ended_at": rows[-1].event_at.isoformat(),
+        "git_commit": detect_git_commit(),
+        "training_data_sha256": sha256_payload(training_data),
+    }
+    artifact_sha256 = sha256_payload(core)
     return ResidualLambdaFit(
         schema_version=GENERIC_RESIDUAL_FIT_VERSION,
         feature_family=family,
         feature_schema_version=schema,
         feature_names=feature_names,
-        home_coefficients=tuple(float(value) for value in home_beta),
-        away_coefficients=tuple(float(value) for value in away_beta),
+        home_coefficients=core["home_coefficients"],
+        away_coefficients=core["away_coefficients"],
         l2_penalty=l2_penalty,
         matches=len(rows),
         converged_home=converged_home,
         converged_away=converged_away,
         iterations_home=iterations_home,
         iterations_away=iterations_away,
+        training_started_at=rows[0].event_at,
+        training_ended_at=rows[-1].event_at,
+        git_commit=core["git_commit"],
+        training_data_sha256=core["training_data_sha256"],
+        artifact_sha256=artifact_sha256,
     )
 
 
@@ -169,13 +229,26 @@ def apply_residual_lambda_adjustment(
     lower_bound: float = 0.15,
     upper_bound: float = 4.5,
 ) -> tuple[float, float]:
+    if not fit.converged_home or not fit.converged_away:
+        raise ValueError("residual fit 尚未收斂，不可套用")
     if (feature_family, feature_schema_version) != (fit.feature_family, fit.feature_schema_version):
         raise ValueError("feature family/schema 與 residual fit 不一致")
+    for label, value in (
+        ("baseline_home_lambda", baseline_home_lambda),
+        ("baseline_away_lambda", baseline_away_lambda),
+    ):
+        if not isfinite(value) or value <= 0:
+            raise ValueError(f"{label} 必須為有限正數")
     if not 0 < lower_bound < upper_bound:
         raise ValueError("lambda bounds 無效")
+    for name, value in features.items():
+        if not name.strip() or not isfinite(float(value)):
+            raise ValueError(f"feature {name!r} 無效")
     unknown = set(features) - set(fit.feature_names)
     if unknown:
         raise ValueError("feature schema 與 residual fit 不一致：" + "、".join(sorted(unknown)))
+    if len(fit.home_coefficients) != len(fit.feature_names) or len(fit.away_coefficients) != len(fit.feature_names):
+        raise ValueError("residual fit coefficient schema 損壞")
     vector = [float(features.get(name, 0.0)) for name in fit.feature_names]
     home_shift = sum(value * beta for value, beta in zip(vector, fit.home_coefficients))
     away_shift = sum(value * beta for value, beta in zip(vector, fit.away_coefficients))
