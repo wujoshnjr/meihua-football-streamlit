@@ -7,7 +7,7 @@ from typing import Iterable
 
 import numpy as np
 
-DYNAMIC_STRENGTH_VERSION = "jarvis-opponent-adjusted-strength-v0.2.0"
+DYNAMIC_STRENGTH_VERSION = "jarvis-opponent-adjusted-strength-v0.3.0"
 
 
 @dataclass(frozen=True)
@@ -24,6 +24,8 @@ class DynamicStrengthObservation:
     baseline_home_goals_per_match: float
     baseline_away_goals_per_match: float
     source_payload_sha256: str
+    home_xg: float | None = None
+    away_xg: float | None = None
 
     def validate(self) -> list[str]:
         errors: list[str] = []
@@ -46,6 +48,11 @@ class DynamicStrengthObservation:
         ):
             if not isfinite(value) or value <= 0:
                 errors.append(f"{self.match_id} 的 {label} 必須為有限正數")
+        if (self.home_xg is None) != (self.away_xg is None):
+            errors.append(f"{self.match_id} 的 home_xg/away_xg 必須同時存在或同時缺失")
+        for label, value in (("home_xg", self.home_xg), ("away_xg", self.away_xg)):
+            if value is not None and (not isfinite(value) or value < 0):
+                errors.append(f"{self.match_id} 的 {label} 必須為有限非負數")
         if len(self.source_payload_sha256) != 64 or any(
             character not in "0123456789abcdef" for character in self.source_payload_sha256
         ):
@@ -81,6 +88,8 @@ class DynamicStrengthFit:
     iterations: int
     selected_match_ids: tuple[str, ...]
     identifiability_constraint: str = "SUM_TO_ZERO_ATTACK_AND_DEFENCE"
+    xg_weight: float = 0.0
+    target_definition: str = "GOALS_ONLY"
 
     def team(self, team_id: str) -> TeamStrength | None:
         return next((team for team in self.teams if team.team_id == team_id), None)
@@ -111,7 +120,7 @@ def _sum_to_zero_contrast(team_count: int) -> np.ndarray:
 def _fit_weighted_poisson(
     matrix: np.ndarray,
     offsets: np.ndarray,
-    goals: np.ndarray,
+    targets: np.ndarray,
     weights: np.ndarray,
     penalty_matrix: np.ndarray,
     *,
@@ -119,11 +128,18 @@ def _fit_weighted_poisson(
     max_iter: int,
     tolerance: float,
 ) -> tuple[np.ndarray, bool, int]:
+    """Fit a log-mean model using Poisson score equations.
+
+    ``targets`` may be non-integer when the research-only xG blend is enabled.
+    In that case this is a quasi-likelihood mean fit, not a claim that xG itself is
+    a Poisson count. ``xg_weight=0`` preserves the original count likelihood.
+    """
+
     coefficients = np.zeros(matrix.shape[1], dtype=float)
     for iteration in range(1, max_iter + 1):
         linear = np.clip(offsets + matrix @ coefficients, -12.0, 6.0)
         mean = np.exp(linear)
-        residual = weights * (mean - goals)
+        residual = weights * (mean - targets)
         gradient = matrix.T @ residual + l2_penalty * (penalty_matrix @ coefficients)
         hessian = matrix.T @ (matrix * (weights * mean)[:, None]) + l2_penalty * penalty_matrix
         try:
@@ -142,18 +158,22 @@ def fit_dynamic_strength(
     cutoff_at: datetime,
     half_life_days: float = 180.0,
     l2_penalty: float = 8.0,
+    xg_weight: float = 0.0,
     min_matches: int = 100,
     max_iter: int = 100,
     tolerance: float = 1e-7,
 ) -> DynamicStrengthFit:
     """Fit time-decayed opponent-adjusted attack and defence effects.
 
-    For match i vs j, the two score intensities are modelled as
+    For match i vs j, score intensities are modelled as
     ``baseline_home * exp(attack_i + defence_weakness_j)`` and
     ``baseline_away * exp(attack_j + defence_weakness_i)``. Attack and defence
-    effects are each constrained to sum to zero across fitted teams. This makes
-    them relative strengths instead of allowing the team-effect layer to absorb a
-    free global recalibration of the registered scoring baseline.
+    effects are each constrained to sum to zero across fitted teams.
+
+    ``xg_weight`` is research-only. Targets become
+    ``(1-xg_weight)*goals + xg_weight*xG`` so noisy finishing can be partially
+    shrunk toward shot-quality production. It defaults to zero for exact backward
+    compatibility and must be selected on VALIDATION rather than TEST_UNTOUCHED.
     """
 
     if cutoff_at.tzinfo is None:
@@ -162,6 +182,8 @@ def fit_dynamic_strength(
         raise ValueError("half_life_days 必須為有限正數")
     if not isfinite(l2_penalty) or l2_penalty <= 0:
         raise ValueError("l2_penalty 必須為有限正數")
+    if not isfinite(xg_weight) or not 0.0 <= xg_weight <= 1.0:
+        raise ValueError("xg_weight 必須為 0 至 1 的有限數")
     if min_matches < 1:
         raise ValueError("min_matches 必須為正整數")
     if isinstance(max_iter, bool) or not isinstance(max_iter, int) or max_iter < 1:
@@ -181,6 +203,8 @@ def fit_dynamic_strength(
     )
     if len(rows) < min_matches:
         raise ValueError(f"動態攻防擬合至少需要 {min_matches} 場 cutoff 前資料")
+    if xg_weight > 0 and any(row.home_xg is None or row.away_xg is None for row in rows):
+        raise ValueError("xg_weight > 0 時所有 selected rows 都必須有 home_xg/away_xg")
 
     teams = tuple(sorted({row.home_team_id for row in rows} | {row.away_team_id for row in rows}))
     team_index = {team_id: index for index, team_id in enumerate(teams)}
@@ -189,7 +213,7 @@ def fit_dynamic_strength(
     effect_dimension = team_count - 1
     matrix = np.zeros((2 * len(rows), 2 * effect_dimension), dtype=float)
     offsets = np.zeros(2 * len(rows), dtype=float)
-    goals = np.zeros(2 * len(rows), dtype=float)
+    targets = np.zeros(2 * len(rows), dtype=float)
     weights = np.zeros(2 * len(rows), dtype=float)
     effective_matches = {team_id: 0.0 for team_id in teams}
 
@@ -207,8 +231,14 @@ def fit_dynamic_strength(
         matrix[away_score_row, effect_dimension:] = contrast[home_index]
         offsets[home_score_row] = log(row.baseline_home_goals_per_match)
         offsets[away_score_row] = log(row.baseline_away_goals_per_match)
-        goals[home_score_row] = float(row.home_goals)
-        goals[away_score_row] = float(row.away_goals)
+        home_target = float(row.home_goals)
+        away_target = float(row.away_goals)
+        if xg_weight > 0:
+            assert row.home_xg is not None and row.away_xg is not None
+            home_target = (1.0 - xg_weight) * home_target + xg_weight * row.home_xg
+            away_target = (1.0 - xg_weight) * away_target + xg_weight * row.away_xg
+        targets[home_score_row] = home_target
+        targets[away_score_row] = away_target
         weights[home_score_row] = weight
         weights[away_score_row] = weight
         effective_matches[row.home_team_id] += weight
@@ -221,7 +251,7 @@ def fit_dynamic_strength(
     coefficients, converged, iterations = _fit_weighted_poisson(
         matrix,
         offsets,
-        goals,
+        targets,
         weights,
         penalty_matrix,
         l2_penalty=l2_penalty,
@@ -249,6 +279,8 @@ def fit_dynamic_strength(
         converged=converged,
         iterations=iterations,
         selected_match_ids=tuple(row.match_id for row in rows),
+        xg_weight=xg_weight,
+        target_definition="GOALS_ONLY" if xg_weight == 0 else "GOALS_XG_CONVEX_BLEND",
     )
 
 
