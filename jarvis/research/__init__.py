@@ -9,6 +9,7 @@ from .experiment import (
     paired_model_comparison,
     validate_chronological_dataset,
 )
+from .market import MARKET_BENCHMARK_VERSION, MarketBenchmarkSnapshot
 from .residual import (
     GENERIC_RESIDUAL_FIT_VERSION,
     ResidualLambdaFit,
@@ -21,6 +22,8 @@ __all__ = [
     "EXPERIMENT_SCHEMA_VERSION",
     "ForecastEvaluation",
     "GENERIC_RESIDUAL_FIT_VERSION",
+    "MARKET_BENCHMARK_VERSION",
+    "MarketBenchmarkSnapshot",
     "ModelForecast",
     "PrematchExperimentRecord",
     "ResidualLambdaFit",
