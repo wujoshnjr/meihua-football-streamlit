@@ -2,17 +2,23 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from math import exp, isfinite
+from math import isfinite
 from typing import Any, Iterable, Mapping
 
-import numpy as np
+from jarvis.research.residual import (
+    GENERIC_RESIDUAL_FIT_VERSION,
+    ResidualLambdaFit,
+    ResidualLambdaObservation,
+    apply_residual_lambda_adjustment,
+    fit_residual_lambda_adjustment,
+)
 
 from .integrity import sha256_payload
-from .outcome_design import validate_numeric_feature_row
-from .runtime import detect_git_commit
+from .outcome_design import QIMEN_OUTCOME_DESIGN_VERSION, validate_numeric_feature_row
 
 
-QIMEN_LAMBDA_FIT_VERSION = "jarvis-qimen-lambda-fit-v0.2.0"
+QIMEN_LAMBDA_FIT_VERSION = "jarvis-qimen-lambda-fit-v0.3.0"
+QIMEN_FEATURE_FAMILY = "QIMEN"
 
 
 @dataclass(frozen=True)
@@ -65,10 +71,27 @@ class QimenLambdaObservation:
         payload["features"] = dict(sorted(self.features.items()))
         return payload
 
+    def to_generic(self) -> ResidualLambdaObservation:
+        return ResidualLambdaObservation(
+            match_id=self.match_id,
+            event_at=self.event_at,
+            baseline_home_lambda=self.baseline_home_lambda,
+            baseline_away_lambda=self.baseline_away_lambda,
+            actual_home_goals=self.actual_home_goals,
+            actual_away_goals=self.actual_away_goals,
+            features=dict(self.features),
+            feature_family=QIMEN_FEATURE_FAMILY,
+            feature_schema_version=QIMEN_OUTCOME_DESIGN_VERSION,
+            payload_sha256=self.payload_sha256,
+            dataset_role=self.dataset_role,
+        )
+
 
 @dataclass(frozen=True)
 class QimenLambdaFit:
     schema_version: str
+    feature_schema_version: str
+    generic_artifact_sha256: str
     git_commit: str
     feature_names: tuple[str, ...]
     home_coefficients: tuple[float, ...]
@@ -95,49 +118,26 @@ class QimenLambdaFit:
         payload["artifact_source"] = self.artifact_source
         return payload
 
-
-def _fit_poisson_offset(
-    matrix: np.ndarray,
-    baseline_lambda: np.ndarray,
-    goals: np.ndarray,
-    *,
-    l2_penalty: float,
-    max_iter: int,
-    tolerance: float,
-) -> tuple[np.ndarray, bool, int]:
-    """Fit log(mu)=log(baseline)+X beta with L2-penalized Newton steps.
-
-    There is intentionally no intercept: if all Qimen coefficients are zero, the
-    challenger exactly reproduces the football-only baseline instead of gaining a
-    free global recalibration term. The design matrix is also checked explicitly
-    so complete one-hot groups cannot recreate a hidden intercept.
-    """
-
-    coefficients = np.zeros(matrix.shape[1], dtype=float)
-    identity = np.eye(matrix.shape[1], dtype=float)
-
-    for iteration in range(1, max_iter + 1):
-        linear = np.log(baseline_lambda) + matrix @ coefficients
-        linear = np.clip(linear, -12.0, 6.0)
-        mean = np.exp(linear)
-        gradient = matrix.T @ (mean - goals) + l2_penalty * coefficients
-        hessian = matrix.T @ (matrix * mean[:, None]) + l2_penalty * identity
-        try:
-            step = np.linalg.solve(hessian, gradient)
-        except np.linalg.LinAlgError:
-            step = np.linalg.pinv(hessian) @ gradient
-        next_coefficients = coefficients - step
-        if np.max(np.abs(step)) <= tolerance:
-            return next_coefficients, True, iteration
-        coefficients = next_coefficients
-
-    return coefficients, False, max_iter
-
-
-def _contains_constant_direction(matrix: np.ndarray, *, tolerance: float = 1e-10) -> bool:
-    target = np.ones(matrix.shape[0], dtype=float)
-    coefficients, *_ = np.linalg.lstsq(matrix, target, rcond=None)
-    return bool(np.max(np.abs(matrix @ coefficients - target)) <= tolerance)
+    def to_generic(self) -> ResidualLambdaFit:
+        return ResidualLambdaFit(
+            schema_version=GENERIC_RESIDUAL_FIT_VERSION,
+            feature_family=QIMEN_FEATURE_FAMILY,
+            feature_schema_version=self.feature_schema_version,
+            feature_names=self.feature_names,
+            home_coefficients=self.home_coefficients,
+            away_coefficients=self.away_coefficients,
+            l2_penalty=self.l2_penalty,
+            matches=self.matches,
+            converged_home=self.converged_home,
+            converged_away=self.converged_away,
+            iterations_home=self.iterations_home,
+            iterations_away=self.iterations_away,
+            training_started_at=self.training_started_at,
+            training_ended_at=self.training_ended_at,
+            git_commit=self.git_commit,
+            training_data_sha256=self.training_data_sha256,
+            artifact_sha256=self.generic_artifact_sha256,
+        )
 
 
 def fit_qimen_lambda_adjustment(
@@ -148,87 +148,63 @@ def fit_qimen_lambda_adjustment(
     tolerance: float = 1e-7,
     min_matches: int = 200,
 ) -> QimenLambdaFit:
-    """Fit home/away Qimen lambda adjustments using TRAIN-only observations."""
+    """Compatibility wrapper over the shared JARVIS residual engine.
+
+    Qimen keeps its public artifact type and source prefix so existing hybrid code
+    remains stable, but optimization, hidden-intercept checks and provenance are
+    delegated to the same generic engine used by other v8 signal families.
+    """
 
     rows = sorted(observations, key=lambda row: (row.event_at, row.match_id))
-    if len(rows) < min_matches:
-        raise ValueError(f"Qimen lambda 擬合至少需要 {min_matches} 場 TRAIN 樣本")
-    if not isfinite(l2_penalty) or l2_penalty <= 0:
-        raise ValueError("l2_penalty 必須為有限正數")
-    if isinstance(max_iter, bool) or not isinstance(max_iter, int) or max_iter < 1:
-        raise ValueError("max_iter 必須為正整數")
-    if not isfinite(tolerance) or tolerance <= 0:
-        raise ValueError("tolerance 必須為有限正數")
-
     errors = [error for row in rows for error in row.validate()]
     if errors:
         raise ValueError("；".join(errors))
     if len({row.match_id.strip() for row in rows}) != len(rows):
         raise ValueError("Qimen lambda TRAIN 資料含重複 match_id")
 
-    feature_names = tuple(sorted({name for row in rows for name in row.features}))
-    matrix = np.asarray(
-        [[float(row.features.get(name, 0.0)) for name in feature_names] for row in rows],
-        dtype=float,
-    )
-    if _contains_constant_direction(matrix):
-        raise ValueError("Qimen feature design 含常數方向，會形成 hidden intercept；請使用 reference/effect coding")
-
-    home_baseline = np.asarray([row.baseline_home_lambda for row in rows], dtype=float)
-    away_baseline = np.asarray([row.baseline_away_lambda for row in rows], dtype=float)
-    home_goals = np.asarray([row.actual_home_goals for row in rows], dtype=float)
-    away_goals = np.asarray([row.actual_away_goals for row in rows], dtype=float)
-
-    home_beta, converged_home, iterations_home = _fit_poisson_offset(
-        matrix,
-        home_baseline,
-        home_goals,
+    generic_fit = fit_residual_lambda_adjustment(
+        (row.to_generic() for row in rows),
         l2_penalty=l2_penalty,
         max_iter=max_iter,
         tolerance=tolerance,
+        min_matches=min_matches,
     )
-    away_beta, converged_away, iterations_away = _fit_poisson_offset(
-        matrix,
-        away_baseline,
-        away_goals,
-        l2_penalty=l2_penalty,
-        max_iter=max_iter,
-        tolerance=tolerance,
-    )
-
-    training_data = [row.to_dict() for row in rows]
     core = {
         "schema_version": QIMEN_LAMBDA_FIT_VERSION,
-        "git_commit": detect_git_commit(),
-        "feature_names": feature_names,
-        "home_coefficients": tuple(float(value) for value in home_beta),
-        "away_coefficients": tuple(float(value) for value in away_beta),
-        "l2_penalty": l2_penalty,
-        "matches": len(rows),
-        "training_started_at": rows[0].event_at.isoformat(),
-        "training_ended_at": rows[-1].event_at.isoformat(),
-        "converged_home": converged_home,
-        "converged_away": converged_away,
-        "iterations_home": iterations_home,
-        "iterations_away": iterations_away,
-        "training_data_sha256": sha256_payload(training_data),
+        "feature_schema_version": generic_fit.feature_schema_version,
+        "generic_artifact_sha256": generic_fit.artifact_sha256,
+        "git_commit": generic_fit.git_commit,
+        "feature_names": generic_fit.feature_names,
+        "home_coefficients": generic_fit.home_coefficients,
+        "away_coefficients": generic_fit.away_coefficients,
+        "l2_penalty": generic_fit.l2_penalty,
+        "matches": generic_fit.matches,
+        "training_started_at": generic_fit.training_started_at.isoformat(),
+        "training_ended_at": generic_fit.training_ended_at.isoformat(),
+        "converged_home": generic_fit.converged_home,
+        "converged_away": generic_fit.converged_away,
+        "iterations_home": generic_fit.iterations_home,
+        "iterations_away": generic_fit.iterations_away,
+        "training_data_sha256": generic_fit.training_data_sha256,
     }
     artifact_sha256 = sha256_payload(core)
     return QimenLambdaFit(
         schema_version=QIMEN_LAMBDA_FIT_VERSION,
-        git_commit=core["git_commit"],
-        feature_names=feature_names,
-        home_coefficients=core["home_coefficients"],
-        away_coefficients=core["away_coefficients"],
-        l2_penalty=l2_penalty,
-        matches=len(rows),
-        training_started_at=rows[0].event_at,
-        training_ended_at=rows[-1].event_at,
-        converged_home=converged_home,
-        converged_away=converged_away,
-        iterations_home=iterations_home,
-        iterations_away=iterations_away,
-        training_data_sha256=core["training_data_sha256"],
+        feature_schema_version=generic_fit.feature_schema_version,
+        generic_artifact_sha256=generic_fit.artifact_sha256,
+        git_commit=generic_fit.git_commit,
+        feature_names=generic_fit.feature_names,
+        home_coefficients=generic_fit.home_coefficients,
+        away_coefficients=generic_fit.away_coefficients,
+        l2_penalty=generic_fit.l2_penalty,
+        matches=generic_fit.matches,
+        training_started_at=generic_fit.training_started_at,
+        training_ended_at=generic_fit.training_ended_at,
+        converged_home=generic_fit.converged_home,
+        converged_away=generic_fit.converged_away,
+        iterations_home=generic_fit.iterations_home,
+        iterations_away=generic_fit.iterations_away,
+        training_data_sha256=generic_fit.training_data_sha256,
         artifact_sha256=artifact_sha256,
     )
 
@@ -242,27 +218,18 @@ def apply_qimen_lambda_adjustment(
     lower_bound: float = 0.15,
     upper_bound: float = 4.5,
 ) -> tuple[float, float]:
-    """Apply a fitted artifact; missing reference-coded fields are zero."""
+    """Apply a Qimen compatibility artifact through the shared residual engine."""
 
-    if not fit.converged_home or not fit.converged_away:
-        raise ValueError("Qimen lambda fit 尚未收斂，不可套用")
-    if not isfinite(baseline_home_lambda) or baseline_home_lambda <= 0:
-        raise ValueError("baseline_home_lambda 必須為有限正數")
-    if not isfinite(baseline_away_lambda) or baseline_away_lambda <= 0:
-        raise ValueError("baseline_away_lambda 必須為有限正數")
-    if not 0 < lower_bound < upper_bound:
-        raise ValueError("lambda bounds 無效")
     validate_numeric_feature_row(features)
-
-    unknown = set(features) - set(fit.feature_names)
-    if unknown:
-        raise ValueError("Qimen feature schema 與 fit 不一致：" + "、".join(sorted(unknown)))
-    vector = [float(features.get(name, 0.0)) for name in fit.feature_names]
-    home_shift = sum(value * beta for value, beta in zip(vector, fit.home_coefficients))
-    away_shift = sum(value * beta for value, beta in zip(vector, fit.away_coefficients))
-    home = baseline_home_lambda * exp(home_shift)
-    away = baseline_away_lambda * exp(away_shift)
-    return (
-        min(upper_bound, max(lower_bound, home)),
-        min(upper_bound, max(lower_bound, away)),
+    if fit.feature_schema_version != QIMEN_OUTCOME_DESIGN_VERSION:
+        raise ValueError("Qimen feature schema 與目前 outcome design 版本不一致")
+    return apply_residual_lambda_adjustment(
+        baseline_home_lambda,
+        baseline_away_lambda,
+        features,
+        fit.to_generic(),
+        feature_family=QIMEN_FEATURE_FAMILY,
+        feature_schema_version=QIMEN_OUTCOME_DESIGN_VERSION,
+        lower_bound=lower_bound,
+        upper_bound=upper_bound,
     )
