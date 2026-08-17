@@ -22,7 +22,7 @@ def test_observation_plum_example_arithmetic_and_body_use():
     assert snapshot.changed_lower_trigram == "艮"
 
 
-def test_feature_encoder_is_raw_and_deterministic():
+def test_feature_encoder_is_raw_reference_coded_and_deterministic():
     snapshot = build_meihua_snapshot_from_numbers(
         event_local_at=datetime(2026, 6, 27, 19, 30, tzinfo=timezone.utc),
         timezone_name="UTC",
@@ -32,7 +32,18 @@ def test_feature_encoder_is_raw_and_deterministic():
         hour_branch="戌",
     )
     features = meihua_outcome_numeric_features(snapshot)
-    assert features["moving_line"] == float(snapshot.moving_line)
-    assert features[f"body_trigram={snapshot.body_trigram}"] == 1.0
-    assert features[f"body_use_relation={snapshot.body_use_relation}"] == 1.0
+
+    assert "moving_line" not in features
+    assert "moving_line=1" not in features
+    if snapshot.moving_line > 1:
+        assert features[f"moving_line={snapshot.moving_line}"] == 1.0
+    else:
+        assert not any(value for name, value in features.items() if name.startswith("moving_line="))
+
+    assert "upper_trigram=乾" not in features
+    assert "body_use_relation=生體" not in features
+    if snapshot.body_trigram != "乾":
+        assert features[f"body_trigram={snapshot.body_trigram}"] == 1.0
+    if snapshot.body_use_relation != "生體":
+        assert features[f"body_use_relation={snapshot.body_use_relation}"] == 1.0
     assert not any("home_win" in name or "goal_bonus" in name for name in features)
