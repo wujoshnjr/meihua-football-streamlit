@@ -43,7 +43,7 @@ The motivation is to test whether partially shrinking noisy realized finishing t
 
 ## VALIDATION-only hyperparameter tuning
 
-`jarvis-dynamic-strength-tuning-v0.1.0` removes manual selection of the three highest-impact dynamic-strength hyperparameters:
+`jarvis-dynamic-strength-tuning-v0.2.0` removes manual selection of the three highest-impact dynamic-strength hyperparameters:
 
 - exponential `half_life_days`;
 - `l2_penalty`;
@@ -51,7 +51,18 @@ The motivation is to test whether partially shrinking noisy realized finishing t
 
 `tune_dynamic_strength(...)` uses rolling-origin validation. For every registered `VALIDATION` fixture it refits the strength model at that fixture's own prematch cutoff, predicts the fixture, and scores 1X2 log loss plus Brier score. Later validation matches therefore cannot leak into earlier validation fits.
 
-The xG grid **must contain `0.0`**. Goals-only is always a legal fallback; xG earns a non-zero weight only when held-out validation forecasts improve. Candidate selection minimizes mean 1X2 log loss, then Brier score. Exact ties are resolved conservatively toward lower xG weight, stronger L2 regularization, and longer half-life.
+The xG grid **must contain `0.0`**. Goals-only is always a legal fallback; xG earns a non-zero weight only when held-out validation forecasts improve. Candidate selection minimizes mean 1X2 log loss, then Brier score. Mean exact-score NLL is also recorded and is used only as a later tie-break/diagnostic, so the primary 1X2 tuning objective is not silently changed. Exact ties are resolved conservatively toward lower xG weight, stronger L2 regularization, and longer half-life.
+
+### Score-model consistency
+
+Version `v0.2.0` also closes a validation/deployment mismatch. Candidate hyperparameters are now scored using the same registered downstream score model that will be used for the frozen challenger:
+
+- `score_model="INDEPENDENT_POISSON"` preserves the previous behavior and requires `dixon_coles_rho=0`;
+- `score_model="DIXON_COLES"` applies the registered low-score dependence correction before deriving 1X2 probabilities and exact-score NLL;
+- `dixon_coles_rho` is treated as an already-frozen TRAIN artifact value. The dynamic-strength tuner does **not** re-estimate rho on VALIDATION;
+- the tuning artifact fingerprints `score_model`, `dixon_coles_rho`, and `max_goals`, so two otherwise identical searches under different score distributions cannot produce the same provenance claim.
+
+This matters because Dixon–Coles specifically changes the probabilities of 0–0, 0–1, 1–0 and 1–1 outcomes. Selecting team-strength hyperparameters under independent Poisson and later evaluating them under Dixon–Coles would optimize one probability distribution and deploy another.
 
 `CALIBRATION` and `TEST_UNTOUCHED` fixtures are rejected by this tuner. After selection, the chosen hyperparameters must be frozen before calibration and untouched testing. A better validation score is not itself evidence of final predictive improvement.
 
@@ -65,6 +76,8 @@ The xG grid **must contain `0.0`**. Goals-only is always a legal fallback; xG ea
 - positive xG weight requires full selected-row xG coverage;
 - tuning fixtures must be explicitly labelled `VALIDATION` and locked before kickoff;
 - xG tuning grids must preserve a goals-only fallback;
+- tuning score-model/rho settings are saved in the artifact fingerprint;
+- a validation score outside the registered `max_goals` grid is rejected rather than silently assigned an incorrect exact-score NLL;
 - unconverged fits cannot be used for prediction;
 - lambda bounds are numerical safety rails, not football claims.
 
