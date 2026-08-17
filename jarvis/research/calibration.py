@@ -82,10 +82,11 @@ def fit_research_calibration(
     specifications.
     """
 
-    row_by_match = {row.record.match_id: row for row in rows}
-    if len(row_by_match) == 0:
+    dataset_rows = list(rows)
+    if not dataset_rows:
         raise ValueError("至少需要一筆 dataset row")
-    if len(row_by_match) != len(list(rows)):
+    row_by_match = {row.record.match_id: row for row in dataset_rows}
+    if len(row_by_match) != len(dataset_rows):
         raise ValueError("dataset rows 含重複 match_id")
 
     supplied = list(forecasts)
