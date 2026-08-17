@@ -12,7 +12,7 @@ from .outcome_design import validate_numeric_feature_row
 from .runtime import detect_git_commit
 
 
-QIMEN_LAMBDA_FIT_VERSION = "jarvis-qimen-lambda-fit-v0.1.0"
+QIMEN_LAMBDA_FIT_VERSION = "jarvis-qimen-lambda-fit-v0.2.0"
 
 
 @dataclass(frozen=True)
@@ -109,7 +109,8 @@ def _fit_poisson_offset(
 
     There is intentionally no intercept: if all Qimen coefficients are zero, the
     challenger exactly reproduces the football-only baseline instead of gaining a
-    free global recalibration term.
+    free global recalibration term. The design matrix is also checked explicitly
+    so complete one-hot groups cannot recreate a hidden intercept.
     """
 
     coefficients = np.zeros(matrix.shape[1], dtype=float)
@@ -131,6 +132,12 @@ def _fit_poisson_offset(
         coefficients = next_coefficients
 
     return coefficients, False, max_iter
+
+
+def _contains_constant_direction(matrix: np.ndarray, *, tolerance: float = 1e-10) -> bool:
+    target = np.ones(matrix.shape[0], dtype=float)
+    coefficients, *_ = np.linalg.lstsq(matrix, target, rcond=None)
+    return bool(np.max(np.abs(matrix @ coefficients - target)) <= tolerance)
 
 
 def fit_qimen_lambda_adjustment(
@@ -164,6 +171,9 @@ def fit_qimen_lambda_adjustment(
         [[float(row.features.get(name, 0.0)) for name in feature_names] for row in rows],
         dtype=float,
     )
+    if _contains_constant_direction(matrix):
+        raise ValueError("Qimen feature design 含常數方向，會形成 hidden intercept；請使用 reference/effect coding")
+
     home_baseline = np.asarray([row.baseline_home_lambda for row in rows], dtype=float)
     away_baseline = np.asarray([row.baseline_away_lambda for row in rows], dtype=float)
     home_goals = np.asarray([row.actual_home_goals for row in rows], dtype=float)
@@ -232,8 +242,10 @@ def apply_qimen_lambda_adjustment(
     lower_bound: float = 0.15,
     upper_bound: float = 4.5,
 ) -> tuple[float, float]:
-    """Apply a fitted artifact; missing one-hot fields are zero, unknown fields fail."""
+    """Apply a fitted artifact; missing reference-coded fields are zero."""
 
+    if not fit.converged_home or not fit.converged_away:
+        raise ValueError("Qimen lambda fit 尚未收斂，不可套用")
     if not isfinite(baseline_home_lambda) or baseline_home_lambda <= 0:
         raise ValueError("baseline_home_lambda 必須為有限正數")
     if not isfinite(baseline_away_lambda) or baseline_away_lambda <= 0:
