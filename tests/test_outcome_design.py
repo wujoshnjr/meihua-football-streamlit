@@ -25,3 +25,13 @@ def test_numeric_design_is_deterministic_and_contains_no_interpretation_weight(c
     assert any(name.startswith("away_star::") for name in first)
     assert all("interpretation_index" not in name for name in first)
     assert all(isinstance(value, float) for value in first.values())
+
+    # Reference categories are intentionally omitted so one-of-K groups cannot
+    # sum to a constant one and recreate an intercept in the residual model.
+    assert "home_door::休門" not in first
+    assert "away_door::休門" not in first
+    assert "chief_door::休門" not in first
+    assert "home_deity::值符" not in first
+    assert "away_deity::值符" not in first
+    assert "home_season::旺" not in first
+    assert "away_season::旺" not in first
