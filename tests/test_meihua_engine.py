@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 
-from meihua.engine import build_meihua_snapshot_from_numbers
+import pytest
+
+from meihua.engine import build_meihua_snapshot, build_meihua_snapshot_from_numbers
 from meihua.outcome_features import meihua_outcome_numeric_features
 
 
@@ -47,3 +49,8 @@ def test_feature_encoder_is_raw_reference_coded_and_deterministic():
     if snapshot.body_use_relation != "生體":
         assert features[f"body_use_relation={snapshot.body_use_relation}"] == 1.0
     assert not any("home_win" in name or "goal_bonus" in name for name in features)
+
+
+def test_meihua_rejects_nonexistent_event_local_dst_time():
+    with pytest.raises(ValueError, match="不存在的夏令時間"):
+        build_meihua_snapshot(datetime(2026, 3, 8, 2, 30), "America/New_York")
