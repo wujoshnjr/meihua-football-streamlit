@@ -90,8 +90,6 @@ class QimenLambdaObservation:
 @dataclass(frozen=True)
 class QimenLambdaFit:
     schema_version: str
-    feature_schema_version: str
-    generic_artifact_sha256: str
     git_commit: str
     feature_names: tuple[str, ...]
     home_coefficients: tuple[float, ...]
@@ -106,6 +104,8 @@ class QimenLambdaFit:
     iterations_away: int
     training_data_sha256: str
     artifact_sha256: str
+    feature_schema_version: str = QIMEN_OUTCOME_DESIGN_VERSION
+    generic_artifact_sha256: str = "0" * 64
 
     @property
     def artifact_source(self) -> str:
@@ -190,8 +190,6 @@ def fit_qimen_lambda_adjustment(
     artifact_sha256 = sha256_payload(core)
     return QimenLambdaFit(
         schema_version=QIMEN_LAMBDA_FIT_VERSION,
-        feature_schema_version=generic_fit.feature_schema_version,
-        generic_artifact_sha256=generic_fit.artifact_sha256,
         git_commit=generic_fit.git_commit,
         feature_names=generic_fit.feature_names,
         home_coefficients=generic_fit.home_coefficients,
@@ -206,6 +204,8 @@ def fit_qimen_lambda_adjustment(
         iterations_away=generic_fit.iterations_away,
         training_data_sha256=generic_fit.training_data_sha256,
         artifact_sha256=artifact_sha256,
+        feature_schema_version=generic_fit.feature_schema_version,
+        generic_artifact_sha256=generic_fit.artifact_sha256,
     )
 
 
