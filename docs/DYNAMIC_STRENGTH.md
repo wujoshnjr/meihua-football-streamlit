@@ -37,19 +37,34 @@ Important constraints:
 - `xg_weight=0` is the default and reproduces the original goals-only estimator;
 - `xg_weight>0` requires complete xG coverage for every selected training row;
 - the blended target is fitted with the same log-mean score equations; with a non-integer target this is treated as a quasi-likelihood mean fit, not as a claim that xG is a Poisson count;
-- `xg_weight` is a research hyperparameter and must be chosen on `VALIDATION`, never by inspecting `CALIBRATION` or `TEST_UNTOUCHED`;
 - enabling xG does not promote this challenger into production and does not imply improved forecast accuracy until chronological out-of-sample metrics demonstrate it.
 
-The motivation is to test whether partially shrinking noisy realized finishing toward shot-quality production improves future estimates of team attack/defence. Recent football research continues to find xG-derived process measures informative about team performance and future outcomes, but this repository treats that as a hypothesis to validate rather than an assumed improvement.
+The motivation is to test whether partially shrinking noisy realized finishing toward shot-quality production improves future estimates of team attack/defence. The repository treats that as a hypothesis to validate rather than an assumed improvement.
+
+## VALIDATION-only hyperparameter tuning
+
+`jarvis-dynamic-strength-tuning-v0.1.0` removes manual selection of the three highest-impact dynamic-strength hyperparameters:
+
+- exponential `half_life_days`;
+- `l2_penalty`;
+- `xg_weight`.
+
+`tune_dynamic_strength(...)` uses rolling-origin validation. For every registered `VALIDATION` fixture it refits the strength model at that fixture's own prematch cutoff, predicts the fixture, and scores 1X2 log loss plus Brier score. Later validation matches therefore cannot leak into earlier validation fits.
+
+The xG grid **must contain `0.0`**. Goals-only is always a legal fallback; xG earns a non-zero weight only when held-out validation forecasts improve. Candidate selection minimizes mean 1X2 log loss, then Brier score. Exact ties are resolved conservatively toward lower xG weight, stronger L2 regularization, and longer half-life.
+
+`CALIBRATION` and `TEST_UNTOUCHED` fixtures are rejected by this tuner. After selection, the chosen hyperparameters must be frozen before calibration and untouched testing. A better validation score is not itself evidence of final predictive improvement.
 
 ## Guardrails
 
-- only `event_at < cutoff_at` and `available_at <= cutoff_at` rows are used;
+- only `event_at < cutoff_at` and `available_at <= cutoff_at` historical rows are used;
 - duplicate match IDs are rejected;
 - attack and defence effects each sum to zero over fitted teams;
 - unseen teams shrink exactly to the registered scoring baseline;
 - partial home/away xG pairs are rejected;
 - positive xG weight requires full selected-row xG coverage;
+- tuning fixtures must be explicitly labelled `VALIDATION` and locked before kickoff;
+- xG tuning grids must preserve a goals-only fallback;
 - unconverged fits cannot be used for prediction;
 - lambda bounds are numerical safety rails, not football claims.
 
