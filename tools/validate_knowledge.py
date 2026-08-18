@@ -14,6 +14,7 @@ from jarvis.qimen_relations import all_relations  # noqa: E402
 KNOWLEDGE = ROOT / "knowledge"
 TRIGRAMS = {"乾", "兌", "離", "震", "巽", "坎", "艮", "坤"}
 BODY_USE = {"生體", "體生用", "克體", "體克用", "比和"}
+DEITIES = {"值符", "螣蛇", "太陰", "六合", "白虎", "玄武", "九地", "九天"}
 
 
 def load(name: str):
@@ -56,6 +57,15 @@ def main() -> None:
         require(bool(row.football_meaning), f"Qimen relation {row.key} missing football meaning")
         require(bool(row.observable_signals), f"Qimen relation {row.key} missing observable signals")
         require(bool(row.counter_signals), f"Qimen relation {row.key} missing counter signals")
+
+    qimen_deep = load("qimen_deep_layers.json")
+    require(len(qimen_deep.get("reading_hierarchy", [])) == 8, "Qimen deep hierarchy must contain 8 layers")
+    require(set(qimen_deep.get("deity_modulation", {})) == DEITIES, "Qimen deep deity modulation must cover all 8 deities")
+    require(len(qimen_deep.get("football_dimensions", [])) >= 8, "Qimen deep football dimensions are incomplete")
+    for name, row in qimen_deep["deity_modulation"].items():
+        require(bool(row.get("general")), f"Qimen deity {name} missing deep general meaning")
+        require(bool(row.get("football")), f"Qimen deity {name} missing deep football meaning")
+        require(bool(row.get("observable")) and bool(row.get("counter")), f"Qimen deity {name} needs evidence and counter-evidence")
 
     ontology = load("football_ontology.json")
     require(bool(ontology.get("boundaries")), "football ontology needs claim boundaries")
@@ -110,6 +120,16 @@ def main() -> None:
     for row in line_roles:
         require(bool(row.get("general")) and bool(row.get("football")), "moving-line roles need general and football meanings")
 
+    meihua_deep = load("meihua_deep_layers.json")
+    require(set(meihua_deep.get("hexagram_roles", {})) == {"original", "mutual", "changed"}, "Meihua deep profile must define original/mutual/changed roles")
+    require(set(meihua_deep.get("body_use_principles", {})) == BODY_USE, "Meihua deep body/use principles must cover all 5 relations")
+    require(set(meihua_deep.get("strength_rules", {})) == {"旺", "平", "衰"}, "Meihua deep strength rules must cover 旺平衰")
+    require(set(meihua_deep.get("moving_line_depth", {})) == {str(i) for i in range(1, 7)}, "Meihua deep moving-line rules must cover 1..6")
+    require(len(meihua_deep.get("football_dimensions", [])) == 8, "Meihua deep football dimensions must contain 8 layers")
+    for relation, row in meihua_deep["body_use_principles"].items():
+        require(bool(row.get("general")) and bool(row.get("football")), f"Meihua {relation} deep meanings incomplete")
+        require(bool(row.get("observe")) and bool(row.get("counter")), f"Meihua {relation} needs evidence and counter-evidence")
+
     sources = load("sources.json")
     source_ids = {row.get("id") for row in sources.get("sources", [])}
     required_sources = {
@@ -126,7 +146,8 @@ def main() -> None:
     print(
         "knowledge validation passed: "
         f"Qimen 9 palaces / 8 doors / 9 stars / 8 deities / 10 stems / {len(patterns)} patterns / "
-        "306 relations; Meihua 8 trigrams / 64 hexagrams / 5 body-use relations / 6 moving-line roles"
+        "306 relations / 8 deep hierarchy layers / 8 deity modulations; "
+        "Meihua 8 trigrams / 64 hexagrams / 5 body-use relations / 6 moving-line roles / 8 deep football dimensions"
     )
 
 
