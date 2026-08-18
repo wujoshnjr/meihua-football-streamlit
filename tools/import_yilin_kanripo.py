@@ -6,7 +6,6 @@ import json
 import re
 import shutil
 import urllib.request
-from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -24,19 +23,18 @@ UPSTREAM_EDITION = "WYG / 文淵閣四庫全書"
 UPSTREAM_BASE = f"https://raw.githubusercontent.com/{UPSTREAM_REPO}/{UPSTREAM_COMMIT}"
 SOURCE_FILES = tuple(f"KR3g0029_{index:03d}.txt" for index in range(1, 5))
 
-# Source transcription spellings are intentionally mapped by King Wen number,
-# then converted to the project's canonical hexagram name. This prevents
-# orthographic variants from breaking runtime lookup while preserving the
-# source label separately.
+# These spellings are only diagnostic. The corpus matrix itself follows the
+# explicit source-section ordinal and the target's position (King Wen 1..64).
+# This is important because the WYG digital transcription contains occasional
+# glyph variants and at least one source-label anomaly (e.g. 艮 block position
+# 9 is labelled 小過). We preserve that label rather than silently rewriting it.
 SOURCE_NAMES = (
     "乾", "坤", "屯", "蒙", "需", "訟", "師", "比", "小畜", "履", "泰", "否", "同人", "大有", "謙", "豫",
     "隨", "蠱", "臨", "觀", "噬嗑", "賁", "剝", "復", "无妄", "大畜", "頤", "大過", "坎", "離", "咸", "恒",
     "遯", "大壯", "晉", "明夷", "家人", "睽", "蹇", "解", "損", "益", "夬", "姤", "萃", "升", "困", "井",
     "革", "鼎", "震", "艮", "漸", "歸妹", "豐", "旅", "巽", "兌", "渙", "節", "中孚", "小過", "既濟", "未濟",
 )
-
 EXTRA_ALIASES = {
-    # historical / glyph variants seen in WYG digital transcriptions
     "㤗": 11,
     "無妄": 25,
     "无妄": 25,
@@ -49,7 +47,6 @@ EXTRA_ALIASES = {
     "兊": 58,
     "兑": 58,
     "兌": 58,
-    # normalized/simplified glyphs that occur in Kanripo's source layer
     "随": 17,
     "蛊": 18,
     "临": 19,
@@ -65,12 +62,14 @@ EXTRA_ALIASES = {
     "丰": 55,
     "涣": 59,
     "节": 60,
-    "小过": 62,
+    "旣濟": 63,
+    "旣济": 63,
     "既济": 63,
     "未济": 64,
 }
 
 SECTION_RE = re.compile(r"^\s*([^\s　]+)之第([一二三四五六七八九十百]+)¶?\s*$")
+ENTRY_RE = re.compile(r"^([^\s　]+)[\s　]+(.*)$")
 PAGE_RE = re.compile(r"^<pb:([^>]+)>¶?$")
 NOTE_RE = re.compile(r"\([^()]*\)")
 GAIJI_RE = re.compile(r"&KR\d+;")
@@ -82,9 +81,7 @@ def _chinese_number(text: str) -> int:
         return 10
     if "十" in text:
         left, right = text.split("十", 1)
-        tens = digit.get(left, 1) if left else 1
-        ones = digit.get(right, 0) if right else 0
-        return tens * 10 + ones
+        return digit.get(left, 1) * 10 + digit.get(right, 0)
     return digit[text]
 
 
@@ -119,9 +116,6 @@ def _clean_text(parts: list[str]) -> tuple[str, str, list[str], list[str]]:
 
 def _parse_volume(filename: str, content: str, project: dict[int, dict[str, Any]]) -> list[dict[str, Any]]:
     aliases = _alias_index()
-    alias_pattern = "|".join(re.escape(name) for name in sorted(aliases, key=len, reverse=True))
-    entry_re = re.compile(rf"^({alias_pattern})[\s　]+(.*)$")
-
     sections: list[dict[str, Any]] = []
     current_section: dict[str, Any] | None = None
     current_entry: dict[str, Any] | None = None
@@ -159,15 +153,13 @@ def _parse_volume(filename: str, content: str, project: dict[int, dict[str, Any]
             source_label, ordinal_text = section_match.groups()
             from_number = _chinese_number(ordinal_text)
             label_number = aliases.get(source_label)
-            if label_number != from_number:
-                raise ValueError(
-                    f"{filename}: section label/order mismatch: {source_label} -> {label_number}, ordinal={from_number}"
-                )
             current_section = {
                 "from_number": from_number,
                 "from_name": project[from_number]["name"],
                 "from_symbol": project[from_number]["symbol"],
                 "source_label": source_label,
+                "source_label_number": label_number,
+                "source_label_order_anomaly": label_number != from_number,
                 "source_section": f"{source_label}之第{ordinal_text}",
                 "source_volume_file": filename,
                 "entries": [],
@@ -182,17 +174,22 @@ def _parse_volume(filename: str, content: str, project: dict[int, dict[str, Any]
         if stripped.startswith("焦氏易林卷") or stripped.startswith("欽定四庫全書"):
             continue
 
-        entry_match = entry_re.match(stripped)
         starts_indented = bool(line[:1].isspace() or line.startswith("　"))
+        entry_match = ENTRY_RE.match(stripped)
         if entry_match and not starts_indented:
             flush_entry()
             target_label, text = entry_match.groups()
-            to_number = aliases[target_label]
+            to_number = len(current_section["entries"]) + 1
+            if to_number > 64:
+                raise ValueError(f"{current_section['source_section']} 出現超過 64 個非縮排行")
+            label_number = aliases.get(target_label)
             current_entry = {
                 "to_number": to_number,
                 "to_name": project[to_number]["name"],
                 "to_symbol": project[to_number]["symbol"],
                 "source_target_label": target_label,
+                "source_target_label_number": label_number,
+                "source_label_order_anomaly": label_number != to_number,
                 "source_page_start": current_page,
                 "parts": [text],
             }
@@ -207,19 +204,44 @@ def _validate_sections(sections: list[dict[str, Any]]) -> None:
     if len(sections) != 64:
         raise ValueError(f"焦氏易林應有 64 個本卦 section，解析得到 {len(sections)}")
     seen_from = [int(section["from_number"]) for section in sections]
-    if set(seen_from) != set(range(1, 65)) or len(seen_from) != len(set(seen_from)):
-        raise ValueError(f"本卦 section 不完整或重複：{seen_from}")
+    if seen_from != list(range(1, 65)):
+        raise ValueError(f"本卦 section 順序或完整性錯誤：{seen_from}")
     for section in sections:
-        targets = [int(row["to_number"]) for row in section["entries"]]
-        counts = Counter(targets)
-        if set(targets) != set(range(1, 65)) or any(value != 1 for value in counts.values()):
-            missing = sorted(set(range(1, 65)) - set(targets))
-            duplicates = sorted(number for number, count in counts.items() if count > 1)
-            raise ValueError(
-                f"{section['source_section']} 應有 64 個之卦；目前 {len(targets)}，missing={missing}, duplicates={duplicates}"
-            )
-        if any(not row.get("classical_text") for row in section["entries"]):
+        rows = section["entries"]
+        targets = [int(row["to_number"]) for row in rows]
+        if targets != list(range(1, 65)):
+            raise ValueError(f"{section['source_section']} 之卦位置必須恰為 1..64，目前={targets}")
+        if any(not row.get("classical_text") for row in rows):
             raise ValueError(f"{section['source_section']} 存在空白林辭")
+        if any(not row.get("source_page_start") for row in rows):
+            raise ValueError(f"{section['source_section']} 存在缺失頁碼定位的林辭")
+
+
+def _source_anomalies(sections: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    anomalies: list[dict[str, Any]] = []
+    for section in sections:
+        if section["source_label_order_anomaly"]:
+            anomalies.append(
+                {
+                    "level": "source_section_label",
+                    "from_number": section["from_number"],
+                    "source_label": section["source_label"],
+                    "mapped_number": section["source_label_number"],
+                }
+            )
+        for row in section["entries"]:
+            if row["source_label_order_anomaly"]:
+                anomalies.append(
+                    {
+                        "level": "target_label",
+                        "from_number": section["from_number"],
+                        "to_number": row["to_number"],
+                        "source_label": row["source_target_label"],
+                        "mapped_number": row["source_target_label_number"],
+                        "page": row["source_page_start"],
+                    }
+                )
+    return anomalies
 
 
 def _write_entries(sections: list[dict[str, Any]], project: dict[int, dict[str, Any]]) -> None:
@@ -227,10 +249,10 @@ def _write_entries(sections: list[dict[str, Any]], project: dict[int, dict[str, 
         shutil.rmtree(ENTRIES_ROOT)
     ENTRIES_ROOT.mkdir(parents=True, exist_ok=True)
 
-    for section in sorted(sections, key=lambda row: int(row["from_number"])):
+    for section in sections:
         from_number = int(section["from_number"])
-        rows = []
-        for source_row in sorted(section["entries"], key=lambda row: int(row["to_number"])):
+        rows: list[dict[str, Any]] = []
+        for source_row in section["entries"]:
             to_number = int(source_row["to_number"])
             rows.append(
                 {
@@ -246,6 +268,8 @@ def _write_entries(sections: list[dict[str, Any]], project: dict[int, dict[str, 
                     "editorial_notes": source_row["editorial_notes"],
                     "gaiji_tokens": source_row["gaiji_tokens"],
                     "source_target_label": source_row["source_target_label"],
+                    "source_target_label_number": source_row["source_target_label_number"],
+                    "source_label_order_anomaly": source_row["source_label_order_anomaly"],
                     "source_page_start": source_row["source_page_start"],
                     "verification_status": "WYG_DIGITAL_TRANSCRIPTION__PAIR_COMPLETE",
                     "variant_status": "EDITORIAL_APPARATUS_PRESERVED__MULTI_EDITION_COLLATION_ONGOING",
@@ -260,17 +284,21 @@ def _write_entries(sections: list[dict[str, Any]], project: dict[int, dict[str, 
             "source_commit": UPSTREAM_COMMIT,
             "source_volume_file": section["source_volume_file"],
             "source_section": section["source_section"],
+            "source_label": section["source_label"],
+            "source_label_order_anomaly": section["source_label_order_anomaly"],
             "from_number": from_number,
             "from_name": project[from_number]["name"],
             "entries": rows,
         }
-        path = ENTRIES_ROOT / f"{from_number:02d}.json"
-        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        (ENTRIES_ROOT / f"{from_number:02d}.json").write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
 
 
-def _write_manifest(source_hashes: dict[str, str]) -> None:
+def _write_manifest(source_hashes: dict[str, str], sections: list[dict[str, Any]], project: dict[int, dict[str, Any]]) -> None:
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    project = _project_hexagrams()
+    anomalies = _source_anomalies(sections)
     manifest.update(
         {
             "schema_version": "stark-yilin-corpus-v1.0.0",
@@ -283,6 +311,11 @@ def _write_manifest(source_hashes: dict[str, str]) -> None:
                 "這代表 pair coverage 完整，不代表所有版本異文、標點與後世注解已完成校勘。"
             ),
             "textual_collation_status": "WYG_BASE_COMPLETE__MULTI_EDITION_VARIANT_COLLATION_ONGOING",
+            "source_label_anomaly_count": len(anomalies),
+            "source_label_policy": (
+                "轉錄中的卦名異體或疑似誤標不被靜默修正；King Wen 位置決定 lookup number，"
+                "原 source label、可辨識映射與 anomaly flag 全部保留。"
+            ),
             "transcription_source": {
                 "id": "yilin-kanripo-wyg-transcription",
                 "repository": UPSTREAM_REPO,
@@ -303,6 +336,7 @@ def _write_manifest(source_hashes: dict[str, str]) -> None:
 
 
 def _write_snapshot(source_hashes: dict[str, str], sections: list[dict[str, Any]]) -> None:
+    anomalies = _source_anomalies(sections)
     payload = {
         "schema_version": "stark-yilin-source-snapshot-v1.0.0",
         "upstream_repository": UPSTREAM_REPO,
@@ -311,11 +345,13 @@ def _write_snapshot(source_hashes: dict[str, str], sections: list[dict[str, Any]
         "files": [{"name": name, "sha256": source_hashes[name]} for name in SOURCE_FILES],
         "parsed_from_hexagrams": len(sections),
         "parsed_pairs": sum(len(section["entries"]) for section in sections),
+        "source_label_anomalies": anomalies,
         "normalization_policy": [
             "頁碼標記不進 classical_text，但每條保留 source_page_start。",
-            "括號校語從 classical_text 分離並完整保存在 editorial_notes 與 transcription_raw。",
-            "Kanripo gaiji token 不猜字，保留在 classical_text/transcription_raw，另列 gaiji_tokens。",
-            "卦名只為 lookup 映射到專案 King Wen canonical name；原轉錄 label 另行保存。",
+            "括號校語從 classical_text 分離，完整保存在 editorial_notes 與 transcription_raw。",
+            "Kanripo gaiji token 不猜字，保留於 classical_text/transcription_raw，另列 gaiji_tokens。",
+            "卦名 lookup 依 King Wen source ordinal/position 映射到專案 canonical name；原轉錄 label 永久保留。",
+            "source label 與位置不一致時只記錄 anomaly，不以 source label 改寫 64×64 matrix。",
             "不以 AI 生成、補寫或改寫任何缺漏林辭。",
         ],
     }
@@ -327,21 +363,25 @@ def import_corpus() -> None:
     sections: list[dict[str, Any]] = []
     source_hashes: dict[str, str] = {}
     for filename in SOURCE_FILES:
-        url = f"{UPSTREAM_BASE}/{filename}"
-        raw = _download(url)
+        raw = _download(f"{UPSTREAM_BASE}/{filename}")
         source_hashes[filename] = hashlib.sha256(raw).hexdigest()
-        content = raw.decode("utf-8")
-        sections.extend(_parse_volume(filename, content, project))
+        sections.extend(_parse_volume(filename, raw.decode("utf-8"), project))
 
     _validate_sections(sections)
     _write_entries(sections, project)
-    _write_manifest(source_hashes)
+    _write_manifest(source_hashes, sections, project)
     _write_snapshot(source_hashes, sections)
-    print(f"Yilin corpus materialized: {len(sections)} source blocks / {sum(len(x['entries']) for x in sections)} pairs")
+    print(
+        "Yilin corpus materialized: "
+        f"{len(sections)} source blocks / {sum(len(section['entries']) for section in sections)} pairs / "
+        f"{len(_source_anomalies(sections))} preserved source-label anomalies"
+    )
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Materialize the complete 64×64 焦氏易林 corpus from pinned WYG transcription.")
+    parser = argparse.ArgumentParser(
+        description="Materialize the complete 64×64 焦氏易林 corpus from pinned WYG transcription."
+    )
     parser.parse_args()
     import_corpus()
 
