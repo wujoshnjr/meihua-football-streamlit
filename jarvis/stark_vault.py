@@ -35,11 +35,7 @@ def _qimen_base_rows() -> dict[str, list[dict[str, Any]]]:
 
 
 def _qimen_pattern_rows() -> list[dict[str, Any]]:
-    payload = _load_json("patterns.json")
-    for key in ("patterns", "items", "entries"):
-        if isinstance(payload.get(key), list):
-            return list(payload[key])
-    return []
+    return list(_load_json("patterns.json").get("patterns", []))
 
 
 def _football_mapping_rows(keys: set[str]) -> list[dict[str, Any]]:
@@ -56,15 +52,28 @@ def _football_mapping_rows(keys: set[str]) -> list[dict[str, Any]]:
     return found
 
 
-def qimen_context(board: QimenBoard) -> list[dict[str, Any]]:
-    """Return knowledge entries relevant to the deterministic Qimen board.
+def _qimen_protocol_context() -> list[dict[str, Any]]:
+    payload = _load_json("interpretation.json")
+    return [
+        {
+            "kind": "qimen_interpretation_policy",
+            "schema_version": payload.get("schema_version"),
+            "mapping_version": payload.get("mapping_version"),
+            "scope_note": payload.get("scope_note"),
+            "source_policy": payload.get("source_policy", []),
+        }
+    ]
 
-    This function retrieves source material only. It does not score, rank, or decide
-    a match outcome; final synthesis belongs to the AI interpreter.
+
+def qimen_context(board: QimenBoard) -> list[dict[str, Any]]:
+    """Retrieve source material relevant to one deterministic Qimen board.
+
+    The vault never scores, ranks, or decides a match outcome. It supplies the
+    objective chart facts and matching knowledge to the final AI interpreter.
     """
 
     base = _qimen_base_rows()
-    context: list[dict[str, Any]] = []
+    context: list[dict[str, Any]] = _qimen_protocol_context()
     relevant_keys: set[str] = set()
 
     for number in sorted(board.palaces):
@@ -97,6 +106,11 @@ def qimen_context(board: QimenBoard) -> list[dict[str, Any]]:
             stem = _by_key(base["stems"], stem_name)
             if stem:
                 context.append({"kind": "qimen_stem", "palace": number, **stem})
+
+        if state.is_void:
+            relevant_keys.add("旬空")
+        if state.is_horse:
+            relevant_keys.add("驛馬")
 
     patterns = _qimen_pattern_rows()
     for hit in board.patterns:
@@ -131,6 +145,7 @@ def meihua_hexagram(upper: str, lower: str) -> dict[str, Any]:
 def meihua_context(snapshot: MeihuaSnapshot) -> list[dict[str, Any]]:
     trigrams = _load_json("meihua_trigrams.json").get("trigrams", [])
     rules = _load_json("meihua_rules.json")
+    line_roles = _load_json("meihua_line_roles.json").get("line_roles", [])
 
     names = {
         snapshot.upper_trigram,
@@ -143,7 +158,13 @@ def meihua_context(snapshot: MeihuaSnapshot) -> list[dict[str, Any]]:
         snapshot.changed_lower_trigram,
         snapshot.changed_use_trigram,
     }
-    context: list[dict[str, Any]] = []
+    context: list[dict[str, Any]] = [
+        {
+            "kind": "meihua_method_policy",
+            "method": rules.get("method"),
+            "interpretation_order": rules.get("interpretation_order", []),
+        }
+    ]
     for name in sorted(names):
         row = _by_key(trigrams, name)
         if row:
@@ -164,6 +185,12 @@ def meihua_context(snapshot: MeihuaSnapshot) -> list[dict[str, Any]]:
         if row.get("relation") == snapshot.body_use_relation:
             context.append({"kind": "meihua_body_use", **row})
             break
+
+    for row in line_roles:
+        if row.get("line") == snapshot.moving_line:
+            context.append({"kind": "meihua_moving_line_role", **row})
+            break
+
     context.append(
         {
             "kind": "meihua_seasonal_state",
@@ -182,11 +209,19 @@ def vault_stats() -> dict[str, int]:
         "qimen_doors": len(qimen["doors"]),
         "qimen_stars": len(qimen["stars"]),
         "qimen_deities": len(qimen["deities"]),
+        "qimen_stems": len(qimen["stems"]),
         "qimen_patterns": len(_qimen_pattern_rows()),
         "meihua_trigrams": len(_load_json("meihua_trigrams.json").get("trigrams", [])),
         "meihua_hexagrams": len(_load_json("meihua_hexagrams.json").get("hexagrams", [])),
         "meihua_body_use_relations": len(_load_json("meihua_rules.json").get("body_use_relations", [])),
+        "meihua_line_roles": len(_load_json("meihua_line_roles.json").get("line_roles", [])),
     }
+
+
+def _search_rows(results: list[dict[str, Any]], system: str, family: str, rows: Iterable[dict[str, Any]], term: str) -> None:
+    for row in rows:
+        if term in json.dumps(row, ensure_ascii=False).lower():
+            results.append({"system": system, "family": family, **row})
 
 
 def search_vault(query: str) -> list[dict[str, Any]]:
@@ -197,24 +232,53 @@ def search_vault(query: str) -> list[dict[str, Any]]:
 
     qimen = _qimen_base_rows()
     for family, rows in qimen.items():
-        for row in rows:
-            if term in json.dumps(row, ensure_ascii=False).lower():
-                results.append({"system": "QIMEN_DUNJIA", "family": family, **row})
+        _search_rows(results, "QIMEN_DUNJIA", family, rows, term)
+    _search_rows(results, "QIMEN_DUNJIA", "patterns", _qimen_pattern_rows(), term)
 
-    for row in _qimen_pattern_rows():
-        if term in json.dumps(row, ensure_ascii=False).lower():
-            results.append({"system": "QIMEN_DUNJIA", "family": "patterns", **row})
+    ontology = _load_json("football_ontology.json").get("mappings", {})
+    if isinstance(ontology, dict):
+        for family, rows in ontology.items():
+            if isinstance(rows, list):
+                _search_rows(results, "QIMEN_DUNJIA", f"football:{family}", rows, term)
 
-    for row in _load_json("meihua_trigrams.json").get("trigrams", []):
-        if term in json.dumps(row, ensure_ascii=False).lower():
-            results.append({"system": "MEIHUA_YISHU", "family": "trigrams", **row})
+    interpretation = _load_json("interpretation.json")
+    if term in json.dumps(interpretation, ensure_ascii=False).lower():
+        results.append(
+            {
+                "system": "QIMEN_DUNJIA",
+                "family": "interpretation_protocol",
+                "schema_version": interpretation.get("schema_version"),
+                "scope_note": interpretation.get("scope_note"),
+                "source_policy": interpretation.get("source_policy", []),
+            }
+        )
 
-    for row in _load_json("meihua_hexagrams.json").get("hexagrams", []):
-        if term in json.dumps(row, ensure_ascii=False).lower():
-            results.append({"system": "MEIHUA_YISHU", "family": "hexagrams", **row})
-
-    for row in _load_json("meihua_rules.json").get("body_use_relations", []):
-        if term in json.dumps(row, ensure_ascii=False).lower():
-            results.append({"system": "MEIHUA_YISHU", "family": "body_use", **row})
-
+    _search_rows(
+        results,
+        "MEIHUA_YISHU",
+        "trigrams",
+        _load_json("meihua_trigrams.json").get("trigrams", []),
+        term,
+    )
+    _search_rows(
+        results,
+        "MEIHUA_YISHU",
+        "hexagrams",
+        _load_json("meihua_hexagrams.json").get("hexagrams", []),
+        term,
+    )
+    _search_rows(
+        results,
+        "MEIHUA_YISHU",
+        "body_use",
+        _load_json("meihua_rules.json").get("body_use_relations", []),
+        term,
+    )
+    _search_rows(
+        results,
+        "MEIHUA_YISHU",
+        "line_roles",
+        _load_json("meihua_line_roles.json").get("line_roles", []),
+        term,
+    )
     return results[:100]
