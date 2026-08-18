@@ -45,6 +45,7 @@ EXTRA_ALIASES = {
     "遁": 33,
     "暌": 38,
     "睽": 38,
+    "㢲": 57,
     "兊": 58,
     "兑": 58,
     "兌": 58,
@@ -269,11 +270,13 @@ def _write_entries(sections: list[dict[str, Any]], project: dict[int, dict[str, 
 
 def _write_manifest(source_hashes: dict[str, str]) -> None:
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    project = _project_hexagrams()
     manifest.update(
         {
             "schema_version": "stark-yilin-corpus-v1.0.0",
             "materialized_pairs": 4096,
             "complete_from_hexagrams": 64,
+            "materialized_from_hexagrams": [project[number]["name"] for number in range(1, 65)],
             "catalog_status": "COMPLETE_4096_PAIR_COVERAGE__TEXTUAL_COLLATION_ONGOING",
             "coverage_claim": (
                 "64×64=4096 個本卦→之卦槽位已全部 materialize，且每條都有非空林辭。"
