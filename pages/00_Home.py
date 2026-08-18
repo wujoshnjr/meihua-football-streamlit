@@ -2,12 +2,18 @@ from __future__ import annotations
 
 import streamlit as st
 
+from jarvis.live_meihua import load_deployed_live_meihua_artifact
 from jarvis.release import runtime_release_status
 
 
 release = runtime_release_status()
 
 st.set_page_config(page_title="JARVIS v8", page_icon="⚽", layout="wide")
+
+try:
+    live_meihua_artifact = load_deployed_live_meihua_artifact()
+except ValueError:
+    live_meihua_artifact = None
 
 st.markdown(
     """
@@ -42,7 +48,7 @@ st.markdown(
         letter-spacing: -.035em;
       }
       .jarvis-hero p {
-        max-width: 760px;
+        max-width: 800px;
         font-size: 1.06rem;
         line-height: 1.75;
         opacity: .82;
@@ -85,20 +91,21 @@ st.markdown(
       <div class="jarvis-kicker">JARVIS · Football Intelligence Research Platform</div>
       <h1>足球預測，研究與實戰分開。</h1>
       <p>
-        一個可重現、可稽核的足球賽前研究系統。正式 Live Predictor 維持 frozen champion；
-        Dynamic Football、xG、Fixture Context、奇門與梅花等 v8 challenger 只在通過 chronological validation 與 untouched review 後才有資格升級。
+        JARVIS v8.1 已把梅花易數正式接入 Live Predictor：每場比賽都建立可重現梅花卦象與 feature fingerprint。
+        數值機率只有在 M2 完成 chronological validation、獨立 calibration、untouched review 與人工批准後才允許改動，
+        因此不會用手寫術數規則冒充已驗證的足球權重。
       </p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-s1, s2, s3 = st.columns(3)
+s1, s2, s3, s4 = st.columns(4)
 with s1:
     st.markdown(
         f"""
         <div class="status-card">
-          <div class="status-label">Live Predictor</div>
+          <div class="status-label">Football Base</div>
           <div class="status-value">v{release.live_predictor_code_version}</div>
           <div class="status-note">Frozen champion compatibility path</div>
         </div>
@@ -111,12 +118,24 @@ with s2:
         <div class="status-card">
           <div class="status-label">Web / Research Stack</div>
           <div class="status-value">v{release.web_app_version}</div>
-          <div class="status-note">JARVIS v8 research tooling online</div>
+          <div class="status-note">JARVIS v8 production UI</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 with s3:
+    meihua_value = "M2 ACTIVE" if live_meihua_artifact is not None and live_meihua_artifact.shrinkage_alpha > 1e-15 else "LIVE ADVISORY"
+    st.markdown(
+        f"""
+        <div class="status-card">
+          <div class="status-label">Meihua Yishu</div>
+          <div class="status-value">{meihua_value}</div>
+          <div class="status-note">Production-integrated · artifact gated</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+with s4:
     st.markdown(
         """
         <div class="status-card">
@@ -132,19 +151,33 @@ st.markdown("### 你要做什麼？")
 left, middle, right = st.columns(3)
 with left:
     with st.container(border=True):
-        st.markdown("#### ⚽ 建立一場賽前預測")
-        st.write("輸入事件時間、雙方盤前足球資料，建立奇門盤與 frozen Live Predictor 機率輸出。")
-        st.page_link("pages/2_Live_Predictor.py", label="開啟 Live Predictor", icon="🎯", use_container_width=True)
+        st.markdown("#### ⚽ Football + 梅花 Live 預測")
+        st.write("輸入事件時間與雙方盤前足球資料；系統同時計算 Football baseline 與正式梅花 Live snapshot。")
+        st.page_link("pages/3_Live_Meihua.py", label="開啟 Live Predictor", icon="🎯", use_container_width=True)
 with middle:
     with st.container(border=True):
-        st.markdown("#### 🚀 看目前 v8 狀態")
-        st.write("查看 Web、Live、Research 三層版本，以及 Dynamic Football、Context、M0–M3 與 promotion gate。")
-        st.page_link("pages/0_JARVIS_v8_Dashboard.py", label="開啟 v8 Dashboard", icon="📊", use_container_width=True)
+        st.markdown("#### 🧭 完整稽核工作台")
+        st.write("需要奇門九宮、證據表、盤前鎖定、JSON / Markdown / HTML 匯出時使用完整 Audit Workbench。")
+        st.page_link("pages/2_Live_Predictor.py", label="開啟 Audit Workbench", icon="🧭", use_container_width=True)
 with right:
     with st.container(border=True):
-        st.markdown("#### 🧪 研究多訊號模型")
-        st.write("查看 Qimen / Meihua raw features 與 M0–M3 研究契約；沒有 frozen artifact 時不覆蓋正式預測。")
-        st.page_link("pages/1_Research_Lab.py", label="開啟 Research Lab", icon="🧪", use_container_width=True)
+        st.markdown("#### 🧪 v8 Research / Promotion")
+        st.write("查看 Dynamic Football、Qimen / Meihua M0–M3、calibration、stability 與 promotion gate。")
+        st.page_link("pages/0_JARVIS_v8_Dashboard.py", label="開啟 v8 Dashboard", icon="📊", use_container_width=True)
+
+st.markdown("### 梅花正式上線的兩層狀態")
+status_left, status_right = st.columns(2)
+with status_left:
+    with st.container(border=True):
+        st.markdown("**LIVE COMPUTATION · ON**")
+        st.write("年月日時起卦、本卦／互卦／變卦、動爻、體用、旺衰與 numeric features 每場正式計算並 fingerprint。")
+with status_right:
+    with st.container(border=True):
+        st.markdown("**M2 PROBABILITY WEIGHT · ARTIFACT GATED**")
+        st.write(
+            "只有 TRAIN fit + VALIDATION alpha + M2 CALIBRATION + TEST_UNTOUCHED promotion report + human approval "
+            "全部通過，才會改動 λ 與 1X2。"
+        )
 
 st.markdown("### 目前模型治理")
 flow = st.columns(4)
@@ -160,21 +193,12 @@ for column, title, detail in (
             st.caption(detail)
 
 st.info(
-    "目前 v8 研究能力已經部署，但這不等於 v8 challenger 已經成為正式模型。"
-    "Live Predictor 仍保持 frozen champion，直到足量真實 chronological data 完成 untouched review。",
+    "目前 v8 研究能力已經部署，梅花也已進入正式 Live computation；"
+    "但 repository 尚無合格 M2 deployment artifact，因此目前不宣稱梅花已提高預測準確率。",
     icon="🛡️",
 )
 
-if "match" in st.session_state:
-    match = st.session_state.match
-    st.markdown("### 本次工作階段")
-    a, b, c, d = st.columns(4)
-    a.metric("比賽", f"{match.home_team} vs {match.away_team}")
-    b.metric("奇門盤", "READY" if "board" in st.session_state else "—")
-    c.metric("Live 預測", "READY" if "prediction" in st.session_state else "—")
-    d.metric("盤前鎖定", "PASS" if st.session_state.get("prediction_lock") else "—")
-
 st.divider()
 st.caption(
-    "JARVIS 僅供研究與教育用途。奇門遁甲與梅花易數屬傳統術數；正式機率層與研究 challenger 必須分離治理。"
+    "JARVIS 僅供研究與教育用途。奇門遁甲與梅花易數屬傳統術數；數值機率只接受可重現的 frozen artifact。"
 )
