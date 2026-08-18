@@ -9,17 +9,27 @@ from meihua.engine import MeihuaSnapshot
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CORPUS_PATH = ROOT / "knowledge" / "zhouyi" / "corpus.json"
-MANIFEST_PATH = ROOT / "knowledge" / "zhouyi" / "manifest.json"
+ZHOUYI_ROOT = ROOT / "knowledge" / "zhouyi"
+ENTRIES_ROOT = ZHOUYI_ROOT / "entries"
+MANIFEST_PATH = ZHOUYI_ROOT / "manifest.json"
 REVIEW_POLICY_PATH = ROOT / "knowledge" / "zhouyi_review_policy.json"
 LINE_ROLE_PATH = ROOT / "knowledge" / "meihua_line_roles.json"
 
 
 @lru_cache(maxsize=1)
-def _corpus() -> dict[str, Any]:
-    if not CORPUS_PATH.exists():
-        raise RuntimeError("缺少 knowledge/zhouyi/corpus.json；請先執行 tools/import_zhouyi_kanripo.py")
-    return json.loads(CORPUS_PATH.read_text(encoding="utf-8"))
+def _corpus_rows() -> tuple[dict[str, Any], ...]:
+    paths = sorted(ENTRIES_ROOT.glob("*.json"))
+    if len(paths) != 8:
+        raise RuntimeError("缺少完整 knowledge/zhouyi/entries/01..08.json；請先執行 tools/import_zhouyi_kanripo.py")
+    rows: list[dict[str, Any]] = []
+    for expected_shard, path in enumerate(paths, 1):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if payload.get("shard") != expected_shard:
+            raise RuntimeError(f"周易 shard 順序錯誤：{path.name}")
+        rows.extend(payload.get("hexagrams", []))
+    if len(rows) != 64 or [int(row["number"]) for row in rows] != list(range(1, 65)):
+        raise RuntimeError("周易 corpus 必須完整且依 1..64 卦序排列")
+    return tuple(rows)
 
 
 @lru_cache(maxsize=1)
@@ -43,10 +53,14 @@ def _line_roles() -> dict[int, dict[str, Any]]:
 def zhouyi_catalog_stats() -> dict[str, Any]:
     manifest = _manifest()
     return {
+        "materialized_shards": int(manifest["materialized_shards"]),
+        "expected_shards": int(manifest["expected_shards"]),
         "materialized_hexagrams": int(manifest["materialized_hexagrams"]),
         "expected_hexagrams": int(manifest["expected_hexagrams"]),
         "materialized_standard_lines": int(manifest["materialized_standard_lines"]),
         "expected_standard_lines": int(manifest["expected_standard_lines"]),
+        "mapped_xiaoxiang": int(manifest["mapped_xiaoxiang"]),
+        "grouped_qian_xiaoxiang": int(manifest["grouped_qian_xiaoxiang"]),
         "use_lines": int(manifest["use_lines"]),
         "source_repository": manifest["source_repository"],
         "source_commit": manifest["source_commit"],
@@ -58,8 +72,7 @@ def zhouyi_catalog_stats() -> dict[str, Any]:
 def zhouyi_hexagram(number: int) -> dict[str, Any]:
     if number not in range(1, 65):
         raise ValueError("周易卦序必須為 1..64")
-    rows = _corpus()["hexagrams"]
-    row = rows[number - 1]
+    row = _corpus_rows()[number - 1]
     if int(row["number"]) != number:
         raise RuntimeError("周易 corpus 卦序索引不一致")
     return row
@@ -70,7 +83,7 @@ def search_zhouyi(query: str, *, limit: int = 100) -> list[dict[str, Any]]:
     if not term:
         return []
     results: list[dict[str, Any]] = []
-    for row in _corpus()["hexagrams"]:
+    for row in _corpus_rows():
         core_haystack = json.dumps(
             {
                 "number": row["number"],
@@ -99,7 +112,15 @@ def search_zhouyi(query: str, *, limit: int = 100) -> list[dict[str, Any]]:
                 }
             )
         for line in row["lines"]:
-            line_haystack = f"{row['name']}{line['marker']}{line['classical_text']}".lower()
+            line_haystack = json.dumps(
+                {
+                    "name": row["name"],
+                    "marker": line["marker"],
+                    "classical_text": line["classical_text"],
+                    "xiaoxiang": line.get("xiaoxiang"),
+                },
+                ensure_ascii=False,
+            ).lower()
             if term in line_haystack:
                 results.append(
                     {
@@ -111,6 +132,7 @@ def search_zhouyi(query: str, *, limit: int = 100) -> list[dict[str, Any]]:
                         "line": line["line"],
                         "marker": line["marker"],
                         "classical_text": line["classical_text"],
+                        "xiaoxiang": line.get("xiaoxiang"),
                         "source_page_start": line["source_page_start"],
                         "source": row["source"],
                     }
@@ -167,6 +189,7 @@ def build_meihua_zhouyi_review(
         "mutual_alignment": _catalog_alignment(mutual_source, mutual_catalog),
         "changed_alignment": _catalog_alignment(changed_source, changed_catalog),
         "moving_line_matches_snapshot": int(moving_line["line"]) == snapshot.moving_line,
+        "moving_line_xiaoxiang_status": moving_line["xiaoxiang"]["status"],
         "pinned_source_commit": original_source["source"]["commit"],
         "all_core_alignments_match": all(
             _catalog_alignment(source, catalog)["all_match"]
@@ -180,7 +203,7 @@ def build_meihua_zhouyi_review(
 
     return {
         "kind": "zhouyi_source_review",
-        "schema_version": "stark-meihua-zhouyi-review-v1.0.0",
+        "schema_version": "stark-meihua-zhouyi-review-v1.1.0",
         "status": "SOURCE_AWARE_REVIEW_READY",
         "scope_note": (
             "《周易》固定底本經文用來加深本／互／變與動爻審查；"
@@ -196,11 +219,12 @@ def build_meihua_zhouyi_review(
             "marker": moving_line["marker"],
             "classical_text": moving_line["classical_text"],
             "source_page_start": moving_line["source_page_start"],
+            "xiaoxiang": moving_line["xiaoxiang"],
             "source_file": original_source["source"]["file"],
             "phase": role["phase"],
             "project_general": role["general"],
             "football_modern_application": role["football"],
-            "boundary": "爻辭是古籍原文；phase/general/football 為 JARVIS 分層解析。",
+            "boundary": "爻辭／可直接映射的小象是古籍轉錄；phase/general/football 為 JARVIS 分層解析。",
         },
         "meihua_crosscheck": {
             "body": snapshot.body_trigram,
