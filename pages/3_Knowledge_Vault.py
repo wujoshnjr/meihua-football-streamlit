@@ -26,11 +26,11 @@ g.metric("梅花六十四卦", stats["meihua_hexagrams"])
 h.metric("梅花深層足球維度", stats["meihua_deep_dimensions"])
 
 st.markdown("### 《焦氏易林》完整轉卦層")
-i, j, k, l = st.columns(4)
-i.metric("轉卦林辭", f"{yilin_stats['materialized_pairs']} / {yilin_stats['expected_pairs']}")
-j.metric("本卦 blocks", f"{yilin_stats['materialized_from_hexagrams']} / 64")
-k.metric("易林意象原子", yilin_stats["ontology_atoms"])
-l.metric("heuristic 命中", f"{yilin_audit['match_ratio']:.1%}")
+pair_col, block_col, ontology_col, audit_col = st.columns(4)
+pair_col.metric("轉卦林辭", f"{yilin_stats['materialized_pairs']} / {yilin_stats['expected_pairs']}")
+block_col.metric("本卦 blocks", f"{yilin_stats['materialized_from_hexagrams']} / 64")
+ontology_col.metric("易林意象原子", yilin_stats["ontology_atoms"])
+audit_col.metric("heuristic 命中", f"{yilin_audit['match_ratio']:.1%}")
 st.success("WYG／文淵閣四庫全書數位轉錄已完整 materialize 4096 / 4096 本卦→之卦 pair。")
 st.caption(
     "4096/4096 指轉卦矩陣與 WYG base transcription 完整；多版本異文、現代標點與歷代注解仍分層持續校勘。"
