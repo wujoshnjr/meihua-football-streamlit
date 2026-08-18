@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wujoshnjr/meihua-football-streamlit/schemas/divination_packet_v2.schema.json",
+  "title": "JARVIS DIVINATION_PACKET_V2",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "packet_purpose",
+    "system",
+    "question",
+    "event",
+    "method",
+    "knowledge_context",
+    "ai_interpretation_contract",
+    "packet_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": "DIVINATION_PACKET_V2"},
+    "packet_purpose": {"const": "JARVIS_CAST_AND_RETRIEVE__CHATGPT_INTERPRETS"},
+    "system": {"enum": ["QIMEN_DUNJIA", "MEIHUA_YISHU"]},
+    "question": {
+      "type": "object",
+      "required": ["text", "category"],
+      "properties": {
+        "text": {"type": "string", "minLength": 1},
+        "category": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "event": {
+      "type": "object",
+      "required": ["datetime", "timezone", "normalization"],
+      "properties": {
+        "datetime": {"type": "string", "format": "date-time"},
+        "timezone": {"type": "string", "minLength": 1},
+        "normalization": {"const": "ACTUAL_CAST_EVENT_LOCAL_TIME"}
+      },
+      "additionalProperties": false
+    },
+    "method": {"type": "object"},
+    "host_guest": {"type": ["object", "null"]},
+    "football_fixture": {"type": ["object", "null"]},
+    "chart": {"type": "object"},
+    "hexagram": {"type": "object"},
+    "zhouyi_review": {
+      "type": "object",
+      "required": ["kind", "status", "catalog_stats", "source_audit", "original", "mutual", "changed", "moving_line"],
+      "properties": {
+        "kind": {"const": "zhouyi_source_review"},
+        "status": {"const": "SOURCE_AWARE_REVIEW_READY"}
+      },
+      "additionalProperties": true
+    },
+    "yilin_bridge": {"type": "object"},
+    "knowledge_context": {"type": "array"},
+    "ai_interpretation_contract": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "packet_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"system": {"const": "QIMEN_DUNJIA"}}},
+      "then": {"required": ["chart", "host_guest"]}
+    },
+    {
+      "if": {"properties": {"system": {"const": "MEIHUA_YISHU"}}},
+      "then": {"required": ["hexagram", "zhouyi_review", "yilin_bridge", "football_fixture"]}
+    }
+  ],
+  "additionalProperties": true
+}
