@@ -6,7 +6,7 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   test:
@@ -24,33 +24,14 @@ jobs:
         run: python tools/import_yilin_kanripo.py
       - name: Verify committed Yilin corpus is reproducible
         run: git diff --exit-code -- knowledge/yilin/entries knowledge/yilin/manifest.json knowledge/yilin/source_snapshot.json
-      - name: Materialize pinned Zhouyi corpus
+      - name: Rebuild pinned Zhouyi corpus
         run: python tools/import_zhouyi_kanripo.py
-      - name: Validate Zhouyi corpus
+      - name: Verify committed Zhouyi corpus is reproducible
+        run: git diff --exit-code -- knowledge/zhouyi/entries knowledge/zhouyi/manifest.json
+      - name: Validate Zhouyi textual corpus
         run: python tools/validate_zhouyi.py
-      - name: Upload generated Zhouyi corpus for review
-        uses: actions/upload-artifact@v4
-        with:
-          name: zhouyi-corpus
-          path: knowledge/zhouyi
-      - name: Commit reproducible Zhouyi shards to PR branch
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
-        run: |
-          git fetch origin "${HEAD_BRANCH}"
-          git checkout -B "${HEAD_BRANCH}" "origin/${HEAD_BRANCH}"
-          python tools/import_zhouyi_kanripo.py
-          python tools/validate_zhouyi.py
-          git add knowledge/zhouyi/entries knowledge/zhouyi/manifest.json
-          if git diff --cached --quiet; then
-            echo "Zhouyi corpus already committed"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Materialize pinned Zhouyi 64/384 source corpus"
-          git push origin HEAD:"${HEAD_BRANCH}"
+      - name: Validate Zhouyi semantic review
+        run: python tools/validate_zhouyi_semantics.py
       - run: ruff check .
       - run: python -m pytest -q
       - run: python tools/validate_knowledge.py
