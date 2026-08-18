@@ -10,7 +10,24 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 YILIN_ROOT = ROOT / "knowledge" / "yilin"
 YILIN_ENTRIES_ROOT = YILIN_ROOT / "entries"
-YILIN_BRIDGE_VERSION = "stark-meihua-yilin-bridge-v1.1.0"
+HEXAGRAM_PATH = ROOT / "knowledge" / "meihua_hexagrams.json"
+YILIN_BRIDGE_VERSION = "stark-meihua-yilin-bridge-v1.2.0"
+
+# User-facing lookup accepts a few common orthographic variants, while every
+# stored corpus row keeps the project's validated King Wen canonical name and
+# the source transcription keeps its original label separately.
+_NAME_ALIASES = {
+    "無妄": "无妄",
+    "恒": "恆",
+    "遁": "遯",
+    "暌": "睽",
+    "兊": "兌",
+    "兑": "兌",
+    "旣濟": "既濟",
+    "旣济": "既濟",
+    "既济": "既濟",
+    "未济": "未濟",
+}
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -27,27 +44,73 @@ def yilin_manifest() -> dict[str, Any]:
 
 
 @lru_cache(maxsize=1)
-def yilin_entries() -> tuple[dict[str, Any], ...]:
+def _hexagram_name_numbers() -> dict[str, int]:
+    rows = _load_json(HEXAGRAM_PATH).get("hexagrams", [])
+    mapping = {str(row["name"]): int(row["number"]) for row in rows}
+    if len(mapping) != 64 or set(mapping.values()) != set(range(1, 65)):
+        raise ValueError("梅花六十四卦 catalog 必須完整且號碼唯一")
+    for alias, canonical in _NAME_ALIASES.items():
+        if canonical in mapping:
+            mapping[alias] = mapping[canonical]
+    return mapping
+
+
+def _canonical_name(name: str) -> str:
+    return _NAME_ALIASES.get(name, name)
+
+
+@lru_cache(maxsize=64)
+def _block_payload(from_number: int) -> dict[str, Any]:
+    number = int(from_number)
+    if number not in range(1, 65):
+        raise KeyError(f"焦氏易林本卦號碼超出 1..64：{number}")
+    return _load_json(YILIN_ENTRIES_ROOT / f"{number:02d}.json")
+
+
+@lru_cache(maxsize=64)
+def _block_entries(from_number: int) -> tuple[dict[str, Any], ...]:
+    payload = _block_payload(int(from_number))
+    path = YILIN_ENTRIES_ROOT / f"{int(from_number):02d}.json"
+    inherited = {
+        "source_id": payload.get("source_id"),
+        "source_section": payload.get("source_section"),
+        "source_edition": payload.get("source_edition"),
+        "source_repo": payload.get("source_repo"),
+        "source_commit": payload.get("source_commit"),
+        "source_volume_file": payload.get("source_volume_file"),
+    }
     rows: list[dict[str, Any]] = []
-    for path in sorted(YILIN_ENTRIES_ROOT.glob("*.json")):
-        payload = _load_json(path)
-        inherited = {
-            "source_id": payload.get("source_id"),
-            "source_section": payload.get("source_section"),
-            "source_edition": payload.get("source_edition"),
-            "source_repo": payload.get("source_repo"),
-            "source_commit": payload.get("source_commit"),
-            "source_volume_file": payload.get("source_volume_file"),
-        }
-        for row in payload.get("entries", []):
-            rows.append(
-                {
-                    **row,
-                    **{key: row.get(key, value) for key, value in inherited.items()},
-                    "source_file": str(path.relative_to(ROOT)),
-                }
-            )
+    for row in payload.get("entries", []):
+        rows.append(
+            {
+                **row,
+                **{key: row.get(key, value) for key, value in inherited.items()},
+                "source_file": str(path.relative_to(ROOT)),
+            }
+        )
     return tuple(rows)
+
+
+@lru_cache(maxsize=64)
+def _block_number_index(from_number: int) -> dict[int, dict[str, Any]]:
+    index: dict[int, dict[str, Any]] = {}
+    for row in _block_entries(int(from_number)):
+        to_number = int(row["to_number"])
+        if to_number in index:
+            raise ValueError(f"焦氏易林本卦 #{from_number} 重複之卦 #{to_number}")
+        index[to_number] = row
+    return index
+
+
+@lru_cache(maxsize=1)
+def yilin_entries() -> tuple[dict[str, Any], ...]:
+    """Materialize the complete corpus only when a full-corpus operation needs it.
+
+    Ordinary Meihua casting does not call this function: the bridge reads only
+    the one 64-entry source block containing the requested transformation.
+    """
+
+    return tuple(row for from_number in range(1, 65) for row in _block_entries(from_number))
 
 
 @lru_cache(maxsize=1)
@@ -65,19 +128,32 @@ def _indexes() -> tuple[dict[tuple[str, str], dict[str, Any]], dict[tuple[int, i
 
 
 def yilin_index() -> dict[tuple[str, str], dict[str, Any]]:
+    """Return a full name index for audit/research callers."""
+
     return _indexes()[0]
 
 
 def yilin_number_index() -> dict[tuple[int, int], dict[str, Any]]:
+    """Return a full numeric index for audit/research callers."""
+
     return _indexes()[1]
 
 
 def yilin_entry(from_name: str, to_name: str) -> dict[str, Any] | None:
-    return yilin_index().get((from_name, to_name))
+    mapping = _hexagram_name_numbers()
+    left = mapping.get(_canonical_name(from_name))
+    right = mapping.get(_canonical_name(to_name))
+    if left is None or right is None:
+        return None
+    return yilin_entry_by_number(left, right)
 
 
 def yilin_entry_by_number(from_number: int, to_number: int) -> dict[str, Any] | None:
-    return yilin_number_index().get((int(from_number), int(to_number)))
+    left = int(from_number)
+    right = int(to_number)
+    if left not in range(1, 65) or right not in range(1, 65):
+        return None
+    return _block_number_index(left).get(right)
 
 
 @lru_cache(maxsize=1)
@@ -160,22 +236,28 @@ def yilin_semantic_audit() -> dict[str, Any]:
 
 @lru_cache(maxsize=1)
 def yilin_catalog_stats() -> dict[str, Any]:
+    """Read release-level counts from the validated manifest.
+
+    This keeps the normal casting hot path O(1) in corpus files instead of
+    parsing all 4096 entries merely to display a coverage badge.
+    """
+
     manifest = yilin_manifest()
-    entries = yilin_entries()
-    from_numbers = {int(row["from_number"]) for row in entries}
-    pair_count = len(entries)
     expected = int(manifest["expected_pairs"])
+    materialized = int(manifest.get("materialized_pairs", 0))
+    source_count = int(manifest.get("complete_from_hexagrams", 0))
     return {
         "expected_pairs": expected,
-        "materialized_pairs": pair_count,
-        "materialized_from_hexagrams": len(from_numbers),
-        "coverage_ratio": pair_count / expected if expected else 0.0,
+        "materialized_pairs": materialized,
+        "materialized_from_hexagrams": source_count,
+        "coverage_ratio": materialized / expected if expected else 0.0,
         "catalog_status": manifest.get("catalog_status"),
         "coverage_claim": manifest.get("coverage_claim"),
         "bridge_mode": manifest.get("bridge_mode"),
         "textual_collation_status": manifest.get("textual_collation_status", "ONGOING"),
         "source_label_anomaly_count": manifest.get("source_label_anomaly_count", 0),
         "ontology_atoms": len(yilin_image_ontology()),
+        "runtime_lookup": "DIRECT_64_ENTRY_BLOCK__NO_FULL_CORPUS_LOAD",
     }
 
 
@@ -216,9 +298,9 @@ def build_meihua_yilin_bridge(
     from_name = str(original_hexagram["name"])
     to_name = str(changed_hexagram["name"])
 
-    # Number lookup is authoritative because historical/digital sources contain
-    # orthographic variants and one preserved WYG target-label anomaly. Display
-    # names remain the project's validated King Wen catalog names.
+    # Numeric lookup is authoritative because source transcriptions contain
+    # orthographic variants and one preserved WYG target-label anomaly. Only
+    # the requested 64-entry source block is loaded in the ordinary cast path.
     entry = yilin_entry_by_number(from_number, to_number)
     base = {
         "kind": "meihua_yilin_bridge",
