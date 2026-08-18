@@ -13,7 +13,7 @@ st.set_page_config(page_title="梅花起卦 · JARVIS", page_icon="☯️", layo
 st.title("☯️ 梅花易數起卦")
 st.caption(
     "年月日時 deterministic 起卦；JARVIS 整理本卦、互卦、變卦、體用、旺衰、動爻，"
-    "再加入《焦氏易林》本卦→變卦完整轉卦鏡頭，最後交給 ChatGPT 合參。"
+    "再核對《周易》卦辭／彖／象／真正動爻爻辭，並加入《焦氏易林》本卦→變卦鏡頭，最後交給 ChatGPT 合參。"
 )
 
 with st.form("meihua_stark_form"):
@@ -62,9 +62,10 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
     mutual = next(row for row in contexts if row.get("kind") == "meihua_mutual_hexagram")
     changed = next(row for row in contexts if row.get("kind") == "meihua_changed_hexagram")
     deep = next(row for row in contexts if row.get("kind") == "meihua_deep_profile")
+    zhouyi = packet["zhouyi_review"]
     yilin = packet["yilin_bridge"]
 
-    st.success(f"起卦完成｜Packet SHA-256：{packet['packet_sha256']}")
+    st.success(f"起卦完成｜{packet['schema_version']}｜Packet SHA-256：{packet['packet_sha256']}")
     a, b, c = st.columns(3)
     with a:
         st.metric("本卦", f"{original['symbol']} {original['name']}")
@@ -98,6 +99,63 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
         )
     st.dataframe(rows, hide_index=True, use_container_width=True)
     st.caption("足球衍生義屬 modern application，不是《周易》或《梅花易數》古籍原文。")
+
+    st.markdown("### 《周易》原典審查 · 64 卦 / 384 爻")
+    zs = zhouyi["catalog_stats"]
+    z1, z2, z3, z4 = st.columns(4)
+    z1.metric("周易卦體", f"{zs['materialized_hexagrams']} / {zs['expected_hexagrams']}")
+    z2.metric("標準爻辭", f"{zs['materialized_standard_lines']} / {zs['expected_standard_lines']}")
+    z3.metric("用九／用六", zs["use_lines"])
+    z4.metric("原典審查", "PASS" if zhouyi["source_audit"]["all_core_alignments_match"] else "REVIEW")
+    st.caption(
+        f"固定來源：{zs['source_repository']} @ {str(zs['source_commit'])[:12]}…｜{zs['source_edition']}。"
+        "這代表固定數位底本的結構化轉錄完整，不宣稱所有歷代版本校勘已完成。"
+    )
+
+    if not zhouyi["source_audit"]["all_core_alignments_match"]:
+        st.error("《周易》原典層與梅花 64 卦 catalog 存在對齊問題；本次解讀應先停止並檢查來源。")
+    else:
+        st.success("本卦／互卦／變卦的卦序、卦名、卦符、上下卦已通過 source-aware 對齊審查。")
+
+    for label, key in (("本卦", "original"), ("互卦", "mutual"), ("變卦", "changed")):
+        classical = zhouyi[key]
+        with st.expander(f"{label} · {classical['symbol']} {classical['name']}｜卦辭／彖／象", expanded=(key == "original")):
+            st.markdown("**卦辭**")
+            st.write(classical["guaci"]["classical_text"])
+            st.caption(f"source page: {classical['guaci'].get('source_page_start') or '—'}")
+            st.markdown("**彖**")
+            st.write(classical["tuan"]["classical_text"])
+            st.caption(f"source page: {classical['tuan'].get('source_page_start') or '—'}")
+            st.markdown("**象**")
+            st.write(classical["xiang"]["classical_text"])
+            if classical["xiang"].get("note"):
+                st.caption(classical["xiang"]["note"])
+            st.caption(
+                f"{classical['source']['file']}｜page {classical['xiang'].get('source_page_start') or '—'}｜"
+                f"SHA-256 {classical['source']['sha256'][:16]}…"
+            )
+
+    moving = zhouyi["moving_line"]
+    st.markdown("#### 真正動爻原文")
+    with st.container(border=True):
+        st.markdown(f"**第 {moving['line']} 爻 · {moving['marker']}**")
+        st.write(moving["classical_text"])
+        st.caption(f"來源：{moving['source_file']}｜{moving['source_page_start']}")
+        st.markdown(f"**JARVIS 爻位階段：{moving['phase']}**")
+        st.write(moving["project_general"])
+        if football:
+            st.caption("足球 modern application：" + moving["football_modern_application"])
+        st.info(moving["boundary"])
+
+    with st.expander("易經審查維度與足球含意邊界"):
+        for dimension in zhouyi["review_dimensions"]:
+            st.markdown(f"**{dimension['name']}**")
+            for question_item in dimension["questions"]:
+                st.write(f"- {question_item}")
+            st.caption(dimension["football_rule"])
+        st.markdown("**禁止捷徑**")
+        for shortcut in zhouyi["football_meaning_contract"]["forbidden_shortcuts"]:
+            st.write(f"- {shortcut}")
 
     st.markdown("### 深層卦象結構")
     for label, key in (
@@ -138,6 +196,7 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
             st.markdown(f"**第 {mline['line']} 爻｜{mline['phase']}**")
             st.write(mline["general"])
             st.caption(mline["football"])
+            st.write("**原典爻辭優先核對：** " + moving["classical_text"])
 
     st.markdown("### 《焦氏易林》本卦 → 變卦")
     ys = yilin["catalog_stats"]
@@ -225,11 +284,11 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
 
     st.markdown("### AI 解卦包")
     st.write(
-        f"JARVIS 已附上 {len(contexts)} 筆梅花深層知識與唯一的「{yilin['lookup_key']}」易林轉卦條目；"
-        "ChatGPT 依『梅花核心 → 易林轉變情境 → 支持／反證 → 綜合判讀』解讀。"
+        f"JARVIS 已附上《周易》64/384 原典審查、{len(contexts)} 筆梅花深層知識與唯一的「{yilin['lookup_key']}」易林轉卦條目；"
+        "ChatGPT 依『周易原典 → 梅花結構 → 動爻 → 易林轉變情境 → 支持／反證 → 綜合判讀』解讀。"
     )
     packet_json = json.dumps(packet, ensure_ascii=False, indent=2)
-    with st.expander("查看完整 DIVINATION_PACKET_V1"):
+    with st.expander(f"查看完整 {packet['schema_version']}"):
         st.code(packet_json, language="json")
     st.download_button(
         "下載 AI 解卦包 JSON",
