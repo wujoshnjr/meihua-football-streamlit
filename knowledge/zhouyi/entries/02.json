@@ -1,0 +1,806 @@
+{
+  "schema_version": "stark-zhouyi-corpus-v1.1.0",
+  "source_id": "zhouyi-kanripo-tls-transcription",
+  "source_repository": "kanripo/KR1a0001",
+  "source_commit": "8284adbf9e3435d713180e24f05bf75f8b7d1d96",
+  "source_edition": "Kanripo TLS digital transcription",
+  "shard": 2,
+  "range": [
+    9,
+    16
+  ],
+  "hexagrams": [
+    {
+      "number": 9,
+      "name": "小畜",
+      "symbol": "䷈",
+      "upper": "巽",
+      "lower": "乾",
+      "source_name": "小畜",
+      "guaci": {
+        "classical_text": "亨。密雲不雨，自我西郊。",
+        "source_page_start": "KR1a0001_tls_009-2a"
+      },
+      "tuan": {
+        "classical_text": "《小畜》，柔得位而上下應之，曰《小畜》。健而巽，剛中而志行，乃「亨」。「密雲不雨」、尚往也，「自我西郊」、施未行也。",
+        "source_page_start": "KR1a0001_tls_009-3a"
+      },
+      "xiang": {
+        "classical_text": "風行天上，《小畜》。君子以懿文德。",
+        "source_page_start": "KR1a0001_tls_009-4a",
+        "note": null
+      },
+      "lines": [
+        {
+          "marker": "初九",
+          "classical_text": "復自道，何其咎，吉。",
+          "source_page_start": "KR1a0001_tls_009-5a",
+          "xiaoxiang": {
+            "classical_text": "「復自道」、其義「吉」也。",
+            "source_page_start": "KR1a0001_tls_009-6a",
+            "status": "MAPPED"
+          },
+          "line": 1
+        },
+        {
+          "marker": "九二",
+          "classical_text": "牽復，吉。",
+          "source_page_start": "KR1a0001_tls_009-7a",
+          "xiaoxiang": {
+            "classical_text": "「牽復」在中、亦不自失也。",
+            "source_page_start": "KR1a0001_tls_009-8a",
+            "status": "MAPPED"
+          },
+          "line": 2
+        },
+        {
+          "marker": "九三",
+          "classical_text": "輿說輻。夫妻反目。",
+          "source_page_start": "KR1a0001_tls_009-9a",
+          "xiaoxiang": {
+            "classical_text": "「夫妻反目」、不能正室也。",
+            "source_page_start": "KR1a0001_tls_009-10a",
+            "status": "MAPPED"
+          },
+          "line": 3
+        },
+        {
+          "marker": "六四",
+          "classical_text": "有孚血去惕出，无咎。",
+          "source_page_start": "KR1a0001_tls_009-11a",
+          "xiaoxiang": {
+            "classical_text": "「有孚惕出」、上合志也。",
+            "source_page_start": "KR1a0001_tls_009-12a",
+            "status": "MAPPED"
+          },
+          "line": 4
+        },
+        {
+          "marker": "九五",
+          "classical_text": "有孚攣如，富以其鄰。",
+          "source_page_start": "KR1a0001_tls_009-13a",
+          "xiaoxiang": {
+            "classical_text": "「有孚攣如」、不獨富也。",
+            "source_page_start": "KR1a0001_tls_009-14a",
+            "status": "MAPPED"
+          },
+          "line": 5
+        },
+        {
+          "marker": "上九",
+          "classical_text": "既雨既處，尚德載。婦貞厲。月幾望，君子征凶。",
+          "source_page_start": "KR1a0001_tls_009-15a",
+          "xiaoxiang": {
+            "classical_text": "「既雨既處」、「德」積「載」也。「君子征凶」、有所疑也。",
+            "source_page_start": "KR1a0001_tls_009-16a",
+            "status": "MAPPED"
+          },
+          "line": 6
+        }
+      ],
+      "use_line": null,
+      "raw_classical_transcription": "《小畜》亨。密雲不雨，自我西郊。《彖》曰：《小畜》，柔得位而上下應之，曰《小畜》。健而巽，剛中而志行，乃「亨」。「密雲不雨」、尚往也，「自我西郊」、施未行也。《象》曰：風行天上，《小畜》。君子以懿文德。初九：復自道，何其咎，吉。《象》曰：「復自道」、其義「吉」也。九二：牽復，吉。《象》曰：「牽復」在中、亦不自失也。九三：輿說輻。夫妻反目。《象》曰：「夫妻反目」、不能正室也。六四：有孚血去惕出，无咎。《象》曰：「有孚惕出」、上合志也。九五：有孚攣如，富以其鄰。《象》曰：「有孚攣如」、不獨富也。上九：既雨既處，尚德載。婦貞厲。月幾望，君子征凶。《象》曰：「既雨既處」、「德」積「載」也。「君子征凶」、有所疑也。",
+      "source": {
+        "repository": "kanripo/KR1a0001",
+        "commit": "8284adbf9e3435d713180e24f05bf75f8b7d1d96",
+        "edition": "Kanripo TLS digital transcription",
+        "file": "KR1a0001_009.txt",
+        "sha256": "fa269d162868f183d4744fcf8a6f249a57312bef5764bb005c22046610144948"
+      },
+      "review_status": "SOURCE_TRANSCRIPTION_PARSED__INTERPRETATION_SEPARATE"
+    },
+    {
+      "number": 10,
+      "name": "履",
+      "symbol": "䷉",
+      "upper": "乾",
+      "lower": "兌",
+      "source_name": "履",
+      "guaci": {
+        "classical_text": "履虎尾，不咥人。亨。",
+        "source_page_start": "KR1a0001_tls_010-2a"
+      },
+      "tuan": {
+        "classical_text": "《履》、柔履剛也。說而應乎乾，是以「履虎尾、不咥人、亨」，剛中正、履帝位而不疚，光明也。",
+        "source_page_start": "KR1a0001_tls_010-3a"
+      },
+      "xiang": {
+        "classical_text": "上天下澤，《履》。君子以辯上下，定民志。",
+        "source_page_start": "KR1a0001_tls_010-4a",
+        "note": null
+      },
+      "lines": [
+        {
+          "marker": "初九",
+          "classical_text": "素履往，无咎。",
+          "source_page_start": "KR1a0001_tls_010-5a",
+          "xiaoxiang": {
+            "classical_text": "「素履」之「往」、獨行願也。",
+            "source_page_start": "KR1a0001_tls_010-6a",
+            "status": "MAPPED"
+          },
+          "line": 1
+        },
+        {
+          "marker": "九二",
+          "classical_text": "履道坦坦，幽人貞吉。",
+          "source_page_start": "KR1a0001_tls_010-7a",
+          "xiaoxiang": {
+            "classical_text": "「幽人貞吉」、中不自亂也。",
+            "source_page_start": "KR1a0001_tls_010-8a",
+            "status": "MAPPED"
+          },
+          "line": 2
+        },
+        {
+          "marker": "六三",
+          "classical_text": "眇能視，跛能履，履虎尾，咥人凶。武人為于大君。",
+          "source_page_start": "KR1a0001_tls_010-9a",
+          "xiaoxiang": {
+            "classical_text": "「眇能視」、不足以有明也，「跛能履」、不足以與行也。「咥人」之「凶」、位不當也，「武人為于大君」、志剛也。",
+            "source_page_start": "KR1a0001_tls_010-10a",
+            "status": "MAPPED"
+          },
+          "line": 3
+        },
+        {
+          "marker": "九四",
+          "classical_text": "履虎尾愬愬，終吉。",
+          "source_page_start": "KR1a0001_tls_010-11a",
+          "xiaoxiang": {
+            "classical_text": "「愬愬終吉」、志行也。",
+            "source_page_start": "KR1a0001_tls_010-12a",
+            "status": "MAPPED"
+          },
+          "line": 4
+        },
+        {
+          "marker": "九五",
+          "classical_text": "夬履貞厲。",
+          "source_page_start": "KR1a0001_tls_010-13a",
+          "xiaoxiang": {
+            "classical_text": "「夬履貞厲」、位正當也。",
+            "source_page_start": "KR1a0001_tls_010-14a",
+            "status": "MAPPED"
+          },
+          "line": 5
+        },
+        {
+          "marker": "上九",
+          "classical_text": "視履考祥，其旋，元吉。",
+          "source_page_start": "KR1a0001_tls_010-15a",
+          "xiaoxiang": {
+            "classical_text": "「元吉」在上、大有慶也。",
+            "source_page_start": "KR1a0001_tls_010-16a",
+            "status": "MAPPED"
+          },
+          "line": 6
+        }
+      ],
+      "use_line": null,
+      "raw_classical_transcription": "《履》履虎尾，不咥人。亨。《彖》曰：《履》、柔履剛也。說而應乎乾，是以「履虎尾、不咥人、亨」，剛中正、履帝位而不疚，光明也。《象》曰：上天下澤，《履》。君子以辯上下，定民志。初九：素履往，无咎。《象》曰：「素履」之「往」、獨行願也。九二：履道坦坦，幽人貞吉。《象》曰：「幽人貞吉」、中不自亂也。六三：眇能視，跛能履，履虎尾，咥人凶。武人為于大君。《象》曰：「眇能視」、不足以有明也，「跛能履」、不足以與行也。「咥人」之「凶」、位不當也，「武人為于大君」、志剛也。九四：履虎尾愬愬，終吉。《象》曰：「愬愬終吉」、志行也。九五：夬履貞厲。《象》曰：「夬履貞厲」、位正當也。上九：視履考祥，其旋，元吉。《象》曰：「元吉」在上、大有慶也。",
+      "source": {
+        "repository": "kanripo/KR1a0001",
+        "commit": "8284adbf9e3435d713180e24f05bf75f8b7d1d96",
+        "edition": "Kanripo TLS digital transcription",
+        "file": "KR1a0001_010.txt",
+        "sha256": "d6c93349b6011e243843d82ea0de1d32181d85ad24892d0092d2435a9d1a31a6"
+      },
+      "review_status": "SOURCE_TRANSCRIPTION_PARSED__INTERPRETATION_SEPARATE"
+    },
+    {
+      "number": 11,
+      "name": "泰",
+      "symbol": "䷊",
+      "upper": "坤",
+      "lower": "乾",
+      "source_name": "泰",
+      "guaci": {
+        "classical_text": "小往大來，吉，亨。",
+        "source_page_start": "KR1a0001_tls_011-2a"
+      },
+      "tuan": {
+        "classical_text": "「《泰》、小往大來、吉、亨」。則是天地交而萬物通也，上下交而其志同也。內陽而外陰，內健而外順，內君子而外小人，君子道長，小人道消也。",
+        "source_page_start": "KR1a0001_tls_011-3a"
+      },
+      "xiang": {
+        "classical_text": "天地交，《泰》。后以財成天地之道，輔相天地之宜，以左右民。",
+        "source_page_start": "KR1a0001_tls_011-4a",
+        "note": null
+      },
+      "lines": [
+        {
+          "marker": "初九",
+          "classical_text": "拔茅茹以其彙。征吉。",
+          "source_page_start": "KR1a0001_tls_011-5a",
+          "xiaoxiang": {
+            "classical_text": "「拔茅征吉」、志在外也。",
+            "source_page_start": "KR1a0001_tls_011-6a",
+            "status": "MAPPED"
+          },
+          "line": 1
+        },
+        {
+          "marker": "九二",
+          "classical_text": "苞荒，用馮河，不遐遺。朋亡，得尚于中行。",
+          "source_page_start": "KR1a0001_tls_011-7a",
+          "xiaoxiang": {
+            "classical_text": "「苞荒、得尚于中行」，以光大也。",
+            "source_page_start": "KR1a0001_tls_011-8a",
+            "status": "MAPPED"
+          },
+          "line": 2
+        },
+        {
+          "marker": "九三",
+          "classical_text": "无平不陂，无往不復。艱貞，无咎。勿恤其孚，于食有福。",
+          "source_page_start": "KR1a0001_tls_011-9a",
+          "xiaoxiang": {
+            "classical_text": "「无往不復」、天地際也。",
+            "source_page_start": "KR1a0001_tls_011-10a",
+            "status": "MAPPED"
+          },
+          "line": 3
+        },
+        {
+          "marker": "六四",
+          "classical_text": "翩翩，不富以其鄰，不戒以孚。",
+          "source_page_start": "KR1a0001_tls_011-11a",
+          "xiaoxiang": {
+            "classical_text": "「翩翩不富」、皆失實也，「不戒以孚」、中心願也。",
+            "source_page_start": "KR1a0001_tls_011-12a",
+            "status": "MAPPED"
+          },
+          "line": 4
+        },
+        {
+          "marker": "六五",
+          "classical_text": "帝乙歸妹，以祉，元吉。",
+          "source_page_start": "KR1a0001_tls_011-13a",
+          "xiaoxiang": {
+            "classical_text": "「以祉元吉」、中以行願也。",
+            "source_page_start": "KR1a0001_tls_011-14a",
+            "status": "MAPPED"
+          },
+          "line": 5
+        },
+        {
+          "marker": "上六",
+          "classical_text": "城復于隍，勿用師，自邑告命、貞吝。",
+          "source_page_start": "KR1a0001_tls_011-15a",
+          "xiaoxiang": {
+            "classical_text": "「城復于隍」、其命亂也。",
+            "source_page_start": "KR1a0001_tls_011-16a",
+            "status": "MAPPED"
+          },
+          "line": 6
+        }
+      ],
+      "use_line": null,
+      "raw_classical_transcription": "《泰》小往大來，吉，亨。《彖》曰：「《泰》、小往大來、吉、亨」。則是天地交而萬物通也，上下交而其志同也。內陽而外陰，內健而外順，內君子而外小人，君子道長，小人道消也。《象》曰：天地交，《泰》。后以財成天地之道，輔相天地之宜，以左右民。初九：拔茅茹以其彙。征吉。《象》曰：「拔茅征吉」、志在外也。九二：苞荒，用馮河，不遐遺。朋亡，得尚于中行。《象》曰：「苞荒、得尚于中行」，以光大也。九三：无平不陂，无往不復。艱貞，无咎。勿恤其孚，于食有福。《象》曰：「无往不復」、天地際也。六四：翩翩，不富以其鄰，不戒以孚。《象》曰：「翩翩不富」、皆失實也，「不戒以孚」、中心願也。六五：帝乙歸妹，以祉，元吉。《象》曰：「以祉元吉」、中以行願也。上六：城復于隍，勿用師，自邑告命、貞吝。《象》曰：「城復于隍」、其命亂也。",
+      "source": {
+        "repository": "kanripo/KR1a0001",
+        "commit": "8284adbf9e3435d713180e24f05bf75f8b7d1d96",
+        "edition": "Kanripo TLS digital transcription",
+        "file": "KR1a0001_011.txt",
+        "sha256": "851c2b2320f0069c9a7cd71e3a5201432a51ff3d0f6dbbb25ec4c9cb5c201f56"
+      },
+      "review_status": "SOURCE_TRANSCRIPTION_PARSED__INTERPRETATION_SEPARATE"
+    },
+    {
+      "number": 12,
+      "name": "否",
+      "symbol": "䷋",
+      "upper": "乾",
+      "lower": "坤",
+      "source_name": "否",
+      "guaci": {
+        "classical_text": "否之匪人。不利君子貞。大往小來。",
+        "source_page_start": "KR1a0001_tls_012-2a"
+      },
+      "tuan": {
+        "classical_text": "「否之匪人、不利君子貞、大往小來」。則是天地不交而萬物不通也，上下不交而天下无邦也；內陰而外陽，內柔而外剛，內小人而外君子，小人道長，君子道消也。",
+        "source_page_start": "KR1a0001_tls_012-3a"
+      },
+      "xiang": {
+        "classical_text": "天地不交，《否》。君子以儉德辟難，不可榮以祿。",
+        "source_page_start": "KR1a0001_tls_012-4a",
+        "note": null
+      },
+      "lines": [
+        {
+          "marker": "初六",
+          "classical_text": "拔茅茹，以其彙。貞吉亨。",
+          "source_page_start": "KR1a0001_tls_012-5a",
+          "xiaoxiang": {
+            "classical_text": "「拔茅貞吉」、志在君也。",
+            "source_page_start": "KR1a0001_tls_012-6a",
+            "status": "MAPPED"
+          },
+          "line": 1
+        },
+        {
+          "marker": "六二",
+          "classical_text": "苞承，小人吉，大人否。亨。",
+          "source_page_start": "KR1a0001_tls_012-7a",
+          "xiaoxiang": {
+            "classical_text": "「大人否亨」、不亂群也。",
+            "source_page_start": "KR1a0001_tls_012-8a",
+            "status": "MAPPED"
+          },
+          "line": 2
+        },
+        {
+          "marker": "六三",
+          "classical_text": "苞羞。",
+          "source_page_start": "KR1a0001_tls_012-9a",
+          "xiaoxiang": {
+            "classical_text": "「苞羞」、位不當也。",
+            "source_page_start": "KR1a0001_tls_012-10a",
+            "status": "MAPPED"
+          },
+          "line": 3
+        },
+        {
+          "marker": "九四",
+          "classical_text": "有命，无咎，疇離祉。",
+          "source_page_start": "KR1a0001_tls_012-11a",
+          "xiaoxiang": {
+            "classical_text": "「有命无咎」、志行也。",
+            "source_page_start": "KR1a0001_tls_012-12a",
+            "status": "MAPPED"
+          },
+          "line": 4
+        },
+        {
+          "marker": "九五",
+          "classical_text": "休否，大人吉。其亡其亡，繫于苞桑。",
+          "source_page_start": "KR1a0001_tls_012-13a",
+          "xiaoxiang": {
+            "classical_text": "「大人」之「吉」、位正當也。",
+            "source_page_start": "KR1a0001_tls_012-14a",
+            "status": "MAPPED"
+          },
+          "line": 5
+        },
+        {
+          "marker": "上九",
+          "classical_text": "傾否，先否後喜。",
+          "source_page_start": "KR1a0001_tls_012-15a",
+          "xiaoxiang": {
+            "classical_text": "「否」終則「傾」、何可長也。",
+            "source_page_start": "KR1a0001_tls_012-16a",
+            "status": "MAPPED"
+          },
+          "line": 6
+        }
+      ],
+      "use_line": null,
+      "raw_classical_transcription": "《否》否之匪人。不利君子貞。大往小來。《彖》曰：「否之匪人、不利君子貞、大往小來」。則是天地不交而萬物不通也，上下不交而天下无邦也；內陰而外陽，內柔而外剛，內小人而外君子，小人道長，君子道消也。《象》曰：天地不交，《否》。君子以儉德辟難，不可榮以祿。初六：拔茅茹，以其彙。貞吉亨。《象》曰：「拔茅貞吉」、志在君也。六二：苞承，小人吉，大人否。亨。《象》曰：「大人否亨」、不亂群也。六三：苞羞。《象》曰：「苞羞」、位不當也。九四：有命，无咎，疇離祉。《象》曰：「有命无咎」、志行也。九五：休否，大人吉。其亡其亡，繫于苞桑。《象》曰：「大人」之「吉」、位正當也。上九：傾否，先否後喜。《象》曰：「否」終則「傾」、何可長也。",
+      "source": {
+        "repository": "kanripo/KR1a0001",
+        "commit": "8284adbf9e3435d713180e24f05bf75f8b7d1d96",
+        "edition": "Kanripo TLS digital transcription",
+        "file": "KR1a0001_012.txt",
+        "sha256": "db30ab2d6eb8db39953a12df5649eea7acac527be556cbe2ebb88e00c97be915"
+      },
+      "review_status": "SOURCE_TRANSCRIPTION_PARSED__INTERPRETATION_SEPARATE"
+    },
+    {
+      "number": 13,
+      "name": "同人",
+      "symbol": "䷌",
+      "upper": "乾",
+      "lower": "離",
+      "source_name": "同人",
+      "guaci": {
+        "classical_text": "同人于野，亨。利涉大川。利君子貞。",
+        "source_page_start": "KR1a0001_tls_013-2a"
+      },
+      "tuan": {
+        "classical_text": "《同人》，柔得位得中而應乎乾曰《同人》。《同人》曰、「同人于野、亨、利涉大川」，乾行也。文明以健，中正而應，「君子」正也。唯君子為能通天下之志。",
+        "source_page_start": "KR1a0001_tls_013-3a"
+      },
+      "xiang": {
+        "classical_text": "天與火、《同人》。君子以類族辨物。",
+        "source_page_start": "KR1a0001_tls_013-4a",
+        "note": null
+      },
+      "lines": [
+        {
+          "marker": "初九",
+          "classical_text": "同人于門，无咎。",
+          "source_page_start": "KR1a0001_tls_013-5a",
+          "xiaoxiang": {
+            "classical_text": "「出門同人」，又誰「咎」也。",
+            "source_page_start": "KR1a0001_tls_013-6a",
+            "status": "MAPPED"
+          },
+          "line": 1
+        },
+        {
+          "marker": "六二",
+          "classical_text": "同人于宗，吝。",
+          "source_page_start": "KR1a0001_tls_013-7a",
+          "xiaoxiang": {
+            "classical_text": "「同人于宗」、「吝」道也。",
+            "source_page_start": "KR1a0001_tls_013-8a",
+            "status": "MAPPED"
+          },
+          "line": 2
+        },
+        {
+          "marker": "九三",
+          "classical_text": "伏戎于莽，升其高陵，三歲不興。",
+          "source_page_start": "KR1a0001_tls_013-9a",
+          "xiaoxiang": {
+            "classical_text": "「伏戎于莽」、敵剛也，「三歲不興」、安行也。",
+            "source_page_start": "KR1a0001_tls_013-10a",
+            "status": "MAPPED"
+          },
+          "line": 3
+        },
+        {
+          "marker": "九四",
+          "classical_text": "乘其墉，弗克攻，吉。",
+          "source_page_start": "KR1a0001_tls_013-11a",
+          "xiaoxiang": {
+            "classical_text": "「乘其墉」、義「弗克」也。其「吉」、則困而反則也。",
+            "source_page_start": "KR1a0001_tls_013-12a",
+            "status": "MAPPED"
+          },
+          "line": 4
+        },
+        {
+          "marker": "九五",
+          "classical_text": "同人先號咷而後笑，大師克，相遇。",
+          "source_page_start": "KR1a0001_tls_013-13a",
+          "xiaoxiang": {
+            "classical_text": "「同人」之「先」以中直也。「大師相遇」、言相「克」也。",
+            "source_page_start": "KR1a0001_tls_013-14a",
+            "status": "MAPPED"
+          },
+          "line": 5
+        },
+        {
+          "marker": "上九",
+          "classical_text": "同人于郊，无悔。",
+          "source_page_start": "KR1a0001_tls_013-15a",
+          "xiaoxiang": {
+            "classical_text": "「同人于郊」、志未得也。",
+            "source_page_start": "KR1a0001_tls_013-16a",
+            "status": "MAPPED"
+          },
+          "line": 6
+        }
+      ],
+      "use_line": null,
+      "raw_classical_transcription": "《同人》同人于野，亨。利涉大川。利君子貞。《彖》曰：《同人》，柔得位得中而應乎乾曰《同人》。《同人》曰、「同人于野、亨、利涉大川」，乾行也。文明以健，中正而應，「君子」正也。唯君子為能通天下之志。《象》曰：天與火、《同人》。君子以類族辨物。初九：同人于門，无咎。《象》曰：「出門同人」，又誰「咎」也。六二：同人于宗，吝。《象》曰：「同人于宗」、「吝」道也。九三：伏戎于莽，升其高陵，三歲不興。《象》曰：「伏戎于莽」、敵剛也，「三歲不興」、安行也。九四：乘其墉，弗克攻，吉。《象》曰：「乘其墉」、義「弗克」也。其「吉」、則困而反則也。九五：同人先號咷而後笑，大師克，相遇。《象》曰：「同人」之「先」以中直也。「大師相遇」、言相「克」也。上九：同人于郊，无悔。《象》曰：「同人于郊」、志未得也。",
+      "source": {
+        "repository": "kanripo/KR1a0001",
+        "commit": "8284adbf9e3435d713180e24f05bf75f8b7d1d96",
+        "edition": "Kanripo TLS digital transcription",
+        "file": "KR1a0001_013.txt",
+        "sha256": "509bcc32c50aecdee4909b071c511aab709f263e12ba59ce6057afc4017e4ffe"
+      },
+      "review_status": "SOURCE_TRANSCRIPTION_PARSED__INTERPRETATION_SEPARATE"
+    },
+    {
+      "number": 14,
+      "name": "大有",
+      "symbol": "䷍",
+      "upper": "離",
+      "lower": "乾",
+      "source_name": "大有",
+      "guaci": {
+        "classical_text": "元亨。",
+        "source_page_start": "KR1a0001_tls_014-2a"
+      },
+      "tuan": {
+        "classical_text": "《大有》，柔得尊位大中而上下應之曰《大有》。其德剛健而文明，應乎天而時行，是以「元亨」。",
+        "source_page_start": "KR1a0001_tls_014-3a"
+      },
+      "xiang": {
+        "classical_text": "火在天上，《大有》。君子以遏惡揚善，順天休命。",
+        "source_page_start": "KR1a0001_tls_014-4a",
+        "note": null
+      },
+      "lines": [
+        {
+          "marker": "初九",
+          "classical_text": "无交害，匪咎、艱則无咎。",
+          "source_page_start": "KR1a0001_tls_014-5a",
+          "xiaoxiang": {
+            "classical_text": "《大有》初九，无交害也。",
+            "source_page_start": "KR1a0001_tls_014-6a",
+            "status": "MAPPED"
+          },
+          "line": 1
+        },
+        {
+          "marker": "九二",
+          "classical_text": "大車以載，有攸往，无咎。",
+          "source_page_start": "KR1a0001_tls_014-7a",
+          "xiaoxiang": {
+            "classical_text": "「大車以載」、積中不敗也。",
+            "source_page_start": "KR1a0001_tls_014-8a",
+            "status": "MAPPED"
+          },
+          "line": 2
+        },
+        {
+          "marker": "九三",
+          "classical_text": "公用亨于天子，小人弗克。",
+          "source_page_start": "KR1a0001_tls_014-9a",
+          "xiaoxiang": {
+            "classical_text": "「公用亨于天子」、「小人」害也。",
+            "source_page_start": "KR1a0001_tls_014-10a",
+            "status": "MAPPED"
+          },
+          "line": 3
+        },
+        {
+          "marker": "九四",
+          "classical_text": "匪其彭，无咎。",
+          "source_page_start": "KR1a0001_tls_014-11a",
+          "xiaoxiang": {
+            "classical_text": "「匪其彭、无咎」、明辯晢也。",
+            "source_page_start": "KR1a0001_tls_014-12a",
+            "status": "MAPPED"
+          },
+          "line": 4
+        },
+        {
+          "marker": "六五",
+          "classical_text": "厥孚交如，威如吉。",
+          "source_page_start": "KR1a0001_tls_014-13a",
+          "xiaoxiang": {
+            "classical_text": "「厥孚交如」、信以發志也，「威如」之「吉」、易而无備也。",
+            "source_page_start": "KR1a0001_tls_014-14a",
+            "status": "MAPPED"
+          },
+          "line": 5
+        },
+        {
+          "marker": "上九",
+          "classical_text": "自天祐之，吉无不利。",
+          "source_page_start": "KR1a0001_tls_014-15a",
+          "xiaoxiang": {
+            "classical_text": "《大有》上「吉」、「自天祐」也。",
+            "source_page_start": "KR1a0001_tls_014-16a",
+            "status": "MAPPED"
+          },
+          "line": 6
+        }
+      ],
+      "use_line": null,
+      "raw_classical_transcription": "《大有》元亨。《彖》曰：《大有》，柔得尊位大中而上下應之曰《大有》。其德剛健而文明，應乎天而時行，是以「元亨」。《象》曰：火在天上，《大有》。君子以遏惡揚善，順天休命。初九：无交害，匪咎、艱則无咎。《象》曰：《大有》初九，无交害也。九二：大車以載，有攸往，无咎。《象》曰：「大車以載」、積中不敗也。九三：公用亨于天子，小人弗克。《象》曰：「公用亨于天子」、「小人」害也。九四：匪其彭，无咎。《象》曰：「匪其彭、无咎」、明辯晢也。六五：厥孚交如，威如吉。《象》曰：「厥孚交如」、信以發志也，「威如」之「吉」、易而无備也。上九：自天祐之，吉无不利。《象》曰：《大有》上「吉」、「自天祐」也。",
+      "source": {
+        "repository": "kanripo/KR1a0001",
+        "commit": "8284adbf9e3435d713180e24f05bf75f8b7d1d96",
+        "edition": "Kanripo TLS digital transcription",
+        "file": "KR1a0001_014.txt",
+        "sha256": "31de6184aa4d3bcb6fd57f7d96c5019eb50a0c4759dda52961a689c84f6fb658"
+      },
+      "review_status": "SOURCE_TRANSCRIPTION_PARSED__INTERPRETATION_SEPARATE"
+    },
+    {
+      "number": 15,
+      "name": "謙",
+      "symbol": "䷎",
+      "upper": "坤",
+      "lower": "艮",
+      "source_name": "謙",
+      "guaci": {
+        "classical_text": "亨。君子有終。",
+        "source_page_start": "KR1a0001_tls_015-2a"
+      },
+      "tuan": {
+        "classical_text": "《謙》「亨」。天道下濟而光明，地道卑而上行。天道虧盈而益謙，地道變盈而流謙，鬼神害盈而福謙，人道惡盈而好謙。《謙》、尊而光，卑而不可踰，「君子」之「終」也。",
+        "source_page_start": "KR1a0001_tls_015-3a"
+      },
+      "xiang": {
+        "classical_text": "地中有山，《謙》。君子以裒多益寡，稱物平施。",
+        "source_page_start": "KR1a0001_tls_015-4a",
+        "note": null
+      },
+      "lines": [
+        {
+          "marker": "初六",
+          "classical_text": "謙謙君子，用涉大川，吉。",
+          "source_page_start": "KR1a0001_tls_015-5a",
+          "xiaoxiang": {
+            "classical_text": "「謙謙君子」、卑以自牧也。",
+            "source_page_start": "KR1a0001_tls_015-6a",
+            "status": "MAPPED"
+          },
+          "line": 1
+        },
+        {
+          "marker": "六二",
+          "classical_text": "鳴謙，貞吉。",
+          "source_page_start": "KR1a0001_tls_015-7a",
+          "xiaoxiang": {
+            "classical_text": "「鳴謙貞吉」、中心得也。",
+            "source_page_start": "KR1a0001_tls_015-8a",
+            "status": "MAPPED"
+          },
+          "line": 2
+        },
+        {
+          "marker": "九三",
+          "classical_text": "勞謙，君子有終、吉。",
+          "source_page_start": "KR1a0001_tls_015-9a",
+          "xiaoxiang": {
+            "classical_text": "「勞謙君子」、萬民服也。",
+            "source_page_start": "KR1a0001_tls_015-10a",
+            "status": "MAPPED"
+          },
+          "line": 3
+        },
+        {
+          "marker": "六四",
+          "classical_text": "无不利，撝謙。",
+          "source_page_start": "KR1a0001_tls_015-11a",
+          "xiaoxiang": {
+            "classical_text": "「无不利、撝謙」、不違則也。",
+            "source_page_start": "KR1a0001_tls_015-12a",
+            "status": "MAPPED"
+          },
+          "line": 4
+        },
+        {
+          "marker": "六五",
+          "classical_text": "不富以其鄰，利用侵伐，无不利。",
+          "source_page_start": "KR1a0001_tls_015-13a",
+          "xiaoxiang": {
+            "classical_text": "「利用侵伐」、征不服也。",
+            "source_page_start": "KR1a0001_tls_015-14a",
+            "status": "MAPPED"
+          },
+          "line": 5
+        },
+        {
+          "marker": "上六",
+          "classical_text": "鳴謙，利用行師征邑國。",
+          "source_page_start": "KR1a0001_tls_015-15a",
+          "xiaoxiang": {
+            "classical_text": "「鳴謙」、志未得也。可「用行師」、征邑國也。",
+            "source_page_start": "KR1a0001_tls_015-16a",
+            "status": "MAPPED"
+          },
+          "line": 6
+        }
+      ],
+      "use_line": null,
+      "raw_classical_transcription": "《謙》亨。君子有終。《彖》曰：《謙》「亨」。天道下濟而光明，地道卑而上行。天道虧盈而益謙，地道變盈而流謙，鬼神害盈而福謙，人道惡盈而好謙。《謙》、尊而光，卑而不可踰，「君子」之「終」也。《象》曰：地中有山，《謙》。君子以裒多益寡，稱物平施。初六：謙謙君子，用涉大川，吉。《象》曰：「謙謙君子」、卑以自牧也。六二：鳴謙，貞吉。《象》曰：「鳴謙貞吉」、中心得也。九三：勞謙，君子有終、吉。《象》曰：「勞謙君子」、萬民服也。六四：无不利，撝謙。《象》曰：「无不利、撝謙」、不違則也。六五：不富以其鄰，利用侵伐，无不利。《象》曰：「利用侵伐」、征不服也。上六：鳴謙，利用行師征邑國。《象》曰：「鳴謙」、志未得也。可「用行師」、征邑國也。",
+      "source": {
+        "repository": "kanripo/KR1a0001",
+        "commit": "8284adbf9e3435d713180e24f05bf75f8b7d1d96",
+        "edition": "Kanripo TLS digital transcription",
+        "file": "KR1a0001_015.txt",
+        "sha256": "492b3272e9a266c2ff8d8045d03ac5abd0576e79e26fef8d4c5de85786be46e6"
+      },
+      "review_status": "SOURCE_TRANSCRIPTION_PARSED__INTERPRETATION_SEPARATE"
+    },
+    {
+      "number": 16,
+      "name": "豫",
+      "symbol": "䷏",
+      "upper": "震",
+      "lower": "坤",
+      "source_name": "豫",
+      "guaci": {
+        "classical_text": "利建侯行師。",
+        "source_page_start": "KR1a0001_tls_016-2a"
+      },
+      "tuan": {
+        "classical_text": "《豫》，剛應而志行，順以動，《豫》。《豫》順以動，故天地如之，而況「建侯行師」乎？天地以順動，故日月不過而四時不忒。聖人以順動，則刑罰清而民服，《豫》之時義大矣哉！",
+        "source_page_start": "KR1a0001_tls_016-3a"
+      },
+      "xiang": {
+        "classical_text": "雷出地奮，《豫》。先王以作樂崇德，殷薦之上帝以配祖考。",
+        "source_page_start": "KR1a0001_tls_016-4a",
+        "note": null
+      },
+      "lines": [
+        {
+          "marker": "初六",
+          "classical_text": "鳴豫，凶。",
+          "source_page_start": "KR1a0001_tls_016-5a",
+          "xiaoxiang": {
+            "classical_text": "「初六鳴豫」、志窮「凶」也。",
+            "source_page_start": "KR1a0001_tls_016-6a",
+            "status": "MAPPED"
+          },
+          "line": 1
+        },
+        {
+          "marker": "六二",
+          "classical_text": "介于石，不終日，貞吉。",
+          "source_page_start": "KR1a0001_tls_016-7a",
+          "xiaoxiang": {
+            "classical_text": "「不終日貞吉」、以中正也。",
+            "source_page_start": "KR1a0001_tls_016-8a",
+            "status": "MAPPED"
+          },
+          "line": 2
+        },
+        {
+          "marker": "六三",
+          "classical_text": "盱豫，悔，遲有悔。",
+          "source_page_start": "KR1a0001_tls_016-9a",
+          "xiaoxiang": {
+            "classical_text": "「盱豫有悔」、位不當也。",
+            "source_page_start": "KR1a0001_tls_016-10a",
+            "status": "MAPPED"
+          },
+          "line": 3
+        },
+        {
+          "marker": "九四",
+          "classical_text": "由豫，大有得，勿疑。朋盍簪。",
+          "source_page_start": "KR1a0001_tls_016-11a",
+          "xiaoxiang": {
+            "classical_text": "「由豫大有得」、志大行也。",
+            "source_page_start": "KR1a0001_tls_016-12a",
+            "status": "MAPPED"
+          },
+          "line": 4
+        },
+        {
+          "marker": "六五",
+          "classical_text": "貞疾，恆不死。",
+          "source_page_start": "KR1a0001_tls_016-13a",
+          "xiaoxiang": {
+            "classical_text": "「六五貞疾」、乘剛也，「恆不死」、中未亡也。",
+            "source_page_start": "KR1a0001_tls_016-14a",
+            "status": "MAPPED"
+          },
+          "line": 5
+        },
+        {
+          "marker": "上六",
+          "classical_text": "冥豫成，有渝、无咎。",
+          "source_page_start": "KR1a0001_tls_016-15a",
+          "xiaoxiang": {
+            "classical_text": "「冥豫」在「上」、何可長也？",
+            "source_page_start": "KR1a0001_tls_016-16a",
+            "status": "MAPPED"
+          },
+          "line": 6
+        }
+      ],
+      "use_line": null,
+      "raw_classical_transcription": "《豫》利建侯行師。《彖》曰：《豫》，剛應而志行，順以動，《豫》。《豫》順以動，故天地如之，而況「建侯行師」乎？天地以順動，故日月不過而四時不忒。聖人以順動，則刑罰清而民服，《豫》之時義大矣哉！《象》曰：雷出地奮，《豫》。先王以作樂崇德，殷薦之上帝以配祖考。初六：鳴豫，凶。《象》曰：「初六鳴豫」、志窮「凶」也。六二：介于石，不終日，貞吉。《象》曰：「不終日貞吉」、以中正也。六三：盱豫，悔，遲有悔。《象》曰：「盱豫有悔」、位不當也。九四：由豫，大有得，勿疑。朋盍簪。《象》曰：「由豫大有得」、志大行也。六五：貞疾，恆不死。《象》曰：「六五貞疾」、乘剛也，「恆不死」、中未亡也。上六：冥豫成，有渝、无咎。《象》曰：「冥豫」在「上」、何可長也？",
+      "source": {
+        "repository": "kanripo/KR1a0001",
+        "commit": "8284adbf9e3435d713180e24f05bf75f8b7d1d96",
+        "edition": "Kanripo TLS digital transcription",
+        "file": "KR1a0001_016.txt",
+        "sha256": "318d2af66d1c42d5372b691f57953045be7317af5b939b9a13460573e95e6d4d"
+      },
+      "review_status": "SOURCE_TRANSCRIPTION_PARSED__INTERPRETATION_SEPARATE"
+    }
+  ]
+}
