@@ -1,5 +1,20 @@
 # Changelog
 
+## 8.0.0 — JARVIS v8 Web Integration 與 Release Status
+
+### 新增
+
+- Streamlit 新增 `JARVIS v8 Dashboard` 與更新後的 `Research Lab`，把 Dynamic Football、xG tuning、fixture context、M0–M3、calibration、untouched stability 與 market incremental-value stack 真正輸出到部署網頁。
+- 新增 `jarvis.release.runtime_release_status()`，把 **Web App**、**Live Predictor** 與 **Research Stack** 三層版本拆開管理。
+- Web App 正式升為 `8.0.0`；目前 Live Predictor compatibility path 仍保留 `qimen.prediction.CODE_VERSION = 7.2.0` 與 Independent Poisson champion，不因 UI 升版自動換模。
+- Runtime contract 明示 `automatic_promotion=False` 與 `FROZEN_CHRONOLOGICAL_ARTIFACT_REQUIRED`，避免未驗證 research challenger 被誤當成 production champion。
+- Dashboard / Research Lab / README 統一顯示 Web 與 Live 版本，並加入 smoke / consistency test 防止 release drift。
+
+### 邊界
+
+- 8.0.0 是**部署與研究介面版本**，不是「v8 challenger 已證明更準」的宣告。
+- Live Predictor 的數學路徑沒有在本 release 被偷偷替換；真正 promotion 仍需 frozen TRAIN → VALIDATION → CALIBRATION → TEST_UNTOUCHED evidence 與人工 review。
+
 ## 7.2.0 — JARVIS 時序訓練與獨立校準
 
 ### 新增
