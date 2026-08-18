@@ -1,79 +1,34 @@
 {
   "schema_version": "stark-yilin-corpus-v1.0.0",
-  "release_stage": "JARVIS_10_ALPHA",
+  "release_stage": "JARVIS_10_RELEASE_CANDIDATE",
   "title": "焦氏易林 4096 轉卦知識層",
   "expected_from_hexagrams": 64,
   "expected_to_hexagrams_per_from": 64,
   "expected_pairs": 4096,
   "materialized_pairs": 4096,
+  "complete_from_hexagrams": 64,
   "materialized_from_hexagrams": [
-    "乾",
-    "坤",
-    "屯",
-    "蒙",
-    "需",
-    "訟",
-    "師",
-    "比",
-    "小畜",
-    "履",
-    "泰",
-    "否",
-    "同人",
-    "大有",
-    "謙",
-    "豫",
-    "隨",
-    "蠱",
-    "臨",
-    "觀",
-    "噬嗑",
-    "賁",
-    "剝",
-    "復",
-    "无妄",
-    "大畜",
-    "頤",
-    "大過",
-    "坎",
-    "離",
-    "咸",
-    "恆",
-    "遯",
-    "大壯",
-    "晉",
-    "明夷",
-    "家人",
-    "睽",
-    "蹇",
-    "解",
-    "損",
-    "益",
-    "夬",
-    "姤",
-    "萃",
-    "升",
-    "困",
-    "井",
-    "革",
-    "鼎",
-    "震",
-    "艮",
-    "漸",
-    "歸妹",
-    "豐",
-    "旅",
-    "巽",
-    "兌",
-    "渙",
-    "節",
-    "中孚",
-    "小過",
-    "既濟",
-    "未濟"
+    "乾", "坤", "屯", "蒙", "需", "訟", "師", "比", "小畜", "履", "泰", "否", "同人", "大有", "謙", "豫",
+    "隨", "蠱", "臨", "觀", "噬嗑", "賁", "剝", "復", "无妄", "大畜", "頤", "大過", "坎", "離", "咸", "恆",
+    "遯", "大壯", "晉", "明夷", "家人", "睽", "蹇", "解", "損", "益", "夬", "姤", "萃", "升", "困", "井",
+    "革", "鼎", "震", "艮", "漸", "歸妹", "豐", "旅", "巽", "兌", "渙", "節", "中孚", "小過", "既濟", "未濟"
   ],
-  "coverage_ratio": 0.015625,
+  "coverage_ratio": 1.0,
   "catalog_status": "COMPLETE_4096_PAIR_COVERAGE__TEXTUAL_COLLATION_ONGOING",
+  "coverage_claim": "64×64=4096 個本卦→之卦槽位已全部 materialize，且每條都有非空林辭與來源定位。這代表 pair coverage 完整，不代表所有版本異文、現代標點與後世注解已完成校勘。",
+  "completeness_matrix": {
+    "pair_matrix": "COMPLETE_4096_OF_4096",
+    "wyg_base_transcription": "COMPLETE_64_SOURCE_BLOCKS",
+    "source_page_locators": "COMPLETE",
+    "raw_transcription_preservation": "COMPLETE",
+    "editorial_note_separation": "COMPLETE_FOR_MACHINE_PARSEABLE_PARENTHETICAL_NOTES",
+    "gaiji_preservation": "COMPLETE_AS_SOURCE_TOKENS__NOT_SILENTLY_GUESSED",
+    "source_label_anomaly_registry": "COMPLETE_FOR_CURRENT_WYG_TRANSCRIPTION",
+    "multi_edition_variant_collation": "ONGOING",
+    "modern_punctuation_collation": "ONGOING",
+    "historical_commentary_layer": "NOT_MERGED_INTO_CLASSICAL_TEXT",
+    "football_semantic_layer": "PROJECT_HEURISTIC__SEPARATE_FROM_CLASSICAL_TEXT"
+  },
   "bridge_mode": "MEIHUA_YILIN_BRIDGE",
   "bridge_rule": "梅花 deterministic 起出本卦與最終變卦後，只查唯一的『本卦之變卦』易林條目；不把互卦當作焦林原始占法。",
   "historical_method_notice": "MEIHUA_YILIN_BRIDGE 是 Operation STARK 的跨系統合參層，不宣稱等同焦林直日或已完整復原《焦氏易林》原始占筮程序。",
@@ -86,28 +41,16 @@
     "CHATGPT_FINAL_SYNTHESIS"
   ],
   "source_policy": {
-    "classical_text": "古籍原文單獨保存，不混入專案白話或足球語義。",
-    "variants": "異文尚未完成交叉校對時必須標示 PENDING_CROSSCHECK，不得靜默改字。",
-    "commentary": "後世注解須標成 commentary，不得冒充焦氏易林原文。",
-    "football": "足球語義屬 modern application，必須包含可觀察與反證，不得直接轉成固定比分或勝率。"
+    "classical_text": "古籍數位轉錄單獨保存，不混入專案白話、注家文字或足球語義。",
+    "transcription": "WYG/文淵閣四庫全書數位轉錄為完整 4096 pair base；同時保留 source page、raw transcription、校語與 gaiji token。",
+    "variants": "多版本異文尚在交叉校對；不得把 WYG base complete 說成所有版本校勘 complete。",
+    "source_anomalies": "來源卦名異體或疑似誤標只登錄 anomaly，不靜默改寫原 source label；runtime 以可稽核的 section/target order 對應 King Wen number。",
+    "commentary": "後世注解必須獨立標成 commentary，不得冒充《焦氏易林》林辭。",
+    "football": "足球語義屬 modern application / project heuristic，必須可觀察、可反證，不得直接轉成固定比分或勝率。"
   },
-  "primary_sources": [
-    {
-      "id": "yilin-siku-wikisource-vol1",
-      "title": "易林（四庫全書本）卷一",
-      "url": "https://zh.wikisource.org/zh-hant/%E6%98%93%E6%9E%97_(%E5%9B%9B%E5%BA%AB%E5%85%A8%E6%9B%B8%E6%9C%AC)/%E5%8D%B71",
-      "materialized_scope": "乾之第一 64 條"
-    },
-    {
-      "id": "jiaoshi-yilin-ctext",
-      "title": "Chinese Text Project · 焦氏易林",
-      "url": "https://ctext.org/jiaoshi-yilin/zh",
-      "materialized_scope": "crosscheck registry; full pairwise collation pending"
-    }
-  ],
-  "complete_from_hexagrams": 64,
-  "coverage_claim": "64×64=4096 個本卦→之卦槽位已全部 materialize，且每條都有非空林辭。這代表 pair coverage 完整，不代表所有版本異文、標點與後世注解已完成校勘。",
   "textual_collation_status": "WYG_BASE_COMPLETE__MULTI_EDITION_VARIANT_COLLATION_ONGOING",
+  "commentary_status": "SEPARATE_LAYER_RESERVED__NO_UNSOURCED_COMMENTARY_MERGED",
+  "target_order_policy": "各本卦 section 先列本卦自身，其餘之卦依文王六十四卦序排列。",
   "source_label_anomaly_count": 1,
   "source_label_policy": "轉錄中的卦名異體或疑似誤標不被靜默修正；section ordinal + 易林 target-order convention 決定 lookup number，原 source label、可辨識映射與 anomaly flag 全部保留。",
   "transcription_source": {
@@ -116,12 +59,7 @@
     "commit": "764e995ce74aa249081918ca1b0c23bbca62bec8",
     "edition": "WYG / 文淵閣四庫全書",
     "role": "DIGITAL_TRANSCRIPTION_OF_PRIMARY_EDITION",
-    "files": [
-      "KR3g0029_001.txt",
-      "KR3g0029_002.txt",
-      "KR3g0029_003.txt",
-      "KR3g0029_004.txt"
-    ],
+    "files": ["KR3g0029_001.txt", "KR3g0029_002.txt", "KR3g0029_003.txt", "KR3g0029_004.txt"],
     "sha256": {
       "KR3g0029_001.txt": "4c8ac7793a733323f1e43d6de2bfe744b2cd08cb7906955179e4c2e40aca3153",
       "KR3g0029_002.txt": "9f68f88384a3b07c0b89f3cfea2937a823f20a2fe9a9f4d298e019c29123ceea",
@@ -132,7 +70,27 @@
   "source_blocks": {
     "complete": 64,
     "expected": 64,
-    "note": "四庫 WYG 數位轉錄已解析全部 64 本卦區塊；多版本異文校勘另行追蹤。"
+    "note": "WYG 數位轉錄已解析全部 64 本卦區塊；多版本異文校勘另行追蹤。"
   },
-  "target_order_policy": "各本卦 section 先列本卦自身，其餘之卦依文王六十四卦序排列。"
+  "primary_sources": [
+    {
+      "id": "yilin-kanripo-wyg-transcription",
+      "title": "Kanripo KR3g0029 · 焦氏易林 · WYG 文淵閣四庫全書數位轉錄",
+      "repository": "kanripo/KR3g0029",
+      "commit": "764e995ce74aa249081918ca1b0c23bbca62bec8",
+      "materialized_scope": "四卷、64 本卦 block、4096/4096 本卦→之卦林辭 base transcription"
+    },
+    {
+      "id": "yilin-siku-wikisource",
+      "title": "易林（四庫全書本）· 維基文庫",
+      "url": "https://zh.wikisource.org/zh-hant/%E6%98%93%E6%9E%97_(%E5%9B%9B%E5%BA%AB%E5%85%A8%E6%9B%B8%E6%9C%AC)",
+      "materialized_scope": "crosscheck source; systematic pairwise variant collation ongoing"
+    },
+    {
+      "id": "jiaoshi-yilin-ctext",
+      "title": "Chinese Text Project · 焦氏易林",
+      "url": "https://ctext.org/jiaoshi-yilin/zh",
+      "materialized_scope": "crosscheck registry; OCR/e-text is not treated as sole textual authority"
+    }
+  ]
 }
