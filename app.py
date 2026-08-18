@@ -4,47 +4,22 @@ import streamlit as st
 
 
 st.set_page_config(
-    page_title="JARVIS v8",
-    page_icon="⚽",
+    page_title="JARVIS 術數 AI · Operation STARK",
+    page_icon="☯️",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-home = st.Page(
-    "pages/00_Home.py",
-    title="JARVIS",
-    icon="🏠",
-    default=True,
-)
-live_predictor = st.Page(
-    "pages/3_Live_Meihua.py",
-    title="Live Predictor",
-    icon="🎯",
-    url_path="predict",
-)
-audit_workbench = st.Page(
-    "pages/2_Live_Predictor.py",
-    title="Audit Workbench",
-    icon="🧭",
-    url_path="workbench",
-)
-dashboard = st.Page(
-    "pages/0_JARVIS_v8_Dashboard.py",
-    title="v8 Dashboard",
-    icon="📊",
-    url_path="dashboard",
-)
-research_lab = st.Page(
-    "pages/1_Research_Lab.py",
-    title="Research Lab",
-    icon="🧪",
-    url_path="research",
-)
+home = st.Page("pages/00_Home.py", title="JARVIS", icon="🏠", default=True)
+qimen = st.Page("pages/1_Qimen_Cast.py", title="奇門起局", icon="🧭", url_path="qimen")
+meihua = st.Page("pages/2_Meihua_Cast.py", title="梅花起卦", icon="☯️", url_path="meihua")
+vault = st.Page("pages/3_Knowledge_Vault.py", title="知識庫", icon="📚", url_path="knowledge")
+packet = st.Page("pages/4_AI_Packet.py", title="AI 解卦包", icon="🤖", url_path="packet")
 
 navigation = st.navigation(
     {
-        "": [home, live_predictor, audit_workbench],
-        "Research": [dashboard, research_lab],
+        "術數": [home, qimen, meihua],
+        "知識與 AI": [vault, packet],
     },
     position="top",
 )
