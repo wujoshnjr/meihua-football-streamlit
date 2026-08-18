@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from jarvis.qimen_relations import all_relations
+
 
 ROOT = Path(__file__).resolve().parents[1]
 KNOWLEDGE = ROOT / "knowledge"
@@ -34,6 +36,23 @@ def main() -> None:
         require(bool(row.get("reading")), f"Qimen pattern {row.get('name')} needs a reading")
         require(bool(row.get("caution")), f"Qimen pattern {row.get('name')} needs a caution")
 
+    relation_rows = all_relations()
+    require(len(relation_rows) == 306, "Qimen relation matrix must contain exactly 306 slots")
+    require(len({row.key for row in relation_rows}) == 306, "Qimen relation keys must be unique")
+    relation_counts = {
+        relation_type: sum(row.relation_type == relation_type for row in relation_rows)
+        for relation_type in ("stem_pair", "star_door", "door_palace", "star_palace")
+    }
+    require(
+        relation_counts == {"stem_pair": 81, "star_door": 72, "door_palace": 72, "star_palace": 81},
+        "Qimen 306-slot relation family counts are incomplete",
+    )
+    for row in relation_rows:
+        require(bool(row.general_interpretation), f"Qimen relation {row.key} missing general interpretation")
+        require(bool(row.football_meaning), f"Qimen relation {row.key} missing football meaning")
+        require(bool(row.observable_signals), f"Qimen relation {row.key} missing observable signals")
+        require(bool(row.counter_signals), f"Qimen relation {row.key} missing counter signals")
+
     ontology = load("football_ontology.json")
     require(bool(ontology.get("boundaries")), "football ontology needs claim boundaries")
     require(bool(ontology.get("dimensions")), "football ontology needs observable dimensions")
@@ -49,16 +68,22 @@ def main() -> None:
 
     interpretation = load("interpretation.json")
     require(bool(interpretation.get("source_policy")), "Qimen interpretation protocol needs source policy")
+    require(bool(interpretation.get("relation_contract")), "Qimen interpretation protocol needs relation contract")
 
     trigrams = load("meihua_trigrams.json").get("trigrams", [])
     names = {row.get("name") for row in trigrams}
     require(len(trigrams) == 8 and names == TRIGRAMS, "Meihua trigram catalog must contain exactly all 8 trigrams")
     for row in trigrams:
-        for field in ("number", "symbol", "element", "core", "football"):
+        for field in ("number", "symbol", "element", "core", "classical_correspondences", "football"):
             require(row.get(field) not in (None, ""), f"Meihua trigram {row.get('name')} missing {field}")
+        require(bool(row.get("football_observable")), f"Meihua trigram {row.get('name')} missing football observables")
+        require(bool(row.get("football_counter")), f"Meihua trigram {row.get('name')} missing football counters")
 
     hexagrams_payload = load("meihua_hexagrams.json")
-    require(hexagrams_payload.get("football_status") == "modern_application_not_classical_text", "hexagram football layer must be labeled modern application")
+    require(
+        hexagrams_payload.get("football_status") == "modern_application_not_classical_text",
+        "hexagram football layer must be labeled modern application",
+    )
     hexagrams = hexagrams_payload.get("hexagrams", [])
     require(len(hexagrams) == 64, "Meihua hexagram catalog must contain 64 entries")
     require({row.get("number") for row in hexagrams} == set(range(1, 65)), "hexagram numbers must be exactly 1..64")
@@ -96,8 +121,8 @@ def main() -> None:
 
     print(
         "knowledge validation passed: "
-        f"Qimen 9 palaces / 8 doors / 9 stars / 8 deities / {len(patterns)} patterns; "
-        "Meihua 8 trigrams / 64 hexagrams / 5 body-use relations / 6 moving-line roles"
+        f"Qimen 9 palaces / 8 doors / 9 stars / 8 deities / 10 stems / {len(patterns)} patterns / "
+        "306 relations; Meihua 8 trigrams / 64 hexagrams / 5 body-use relations / 6 moving-line roles"
     )
 
 
