@@ -6,19 +6,36 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements-dev.txt
+      - name: Materialize full Yilin corpus on completion branch
+        if: github.ref_name == 'agent/jarvis-10-yilin-complete' || github.head_ref == 'agent/jarvis-10-yilin-complete'
+        run: python tools/import_yilin_kanripo.py
       - run: ruff check .
       - run: python -m pytest -q
       - run: python tools/validate_knowledge.py
       - run: python tools/validate_yilin.py
+      - name: Persist generated Yilin corpus
+        if: github.event_name == 'push' && github.ref_name == 'agent/jarvis-10-yilin-complete' && github.actor != 'github-actions[bot]'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add knowledge/yilin/entries knowledge/yilin/manifest.json knowledge/yilin/source_snapshot.json
+          if git diff --cached --quiet; then
+            echo "Corpus already persisted"
+          else
+            git commit -m "Materialize complete 4096 Yilin corpus"
+            git push origin HEAD:agent/jarvis-10-yilin-complete
+          fi
