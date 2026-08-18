@@ -6,7 +6,7 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   test:
@@ -33,6 +33,18 @@ jobs:
         with:
           name: zhouyi-corpus
           path: knowledge/zhouyi
+      - name: Commit reproducible Zhouyi corpus to agent branch
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/agent/')
+        run: |
+          if git diff --quiet -- knowledge/zhouyi; then
+            echo "Zhouyi corpus already committed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add knowledge/zhouyi/corpus.json knowledge/zhouyi/manifest.json
+          git commit -m "Materialize pinned Zhouyi 64/384 corpus"
+          git push origin HEAD:${GITHUB_REF_NAME}
       - run: ruff check .
       - run: python -m pytest -q
       - run: python tools/validate_knowledge.py
