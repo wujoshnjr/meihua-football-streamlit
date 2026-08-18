@@ -4,16 +4,24 @@ from pathlib import Path
 
 from streamlit.testing.v1 import AppTest
 
+from jarvis.release import runtime_release_status
+
 
 APP = Path(__file__).resolve().parents[1] / "app.py"
 
 
 def test_streamlit_app_starts_and_casts_default_chart():
+    release = runtime_release_status()
     app = AppTest.from_file(str(APP), default_timeout=30).run()
     assert not app.exception
     assert any("奇門遁甲足球研究系統・JARVIS" in item.value for item in app.title)
-    assert any("不自動輸出勝率" in item.value for item in app.markdown)
-    assert any("JARVIS Phase 2" in item.value for item in app.subheader)
+    assert any(
+        f"Web App v{release.web_app_version}" in item.value
+        and f"Live Predictor v{release.live_predictor_code_version}" in item.value
+        for item in app.caption
+    )
+    assert any("frozen Live Predictor champion compatibility path" in item.value for item in app.markdown)
+    assert any("JARVIS v8 Web" in item.value for item in app.subheader)
     assert any(item.label == "完整基礎語義" and item.value == "108" for item in app.metric)
     assert any(item.label == "核心組合覆蓋" and item.value == "5,184" for item in app.metric)
     assert any(item.label == "關係矩陣" and item.value == "306" for item in app.metric)
