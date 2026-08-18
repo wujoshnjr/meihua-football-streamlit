@@ -8,7 +8,8 @@ from meihua import build_meihua_snapshot
 from qimen.engine import cast_qimen
 from qimen.models import QimenBoard
 
-from .stark_vault import meihua_context, qimen_context
+from .stark_vault import meihua_context, meihua_hexagram, qimen_context
+from .yilin import build_meihua_yilin_bridge
 
 
 DIVINATION_PACKET_VERSION = "DIVINATION_PACKET_V1"
@@ -112,6 +113,12 @@ def build_meihua_packet(
         raise ValueError("足球比賽必須填主隊與客隊")
 
     snapshot = build_meihua_snapshot(event_at, timezone_name)
+    knowledge_context = meihua_context(snapshot)
+    original = meihua_hexagram(snapshot.upper_trigram, snapshot.lower_trigram)
+    changed = meihua_hexagram(snapshot.changed_upper_trigram, snapshot.changed_lower_trigram)
+    yilin_bridge = build_meihua_yilin_bridge(original, changed)
+    knowledge_context.append(yilin_bridge)
+
     payload: dict[str, Any] = {
         "schema_version": DIVINATION_PACKET_VERSION,
         "packet_purpose": "JARVIS_CAST_AND_RETRIEVE__CHATGPT_INTERPRETS",
@@ -129,12 +136,16 @@ def build_meihua_packet(
             "engine_version": snapshot.schema_version,
         },
         "hexagram": snapshot.to_dict(),
-        "knowledge_context": meihua_context(snapshot),
+        "yilin_bridge": yilin_bridge,
+        "knowledge_context": knowledge_context,
         "ai_interpretation_contract": [
             "不要重新起卦或修改本卦、互卦、變卦、動爻、體用。",
-            "依序合參：本卦 → 體用 → 旺衰 → 互卦 → 變卦 → 動爻 → 可用外應。",
-            "知識庫中的 football 欄位是現代足球類比，不是《梅花易數》古文。",
-            "不可只看一條生克就直接判勝負；必須處理相互支持與相互抵銷的訊號。",
+            "固定合參順序：本卦 → 上下卦內外 → 體用 → 旺衰 → 互卦 → 變卦 → 動爻 → 焦氏易林本卦之變卦 → 可用外應。",
+            "焦氏易林在此是 MEIHUA_YILIN_BRIDGE：補充本卦到最終變卦的情境，不宣稱等同焦林直日占法，也不可重起一套卦。",
+            "易林 classical_text、專案 image_atoms、football modern application 必須分開；不可把專案 heuristic 冒充古籍原註。",
+            "知識庫中的 football 欄位是現代足球類比，不是《梅花易數》或《焦氏易林》古文。",
+            "不可只看一條生克或一條林辭就直接判勝負；必須處理相互支持與相互抵銷的訊號。",
+            "若易林與梅花核心呈現矛盾，直接保留矛盾並說明條件，不得強行統一。",
             "若是足球問題，最後可給比賽走勢、可能轉折與需觀察的場上證據，但不捏造統計勝率。",
         ],
     }
