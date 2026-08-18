@@ -10,14 +10,15 @@ st.title("📚 奇門遁甲 × 梅花易數知識庫")
 st.caption("古典原義、專案摘要、足球衍生義分欄保存；JARVIS 負責檢索，不在這裡替你下最終結論。")
 
 stats = vault_stats()
-a, b, c, d, e = st.columns(5)
+a, b, c, d, e, f = st.columns(6)
 a.metric("奇門九宮", stats["qimen_palaces"])
-b.metric("八門", stats["qimen_doors"])
-c.metric("九星／八神", stats["qimen_stars"] + stats["qimen_deities"])
-d.metric("梅花八卦", stats["meihua_trigrams"])
-e.metric("六十四卦", stats["meihua_hexagrams"])
+b.metric("八門／九星／八神", stats["qimen_doors"] + stats["qimen_stars"] + stats["qimen_deities"])
+c.metric("奇門關係", stats["qimen_relations"])
+d.metric("奇門格局", stats["qimen_patterns"])
+e.metric("梅花八卦", stats["meihua_trigrams"])
+f.metric("六十四卦", stats["meihua_hexagrams"])
 
-query = st.text_input("搜尋", placeholder="例如：生門、天蓬、伏吟、乾、未濟、體克用、反擊、傷停…")
+query = st.text_input("搜尋", placeholder="例如：生門、天蓬、青龍返首、乾、未濟、體克用、反擊、傷停…")
 if query.strip():
     results = search_vault(query)
     st.write(f"找到 {len(results)} 筆")
@@ -29,13 +30,15 @@ if query.strip():
     else:
         st.info("沒有找到符合內容。")
 else:
-    st.info("輸入關鍵字後搜尋。六十四卦、八卦、奇門九宮／八門／九星／八神與格局均可檢索。")
+    st.info("輸入關鍵字後搜尋。六十四卦、八卦、奇門九宮／八門／九星／八神、306 關係槽位與格局均可檢索。")
 
 st.markdown("### 資料庫邊界")
 st.markdown(
     """
 - **古籍／傳統義理**：保存來源與結構化摘要。
 - **足球衍生義**：是 JARVIS 專案的現代應用推演，不冒充古籍原文。
+- **奇門完整性**：採「基礎符號 + 306 關係矩陣 + 動態盤面格局」，不是捏造一個有限的奇門卦列表。
+- **梅花完整性**：八卦、六十四卦、體用、動爻、本互變與旺衰共同構成實際解卦上下文。
 - **最終解讀**：不由資料庫自動決定，需把起局／起卦後的 `DIVINATION_PACKET_V1` 交給 ChatGPT 綜合判讀。
 - **禁止事後改盤**：賽後結果不能回寫原始盤象、卦象或原問題。
 """
