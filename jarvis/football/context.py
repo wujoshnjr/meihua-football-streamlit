@@ -11,7 +11,7 @@ from jarvis.research.residual import ResidualLambdaObservation
 from .strength import DynamicStrengthObservation
 
 
-FOOTBALL_CONTEXT_VERSION = "jarvis-football-fixture-context-v0.1.0"
+FOOTBALL_CONTEXT_VERSION = "jarvis-football-fixture-context-v0.2.0"
 FOOTBALL_CONTEXT_FAMILY = "FOOTBALL_CONTEXT"
 REST_CAP_DAYS = 14.0
 CONGESTION_HOURS = 96.0
@@ -157,26 +157,33 @@ def build_fixture_context_snapshot(
 
 
 def fixture_context_numeric_features(snapshot: FixtureContextSnapshot) -> dict[str, float]:
-    """Encode schedule facts without assigning an outcome direction by hand."""
+    """Encode schedule facts without assigning an outcome direction by hand.
+
+    Missing-history indicators use an effect-coded balance instead of separate
+    one-of-K flags. With complete historical coverage this feature becomes zero,
+    not a constant-one column that could recreate a hidden intercept.
+    """
 
     home_known = snapshot.home_rest_hours is not None
     away_known = snapshot.away_rest_hours is not None
     home_rest_days = min((snapshot.home_rest_hours or 0.0) / 24.0, REST_CAP_DAYS)
     away_rest_days = min((snapshot.away_rest_hours or 0.0) / 24.0, REST_CAP_DAYS)
-    both_known = home_known and away_known
+    home_congested = float(home_known and snapshot.home_rest_hours < CONGESTION_HOURS)
+    away_congested = float(away_known and snapshot.away_rest_hours < CONGESTION_HOURS)
     return {
-        "home_rest_known": float(home_known),
-        "away_rest_known": float(away_known),
-        "both_rest_known": float(both_known),
+        "rest_history_balance": float(home_known) - float(away_known),
         "home_rest_days_capped": float(home_rest_days),
         "away_rest_days_capped": float(away_rest_days),
-        "rest_days_difference": float(home_rest_days - away_rest_days) if both_known else 0.0,
-        "home_under_96h": float(home_known and snapshot.home_rest_hours < CONGESTION_HOURS),
-        "away_under_96h": float(away_known and snapshot.away_rest_hours < CONGESTION_HOURS),
+        "rest_days_difference": float(home_rest_days - away_rest_days) if home_known and away_known else 0.0,
+        "home_under_96h": home_congested,
+        "away_under_96h": away_congested,
+        "congestion_balance": home_congested - away_congested,
         "home_matches_last_7d": float(snapshot.home_matches_last_7d),
         "away_matches_last_7d": float(snapshot.away_matches_last_7d),
+        "matches_last_7d_difference": float(snapshot.home_matches_last_7d - snapshot.away_matches_last_7d),
         "home_matches_last_14d": float(snapshot.home_matches_last_14d),
         "away_matches_last_14d": float(snapshot.away_matches_last_14d),
+        "matches_last_14d_difference": float(snapshot.home_matches_last_14d - snapshot.away_matches_last_14d),
     }
 
 
