@@ -100,6 +100,24 @@ def infer_image_atoms(classical_text: str) -> tuple[dict[str, Any], ...]:
     return tuple(found)
 
 
+def search_yilin(query: str) -> list[dict[str, Any]]:
+    term = query.strip().lower()
+    if not term:
+        return []
+    results: list[dict[str, Any]] = []
+    for row in yilin_entries():
+        enriched = {
+            **row,
+            "lookup_key": f"{row['from_name']}之{row['to_name']}",
+        }
+        if term in json.dumps(enriched, ensure_ascii=False).lower():
+            results.append({"system": "JIAOSHI_YILIN", "family": "transformation", **enriched})
+    for atom in yilin_image_ontology():
+        if term in json.dumps(atom, ensure_ascii=False).lower():
+            results.append({"system": "JIAOSHI_YILIN", "family": "image_ontology", **atom})
+    return results[:100]
+
+
 def build_meihua_yilin_bridge(
     original_hexagram: dict[str, Any],
     changed_hexagram: dict[str, Any],
