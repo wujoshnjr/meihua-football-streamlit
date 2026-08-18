@@ -24,6 +24,14 @@ jobs:
         run: python tools/import_yilin_kanripo.py
       - name: Verify committed Yilin corpus is reproducible
         run: git diff --exit-code -- knowledge/yilin/entries knowledge/yilin/manifest.json knowledge/yilin/source_snapshot.json
+      - name: Rebuild pinned Zhouyi corpus
+        run: python tools/import_zhouyi_kanripo.py
+      - name: Verify committed Zhouyi corpus is reproducible
+        run: git diff --exit-code -- knowledge/zhouyi/entries knowledge/zhouyi/manifest.json
+      - name: Validate Zhouyi textual corpus
+        run: python tools/validate_zhouyi.py
+      - name: Validate Zhouyi semantic review
+        run: python tools/validate_zhouyi_semantics.py
       - run: ruff check .
       - run: python -m pytest -q
       - run: python tools/validate_knowledge.py

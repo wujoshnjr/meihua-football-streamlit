@@ -10,9 +10,10 @@ from qimen.models import QimenBoard
 
 from .stark_vault import meihua_context, meihua_hexagram, qimen_context
 from .yilin import build_meihua_yilin_bridge
+from .zhouyi import build_meihua_zhouyi_review
 
 
-DIVINATION_PACKET_VERSION = "DIVINATION_PACKET_V1"
+DIVINATION_PACKET_VERSION = "DIVINATION_PACKET_V2"
 
 
 def _locate_visible_stem(board: QimenBoard, stem: str) -> int:
@@ -68,7 +69,11 @@ def build_qimen_packet(
         "packet_purpose": "JARVIS_CAST_AND_RETRIEVE__CHATGPT_INTERPRETS",
         "system": "QIMEN_DUNJIA",
         "question": {"text": question.strip(), "category": category},
-        "event": {"datetime": event_at.isoformat(), "timezone": timezone_name},
+        "event": {
+            "datetime": board.calendar.local_datetime.isoformat(),
+            "timezone": board.calendar.timezone_name,
+            "normalization": "ACTUAL_CAST_EVENT_LOCAL_TIME",
+        },
         "method": {
             "family": board.method.family,
             "plate_method": board.method.plate_method,
@@ -113,16 +118,26 @@ def build_meihua_packet(
     snapshot = build_meihua_snapshot(event_at, timezone_name)
     knowledge_context = meihua_context(snapshot)
     original = meihua_hexagram(snapshot.upper_trigram, snapshot.lower_trigram)
+    mutual = meihua_hexagram(snapshot.mutual_upper_trigram, snapshot.mutual_lower_trigram)
     changed = meihua_hexagram(snapshot.changed_upper_trigram, snapshot.changed_lower_trigram)
+    zhouyi_review = build_meihua_zhouyi_review(
+        snapshot,
+        original_catalog=original,
+        mutual_catalog=mutual,
+        changed_catalog=changed,
+    )
     yilin_bridge = build_meihua_yilin_bridge(original, changed)
-    knowledge_context.append(yilin_bridge)
 
     payload: dict[str, Any] = {
         "schema_version": DIVINATION_PACKET_VERSION,
         "packet_purpose": "JARVIS_CAST_AND_RETRIEVE__CHATGPT_INTERPRETS",
         "system": "MEIHUA_YISHU",
         "question": {"text": question.strip(), "category": category},
-        "event": {"datetime": event_at.isoformat(), "timezone": timezone_name},
+        "event": {
+            "datetime": snapshot.event_local_at.isoformat(),
+            "timezone": snapshot.timezone_name,
+            "normalization": "ACTUAL_CAST_EVENT_LOCAL_TIME",
+        },
         "football_fixture": (
             {"home_team": home_team.strip(), "away_team": away_team.strip()}
             if category == "football_match"
@@ -134,17 +149,18 @@ def build_meihua_packet(
             "engine_version": snapshot.schema_version,
         },
         "hexagram": snapshot.to_dict(),
+        "zhouyi_review": zhouyi_review,
         "yilin_bridge": yilin_bridge,
         "knowledge_context": knowledge_context,
         "ai_interpretation_contract": [
             "不要重新起卦或修改本卦、互卦、變卦、動爻、體用；以 hexagram 為梅花盤象事實。",
-            "固定合參順序：本卦 → 上下卦內外 → 體用 → 旺衰 → 互卦 → 變卦 → 動爻 → 焦氏易林本卦之變卦 → 可用外應 → 支持／反證。",
+            "先核對 zhouyi_review.source_audit；再讀本卦卦辭／彖／象與真正動爻爻辭，古籍文字不得由 AI 改寫或補造。",
+            "固定合參順序：本卦經文 → 上下卦內外 → 體用 → 旺衰 → 互卦經文 → 動爻原文 → 變卦經文 → 焦氏易林本卦之變卦 → 支持／反證。",
+            "zhouyi_review 中 classical_text 是固定來源數位轉錄；project_general、football_modern_application 與 review_dimensions 是 JARVIS 專案層，必須分開陳述。",
             "焦氏易林在此是 MEIHUA_YILIN_BRIDGE：只補充本卦到最終變卦的情境，不宣稱等同焦林直日占法，也不可重起一套卦。",
             "先讀 yilin_bridge.classical_entry.classical_text，再讀 semantic_profile；後者是 PROJECT_HEURISTIC，不是焦氏原註。",
-            "易林數位轉錄、source editorial notes／gaiji、後世 commentary、project heuristic、football modern application 必須分層，不可互相冒充。",
-            "若 provenance 標示 source_label_order_anomaly 或 gaiji_tokens，不得自行改字、補字或假稱已校定。",
-            "不可只看一條生克、單一卦象、單條林辭或 image atom 就直接判勝負；必須處理支持、抵銷與矛盾訊號。",
-            "若易林與梅花核心矛盾，保留矛盾、解釋條件，不得強行統一。",
+            "若周易經文、梅花體用與易林情境彼此矛盾，保留矛盾、解釋成立條件，不得強行統一。",
+            "不可只看一條生克、單一卦象、單句爻辭、單條林辭或 image atom 就直接判勝負。",
             "若是足球問題，可給比賽劇本、主客趨勢、階段轉折與可觀察證據，但不捏造統計勝率或固定比分。",
         ],
     }

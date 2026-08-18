@@ -55,7 +55,7 @@ packet = st.session_state.get("stark_packet")
 if packet and packet.get("system") == "QIMEN_DUNJIA":
     chart = packet["chart"]
     contexts = packet["knowledge_context"]
-    st.success(f"起局完成｜Packet SHA-256：{packet['packet_sha256']}")
+    st.success(f"起局完成｜{packet['schema_version']}｜Packet SHA-256：{packet['packet_sha256']}")
     a, b, c, d = st.columns(4)
     a.metric("遁", chart["dun"])
     b.metric("局", chart["ju_label"])
@@ -101,7 +101,7 @@ if packet and packet.get("system") == "QIMEN_DUNJIA":
     relation_context = [item for item in contexts if item.get("kind") == "qimen_relation"]
     st.markdown("### 本盤組合關係")
     st.caption(
-        "底層資料庫覆蓋 306 個關係槽位；這裡只顯示本盤實際出現的天地盤干、星門、門宮、星宮。"
+        "Core 306 Matrix 覆蓋天地盤干、星門、門宮、星宮四類關係；這裡只顯示本盤實際命中的子集。"
         "足球欄位屬現代應用類比，不是古籍固定勝負公式。"
     )
     relation_rows = [
@@ -121,7 +121,7 @@ if packet and packet.get("system") == "QIMEN_DUNJIA":
         st.dataframe(relation_rows, hide_index=True, use_container_width=True)
 
     st.markdown("### 深層九宮合參")
-    st.caption("每宮固定依『宮 → 門 → 星 → 神 → 天地盤干 → 格局／空馬』整理；八神不再只顯示名稱，而會附上其調制方式、足球證據與反證。")
+    st.caption("每宮固定依『宮 → 門 → 星 → 神 → 天地盤干 → 格局／空馬』整理；八神附調制方式、足球證據與反證。")
     deep_palaces = [item for item in contexts if item.get("kind") == "qimen_palace_deep_profile"]
     deep_palaces.sort(key=lambda item: item["palace"])
     for item in deep_palaces:
@@ -143,13 +143,13 @@ if packet and packet.get("system") == "QIMEN_DUNJIA":
                     if modifier.get("football"):
                         st.caption(modifier["football"])
             st.markdown("**本宮解讀問題**")
-            for question in item["football_questions"]:
-                st.write(f"- {question}")
+            for question_item in item["football_questions"]:
+                st.write(f"- {question_item}")
 
     st.markdown("### AI 解局包")
-    st.write(f"JARVIS 已附上 {len(contexts)} 筆與本盤相關的基礎、關係、八神調制、結構修飾與深層九宮知識。")
+    st.write(f"JARVIS 已附上 {len(contexts)} 筆與本盤相關的基礎、Core 關係、八神調制、結構修飾與深層九宮知識。")
     packet_json = json.dumps(packet, ensure_ascii=False, indent=2)
-    with st.expander("查看完整 DIVINATION_PACKET_V1"):
+    with st.expander(f"查看完整 {packet['schema_version']}"):
         st.code(packet_json, language="json")
     st.download_button(
         "下載 AI 解局包 JSON",

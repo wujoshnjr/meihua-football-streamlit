@@ -1,0 +1,70 @@
+{
+  "schema_version": "stark-zhouyi-semantic-completion-v1.0.0",
+  "scope_note": "補充第一輪 384 爻 semantic audit 中未命中的罕見意象。所有條目仍是來源字詞召回的 JARVIS project heuristic，不是《周易》原註。",
+  "inference_status": "PROJECT_HEURISTIC__NOT_CLASSICAL_COMMENTARY",
+  "atoms": [
+    {
+      "id":"gradual_cold_accumulation","name":"霜冰／漸積","domain":"timing","match_terms":["霜","冰","始凝","堅冰","馴致"],
+      "project_abstraction":"微小徵兆逐步凝結成較難逆轉的條件，重點在早期訊號與累積。",
+      "football":["早段小漏洞逐步變成結構性壓力","體能／犯規／防守問題累積後放大","對手反覆利用同一弱點"],
+      "observable_signals":["同一問題從偶發變成連續發生","早期小失誤未修正並逐漸造成更大代價"],
+      "counter_signals":["早期問題很快被修正且不再出現","局勢沒有任何累積性惡化"]
+    },
+    {
+      "id":"grant_recognition","name":"賜予／聲譽","domain":"resource","match_terms":["錫","譽","賜","受服"],
+      "project_abstraction":"獲得承認、資源、名位或表面回報；仍要檢查能否持續。",
+      "football":["核心球員獲得更多責任或球權","戰術成功帶來短期聲勢／優勢","換人或角色調整得到即時回報"],
+      "observable_signals":["某球員／戰術因成功而持續獲得資源傾斜","短期優勢形成後被球隊明顯強化"],
+      "counter_signals":["表面回報沒有延續成實際作用","獲得資源後反而迅速失去位置或影響力"]
+    },
+    {
+      "id":"revocation_disgrace","name":"褫奪／羞棄","domain":"outcome","match_terms":["褫","羞","棄","无所容","無所容"],
+      "project_abstraction":"既有位置、認可或作用被撤除，或因條件不當而難以維持。",
+      "football":["戰術方案被迫放棄","球員角色被換下／降權","短暫優勢因失誤快速消失"],
+      "observable_signals":["原本有效的配置很快被迫撤回","某球員／區域的作用明顯失去場上位置"],
+      "counter_signals":["原配置持續穩定有效","短期優勢能長時間保留而沒有被撤除"]
+    },
+    {
+      "id":"position_misalignment","name":"失位／不當","domain":"structure","match_terms":["不當","位不當","失位","苞羞"],
+      "project_abstraction":"位置、角色或時機與其應承擔的功能不相稱。",
+      "football":["站位錯位造成防守／接應問題","球員被放在不適配角色","壓迫觸發點與隊形不同步"],
+      "observable_signals":["同一位置反覆出現無人接管或重疊","角色配置造成明顯功能浪費"],
+      "counter_signals":["位置分工清楚且互補","球員在角色中持續發揮其主要能力"]
+    },
+    {
+      "id":"repair_inherited_disorder","name":"整治積弊","domain":"repair","match_terms":["蠱","幹父","幹母","承以德"],
+      "project_abstraction":"接手既有問題並加以整治、修復或重新建立秩序。",
+      "football":["修補既有防守漏洞","教練針對前段問題做結構調整","替補登場處理已暴露的弱點"],
+      "observable_signals":["同一漏洞在調整後明顯減少","球隊針對既有問題改變站位／對位"],
+      "counter_signals":["問題被看見後仍反覆發生","調整沒有觸及真正的結構缺口"]
+    },
+    {
+      "id":"adornment_attachment","name":"修飾／附從","domain":"visibility","match_terms":["賁其","賁","其須","與上興"],
+      "project_abstraction":"外在呈現、修飾或依附於更主要力量而顯現。",
+      "football":["漂亮技術／傳控依附於主軸戰術","輔助球員因核心帶動而表現突出","場面觀感好但需檢查實際效率"],
+      "observable_signals":["華麗配合能連接到真正威脅","輔助角色明顯因核心牽引得到空間"],
+      "counter_signals":["只有表面技術沒有有效進入危險區","輔助表現脫離主軸後立即失效"]
+    },
+    {
+      "id":"combustion_breakdown","name":"突燃／崩解","domain":"risk","match_terms":["焚如","焚","死如","棄如","突如其來"],
+      "project_abstraction":"突然爆發並迅速失控、耗盡或被排除的高烈度轉折。",
+      "football":["短時間連續失誤造成局面崩解","過度前壓後被快速反擊懲罰","情緒／紀律事件令原戰術瞬間失效"],
+      "observable_signals":["短時間內場面從平衡轉成明顯失控","一次突發事件後隊形與情緒連續惡化"],
+      "counter_signals":["突發事件後球隊立即恢復秩序","高強度階段沒有造成任何結構性崩解"]
+    },
+    {
+      "id":"sensory_body_response","name":"感應／身體回應","domain":"response","match_terms":["咸其","拇","腓","股","脢","輔頰舌","志在外"],
+      "project_abstraction":"外界刺激引發由局部到整體的回應，位置不同代表反應層級不同。",
+      "football":["一方調整立即誘發另一方對應變化","局部對位牽動整體站位","邊路／中場局部訊號帶動連鎖跑位"],
+      "observable_signals":["對手一變陣，本方迅速在對應區域調整","局部動作會連續帶動其他球員位置"],
+      "counter_signals":["對手調整後本方完全沒有回應","局部變化與整體隊形彼此無關"]
+    },
+    {
+      "id":"fortified_restraint","name":"鞏固／不可妄動","domain":"control","match_terms":["鞏","黃牛之革","不可以有為","不可有為"],
+      "project_abstraction":"先把既有位置鞏固，不宜在條件未成熟時急於大幅行動。",
+      "football":["先穩定防線與中場結構再變陣","避免過早冒險換人／全線前壓","保持既定紀律等待更清楚轉折"],
+      "observable_signals":["球隊優先穩住結構再逐步增加風險","沒有因短期焦躁破壞基本站位"],
+      "counter_signals":["尚未穩定就立刻大幅改動造成更多漏洞","球隊完全放棄結構性約束"]
+    }
+  ]
+}

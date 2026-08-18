@@ -30,6 +30,7 @@ def test_qimen_packet_is_deterministic_and_ai_handoff_only():
     assert first["chart"] == second["chart"]
     assert "generated_at" not in first["chart"]
     assert first["host_guest"]["home_team"] == "西班牙"
+    assert first["event"]["normalization"] == "ACTUAL_CAST_EVENT_LOCAL_TIME"
     assert first["knowledge_context"]
     kinds = [row["kind"] for row in first["knowledge_context"]]
     assert "qimen_deep_reading_policy" in kinds
@@ -58,6 +59,7 @@ def test_meihua_packet_is_deterministic_and_contains_deep_three_hexagram_layers(
     assert first["system"] == "MEIHUA_YISHU"
     assert first["packet_sha256"] == second["packet_sha256"]
     assert first["hexagram"] == second["hexagram"]
+    assert first["zhouyi_review"] == second["zhouyi_review"]
     assert first["yilin_bridge"] == second["yilin_bridge"]
     assert first["yilin_bridge"]["mode"] == "MEIHUA_YILIN_BRIDGE"
     assert first["yilin_bridge"]["status"] == "MATERIALIZED"
@@ -65,6 +67,12 @@ def test_meihua_packet_is_deterministic_and_contains_deep_three_hexagram_layers(
     assert first["yilin_bridge"]["catalog_stats"]["expected_pairs"] == 4096
     assert first["yilin_bridge"]["catalog_stats"]["coverage_ratio"] == 1.0
     assert first["yilin_bridge"]["provenance"]["source_id"] == "yilin-kanripo-wyg-transcription"
+
+    zhouyi = first["zhouyi_review"]
+    assert zhouyi["catalog_stats"]["materialized_hexagrams"] == 64
+    assert zhouyi["catalog_stats"]["materialized_standard_lines"] == 384
+    assert zhouyi["source_audit"]["all_core_alignments_match"] is True
+    assert zhouyi["moving_line"]["classical_text"]
 
     kinds = {row["kind"] for row in first["knowledge_context"]}
     assert "meihua_original_hexagram" in kinds
@@ -74,7 +82,7 @@ def test_meihua_packet_is_deterministic_and_contains_deep_three_hexagram_layers(
     assert "meihua_moving_line_role" in kinds
     assert "meihua_deep_reading_policy" in kinds
     assert "meihua_deep_profile" in kinds
-    assert "meihua_yilin_bridge" in kinds
+    assert "meihua_yilin_bridge" not in kinds
 
     deep = next(row for row in first["knowledge_context"] if row["kind"] == "meihua_deep_profile")
     assert deep["original"]["hexagram"]["name"]
