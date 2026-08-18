@@ -7,6 +7,8 @@ from typing import Any, Iterable
 from meihua.engine import MeihuaSnapshot
 from qimen.models import QimenBoard
 
+from .qimen_relations import all_relations, relations_for_palace
+
 
 ROOT = Path(__file__).resolve().parents[1]
 KNOWLEDGE_ROOT = ROOT / "knowledge"
@@ -61,15 +63,17 @@ def _qimen_protocol_context() -> list[dict[str, Any]]:
             "mapping_version": payload.get("mapping_version"),
             "scope_note": payload.get("scope_note"),
             "source_policy": payload.get("source_policy", []),
+            "relation_contract": payload.get("relation_contract", {}),
         }
     ]
 
 
 def qimen_context(board: QimenBoard) -> list[dict[str, Any]]:
-    """Retrieve source material relevant to one deterministic Qimen board.
+    """Retrieve all knowledge layers that are active in one deterministic Qimen board.
 
-    The vault never scores, ranks, or decides a match outcome. It supplies the
-    objective chart facts and matching knowledge to the final AI interpreter.
+    Base symbols, actual palace relationships, structural patterns and matching
+    football semantics are supplied to the AI. The vault never turns them into a
+    final result, probability, or fixed score.
     """
 
     base = _qimen_base_rows()
@@ -107,10 +111,35 @@ def qimen_context(board: QimenBoard) -> list[dict[str, Any]]:
             if stem:
                 context.append({"kind": "qimen_stem", "palace": number, **stem})
 
+        for relation in relations_for_palace(state):
+            context.append({"kind": "qimen_relation", "palace": number, **relation.to_dict()})
+
         if state.is_void:
             relevant_keys.add("旬空")
+            context.append(
+                {
+                    "kind": "qimen_modifier",
+                    "palace": number,
+                    "name": "旬空",
+                    "general_interpretation": "此宮處在旬空狀態，象意宜看暫不受力、落空、延後或需要外部填實；不可單憑空亡判吉凶。",
+                    "football_meaning": "可能對應名單未落實、戰術訊號未兌現、機會有形無實或某條進攻／防守通道暫時失效。",
+                    "observable_signals": ["預期主力／戰術沒有實際發揮", "場面優勢未轉成有效機會"],
+                    "counter_signals": ["相關宮位代表的功能持續穩定兌現", "盤前不確定事項已正式落實且場上有效"],
+                }
+            )
         if state.is_horse:
             relevant_keys.add("驛馬")
+            context.append(
+                {
+                    "kind": "qimen_modifier",
+                    "palace": number,
+                    "name": "驛馬",
+                    "general_interpretation": "驛馬主動、移、奔走與位置變化；須合看所在宮與其他層，不自動等於吉或凶。",
+                    "football_meaning": "可能對應快速轉換、頻繁換位、邊路縱深、遠征／旅途或比賽節奏突然加速。",
+                    "observable_signals": ["快速攻守轉換", "球員頻繁換位或大範圍移動"],
+                    "counter_signals": ["比賽長時間低速靜態", "相關球員／區域幾乎沒有位移與轉換"],
+                }
+            )
 
     patterns = _qimen_pattern_rows()
     for hit in board.patterns:
@@ -211,6 +240,7 @@ def vault_stats() -> dict[str, int]:
         "qimen_deities": len(qimen["deities"]),
         "qimen_stems": len(qimen["stems"]),
         "qimen_patterns": len(_qimen_pattern_rows()),
+        "qimen_relations": len(all_relations()),
         "meihua_trigrams": len(_load_json("meihua_trigrams.json").get("trigrams", [])),
         "meihua_hexagrams": len(_load_json("meihua_hexagrams.json").get("hexagrams", [])),
         "meihua_body_use_relations": len(_load_json("meihua_rules.json").get("body_use_relations", [])),
@@ -234,6 +264,8 @@ def search_vault(query: str) -> list[dict[str, Any]]:
     for family, rows in qimen.items():
         _search_rows(results, "QIMEN_DUNJIA", family, rows, term)
     _search_rows(results, "QIMEN_DUNJIA", "patterns", _qimen_pattern_rows(), term)
+    relation_rows = (row.to_dict() for row in all_relations())
+    _search_rows(results, "QIMEN_DUNJIA", "relations", relation_rows, term)
 
     ontology = _load_json("football_ontology.json").get("mappings", {})
     if isinstance(ontology, dict):
