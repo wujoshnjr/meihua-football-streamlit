@@ -42,7 +42,7 @@ def main() -> None:
         require(bool(row.get("caution")), f"Qimen pattern {row.get('name')} needs a caution")
 
     relation_rows = all_relations()
-    require(len(relation_rows) == 306, "Qimen relation matrix must contain exactly 306 slots")
+    require(len(relation_rows) == 306, "Qimen Core relation matrix must contain exactly 306 slots")
     require(len({row.key for row in relation_rows}) == 306, "Qimen relation keys must be unique")
     relation_counts = {
         relation_type: sum(row.relation_type == relation_type for row in relation_rows)
@@ -50,7 +50,7 @@ def main() -> None:
     }
     require(
         relation_counts == {"stem_pair": 81, "star_door": 72, "door_palace": 72, "star_palace": 81},
-        "Qimen 306-slot relation family counts are incomplete",
+        "Qimen Core 306 family counts are incomplete",
     )
     for row in relation_rows:
         require(bool(row.general_interpretation), f"Qimen relation {row.key} missing general interpretation")
@@ -130,6 +130,18 @@ def main() -> None:
         require(bool(row.get("general")) and bool(row.get("football")), f"Meihua {relation} deep meanings incomplete")
         require(bool(row.get("observe")) and bool(row.get("counter")), f"Meihua {relation} needs evidence and counter-evidence")
 
+    zhouyi_review = load("zhouyi_review_policy.json")
+    require(len(zhouyi_review.get("review_dimensions", [])) == 8, "Zhouyi review policy must contain 8 dimensions")
+    require(bool(zhouyi_review.get("authority_order")), "Zhouyi review authority order is required")
+    require(bool(zhouyi_review.get("ai_review_order")), "Zhouyi AI review order is required")
+    football_contract = zhouyi_review.get("football_meaning_contract", {})
+    require(bool(football_contract.get("required_fields")), "Zhouyi football meaning contract needs required fields")
+    require(bool(football_contract.get("forbidden_shortcuts")), "Zhouyi review must list forbidden shortcuts")
+    for dimension in zhouyi_review["review_dimensions"]:
+        require(bool(dimension.get("id")) and bool(dimension.get("name")), "Zhouyi review dimension needs id/name")
+        require(bool(dimension.get("questions")), f"Zhouyi review dimension {dimension.get('id')} needs questions")
+        require(bool(dimension.get("football_rule")), f"Zhouyi review dimension {dimension.get('id')} needs football boundary")
+
     sources = load("sources.json")
     source_ids = {row.get("id") for row in sources.get("sources", [])}
     required_sources = {
@@ -137,7 +149,9 @@ def main() -> None:
         "qimen-daquan",
         "meihua-yishu-wikisource",
         "zhouyi-wikisource",
+        "zhouyi-kanripo-tls-transcription",
         "ctext-book-of-changes",
+        "yilin-kanripo-wyg-transcription",
         "project-football-ontology",
         "project-reading-protocol",
     }
@@ -146,8 +160,9 @@ def main() -> None:
     print(
         "knowledge validation passed: "
         f"Qimen 9 palaces / 8 doors / 9 stars / 8 deities / 10 stems / {len(patterns)} patterns / "
-        "306 relations / 8 deep hierarchy layers / 8 deity modulations; "
-        "Meihua 8 trigrams / 64 hexagrams / 5 body-use relations / 6 moving-line roles / 8 deep football dimensions"
+        "Core 306 relations / 8 deep hierarchy layers / 8 deity modulations; "
+        "Meihua 8 trigrams / 64 hexagrams / 5 body-use relations / 6 moving-line roles / 8 deep football dimensions; "
+        "Zhouyi 8 source-review dimensions"
     )
 
 
