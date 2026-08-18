@@ -59,8 +59,14 @@ def build_qimen_packet(
             "away_palace": _locate_visible_stem(board, hour_stem),
         }
 
+    chart = board.to_dict()
+    # QimenBoard.generated_at is audit metadata, not part of the deterministic chart.
+    # Removing it makes the same event/method produce the same packet fingerprint.
+    chart.pop("generated_at", None)
+
     payload: dict[str, Any] = {
         "schema_version": DIVINATION_PACKET_VERSION,
+        "packet_purpose": "JARVIS_CAST_AND_RETRIEVE__CHATGPT_INTERPRETS",
         "system": "QIMEN_DUNJIA",
         "question": {"text": question.strip(), "category": category},
         "event": {"datetime": event_at.isoformat(), "timezone": timezone_name},
@@ -75,7 +81,7 @@ def build_qimen_packet(
             "version": board.method.version,
         },
         "host_guest": host_guest,
-        "chart": board.to_dict(),
+        "chart": chart,
         "knowledge_context": qimen_context(board),
         "ai_interpretation_contract": [
             "不要重新起局或修改盤面；以 chart 為唯一盤象事實。",
@@ -108,6 +114,7 @@ def build_meihua_packet(
     snapshot = build_meihua_snapshot(event_at, timezone_name)
     payload: dict[str, Any] = {
         "schema_version": DIVINATION_PACKET_VERSION,
+        "packet_purpose": "JARVIS_CAST_AND_RETRIEVE__CHATGPT_INTERPRETS",
         "system": "MEIHUA_YISHU",
         "question": {"text": question.strip(), "category": category},
         "event": {"datetime": event_at.isoformat(), "timezone": timezone_name},
