@@ -1,0 +1,45 @@
+{
+  "schema_version": "stark-yilin-source-snapshot-v1.0.0",
+  "upstream_repository": "kanripo/KR3g0029",
+  "upstream_commit": "764e995ce74aa249081918ca1b0c23bbca62bec8",
+  "edition": "WYG / 文淵閣四庫全書",
+  "files": [
+    {
+      "name": "KR3g0029_001.txt",
+      "sha256": "4c8ac7793a733323f1e43d6de2bfe744b2cd08cb7906955179e4c2e40aca3153"
+    },
+    {
+      "name": "KR3g0029_002.txt",
+      "sha256": "9f68f88384a3b07c0b89f3cfea2937a823f20a2fe9a9f4d298e019c29123ceea"
+    },
+    {
+      "name": "KR3g0029_003.txt",
+      "sha256": "244eb0068ab386509554cc16d94a05a41ff32027c2be454b60973988992e7863"
+    },
+    {
+      "name": "KR3g0029_004.txt",
+      "sha256": "9d07448f8e2dc5b32b78f2c3010571482510b600144efdb5eef5a8c32f377ab1"
+    }
+  ],
+  "parsed_from_hexagrams": 64,
+  "parsed_pairs": 4096,
+  "target_order_policy": "SELF_FIRST__THEN_KING_WEN_ORDER_EXCLUDING_SELF",
+  "source_label_anomalies": [
+    {
+      "level": "target_label",
+      "from_number": 52,
+      "to_number": 9,
+      "source_label": "小過",
+      "mapped_number": 62,
+      "page": "KR3g0029_WYG_004-40b"
+    }
+  ],
+  "normalization_policy": [
+    "頁碼標記不進 classical_text，但每條保留 source_page_start。",
+    "括號校語從 classical_text 分離，完整保存在 editorial_notes 與 transcription_raw。",
+    "Kanripo gaiji token 不猜字，保留於 classical_text/transcription_raw，另列 gaiji_tokens。",
+    "卦名 lookup 依 section ordinal 與『本卦先列、其餘依文王序』映射到專案 canonical name；原轉錄 label 永久保留。",
+    "source label 與預期位置不一致時只記錄 anomaly，不以 label 靜默改寫 64×64 matrix。",
+    "不以 AI 生成、補寫或改寫任何缺漏林辭。"
+  ]
+}

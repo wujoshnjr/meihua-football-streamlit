@@ -7,7 +7,7 @@ import streamlit as st
 
 st.set_page_config(page_title="AI 解卦包 · JARVIS", page_icon="🤖", layout="wide")
 st.title("🤖 AI 解卦包")
-st.caption("JARVIS 到這裡為止：盤與知識整理完成。接下來把完整 packet 交給 ChatGPT 解讀。")
+st.caption("JARVIS 到這裡為止：盤、卦、來源與相關知識已固定。接下來把完整 packet 交給 ChatGPT 解讀。")
 
 packet = st.session_state.get("stark_packet")
 if not packet:
@@ -18,26 +18,55 @@ context = packet.get("knowledge_context", [])
 kinds = [row.get("kind") for row in context]
 st.success(f"{packet['system']}｜{packet['schema_version']}｜{packet['packet_sha256']}")
 
-c1, c2, c3 = st.columns(3)
+c1, c2, c3, c4 = st.columns(4)
 c1.metric("知識條目", len(context))
 if packet["system"] == "QIMEN_DUNJIA":
     c2.metric("深層宮位解析", kinds.count("qimen_palace_deep_profile"))
     c3.metric("關係條目", kinds.count("qimen_relation"))
+    c4.metric("焦氏易林", "不適用")
 else:
-    c2.metric("本／互／變深層層次", 3 if "meihua_deep_profile" in kinds else 0)
-    c3.metric("體用／動爻深層解析", 2 if "meihua_deep_profile" in kinds else 0)
+    c2.metric("本／互／變", 3 if "meihua_deep_profile" in kinds else 0)
+    c3.metric("體用／動爻", 2 if "meihua_deep_profile" in kinds else 0)
+    yilin = packet.get("yilin_bridge", {})
+    stats = yilin.get("catalog_stats", {})
+    c4.metric("焦氏易林", f"{stats.get('materialized_pairs', 0)}/{stats.get('expected_pairs', 4096)}")
 
 st.markdown("### 交給 ChatGPT 時的固定指令")
-st.code(
-    "請依這份 JARVIS DIVINATION_PACKET_V1 解局／解卦。\n"
-    "不要重新起局或起卦，也不要修改 packet 內的盤象。\n"
-    "優先讀取 knowledge_context 內的 deep_reading_policy / deep_profile。\n"
-    "奇門請按：整體局勢→主客用神→宮→門→星→神→天地盤干→格局／空馬→證據／反證。\n"
-    "梅花請按：本卦→上下卦內外→體用→旺衰→互卦→變卦→動爻→證據／反證。\n"
-    "請分成：盤象事實、古典／知識庫依據、足球現代類比、支持訊號、反證訊號、綜合判讀與不確定性。\n"
-    "若內容互相矛盾，請直接指出，不要強行統一。",
-    language=None,
-)
+if packet["system"] == "QIMEN_DUNJIA":
+    instruction = (
+        "請依這份 JARVIS DIVINATION_PACKET_V1 解奇門局。\n"
+        "不要重新起局，也不要修改 packet 內的盤象。\n"
+        "先讀整體局勢與主客用神，再按：宮→門→星→神→天地盤干→格局／空馬。\n"
+        "每一個足球推論都分清盤象事實、知識庫依據、modern application、支持訊號與反證訊號。\n"
+        "遇到相互矛盾的宮位或格局要保留矛盾，不可為了給單一答案而刪除反證。\n"
+        "最後才做綜合判讀，並說明關鍵轉折與不確定性。"
+    )
+else:
+    instruction = (
+        "請依這份 JARVIS DIVINATION_PACKET_V1 解梅花卦，並合參其中的 MEIHUA_YILIN_BRIDGE。\n"
+        "不要重新起卦，也不要修改本卦、互卦、變卦、動爻、體用或 JARVIS 的焦氏易林 lookup。\n"
+        "固定順序：問題定位→本卦→上下卦內外→體用→旺衰→互卦→變卦→動爻→焦氏易林『本卦之變卦』→支持／反證→綜合判讀。\n"
+        "焦氏易林先讀 classical_entry.classical_text，再讀 semantic_profile；semantic_profile/image_atoms 是專案 heuristic，不是焦氏原註。\n"
+        "若有 source_label_order_anomaly、gaiji_tokens 或 editorial_notes，請把它當文本校勘資訊，不要擅自補字或改字。\n"
+        "古籍數位轉錄、後世注解、專案 heuristic、football modern application 必須分層陳述。\n"
+        "易林若與梅花核心相反，要把矛盾當作解讀資訊，不得強行統一；不可把單條林辭直接換成勝率、固定比分或必然勝負。\n"
+        "最後才給出比賽／事件的整體劇本、可能轉折、支持與反證，以及不確定性。"
+    )
+st.code(instruction, language=None)
+
+if packet["system"] == "MEIHUA_YISHU":
+    yilin = packet.get("yilin_bridge", {})
+    with st.expander("《焦氏易林》AI 交接摘要", expanded=True):
+        st.write(f"**lookup**：{yilin.get('lookup_key', '—')}｜**status**：{yilin.get('status', '—')}")
+        entry = yilin.get("classical_entry") or {}
+        if entry:
+            st.write(f"**林辭**：{entry.get('classical_text', '')}")
+            provenance = yilin.get("provenance", {})
+            st.caption(
+                f"{provenance.get('edition', '')}｜{provenance.get('volume_file', '')}｜"
+                f"{provenance.get('page_start', '')}"
+            )
+        st.caption("梅花定結構 × 易林補劇情 × ChatGPT 合參。易林不重起卦，也不改變梅花 deterministic chart。")
 
 packet_json = json.dumps(packet, ensure_ascii=False, indent=2)
 st.markdown("### 完整 Packet")
@@ -55,8 +84,8 @@ a, b = st.columns(2)
 with a:
     with st.container(border=True):
         st.markdown("**JARVIS**")
-        st.write("保存知識、起局／起卦、固定盤象、檢索相關條目、建立深層結構化上下文、產生 packet。")
+        st.write("保存知識、固定起局／起卦、查唯一相關條目、保存 provenance、建立深層上下文、產生 packet。")
 with b:
     with st.container(border=True):
         st.markdown("**ChatGPT**")
-        st.write("閱讀 packet，合參盤象、古典義理、深層關係與足球情境，完成最後解讀。")
+        st.write("不重排盤；閱讀 packet，處理古典義理、文本情境、支持／反證與現代足球情境，完成最後合參。")

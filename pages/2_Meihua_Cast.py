@@ -11,7 +11,10 @@ from qimen.calendar import LocalTimeError, aware_local_datetime
 
 st.set_page_config(page_title="梅花起卦 · JARVIS", page_icon="☯️", layout="wide")
 st.title("☯️ 梅花易數起卦")
-st.caption("年月日時 deterministic 起卦；JARVIS 整理本卦、互卦、變卦、體用、旺衰、動爻與焦氏易林轉卦鏡頭，最後解卦交給 ChatGPT。")
+st.caption(
+    "年月日時 deterministic 起卦；JARVIS 整理本卦、互卦、變卦、體用、旺衰、動爻，"
+    "再加入《焦氏易林》本卦→變卦完整轉卦鏡頭，最後交給 ChatGPT 合參。"
+)
 
 with st.form("meihua_stark_form"):
     question = st.text_area("占問問題", placeholder="例如：西班牙對維德角，這場比賽整體走勢如何？")
@@ -97,7 +100,11 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
     st.caption("足球衍生義屬 modern application，不是《周易》或《梅花易數》古籍原文。")
 
     st.markdown("### 深層卦象結構")
-    for label, key in (("本卦 · 目前結構", "original"), ("互卦 · 中段機制", "mutual"), ("變卦 · 後段走向", "changed")):
+    for label, key in (
+        ("本卦 · 目前結構", "original"),
+        ("互卦 · 中段機制", "mutual"),
+        ("變卦 · 後段走向", "changed"),
+    ):
         stage = deep[key]
         relation = stage["upper_lower_element_relation"]
         with st.expander(label, expanded=(key == "original")):
@@ -105,10 +112,12 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
             st.caption(stage["stage_role"]["football"])
             x, y = st.columns(2)
             with x:
-                st.markdown(f"**下卦／內部**：{stage['lower_role']['trigram']['name']} · {stage['lower_role']['trigram'].get('core', '')}")
+                trigram = stage["lower_role"]["trigram"]
+                st.markdown(f"**下卦／內部**：{trigram['name']} · {trigram.get('core', '')}")
                 st.write(stage["lower_role"]["general"])
             with y:
-                st.markdown(f"**上卦／外部**：{stage['upper_role']['trigram']['name']} · {stage['upper_role']['trigram'].get('core', '')}")
+                trigram = stage["upper_role"]["trigram"]
+                st.markdown(f"**上卦／外部**：{trigram['name']} · {trigram.get('core', '')}")
                 st.write(stage["upper_role"]["general"])
             st.markdown(f"**上下卦五行關係**：{relation['lower_element']} → {relation['upper_element']}")
             st.write(relation["interpretation"])
@@ -130,38 +139,77 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
             st.write(mline["general"])
             st.caption(mline["football"])
 
-    st.markdown("### 《焦氏易林》轉卦鏡頭")
+    st.markdown("### 《焦氏易林》本卦 → 變卦")
     ys = yilin["catalog_stats"]
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("易林轉卦", f"{ys['materialized_pairs']} / {ys['expected_pairs']}")
+    m2.metric("本卦 blocks", f"{ys['materialized_from_hexagrams']} / 64")
+    m3.metric("意象原子", ys["ontology_atoms"])
+    m4.metric("來源異常登錄", ys["source_label_anomaly_count"])
     st.caption(
-        f"JARVIS 10 alpha｜本地已 materialize {ys['materialized_pairs']} / {ys['expected_pairs']} 條。"
-        "目前只使用『本卦 → 最終變卦』，不把互卦冒充焦林原始占法。"
+        "WYG／文淵閣四庫全書數位轉錄已達 4096/4096 pair coverage。"
+        "多版本異文與後世注解仍是獨立校勘層，不把『pair 完整』誇大成『所有版本研究已完成』。"
     )
-    if yilin["status"] == "MATERIALIZED":
+
+    if yilin["status"] != "MATERIALIZED":
+        st.error(f"完整 catalog 不應缺此 pair：{yilin['lookup_key']}｜{yilin.get('missing_reason', '')}")
+    else:
         entry = yilin["classical_entry"]
-        st.success(f"已命中：{yilin['lookup_key']}｜{entry['source_section']}")
-        st.markdown("**易林原文**")
+        provenance = yilin["provenance"]
+        st.success(f"已命中：{yilin['lookup_key']}｜{provenance['source_section']}")
+        st.markdown("#### 林辭原文")
         st.write(entry["classical_text"])
-        st.caption("原文與專案語義分層保存；異文仍標示 PENDING_CROSSCHECK。")
-        atoms = yilin.get("image_atoms", [])
+        st.caption(
+            f"來源：{provenance['edition']}｜{provenance['volume_file']}｜{provenance['page_start']}｜"
+            f"pinned commit {str(provenance['commit'])[:12]}…"
+        )
+
+        if provenance.get("source_label_order_anomaly"):
+            st.warning(
+                f"此條來源轉錄卦名標籤為「{provenance.get('source_target_label')}」，"
+                "與該位置的文王卦序不一致；JARVIS 保留原標籤並登錄 anomaly，沒有靜默改寫來源。"
+            )
+        if provenance.get("gaiji_tokens"):
+            st.warning("此條含尚未擅自猜字的 gaiji token：" + "、".join(provenance["gaiji_tokens"]))
+
+        with st.expander("查看原轉錄、校語與來源細節"):
+            st.write(f"**原轉錄**：{entry['transcription_raw']}")
+            st.write("**校語／括注**：" + ("；".join(provenance.get("editorial_notes", [])) or "—"))
+            st.write(f"**source target label**：{provenance.get('source_target_label') or '—'}")
+            st.write(f"**source id**：{provenance['source_id']}")
+            st.write(f"**repository / commit**：{provenance['repository']} @ {provenance['commit']}")
+
+        profile = yilin.get("semantic_profile") or {}
+        atoms = profile.get("image_atoms", [])
+        st.markdown("#### 易林情境語義")
+        st.caption("以下是 Operation STARK 的檢索 heuristic，不是《焦氏易林》原註。先讀林辭，再看候選意象。")
         if atoms:
-            st.markdown("**意象原子（專案 heuristic，不是古籍原註）**")
             st.dataframe(
                 [
                     {
+                        "領域": row["domain"],
                         "意象": row["name"],
                         "命中字詞": "、".join(row["matched_terms"]),
                         "抽象義": row["classical_abstraction"],
                         "足球可能情境": "；".join(row["football"]),
-                        "支持": "；".join(row["observable_signals"]),
-                        "反證": "；".join(row["counter_signals"]),
                     }
                     for row in atoms
                 ],
                 hide_index=True,
                 use_container_width=True,
             )
-    else:
-        st.warning(f"{yilin['lookup_key']} 尚未 materialize：{yilin['missing_reason']}")
+            if football:
+                s1, s2 = st.columns(2)
+                with s1:
+                    st.markdown("**足球支持訊號**")
+                    for item in profile.get("observable_signals", []):
+                        st.write(f"- {item}")
+                with s2:
+                    st.markdown("**足球反證訊號**")
+                    for item in profile.get("counter_signals", []):
+                        st.write(f"- {item}")
+        else:
+            st.info("此林辭沒有命中目前的意象 ontology；AI 仍應直接閱讀林辭，不能把『未命中』當成『無意義』。")
 
     with st.expander("易林融合方法邊界"):
         st.write(yilin["historical_method_notice"])
@@ -176,7 +224,10 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
     )
 
     st.markdown("### AI 解卦包")
-    st.write(f"JARVIS 已附上 {len(contexts)} 筆梅花深層知識，並加入焦氏易林 bridge 狀態。")
+    st.write(
+        f"JARVIS 已附上 {len(contexts)} 筆梅花深層知識與唯一的「{yilin['lookup_key']}」易林轉卦條目；"
+        "ChatGPT 依『梅花核心 → 易林轉變情境 → 支持／反證 → 綜合判讀』解讀。"
+    )
     packet_json = json.dumps(packet, ensure_ascii=False, indent=2)
     with st.expander("查看完整 DIVINATION_PACKET_V1"):
         st.code(packet_json, language="json")

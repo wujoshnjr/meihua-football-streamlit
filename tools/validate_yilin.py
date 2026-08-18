@@ -8,11 +8,19 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from jarvis.yilin import yilin_entries, yilin_image_ontology, yilin_manifest  # noqa: E402
+from jarvis.yilin import (  # noqa: E402
+    yilin_entries,
+    yilin_image_ontology,
+    yilin_manifest,
+    yilin_semantic_audit,
+)
 
 
 EXPECTED_HEXAGRAMS = 64
 EXPECTED_PAIRS = 4096
+EXPECTED_UPSTREAM_REPO = "kanripo/KR3g0029"
+EXPECTED_UPSTREAM_COMMIT = "764e995ce74aa249081918ca1b0c23bbca62bec8"
+SNAPSHOT_PATH = ROOT / "knowledge" / "yilin" / "source_snapshot.json"
 
 
 def require(condition: bool, message: str) -> None:
@@ -28,23 +36,41 @@ def main() -> None:
     require(manifest.get("expected_from_hexagrams") == EXPECTED_HEXAGRAMS, "expected from hexagrams must be 64")
     require(manifest.get("expected_to_hexagrams_per_from") == EXPECTED_HEXAGRAMS, "expected targets per from must be 64")
     require(manifest.get("expected_pairs") == EXPECTED_PAIRS, "expected pairs must be 4096")
+    require(manifest.get("materialized_pairs") == EXPECTED_PAIRS, "manifest materialized_pairs must be 4096")
+    require(manifest.get("complete_from_hexagrams") == EXPECTED_HEXAGRAMS, "manifest complete source blocks must be 64")
+    require(manifest.get("coverage_ratio") == 1.0, "manifest coverage ratio must be 1.0")
     require(manifest.get("bridge_mode") == "MEIHUA_YILIN_BRIDGE", "bridge mode must stay explicit")
     require(bool(manifest.get("historical_method_notice")), "historical method notice is required")
     require(bool(manifest.get("authority_order")), "authority order is required")
+    require(bool(manifest.get("completeness_matrix")), "completeness matrix is required")
+    require(
+        manifest.get("catalog_status") == "COMPLETE_4096_PAIR_COVERAGE__TEXTUAL_COLLATION_ONGOING",
+        "catalog status must distinguish pair completeness from textual collation",
+    )
+    require(
+        manifest.get("textual_collation_status") == "WYG_BASE_COMPLETE__MULTI_EDITION_VARIANT_COLLATION_ONGOING",
+        "textual collation must remain explicitly ongoing",
+    )
 
-    pair_keys = {(row.get("from_name"), row.get("to_name")) for row in rows}
-    require(len(pair_keys) == len(rows), "from/to pairs must be unique")
-    require(len(rows) == manifest.get("materialized_pairs"), "manifest materialized_pairs must match files")
-    require(len(rows) <= EXPECTED_PAIRS, "materialized pairs cannot exceed 4096")
+    require(len(rows) == EXPECTED_PAIRS, f"stable corpus must contain exactly {EXPECTED_PAIRS} entries")
+    number_pairs = {(int(row["from_number"]), int(row["to_number"])) for row in rows}
+    name_pairs = {(str(row["from_name"]), str(row["to_name"])) for row in rows}
+    require(len(number_pairs) == EXPECTED_PAIRS, "numeric from/to pairs must be unique")
+    require(len(name_pairs) == EXPECTED_PAIRS, "canonical-name from/to pairs must be unique")
+    expected_matrix = {(left, right) for left in range(1, 65) for right in range(1, 65)}
+    require(number_pairs == expected_matrix, "numeric matrix must be exactly 64×64")
 
-    from_names = {str(row.get("from_name")) for row in rows}
-    require(sorted(from_names) == sorted(manifest.get("materialized_from_hexagrams", [])), "manifest from-hexagram list mismatch")
+    from_names = {str(row["from_name"]) for row in rows}
+    require(len(from_names) == 64, "must contain 64 canonical source hexagram names")
+    require(
+        sorted(from_names) == sorted(manifest.get("materialized_from_hexagrams", [])),
+        "manifest from-hexagram list mismatch",
+    )
 
-    for from_name in from_names:
-        block = [row for row in rows if row.get("from_name") == from_name]
-        require(len(block) == 64, f"{from_name} block must be materialized as a complete 64-entry unit")
-        require({row.get("to_number") for row in block} == set(range(1, 65)), f"{from_name} target numbers must be exactly 1..64")
-        require(len({row.get("to_name") for row in block}) == 64, f"{from_name} target names must be unique")
+    for from_number in range(1, 65):
+        block = [row for row in rows if int(row["from_number"]) == from_number]
+        require(len(block) == 64, f"source #{from_number} must contain exactly 64 targets")
+        require({int(row["to_number"]) for row in block} == set(range(1, 65)), f"source #{from_number} targets must be 1..64")
 
     for row in rows:
         for field in (
@@ -56,32 +82,91 @@ def main() -> None:
             "to_name",
             "to_symbol",
             "classical_text",
+            "transcription_raw",
             "source_id",
+            "source_section",
+            "source_file",
+            "source_edition",
+            "source_repo",
+            "source_commit",
+            "source_volume_file",
+            "source_page_start",
             "verification_status",
             "variant_status",
             "semantic_status",
         ):
             require(row.get(field) not in (None, ""), f"{row.get('id')} missing {field}")
-        require(row.get("variant_status") in {"PENDING_CROSSCHECK", "CROSSCHECKED", "VARIANT_RECORDED"}, f"{row.get('id')} invalid variant status")
-        require("home_win_probability" not in json.dumps(row, ensure_ascii=False), f"{row.get('id')} must not contain model probability")
-        require("fixed_score" not in json.dumps(row, ensure_ascii=False), f"{row.get('id')} must not contain fixed score")
+        require(isinstance(row.get("editorial_notes"), list), f"{row['id']} editorial_notes must be a list")
+        require(isinstance(row.get("gaiji_tokens"), list), f"{row['id']} gaiji_tokens must be a list")
+        require(isinstance(row.get("source_label_order_anomaly"), bool), f"{row['id']} anomaly flag must be bool")
+        require(row["source_repo"] == EXPECTED_UPSTREAM_REPO, f"{row['id']} unexpected source repo")
+        require(row["source_commit"] == EXPECTED_UPSTREAM_COMMIT, f"{row['id']} unexpected source commit")
+        require(row["verification_status"] == "WYG_DIGITAL_TRANSCRIPTION__PAIR_COMPLETE", f"{row['id']} invalid verification status")
+        require(
+            row["variant_status"] == "EDITORIAL_APPARATUS_PRESERVED__MULTI_EDITION_COLLATION_ONGOING",
+            f"{row['id']} invalid variant status",
+        )
+        require(
+            row["semantic_status"] == "RAW_CLASSICAL_TEXT__PROJECT_HEURISTICS_SEPARATE",
+            f"{row['id']} invalid semantic status",
+        )
+        for token in row["gaiji_tokens"]:
+            require(token in row["transcription_raw"], f"{row['id']} gaiji token missing from raw transcription")
+        serialized = json.dumps(row, ensure_ascii=False)
+        require("home_win_probability" not in serialized, f"{row['id']} must not contain model probability")
+        require("fixed_score" not in serialized, f"{row['id']} must not contain fixed score")
+
+    require(SNAPSHOT_PATH.exists(), "source_snapshot.json must exist")
+    snapshot = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+    require(snapshot.get("upstream_repository") == EXPECTED_UPSTREAM_REPO, "snapshot repo mismatch")
+    require(snapshot.get("upstream_commit") == EXPECTED_UPSTREAM_COMMIT, "snapshot commit mismatch")
+    require(snapshot.get("parsed_from_hexagrams") == 64, "snapshot must report 64 source blocks")
+    require(snapshot.get("parsed_pairs") == 4096, "snapshot must report 4096 pairs")
+    require(snapshot.get("target_order_policy") == "SELF_FIRST__THEN_KING_WEN_ORDER_EXCLUDING_SELF", "snapshot target order policy mismatch")
+    files = snapshot.get("files", [])
+    require(len(files) == 4, "snapshot must pin four source volume files")
+    require(all(item.get("name") and item.get("sha256") and len(item["sha256"]) == 64 for item in files), "source file SHA-256 metadata invalid")
+    anomalies = snapshot.get("source_label_anomalies", [])
+    require(len(anomalies) == manifest.get("source_label_anomaly_count"), "source-label anomaly count mismatch")
+    require(len(anomalies) == 1, "current pinned WYG transcription should expose exactly one known target-label anomaly")
+
+    source = manifest.get("transcription_source", {})
+    require(source.get("repository") == EXPECTED_UPSTREAM_REPO, "manifest source repo mismatch")
+    require(source.get("commit") == EXPECTED_UPSTREAM_COMMIT, "manifest source commit mismatch")
+    require(len(source.get("sha256", {})) == 4, "manifest must pin SHA-256 for four source files")
 
     require(atoms, "image ontology cannot be empty")
+    ids: set[str] = set()
     for atom in atoms:
-        for field in ("id", "name", "match_terms", "classical_abstraction", "football", "observable_signals", "counter_signals"):
+        for field in (
+            "id",
+            "name",
+            "domain",
+            "specificity",
+            "match_terms",
+            "classical_abstraction",
+            "football",
+            "observable_signals",
+            "counter_signals",
+        ):
             require(atom.get(field), f"image atom {atom.get('id')} missing {field}")
+        require(atom["id"] not in ids, f"duplicate image atom id: {atom['id']}")
+        ids.add(atom["id"])
 
-    if len(rows) < EXPECTED_PAIRS:
-        require(
-            manifest.get("catalog_status") == "PARTIAL_BUILD__DO_NOT_CLAIM_4096_COMPLETE",
-            "partial catalog must explicitly reject completeness claims",
-        )
-    else:
-        require(len(from_names) == 64, "complete catalog must contain 64 source hexagrams")
+    audit = yilin_semantic_audit()
+    require(audit["total_entries"] == 4096, "semantic audit must inspect the complete corpus")
+    require(audit["ontology_atoms"] == len(atoms), "semantic audit ontology count mismatch")
+    require(audit["entries_with_image_atoms"] > 0, "semantic ontology must match at least one classical entry")
+    require(
+        audit["entries_with_image_atoms"] + audit["entries_without_image_atoms"] == 4096,
+        "semantic audit coverage accounting mismatch",
+    )
 
     print(
         "yilin validation passed: "
-        f"{len(rows)}/{EXPECTED_PAIRS} pairs, {len(from_names)}/64 complete source blocks, {len(atoms)} image atoms"
+        f"4096/4096 pairs, 64/64 source blocks, {len(atoms)} image atoms, "
+        f"{len(anomalies)} preserved source-label anomaly, "
+        f"heuristic semantic match={audit['entries_with_image_atoms']}/4096"
     )
 
 

@@ -1,5 +1,55 @@
 # Changelog
 
+## 10.0.0 — JARVIS 10 YILIN FUSION
+
+JARVIS 10 completes the local 《焦氏易林》 transformation matrix while preserving the Operation STARK boundary: **JARVIS casts and retrieves; ChatGPT interprets**.
+
+### Complete Yilin base corpus
+
+- Expand from the alpha 64/4096 block to **4096/4096 unique pairs**: 64 source hexagrams × 64 target hexagrams.
+- Materialize all **64/64 source blocks** from a pinned WYG / 文淵閣四庫全書 digital transcription in `kanripo/KR3g0029` at commit `764e995ce74aa249081918ca1b0c23bbca62bec8`.
+- Preserve exact source provenance: source volume, section, page locator, raw transcription, editorial parenthetical notes, gaiji tokens, upstream repository and pinned commit.
+- Add source-file SHA-256 hashes and `knowledge/yilin/source_snapshot.json` so the corpus can be audited and reproduced.
+- Never use AI to create, complete or silently rewrite missing classical text.
+
+### Textual integrity
+
+- Runtime lookup is keyed by canonical King Wen numeric pairs, preventing glyph variants such as 无/無, 恒/恆, 兊/兌 and 㢲/巽 from breaking the bridge.
+- Reconstruct each source block using the documented 易林 order: the block's own hexagram first, followed by the remaining King Wen hexagrams.
+- Preserve one detected WYG source-target label anomaly instead of silently correcting it: 艮 block target position #9 is transcribed as `小過`; JARVIS keeps that source label and records the anomaly while the canonical lookup remains `艮之小畜`.
+- Add `knowledge/yilin/collation_status.json` to distinguish **pair-matrix completeness** from still-ongoing multi-edition variant collation, modern punctuation and commentary work.
+
+### Deep semantic layer
+
+- Expand the Yilin image ontology to dozens of explicit semantic atoms spanning movement, crossing, vehicles, obstruction, timing, access, defense, conflict, discipline, deception, communication, cooperation, isolation, authority, resources, gain/loss, supply, growth, fitness, recovery, reversal, collapse, ascent, weather, visibility, psychology and collective structure.
+- Every atom retains `PROJECT_HEURISTIC__NOT_CLASSICAL_COMMENTARY` authority and includes football hypotheses, observable evidence and counter-evidence.
+- Add `yilin_semantic_profile()` to aggregate matched domains, football hypotheses, support signals and counter-signals for the single active forest verse.
+- Add `yilin_semantic_audit()` to expose heuristic retrieval coverage without presenting it as textual completeness or predictive accuracy.
+
+### Runtime and AI handoff
+
+- Harden `MEIHUA_YILIN_BRIDGE` so Meihua remains the authority for original/mutual/changed hexagrams, moving line, body/use and strength.
+- Consult exactly one Yilin pair: **original hexagram → final changed hexagram**.
+- Include classical text, source apparatus, provenance, semantic profile and compatibility image atoms in `DIVINATION_PACKET_V1`.
+- AI instructions explicitly separate: digital transcription → source apparatus → sourced commentary → project heuristic → football modern application → ChatGPT final synthesis.
+- Keep the historical-method notice: this bridge is a project cross-system synthesis, not a claim that it reproduces Jiaolin day-assignment practice.
+
+### UI
+
+- Home page now reports complete 4096/4096 Yilin pair coverage and clearly states the textual-collation boundary.
+- Meihua page exposes the active `本卦之變卦`, forest verse, edition, volume/page, raw transcription, notes, gaiji warnings, anomaly warnings, semantic domains, football support and counter-evidence.
+- Knowledge Vault searches the complete 4096 corpus and the expanded image ontology.
+- AI Packet page gives ChatGPT the exact Meihua → Yilin → evidence/counter-evidence interpretation order.
+
+### Validation and reproducibility
+
+- `tools/import_yilin_kanripo.py` deterministically reproduces the complete corpus from the pinned upstream source.
+- `tools/validate_yilin.py` rejects anything other than an exact 64×64 matrix with complete required provenance and consistent snapshot/hash metadata.
+- Tests cover first/middle/last source blocks, forward/reverse lookups, orthographic normalization, semantic profiles, search and packet-level full coverage.
+- No Yilin content is converted directly into a probability, fixed score or automatic match result.
+
+**Completeness statement:** JARVIS 10 is complete at the 4096-pair / WYG-base-transcription layer. Multi-edition textual variants, editorial punctuation and historical commentary remain explicitly separate ongoing scholarly layers.
+
 ## 10.0.0-alpha.1 — JARVIS 10 YILIN FUSION
 
 Operation STARK begins the staged integration of the full 《焦氏易林》 64×64 transformation corpus.
@@ -36,7 +86,7 @@ Operation STARK begins the staged integration of the full 《焦氏易林》 64�
 
 - Add `tests/test_yilin_fusion.py`.
 - Add `tools/validate_yilin.py` and run it in GitHub Actions.
-- Current alpha validation requires each materialized source hexagram to be imported as a complete 64-target block and requires manifest coverage to match the files exactly.
+- Alpha validation requires each materialized source hexagram to be imported as a complete 64-target block and manifest coverage to match the files exactly.
 
 ## 9.1.0 — Operation STARK Deep Reading
 

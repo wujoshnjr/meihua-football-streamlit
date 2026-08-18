@@ -1,10 +1,12 @@
 # JARVIS 10 — YILIN FUSION
 
-## 產品定位
+## 核心原則
 
-JARVIS 的梅花易數仍然負責 deterministic 起卦：本卦、互卦、變卦、動爻、體用與旺衰不可被《焦氏易林》改寫。
+> **梅花定結構 × 易林補劇情 × ChatGPT 合參**
 
-《焦氏易林》只提供一個額外 transformation lens：
+JARVIS 的梅花易數仍然是 deterministic 起卦權威。本卦、互卦、變卦、動爻、體用與旺衰不能被《焦氏易林》改寫。
+
+《焦氏易林》只增加 transformation lens：
 
 ```text
 梅花本卦 H0
@@ -13,165 +15,237 @@ JARVIS 的梅花易數仍然負責 deterministic 起卦：本卦、互卦、變�
   ↓
 查《焦氏易林》H0 之 H1
   ↓
-原文 + provenance + project image atoms
+林辭 + provenance + source apparatus
   ↓
-放入 DIVINATION_PACKET_V1
+project semantic profile / image ontology
+  ↓
+DIVINATION_PACKET_V1
   ↓
 ChatGPT 最後合參
 ```
 
 ## 歷史方法聲明
 
-`MEIHUA_YILIN_BRIDGE` 是 Operation STARK 的跨系統合參層，不宣稱等同焦林直日法，也不宣稱已完整復原《焦氏易林》原始占筮程序。
+`MEIHUA_YILIN_BRIDGE` 是 Operation STARK 的跨系統合參層：
 
-互卦仍是梅花內部發展層，不會自動再查一次「本→互」或「互→變」並冒充焦林原法。
+- 不宣稱等同焦林直日法。
+- 不宣稱完整復原《焦氏易林》原始占筮程序。
+- 不拿互卦再查一套焦林並冒充原法。
+- 不重新起卦。
+- 不把林辭直接換成吉凶、勝率或固定比分。
 
-## 權威順序
+## 4096 / 4096 corpus
+
+JARVIS 10 的本地易林 base corpus 現在是：
+
+- 64 個本卦
+- 每個本卦 64 個之卦
+- **4096 / 4096 unique pair**
+- **64 / 64 source blocks**
+- 每條非空林辭
+- 每條保存 source page locator
+- 每條保存 raw transcription
+- 括號校語分離保存
+- gaiji token 原樣保存，不擅自猜字
+- source label 與預期位置不一致時登錄 anomaly，不靜默改寫
+
+主要 base transcription：
+
+```text
+repository: kanripo/KR3g0029
+edition: WYG / 文淵閣四庫全書
+pinned commit: 764e995ce74aa249081918ca1b0c23bbca62bec8
+source files: KR3g0029_001.txt ... KR3g0029_004.txt
+```
+
+來源 snapshot 與 SHA-256 固定在：
+
+- `knowledge/yilin/source_snapshot.json`
+- `knowledge/yilin/manifest.json`
+
+完整 64 blocks 存於：
+
+- `knowledge/yilin/entries/01.json` … `64.json`
+
+## 「完整」的精確定義
+
+JARVIS 10 可以宣稱：
+
+- 64×64 pair matrix 完整
+- WYG base digital transcription 完整
+- source-page provenance 完整
+- raw transcription preservation 完整
+- 現有 WYG source-label anomaly registry 完整
+
+JARVIS 10 **不宣稱**：
+
+- 所有版本異文都已校勘完畢
+- 所有句讀／現代標點都已校定
+- 所有歷代注解都已收完
+- project heuristic 等於焦氏原註
+- 足球類比已被證明具有預測準確率
+
+這些維度記錄在 `knowledge/yilin/collation_status.json`。
+
+## Source order 與卦名異體
+
+傳世數位轉錄的每一個 source block 採：
+
+```text
+本卦自身
+→
+其餘六十三卦依文王卦序
+```
+
+因此 runtime lookup 用 **King Wen number pair** 做權威鍵，不依賴來源字形。
+
+例如來源可能使用：
+
+- 无 / 無
+- 恒 / 恆
+- 兊 / 兑 / 兌
+- 㢲 / 巽
+- 暌 / 睽
+
+這些原 source label 仍保存。
+
+目前 pinned WYG transcription 檢出 1 個 source-target label anomaly：艮 block 的 target #9 位置標成「小過」。JARVIS 保存原標籤與 anomaly flag，但 lookup pair 仍依 source order 對應 `艮之小畜`，避免靜默篡改原文，也避免 matrix 錯位。
+
+## 每條 record
+
+每條至少保存：
+
+```text
+id
+from_number / from_name / from_symbol
+to_number / to_name / to_symbol
+classical_text
+transcription_raw
+editorial_notes
+gaiji_tokens
+source_target_label
+source_label_order_anomaly
+source_page_start
+source_id
+source_section
+source_edition
+source_repo / source_commit
+source_volume_file
+verification_status
+variant_status
+semantic_status
+```
+
+## 易林意象 ontology
+
+`knowledge/yilin/image_ontology.json` 是 **專案 heuristic**，不是古籍原註。
+
+目前覆蓋移動、渡涉、車馬、阻滯、延遲、開啟、門戶、防守、爭鬥、刑法、隱伏、資訊、協作、離散、婚合、權位、財貨、得失、供給、生長、傷病、康復、轉折、崩解、升進、水火、風雨、幽暗、猛獸、飛鳥、士氣、悲憂、時令、家室、群體等情境領域。
+
+每個 atom 固定保存：
+
+```text
+source match terms
+→
+project classical abstraction
+→
+football hypotheses
+→
+observable signals
+→
+counter signals
+```
+
+authority 永遠是：
+
+`PROJECT_HEURISTIC__NOT_CLASSICAL_COMMENTARY`
+
+`jarvis.yilin.yilin_semantic_profile()` 只做候選語義聚合；未命中 ontology 的林辭仍由 ChatGPT 直接閱讀，不能視為「無意義」。
+
+## AI 權威順序
 
 1. `MEIHUA_DETERMINISTIC_CHART`
 2. `MEIHUA_BODY_USE_STRENGTH_MUTUAL_CHANGED_MOVING_LINE`
 3. `JIAOSHI_YILIN_FROM_TO_CLASSICAL_TEXT`
 4. `COMMENTARIAL_INTERPRETATION_WHEN_SEPARATELY_SOURCED`
-5. `FOOTBALL_MODERN_APPLICATION`
-6. `CHATGPT_FINAL_SYNTHESIS`
+5. `PROJECT_SEMANTIC_HEURISTIC`
+6. `FOOTBALL_MODERN_APPLICATION`
+7. `CHATGPT_FINAL_SYNTHESIS`
 
-任何下層都不能靜默改寫上層。
+下層不能靜默改寫上層。
 
-## 4096 catalog
+## 足球解讀協議
 
-完整目標：
-
-- 64 個本卦
-- 每個本卦 64 個之卦
-- 總計 4096 unique pair
-
-JARVIS 10 alpha 第一批只 materialize 《易林（四庫全書本）》卷一「乾之第一」64 條。
-
-目前必須公開顯示：
+林辭進入足球問題時，必須經過：
 
 ```text
-64 / 4096
-PARTIAL_BUILD__DO_NOT_CLAIM_4096_COMPLETE
+林辭原文
+↓
+候選古典抽象語義
+↓
+足球 modern application
+↓
+場上可觀察證據
+↓
+反證
+↓
+與梅花核心合參
 ```
 
-缺資料時只回：
+禁止：
 
-```text
-SOURCE_PENDING
-```
+- 林辭 A = 主勝
+- 意象 B = 客勝
+- 某字 = 固定比分
+- 用單一林辭產生統計勝率
+- 把 heuristic 當古籍原註
 
-不得讓 AI、程式或模板補寫不存在的林辭。
+## 多版本校勘與 commentary
 
-## 每條資料欄位
+WYG base 完整後，下一個文本工作是逐條 crosscheck：
 
-每一條原典 record 至少包含：
+- Wikisource《易林（四庫全書本）》
+- Chinese Text Project《焦氏易林》
+- 後續可合法、可驗證取得的其他底本
 
-- `from_number / from_name / from_symbol`
-- `to_number / to_name / to_symbol`
-- `classical_text`
-- `source_id / source_section / source_file`
-- `verification_status`
-- `variant_status`
-- `semantic_status`
+異文必須以 alternate reading / source note 方式保存，不能覆蓋 base transcription。
 
-未完成版本異文交叉核對時，`variant_status` 必須保持 `PENDING_CROSSCHECK`。
+後世注解另建 commentary layer；作者、版本、來源與權利狀態必須明確，不與焦氏林辭混寫。
 
-## 易林意象 ontology
+## Reproducible importer
 
-`knowledge/yilin/image_ontology.json` 是專案分析層，不是古籍原註。
+`tools/import_yilin_kanripo.py` 可從 pinned upstream commit 重新 materialize 4096 corpus。Importer 會拒絕：
 
-目前先建立：
+- 不是 64 個 source blocks
+- block 不是完整 64 target
+- 空白林辭
+- 缺 source page
 
-- 道路／行進
-- 阻滯／不通
-- 爭鬥／對抗
-- 傷病／疲耗
-- 得助／資源
-- 失落／無功
-- 相從／協作
-- 言語／資訊
-- 水勢／環境
-- 權位／主導
-- 回復／轉折
-- 門戶／屏障
-
-每個 atom 均保存：
-
-```text
-古典抽象語義
-↓
-足球可能情境
-↓
-可觀察訊號
-↓
-反證訊號
-```
-
-這一層的 authority 固定標成：
-
-`PROJECT_HEURISTIC__NOT_CLASSICAL_COMMENTARY`
-
-## 足球解讀邊界
-
-JARVIS 可以把林辭意象轉成「可能的足球情境」，例如道路阻滯可對應出球／推進受阻，但不得直接變成：
-
-- 主勝／客勝固定規則
-- 勝率百分比
-- 固定比分
-- 單一林辭決定結果
-
-ChatGPT 必須把它與梅花本卦、體用、旺衰、互卦、動爻、變卦一起合參，並列出支持與反證。
-
-## 完整建構路線
-
-### Phase A — catalog infrastructure
-
-- manifest
-- loader / exact lookup
-- bridge
-- CI validator
-- partial-coverage truthfulness
-
-### Phase B — 4096 原文 materialization
-
-以完整 64-entry source block 為最小提交單位；每新增一個本卦就一次加入它的 64 個之卦。
-
-### Phase C — 異文校勘
-
-逐條建立：
-
-- primary transcription
-- alternate readings
-- edition/source notes
-- `CROSSCHECKED` / `VARIANT_RECORDED`
-
-### Phase D — semantic atoms
-
-把 4096 林辭拆成可重用意象原子，避免每條各自任意白話化。
-
-### Phase E — commentary layer
-
-加入後世注解時獨立保存為 `commentary`，不與焦氏易林原文混寫。
-
-### Phase F — AI packet stabilization
-
-等 4096 catalog、異文與 commentary contract 穩定後，再評估從 `DIVINATION_PACKET_V1` 升級為 `DIVINATION_PACKET_V2`。
+它不使用 AI 生成或補寫任何古籍文字。
 
 ## 驗證
 
-CI 必須同時執行：
+正式 CI：
 
 ```bash
+ruff check .
 python -m pytest -q
 python tools/validate_knowledge.py
 python tools/validate_yilin.py
 ```
 
-`validate_yilin.py` 會拒絕：
+`validate_yilin.py` 嚴格驗證：
 
-- 重複 pair
-- manifest coverage 與實際檔案不一致
-- 單一來源卦只匯入部分之卦
-- 缺 classical text / provenance / verification status
-- 4096 未完成卻宣稱 complete
-- 任何把 model probability 或 fixed score 寫進易林古籍 record 的資料
+- exact 64×64 numeric matrix
+- 4096 unique name/numeric pair
+- 64/64 source blocks
+- non-empty classical text
+- full provenance / pinned upstream commit
+- source snapshot / SHA-256
+- raw transcription / editorial notes / gaiji preservation
+- anomaly registry consistency
+- ontology fields / unique IDs
+- semantic audit accounting
+- 無 probability / fixed-score 污染
+
+最終產品邊界不變：**JARVIS 負責起卦、查庫、保存來源與打包；ChatGPT 負責最後解卦。**

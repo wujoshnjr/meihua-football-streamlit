@@ -60,9 +60,11 @@ def test_meihua_packet_is_deterministic_and_contains_deep_three_hexagram_layers(
     assert first["hexagram"] == second["hexagram"]
     assert first["yilin_bridge"] == second["yilin_bridge"]
     assert first["yilin_bridge"]["mode"] == "MEIHUA_YILIN_BRIDGE"
-    assert first["yilin_bridge"]["status"] in {"MATERIALIZED", "SOURCE_PENDING"}
-    assert first["yilin_bridge"]["catalog_stats"]["materialized_pairs"] == 64
+    assert first["yilin_bridge"]["status"] == "MATERIALIZED"
+    assert first["yilin_bridge"]["catalog_stats"]["materialized_pairs"] == 4096
     assert first["yilin_bridge"]["catalog_stats"]["expected_pairs"] == 4096
+    assert first["yilin_bridge"]["catalog_stats"]["coverage_ratio"] == 1.0
+    assert first["yilin_bridge"]["provenance"]["source_id"] == "yilin-kanripo-wyg-transcription"
 
     kinds = {row["kind"] for row in first["knowledge_context"]}
     assert "meihua_original_hexagram" in kinds

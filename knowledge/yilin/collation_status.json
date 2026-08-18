@@ -1,0 +1,72 @@
+{
+  "schema_version": "stark-yilin-collation-status-v1.0.0",
+  "principle": "pair coverage、底本轉錄、版本異文、標點、注解與現代應用是不同完成維度；不得用 4096/4096 掩蓋文本校勘尚在進行。",
+  "base_corpus": {
+    "edition": "WYG / 文淵閣四庫全書",
+    "digital_transcription": "kanripo/KR3g0029",
+    "pinned_commit": "764e995ce74aa249081918ca1b0c23bbca62bec8",
+    "source_blocks": "64/64",
+    "pairs": "4096/4096",
+    "status": "COMPLETE_BASE_TRANSCRIPTION"
+  },
+  "layers": [
+    {
+      "id": "pair_matrix",
+      "name": "64×64 轉卦矩陣",
+      "status": "COMPLETE",
+      "scope": "每個本卦對每個之卦都有唯一 canonical numeric lookup 與非空林辭。"
+    },
+    {
+      "id": "source_provenance",
+      "name": "來源定位",
+      "status": "COMPLETE_FOR_WYG_BASE",
+      "scope": "保存 upstream repo/commit、卷檔、source section、頁碼、raw transcription、校語與 gaiji token。"
+    },
+    {
+      "id": "source_anomalies",
+      "name": "來源異體／疑似誤標",
+      "status": "REGISTERED_FOR_WYG_BASE",
+      "scope": "不靜默改字；目前 pinned WYG transcription 檢出 1 個 target-label anomaly，記錄於 source_snapshot.json。"
+    },
+    {
+      "id": "multi_edition_variants",
+      "name": "多版本異文校勘",
+      "status": "ONGOING",
+      "scope": "Wikisource 四庫本、Chinese Text Project 及後續可合法取得的其他底本逐條 crosscheck。"
+    },
+    {
+      "id": "modern_punctuation",
+      "name": "現代標點",
+      "status": "ONGOING",
+      "scope": "不得把專案自動斷句冒充古籍原始標點；未校定前保留無標點 classical_text。"
+    },
+    {
+      "id": "commentary",
+      "name": "後世注解",
+      "status": "SEPARATE_LAYER_RESERVED",
+      "scope": "注家內容須保存作者／版本／來源與權利狀態，永遠不得混寫成焦氏林辭。"
+    },
+    {
+      "id": "image_ontology",
+      "name": "意象 ontology",
+      "status": "PROJECT_HEURISTIC_V1",
+      "scope": "只做 AI 候選語義召回；不等同古注、不代表吉凶、不代表預測準確率。"
+    },
+    {
+      "id": "football_application",
+      "name": "足球 modern application",
+      "status": "PROJECT_APPLICATION",
+      "scope": "每個情境須可觀察、可反證；不得直接從林辭跳成固定比分或勝率。"
+    }
+  ],
+  "ai_authority_order": [
+    "梅花 deterministic 卦象",
+    "梅花體用／旺衰／本互變／動爻",
+    "焦氏易林本卦→變卦林辭",
+    "有明確來源的注解層",
+    "專案意象 heuristic",
+    "足球 modern application",
+    "ChatGPT 最終合參"
+  ],
+  "release_rule": "JARVIS 10 stable 可以宣稱 4096/4096 pair coverage 與 WYG base transcription complete；不得宣稱所有版本異文、標點與歷代注解研究 complete。"
+}
