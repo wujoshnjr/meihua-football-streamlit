@@ -1,0 +1,14 @@
+{
+  "schema_version": "stark-meihua-trigrams-v1.0.0",
+  "scope_note": "八卦數、五行、卦氣旺衰與基本類象依《梅花易數》卷一；football 為現代應用類比。",
+  "trigrams": [
+    {"name":"乾","number":1,"symbol":"☰","element":"金","direction":"西北","nature":"天","core":"健、剛、創始、主導","football":"主動掌控、強勢推進、核心領袖與高位壓迫；過強時防冒進與身後空間。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]},
+    {"name":"兌","number":2,"symbol":"☱","element":"金","direction":"正西","nature":"澤","core":"悅、口、交流、缺口","football":"士氣、溝通、球迷聲勢、定位球與心理；陰面是口舌、分心與防線缺口。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]},
+    {"name":"離","number":3,"symbol":"☲","element":"火","direction":"正南","nature":"火","core":"明、附麗、顯現、文明","football":"技術亮點、射門、明星與VAR焦點；陰面是過熱、華而不實與防守暴露。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]},
+    {"name":"震","number":4,"symbol":"☳","element":"木","direction":"正東","nature":"雷","core":"動、驚、啟動、迅速","football":"開局衝擊、前場壓迫、快攻與突發事件；陰面是躁進、犯規、失位。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]},
+    {"name":"巽","number":5,"symbol":"☴","element":"木","direction":"東南","nature":"風","core":"入、順、滲透、反覆","football":"傳控滲透、邊肋部進攻、教練細節與情報；陰面是猶豫、缺乏直接性。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]},
+    {"name":"坎","number":6,"symbol":"☵","element":"水","direction":"正北","nature":"水","core":"險、流動、隱伏、反覆","football":"低位等待、反擊、門將與風險管理；陰面是連續失誤、傷情與被壓制。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]},
+    {"name":"艮","number":7,"symbol":"☶","element":"土","direction":"東北","nature":"山","core":"止、界限、積累、穩固","football":"防線屏障、守成、限制空間與體能保存；陰面是停滯、無法推進。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]},
+    {"name":"坤","number":8,"symbol":"☷","element":"土","direction":"西南","nature":"地","core":"順、承載、群體、包容","football":"整體防守、團隊協作、場地與耐力；陰面是被動、慢熱、缺乏主動創造。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]}
+  ]
+}
