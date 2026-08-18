@@ -31,12 +31,18 @@ def test_qimen_packet_is_deterministic_and_ai_handoff_only():
     assert "generated_at" not in first["chart"]
     assert first["host_guest"]["home_team"] == "西班牙"
     assert first["knowledge_context"]
+    kinds = [row["kind"] for row in first["knowledge_context"]]
+    assert "qimen_deep_reading_policy" in kinds
+    assert kinds.count("qimen_palace_deep_profile") == 9
+    deep_palaces = [row for row in first["knowledge_context"] if row["kind"] == "qimen_palace_deep_profile"]
+    assert all(row["football_questions"] for row in deep_palaces)
+    assert any(row["deity_detail"] for row in deep_palaces)
     serialized = str(first).lower()
     assert "home_win_probability" not in serialized
     assert "fixed_score" not in serialized
 
 
-def test_meihua_packet_is_deterministic_and_contains_three_hexagram_layers():
+def test_meihua_packet_is_deterministic_and_contains_deep_three_hexagram_layers():
     kwargs = dict(
         question="西班牙對維德角，這場比賽整體走勢如何？",
         event_at=event_at(),
@@ -58,6 +64,17 @@ def test_meihua_packet_is_deterministic_and_contains_three_hexagram_layers():
     assert "meihua_changed_hexagram" in kinds
     assert "meihua_body_use" in kinds
     assert "meihua_moving_line_role" in kinds
+    assert "meihua_deep_reading_policy" in kinds
+    assert "meihua_deep_profile" in kinds
+
+    deep = next(row for row in first["knowledge_context"] if row["kind"] == "meihua_deep_profile")
+    assert deep["original"]["hexagram"]["name"]
+    assert deep["mutual"]["hexagram"]["name"]
+    assert deep["changed"]["hexagram"]["name"]
+    assert deep["body_use"]["relation_detail"]["general"]
+    assert deep["moving_line"]["football"]
+    assert len(deep["football_dimensions"]) == 8
+
     serialized = str(first).lower()
     assert "home_win_probability" not in serialized
     assert "fixed_score" not in serialized
