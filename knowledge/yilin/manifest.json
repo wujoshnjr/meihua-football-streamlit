@@ -1,0 +1,43 @@
+{
+  "schema_version": "stark-yilin-catalog-v0.1.0",
+  "release_stage": "JARVIS_10_ALPHA",
+  "title": "焦氏易林 4096 轉卦知識層",
+  "expected_from_hexagrams": 64,
+  "expected_to_hexagrams_per_from": 64,
+  "expected_pairs": 4096,
+  "materialized_pairs": 64,
+  "materialized_from_hexagrams": ["乾"],
+  "coverage_ratio": 0.015625,
+  "catalog_status": "PARTIAL_BUILD__DO_NOT_CLAIM_4096_COMPLETE",
+  "bridge_mode": "MEIHUA_YILIN_BRIDGE",
+  "bridge_rule": "梅花 deterministic 起出本卦與最終變卦後，只查唯一的『本卦之變卦』易林條目；不把互卦當作焦林原始占法。",
+  "historical_method_notice": "MEIHUA_YILIN_BRIDGE 是 Operation STARK 的跨系統合參層，不宣稱等同焦林直日或已完整復原《焦氏易林》原始占筮程序。",
+  "authority_order": [
+    "MEIHUA_DETERMINISTIC_CHART",
+    "MEIHUA_BODY_USE_STRENGTH_MUTUAL_CHANGED_MOVING_LINE",
+    "JIAOSHI_YILIN_FROM_TO_CLASSICAL_TEXT",
+    "COMMENTARIAL_INTERPRETATION_WHEN_SEPARATELY_SOURCED",
+    "FOOTBALL_MODERN_APPLICATION",
+    "CHATGPT_FINAL_SYNTHESIS"
+  ],
+  "source_policy": {
+    "classical_text": "古籍原文單獨保存，不混入專案白話或足球語義。",
+    "variants": "異文尚未完成交叉校對時必須標示 PENDING_CROSSCHECK，不得靜默改字。",
+    "commentary": "後世注解須標成 commentary，不得冒充焦氏易林原文。",
+    "football": "足球語義屬 modern application，必須包含可觀察與反證，不得直接轉成固定比分或勝率。"
+  },
+  "primary_sources": [
+    {
+      "id": "yilin-siku-wikisource-vol1",
+      "title": "易林（四庫全書本）卷一",
+      "url": "https://zh.wikisource.org/zh-hant/%E6%98%93%E6%9E%97_(%E5%9B%9B%E5%BA%AB%E5%85%A8%E6%9B%B8%E6%9C%AC)/%E5%8D%B71",
+      "materialized_scope": "乾之第一 64 條"
+    },
+    {
+      "id": "jiaoshi-yilin-ctext",
+      "title": "Chinese Text Project · 焦氏易林",
+      "url": "https://ctext.org/jiaoshi-yilin/zh",
+      "materialized_scope": "crosscheck registry; full pairwise collation pending"
+    }
+  ]
+}
