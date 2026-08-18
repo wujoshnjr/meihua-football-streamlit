@@ -23,11 +23,11 @@ UPSTREAM_EDITION = "WYG / 文淵閣四庫全書"
 UPSTREAM_BASE = f"https://raw.githubusercontent.com/{UPSTREAM_REPO}/{UPSTREAM_COMMIT}"
 SOURCE_FILES = tuple(f"KR3g0029_{index:03d}.txt" for index in range(1, 5))
 
-# These spellings are only diagnostic. The corpus matrix itself follows the
-# explicit source-section ordinal and the target's position (King Wen 1..64).
-# This is important because the WYG digital transcription contains occasional
-# glyph variants and at least one source-label anomaly (e.g. 艮 block position
-# 9 is labelled 小過). We preserve that label rather than silently rewriting it.
+# These spellings are diagnostic only. Each 易林 section places its own hexagram
+# first, then lists the remaining King Wen hexagrams in canonical order. Runtime
+# keys are therefore reconstructed from that explicit source convention, while
+# the source labels are permanently retained so glyph variants or source errors
+# are visible rather than silently normalized away.
 SOURCE_NAMES = (
     "乾", "坤", "屯", "蒙", "需", "訟", "師", "比", "小畜", "履", "泰", "否", "同人", "大有", "謙", "豫",
     "隨", "蠱", "臨", "觀", "噬嗑", "賁", "剝", "復", "无妄", "大畜", "頤", "大過", "坎", "離", "咸", "恒",
@@ -97,6 +97,10 @@ def _alias_index() -> dict[str, int]:
     index = {name: number for number, name in enumerate(SOURCE_NAMES, 1)}
     index.update(EXTRA_ALIASES)
     return index
+
+
+def _target_order(from_number: int) -> list[int]:
+    return [from_number, *[number for number in range(1, 65) if number != from_number]]
 
 
 def _download(url: str) -> bytes:
@@ -179,9 +183,11 @@ def _parse_volume(filename: str, content: str, project: dict[int, dict[str, Any]
         if entry_match and not starts_indented:
             flush_entry()
             target_label, text = entry_match.groups()
-            to_number = len(current_section["entries"]) + 1
-            if to_number > 64:
+            order = _target_order(int(current_section["from_number"]))
+            position = len(current_section["entries"])
+            if position >= 64:
                 raise ValueError(f"{current_section['source_section']} 出現超過 64 個非縮排行")
+            to_number = order[position]
             label_number = aliases.get(target_label)
             current_entry = {
                 "to_number": to_number,
@@ -208,9 +214,12 @@ def _validate_sections(sections: list[dict[str, Any]]) -> None:
         raise ValueError(f"本卦 section 順序或完整性錯誤：{seen_from}")
     for section in sections:
         rows = section["entries"]
+        expected = _target_order(int(section["from_number"]))
         targets = [int(row["to_number"]) for row in rows]
-        if targets != list(range(1, 65)):
-            raise ValueError(f"{section['source_section']} 之卦位置必須恰為 1..64，目前={targets}")
+        if targets != expected:
+            raise ValueError(f"{section['source_section']} 之卦順序不符合『本卦先列，其餘依文王序』：{targets}")
+        if set(targets) != set(range(1, 65)):
+            raise ValueError(f"{section['source_section']} 必須完整覆蓋 64 之卦")
         if any(not row.get("classical_text") for row in rows):
             raise ValueError(f"{section['source_section']} 存在空白林辭")
         if any(not row.get("source_page_start") for row in rows):
@@ -311,9 +320,10 @@ def _write_manifest(source_hashes: dict[str, str], sections: list[dict[str, Any]
                 "這代表 pair coverage 完整，不代表所有版本異文、標點與後世注解已完成校勘。"
             ),
             "textual_collation_status": "WYG_BASE_COMPLETE__MULTI_EDITION_VARIANT_COLLATION_ONGOING",
+            "target_order_policy": "各本卦 section 先列本卦自身，其餘之卦依文王六十四卦序排列。",
             "source_label_anomaly_count": len(anomalies),
             "source_label_policy": (
-                "轉錄中的卦名異體或疑似誤標不被靜默修正；King Wen 位置決定 lookup number，"
+                "轉錄中的卦名異體或疑似誤標不被靜默修正；section ordinal + 易林 target-order convention 決定 lookup number，"
                 "原 source label、可辨識映射與 anomaly flag 全部保留。"
             ),
             "transcription_source": {
@@ -345,13 +355,14 @@ def _write_snapshot(source_hashes: dict[str, str], sections: list[dict[str, Any]
         "files": [{"name": name, "sha256": source_hashes[name]} for name in SOURCE_FILES],
         "parsed_from_hexagrams": len(sections),
         "parsed_pairs": sum(len(section["entries"]) for section in sections),
+        "target_order_policy": "SELF_FIRST__THEN_KING_WEN_ORDER_EXCLUDING_SELF",
         "source_label_anomalies": anomalies,
         "normalization_policy": [
             "頁碼標記不進 classical_text，但每條保留 source_page_start。",
             "括號校語從 classical_text 分離，完整保存在 editorial_notes 與 transcription_raw。",
             "Kanripo gaiji token 不猜字，保留於 classical_text/transcription_raw，另列 gaiji_tokens。",
-            "卦名 lookup 依 King Wen source ordinal/position 映射到專案 canonical name；原轉錄 label 永久保留。",
-            "source label 與位置不一致時只記錄 anomaly，不以 source label 改寫 64×64 matrix。",
+            "卦名 lookup 依 section ordinal 與『本卦先列、其餘依文王序』映射到專案 canonical name；原轉錄 label 永久保留。",
+            "source label 與預期位置不一致時只記錄 anomaly，不以 label 靜默改寫 64×64 matrix。",
             "不以 AI 生成、補寫或改寫任何缺漏林辭。",
         ],
     }
