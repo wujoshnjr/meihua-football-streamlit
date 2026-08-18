@@ -1,5 +1,43 @@
 # Changelog
 
+## 10.0.0-alpha.1 — JARVIS 10 YILIN FUSION
+
+Operation STARK begins the staged integration of the full 《焦氏易林》 64×64 transformation corpus.
+
+### Yilin catalog
+
+- Add `knowledge/yilin/manifest.json` with a hard target of **4096/4096** unique `from_hexagram → to_hexagram` records.
+- Materialize the first complete 64-entry source block: 《易林（四庫全書本）》卷一「乾之第一」.
+- The catalog is explicitly marked `PARTIAL_BUILD__DO_NOT_CLAIM_4096_COMPLETE`; missing pairs are never fabricated.
+- Every materialized record keeps classical text, source provenance, verification status, pending variant status and semantic-status boundaries.
+
+### Meihua bridge
+
+- Add `jarvis/yilin.py` and `MEIHUA_YILIN_BRIDGE`.
+- Meihua still determines the original, mutual and changed hexagrams, moving line, body/use and strength.
+- Yilin is consulted only as **original hexagram → final changed hexagram** transformation context.
+- Mutual hexagrams are not silently reinterpreted as a historical Yilin method.
+- Missing source pairs return `SOURCE_PENDING` with no generated classical text.
+
+### Image ontology and football semantics
+
+- Add an initial Yilin image ontology for path/movement, obstruction, conflict, injury/fatigue, gain/support, loss/failure, cooperation, communication, environment, authority, recovery and defensive enclosure.
+- Image matching is explicitly labeled `PROJECT_HEURISTIC__NOT_CLASSICAL_COMMENTARY`.
+- Football mappings remain modern application hypotheses with observable evidence and counter-evidence, never classical quotations or automatic probabilities.
+
+### UI and AI packet
+
+- The Meihua page now displays the Yilin transformation lookup, source text when materialized, project image atoms, coverage and method boundary.
+- The knowledge vault now searches Yilin materialized entries and image ontology alongside Qimen and Meihua.
+- `DIVINATION_PACKET_V1` gains an additive `yilin_bridge` field while preserving the existing deterministic packet contract.
+- ChatGPT is instructed to read: Meihua core → Yilin transformation context → modern application → support/counter-evidence → final synthesis.
+
+### Validation
+
+- Add `tests/test_yilin_fusion.py`.
+- Add `tools/validate_yilin.py` and run it in GitHub Actions.
+- Current alpha validation requires each materialized source hexagram to be imported as a complete 64-target block and requires manifest coverage to match the files exactly.
+
 ## 9.1.0 — Operation STARK Deep Reading
 
 JARVIS keeps the same responsibility boundary — **cast + retrieve + package** — but the divination packet now carries materially deeper structured knowledge for ChatGPT to interpret.
