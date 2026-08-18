@@ -1,2 +1,0 @@
-match_id,event_at,p_home,p_draw,p_away,actual_result,model_spec_sha256,payload_sha256,dataset_role
-EXAMPLE-CAL-001,2024-01-01T20:00:00+00:00,0.45,0.30,0.25,主勝,bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb,aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,CALIBRATION
