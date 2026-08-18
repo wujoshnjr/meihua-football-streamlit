@@ -1,5 +1,5 @@
 {
-  "schema_version": "stark-sources-v1.0.0",
+  "schema_version": "stark-sources-v1.1.0",
   "sources": [
     {"id":"dunjia-yanyi","title":"遁甲演義（四庫全書本）","type":"primary_classic","url":"https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9","use":"時家奇門、陰陽遁、九宮、值符值使、星門及格局。"},
     {"id":"dunjia-yanyi-2","title":"遁甲演義・格局條目","type":"primary_classic","url":"https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9","use":"奇儀格、伏吟反吟、刑格等結構交叉核對。"},
@@ -12,6 +12,8 @@
     {"id":"meihua-yishu-wikisource","title":"梅花易數","type":"primary_classic","url":"https://zh.wikisource.org/zh-hant/%E6%A2%85%E8%8A%B1%E6%98%93%E6%95%B8","use":"八卦數、五行生克、卦氣旺衰、年月日時起卦、互卦、體用與克應。"},
     {"id":"zhouyi-wikisource","title":"周易","type":"primary_classic","url":"https://zh.wikisource.org/zh-hant/%E5%91%A8%E6%98%93","use":"六十四卦名稱、卦序及卦體交叉核對。"},
     {"id":"ctext-book-of-changes","title":"Chinese Text Project · Book of Changes","type":"primary_classic_crosscheck","url":"https://ctext.org/book-of-changes","use":"六十四卦卦序與文本交叉核對。"},
+    {"id":"yilin-siku-wikisource-vol1","title":"易林（四庫全書本）卷一","type":"primary_classic","url":"https://zh.wikisource.org/zh-hant/%E6%98%93%E6%9E%97_(%E5%9B%9B%E5%BA%AB%E5%85%A8%E6%9B%B8%E6%9C%AC)/%E5%8D%B71","use":"JARVIS 10 YILIN FUSION 首批原文來源；目前 materialize 乾之第一 64 條。"},
+    {"id":"jiaoshi-yilin-ctext","title":"Chinese Text Project · 焦氏易林","type":"primary_classic_crosscheck","url":"https://ctext.org/jiaoshi-yilin/zh","use":"焦氏易林 64×64 結構與林辭交叉核對；不將 CText OCR 當唯一底本。"},
     {"id":"lunar-python","title":"6tail/lunar-python","type":"software_primary_source","url":"https://github.com/6tail/lunar-python","use":"事件時刻的干支、節氣與農曆資料；專案固定 lunar_python==1.4.8。"},
     {"id":"iana-tzdb","title":"IANA Time Zone Database","type":"official_time_standard","url":"https://www.iana.org/time-zones","use":"事件所在地歷史時區與 DST 規則。"},
     {"id":"python-zoneinfo","title":"Python zoneinfo","type":"software_primary_source","url":"https://docs.python.org/3/library/zoneinfo.html","use":"IANA 時區處理。"},
@@ -28,6 +30,8 @@
   "source_policy": [
     "古籍原義、專案摘要與現代足球類比必須分欄，不把現代推演冒充古文。",
     "JARVIS 只 deterministic 起局／起卦與檢索，不自動決定最終吉凶、勝率或固定比分。",
+    "焦氏易林 bridge 只用梅花本卦→最終變卦；不把互卦當作焦林原始占法，也不宣稱等同直日法。",
+    "焦氏易林異文未完成交叉校對前必須標示 PENDING_CROSSCHECK，不得靜默改字。",
     "天文曆法與時區優先使用一手標準或所採軟體的一手來源。",
     "足球來源只用來定義可觀察事件語彙，不能反向證成術數必然有效。",
     "來源或方法改版不得回寫既有 packet；應提升 schema／method version。"
