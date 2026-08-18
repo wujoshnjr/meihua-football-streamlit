@@ -1,5 +1,6 @@
 {
-  "schema_version": "stark-zhouyi-manifest-v1.0.0",
+  "schema_version": "stark-zhouyi-manifest-v1.1.0",
+  "corpus_schema_version": "stark-zhouyi-corpus-v1.1.0",
   "source_repository": "kanripo/KR1a0001",
   "source_commit": "8284adbf9e3435d713180e24f05bf75f8b7d1d96",
   "source_edition": "Kanripo TLS digital transcription",
@@ -69,10 +70,21 @@
     "KR1a0001_063.txt": "5cd625c46c875135d6eb0e6b2b10ec64b3a87aae4296bd742271df1d1aa91ff9",
     "KR1a0001_064.txt": "a257dd859081a00335ac2c7087c826b5d37319180f59ebdaab327623615c2c74"
   },
+  "shard_size": 8,
+  "expected_shards": 8,
+  "materialized_shards": 8,
   "expected_hexagrams": 64,
   "materialized_hexagrams": 64,
   "expected_standard_lines": 384,
   "materialized_standard_lines": 384,
+  "mapped_xiaoxiang": 378,
+  "grouped_qian_xiaoxiang": 6,
   "use_lines": 2,
-  "completion_status": "64_HEXAGRAMS__384_STANDARD_LINES__BASE_TRANSCRIPTION_COMPLETE"
+  "completion_status": "64_HEXAGRAMS__384_STANDARD_LINES__SOURCE_AWARE_XIAOXIANG",
+  "textual_policy": [
+    "固定 Kanripo/TLS 數位轉錄作可重建底本，不宣稱所有版本校勘完成。",
+    "卦辭、彖、大象、爻辭與可直接映射的小象分欄保存；乾卦合併象傳不強行猜切六小象。",
+    "古籍原文、後世注解、JARVIS 專案解析與足球 modern application 必須分層。",
+    "不得用 AI 補寫缺失經文或靜默改字。"
+  ]
 }
