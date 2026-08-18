@@ -1,0 +1,53 @@
+name: yilin-corpus-sync
+
+on:
+  push:
+    branches: ["agent/jarvis-10-yilin-complete"]
+    paths:
+      - "tools/import_yilin_kanripo.py"
+      - ".github/workflows/yilin-sync.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: agent/jarvis-10-yilin-complete
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Materialize pinned WYG transcription
+        run: python tools/import_yilin_kanripo.py
+      - name: Sanity check exact corpus shape
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('knowledge/yilin/entries')
+          files = sorted(root.glob('*.json'))
+          rows = []
+          for path in files:
+              rows.extend(json.loads(path.read_text(encoding='utf-8'))['entries'])
+          assert len(files) == 64, len(files)
+          assert len(rows) == 4096, len(rows)
+          assert len({(r['from_number'], r['to_number']) for r in rows}) == 4096
+          assert all(r['classical_text'] for r in rows)
+          print('4096/4096 Yilin pairs materialized')
+          PY
+      - name: Commit generated corpus
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add knowledge/yilin/entries knowledge/yilin/manifest.json knowledge/yilin/source_snapshot.json
+          if git diff --cached --quiet; then
+            echo "Corpus already up to date"
+          else
+            git commit -m "Materialize complete 4096 Yilin corpus"
+            git push origin HEAD:agent/jarvis-10-yilin-complete
+          fi
