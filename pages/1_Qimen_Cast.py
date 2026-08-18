@@ -97,6 +97,31 @@ if packet and packet.get("system") == "QIMEN_DUNJIA":
     else:
         st.info("本局未命中目前 catalog 中的特殊格局。")
 
+    relation_context = [
+        item for item in packet["knowledge_context"]
+        if item.get("kind") == "qimen_relation"
+    ]
+    st.markdown("### 本盤組合關係")
+    st.caption(
+        "底層資料庫覆蓋 306 個關係槽位；這裡只顯示本盤實際出現的天地盤干、星門、門宮、星宮。"
+        "足球欄位屬現代應用類比，不是古籍固定勝負公式。"
+    )
+    relation_rows = [
+        {
+            "宮": item["palace"],
+            "類型": item["relation_label"],
+            "組合": f"{item['first']} → {item['second']}",
+            "五行": item["element_relation"],
+            "一般解析": item["general_interpretation"],
+            "足球衍生義": item["football_meaning"],
+            "可觀察": "；".join(item["observable_signals"]),
+            "反證": "；".join(item["counter_signals"]),
+        }
+        for item in relation_context
+    ]
+    if relation_rows:
+        st.dataframe(relation_rows, hide_index=True, use_container_width=True)
+
     st.markdown("### AI 解局包")
     st.write(f"JARVIS 已附上 {len(packet['knowledge_context'])} 筆與本盤相關的知識庫內容。")
     packet_json = json.dumps(packet, ensure_ascii=False, indent=2)
