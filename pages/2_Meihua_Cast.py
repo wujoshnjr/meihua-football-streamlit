@@ -11,7 +11,7 @@ from qimen.calendar import LocalTimeError, aware_local_datetime
 
 st.set_page_config(page_title="梅花起卦 · JARVIS", page_icon="☯️", layout="wide")
 st.title("☯️ 梅花易數起卦")
-st.caption("年月日時 deterministic 起卦；JARVIS 整理本卦、互卦、變卦、體用、旺衰、動爻與深層知識上下文，最後解卦交給 ChatGPT。")
+st.caption("年月日時 deterministic 起卦；JARVIS 整理本卦、互卦、變卦、體用、旺衰、動爻與焦氏易林轉卦鏡頭，最後解卦交給 ChatGPT。")
 
 with st.form("meihua_stark_form"):
     question = st.text_area("占問問題", placeholder="例如：西班牙對維德角，這場比賽整體走勢如何？")
@@ -59,6 +59,7 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
     mutual = next(row for row in contexts if row.get("kind") == "meihua_mutual_hexagram")
     changed = next(row for row in contexts if row.get("kind") == "meihua_changed_hexagram")
     deep = next(row for row in contexts if row.get("kind") == "meihua_deep_profile")
+    yilin = packet["yilin_bridge"]
 
     st.success(f"起卦完成｜Packet SHA-256：{packet['packet_sha256']}")
     a, b, c = st.columns(3)
@@ -129,6 +130,44 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
             st.write(mline["general"])
             st.caption(mline["football"])
 
+    st.markdown("### 《焦氏易林》轉卦鏡頭")
+    ys = yilin["catalog_stats"]
+    st.caption(
+        f"JARVIS 10 alpha｜本地已 materialize {ys['materialized_pairs']} / {ys['expected_pairs']} 條。"
+        "目前只使用『本卦 → 最終變卦』，不把互卦冒充焦林原始占法。"
+    )
+    if yilin["status"] == "MATERIALIZED":
+        entry = yilin["classical_entry"]
+        st.success(f"已命中：{yilin['lookup_key']}｜{entry['source_section']}")
+        st.markdown("**易林原文**")
+        st.write(entry["classical_text"])
+        st.caption("原文與專案語義分層保存；異文仍標示 PENDING_CROSSCHECK。")
+        atoms = yilin.get("image_atoms", [])
+        if atoms:
+            st.markdown("**意象原子（專案 heuristic，不是古籍原註）**")
+            st.dataframe(
+                [
+                    {
+                        "意象": row["name"],
+                        "命中字詞": "、".join(row["matched_terms"]),
+                        "抽象義": row["classical_abstraction"],
+                        "足球可能情境": "；".join(row["football"]),
+                        "支持": "；".join(row["observable_signals"]),
+                        "反證": "；".join(row["counter_signals"]),
+                    }
+                    for row in atoms
+                ],
+                hide_index=True,
+                use_container_width=True,
+            )
+    else:
+        st.warning(f"{yilin['lookup_key']} 尚未 materialize：{yilin['missing_reason']}")
+
+    with st.expander("易林融合方法邊界"):
+        st.write(yilin["historical_method_notice"])
+        for rule in yilin["interpretation_contract"]:
+            st.write(f"- {rule}")
+
     st.markdown("### 足球解讀檢查維度")
     st.dataframe(
         [{"維度": row["name"], "解讀問題": " / ".join(row["questions"])} for row in deep["football_dimensions"]],
@@ -137,7 +176,7 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
     )
 
     st.markdown("### AI 解卦包")
-    st.write(f"JARVIS 已附上 {len(contexts)} 筆與本卦、互卦、變卦、體用、旺衰、動爻及深層結構直接相關的知識內容。")
+    st.write(f"JARVIS 已附上 {len(contexts)} 筆梅花深層知識，並加入焦氏易林 bridge 狀態。")
     packet_json = json.dumps(packet, ensure_ascii=False, indent=2)
     with st.expander("查看完整 DIVINATION_PACKET_V1"):
         st.code(packet_json, language="json")
