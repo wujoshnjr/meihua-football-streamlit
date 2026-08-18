@@ -16,10 +16,13 @@ def test_vault_has_full_core_catalogs():
     assert stats["qimen_stems"] == 10
     assert stats["qimen_patterns"] > 0
     assert stats["qimen_relations"] == 306
+    assert stats["qimen_deep_layers"] == 8
+    assert stats["qimen_deity_modulations"] == 8
     assert stats["meihua_trigrams"] == 8
     assert stats["meihua_hexagrams"] == 64
     assert stats["meihua_body_use_relations"] == 5
     assert stats["meihua_line_roles"] == 6
+    assert stats["meihua_deep_dimensions"] == 8
 
 
 def test_qimen_complete_relation_matrix_has_306_unique_slots():
@@ -48,7 +51,21 @@ def test_all_64_upper_lower_hexagram_combinations_are_addressable():
     assert all(row["summary"] and row["football"] for row in rows)
 
 
-def test_vault_search_covers_qimen_relations_and_meihua_football_semantics():
+def test_vault_search_covers_deep_qimen_and_meihua_semantics():
+    qimen_results = search_vault("高位壓迫")
+    meihua_results = search_vault("終局極限")
+
+    assert any(
+        row["system"] == "QIMEN_DUNJIA" and row["family"] == "deep:deity_modulation"
+        for row in qimen_results
+    )
+    assert any(
+        row["system"] == "MEIHUA_YISHU" and row["family"] == "deep:moving_line"
+        for row in meihua_results
+    )
+
+
+def test_vault_search_still_covers_named_classics_and_hexagrams():
     qimen_results = search_vault("青龍返首")
     meihua_results = search_vault("未濟")
 

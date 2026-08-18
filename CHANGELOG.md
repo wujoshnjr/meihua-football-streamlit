@@ -1,5 +1,33 @@
 # Changelog
 
+## 9.1.0 — Operation STARK Deep Reading
+
+JARVIS keeps the same responsibility boundary — **cast + retrieve + package** — but the divination packet now carries materially deeper structured knowledge for ChatGPT to interpret.
+
+### Qimen Dunjia
+
+- Add an 8-layer reading hierarchy: palace → door → star → deity → heaven stem → earth stem → structural pattern → void/horse modifiers.
+- Add deep modulation profiles for all 8 deities, each with general meaning, football modern-application meaning, observable evidence and counter-evidence.
+- Add explicit deep state modifiers for void, horse, Fu Yin, Fan Yin, door/palace pressure, tomb and punishment.
+- Every cast now receives 9 `qimen_palace_deep_profile` records that synthesize the actual stack and active 306-matrix relations in that palace.
+- The Qimen page exposes the deep palace profiles instead of limiting the UI to raw symbols and relation rows.
+
+### Meihua Yishu
+
+- Add explicit roles for original / mutual / changed hexagrams.
+- Add upper/lower trigram internal-external reading roles and their five-element interaction.
+- Expand all 5 body/use relations with strength-sensitive general meaning, football application, observables and counter-evidence.
+- Add deep 旺 / 平 / 衰 rules and detailed phase meanings for all 6 moving-line positions.
+- Every cast now receives one `meihua_deep_profile` containing original/mutual/changed stage structures, body/use, strength, moving line and 8 football reading dimensions.
+- The Meihua page now shows these deeper layers directly before packet download.
+
+### Knowledge vault and AI handoff
+
+- Add `knowledge/qimen_deep_layers.json` and `knowledge/meihua_deep_layers.json`.
+- Deep-layer content is searchable from the knowledge vault.
+- AI packet instructions now explicitly tell ChatGPT which deep reading order to use for Qimen and Meihua.
+- Football meanings remain labeled modern application; no symbol is converted into an automatic probability, fixed score or deterministic match result.
+
 ## 9.0.0 — Operation STARK
 
 JARVIS product scope has been reset around divination knowledge and AI handoff.

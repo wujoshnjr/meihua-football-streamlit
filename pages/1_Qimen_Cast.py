@@ -11,7 +11,7 @@ from qimen.calendar import LocalTimeError, aware_local_datetime
 
 st.set_page_config(page_title="奇門起局 · JARVIS", page_icon="🧭", layout="wide")
 st.title("🧭 奇門遁甲起局")
-st.caption("JARVIS 只負責固定方法起局與知識檢索；最後解局交給 ChatGPT。")
+st.caption("JARVIS 只負責固定方法起局、深層盤象整理與知識檢索；最後解局交給 ChatGPT。")
 
 with st.form("qimen_stark_form"):
     question = st.text_area("占問問題", placeholder="例如：西班牙對維德角，這場比賽整體走勢如何？")
@@ -54,6 +54,7 @@ if submitted:
 packet = st.session_state.get("stark_packet")
 if packet and packet.get("system") == "QIMEN_DUNJIA":
     chart = packet["chart"]
+    contexts = packet["knowledge_context"]
     st.success(f"起局完成｜Packet SHA-256：{packet['packet_sha256']}")
     a, b, c, d = st.columns(4)
     a.metric("遁", chart["dun"])
@@ -97,10 +98,7 @@ if packet and packet.get("system") == "QIMEN_DUNJIA":
     else:
         st.info("本局未命中目前 catalog 中的特殊格局。")
 
-    relation_context = [
-        item for item in packet["knowledge_context"]
-        if item.get("kind") == "qimen_relation"
-    ]
+    relation_context = [item for item in contexts if item.get("kind") == "qimen_relation"]
     st.markdown("### 本盤組合關係")
     st.caption(
         "底層資料庫覆蓋 306 個關係槽位；這裡只顯示本盤實際出現的天地盤干、星門、門宮、星宮。"
@@ -122,8 +120,34 @@ if packet and packet.get("system") == "QIMEN_DUNJIA":
     if relation_rows:
         st.dataframe(relation_rows, hide_index=True, use_container_width=True)
 
+    st.markdown("### 深層九宮合參")
+    st.caption("每宮固定依『宮 → 門 → 星 → 神 → 天地盤干 → 格局／空馬』整理；八神不再只顯示名稱，而會附上其調制方式、足球證據與反證。")
+    deep_palaces = [item for item in contexts if item.get("kind") == "qimen_palace_deep_profile"]
+    deep_palaces.sort(key=lambda item: item["palace"])
+    for item in deep_palaces:
+        with st.expander(f"{item['palace_name']}｜深層盤象", expanded=False):
+            st.write(item["reading_prompt"])
+            stack = item["stack"]
+            st.json(stack)
+            deity = item.get("deity_detail")
+            if deity:
+                st.markdown(f"**八神調制：{stack['deity_modulation']}**")
+                st.write(deity["general"])
+                st.caption(deity["football"])
+                st.write("可觀察：" + "；".join(deity["observable"]))
+                st.write("反證：" + "；".join(deity["counter"]))
+            if item["active_modifiers"]:
+                st.markdown("**結構修飾**")
+                for modifier in item["active_modifiers"]:
+                    st.write(f"- {modifier['name']}：{modifier.get('general', '')}")
+                    if modifier.get("football"):
+                        st.caption(modifier["football"])
+            st.markdown("**本宮解讀問題**")
+            for question in item["football_questions"]:
+                st.write(f"- {question}")
+
     st.markdown("### AI 解局包")
-    st.write(f"JARVIS 已附上 {len(packet['knowledge_context'])} 筆與本盤相關的知識庫內容。")
+    st.write(f"JARVIS 已附上 {len(contexts)} 筆與本盤相關的基礎、關係、八神調制、結構修飾與深層九宮知識。")
     packet_json = json.dumps(packet, ensure_ascii=False, indent=2)
     with st.expander("查看完整 DIVINATION_PACKET_V1"):
         st.code(packet_json, language="json")

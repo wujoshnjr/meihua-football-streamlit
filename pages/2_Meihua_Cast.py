@@ -11,7 +11,7 @@ from qimen.calendar import LocalTimeError, aware_local_datetime
 
 st.set_page_config(page_title="梅花起卦 · JARVIS", page_icon="☯️", layout="wide")
 st.title("☯️ 梅花易數起卦")
-st.caption("年月日時 deterministic 起卦；JARVIS 整理本卦、互卦、變卦、體用與知識上下文，最後解卦交給 ChatGPT。")
+st.caption("年月日時 deterministic 起卦；JARVIS 整理本卦、互卦、變卦、體用、旺衰、動爻與深層知識上下文，最後解卦交給 ChatGPT。")
 
 with st.form("meihua_stark_form"):
     question = st.text_area("占問問題", placeholder="例如：西班牙對維德角，這場比賽整體走勢如何？")
@@ -58,6 +58,7 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
     original = next(row for row in contexts if row.get("kind") == "meihua_original_hexagram")
     mutual = next(row for row in contexts if row.get("kind") == "meihua_mutual_hexagram")
     changed = next(row for row in contexts if row.get("kind") == "meihua_changed_hexagram")
+    deep = next(row for row in contexts if row.get("kind") == "meihua_deep_profile")
 
     st.success(f"起卦完成｜Packet SHA-256：{packet['packet_sha256']}")
     a, b, c = st.columns(3)
@@ -94,8 +95,49 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
     st.dataframe(rows, hide_index=True, use_container_width=True)
     st.caption("足球衍生義屬 modern application，不是《周易》或《梅花易數》古籍原文。")
 
+    st.markdown("### 深層卦象結構")
+    for label, key in (("本卦 · 目前結構", "original"), ("互卦 · 中段機制", "mutual"), ("變卦 · 後段走向", "changed")):
+        stage = deep[key]
+        relation = stage["upper_lower_element_relation"]
+        with st.expander(label, expanded=(key == "original")):
+            st.write(stage["stage_role"]["general"])
+            st.caption(stage["stage_role"]["football"])
+            x, y = st.columns(2)
+            with x:
+                st.markdown(f"**下卦／內部**：{stage['lower_role']['trigram']['name']} · {stage['lower_role']['trigram'].get('core', '')}")
+                st.write(stage["lower_role"]["general"])
+            with y:
+                st.markdown(f"**上卦／外部**：{stage['upper_role']['trigram']['name']} · {stage['upper_role']['trigram'].get('core', '')}")
+                st.write(stage["upper_role"]["general"])
+            st.markdown(f"**上下卦五行關係**：{relation['lower_element']} → {relation['upper_element']}")
+            st.write(relation["interpretation"])
+
+    st.markdown("### 體用、旺衰與動爻深讀")
+    body_use = deep["body_use"]
+    mline = deep["moving_line"]
+    col1, col2 = st.columns(2)
+    with col1:
+        with st.container(border=True):
+            st.markdown(f"**{body_use['body']}體 × {body_use['use']}用｜{body_use['relation']}**")
+            st.write(body_use["relation_detail"]["general"])
+            st.caption(body_use["relation_detail"]["football"])
+            st.write(f"**體卦旺衰：{body_use['body_season_state']}** — {body_use['strength_detail']['general']}")
+            st.caption(body_use["strength_detail"]["football"])
+    with col2:
+        with st.container(border=True):
+            st.markdown(f"**第 {mline['line']} 爻｜{mline['phase']}**")
+            st.write(mline["general"])
+            st.caption(mline["football"])
+
+    st.markdown("### 足球解讀檢查維度")
+    st.dataframe(
+        [{"維度": row["name"], "解讀問題": " / ".join(row["questions"])} for row in deep["football_dimensions"]],
+        hide_index=True,
+        use_container_width=True,
+    )
+
     st.markdown("### AI 解卦包")
-    st.write(f"JARVIS 已附上 {len(contexts)} 筆與本卦、互卦、變卦、體用、旺衰直接相關的知識內容。")
+    st.write(f"JARVIS 已附上 {len(contexts)} 筆與本卦、互卦、變卦、體用、旺衰、動爻及深層結構直接相關的知識內容。")
     packet_json = json.dumps(packet, ensure_ascii=False, indent=2)
     with st.expander("查看完整 DIVINATION_PACKET_V1"):
         st.code(packet_json, language="json")
