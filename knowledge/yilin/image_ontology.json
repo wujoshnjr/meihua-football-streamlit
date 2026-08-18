@@ -1,0 +1,115 @@
+{
+  "schema_version": "stark-yilin-image-ontology-v0.1.0",
+  "scope_note": "把《焦氏易林》林辭中的具體意象拆成可重用語義原子。match_terms 與 football 均為 Operation STARK 專案層，不冒充古籍原註。",
+  "inference_status": "PROJECT_HEURISTIC__NOT_CLASSICAL_COMMENTARY",
+  "atoms": [
+    {
+      "id": "path_movement",
+      "name": "道路／行進",
+      "match_terms": ["道", "路", "徑", "行", "歸", "遊", "驅馳", "奔馳"],
+      "classical_abstraction": "行進、方向、通達與旅程。",
+      "football": ["後場到中場的推進線", "邊路或肋部進入前場", "攻守轉換的前進效率"],
+      "observable_signals": ["能持續把球推入前場或最後三分之一", "轉換時有清楚前進路線"],
+      "counter_signals": ["長時間只能橫傳回傳", "推進路線持續被切斷"]
+    },
+    {
+      "id": "obstruction",
+      "name": "阻滯／不通",
+      "match_terms": ["阪", "險", "難", "不通", "不得", "不行", "不進", "迷路", "失道", "隔"],
+      "classical_abstraction": "前進受阻、方向不明或條件不允許。",
+      "football": ["出球受阻", "主要進攻通道被封鎖", "戰術計畫被迫改道"],
+      "observable_signals": ["被迫大量回傳或長傳", "核心接球點被封鎖"],
+      "counter_signals": ["能穩定穿越中場線", "核心通道持續自由運作"]
+    },
+    {
+      "id": "conflict",
+      "name": "爭鬥／對抗",
+      "match_terms": ["戰", "鬭", "兵", "戈", "擊", "刺", "賊", "寇", "仇"],
+      "classical_abstraction": "衝突、競逐、外來壓力或敵對。",
+      "football": ["高強度對抗與逼搶", "犯規與紀律風險", "一對一對位衝突"],
+      "observable_signals": ["犯規與身體碰撞增加", "對位強度明顯升高"],
+      "counter_signals": ["比賽長時間低對抗", "雙方主要靠慢速無接觸組織"]
+    },
+    {
+      "id": "injury_fatigue",
+      "name": "傷病／疲耗",
+      "match_terms": ["傷", "病", "疾", "折", "盲", "疲", "餓", "憔悴", "勞"],
+      "classical_abstraction": "身體受損、資源耗竭或承受代價。",
+      "football": ["傷停與碰撞", "體能下降", "高消耗打法的後段代價"],
+      "observable_signals": ["球員治療或被迫換下", "壓迫與回追速度明顯下降"],
+      "counter_signals": ["體能與陣容長時間穩定", "沒有傷情或耗竭跡象"]
+    },
+    {
+      "id": "gain_support",
+      "name": "得助／資源",
+      "match_terms": ["福", "祐", "祿", "富", "饒", "盈", "得", "喜", "安", "嘉"],
+      "classical_abstraction": "資源增加、獲助、安定或成果可得。",
+      "football": ["替補深度或人員優勢", "對手失誤形成可利用資源", "戰術條件逐步有利"],
+      "observable_signals": ["替補或二線球員有效補充", "外部條件實際轉化成機會"],
+      "counter_signals": ["紙面資源無法轉成場上優勢", "有利條件被持續浪費"]
+    },
+    {
+      "id": "loss_failure",
+      "name": "失落／無功",
+      "match_terms": ["失", "亡", "無功", "無所得", "不利", "憂", "殆", "空"],
+      "classical_abstraction": "失去、落空、收益不足或結果未成。",
+      "football": ["控球或射門沒有有效轉化", "關鍵機會浪費", "優勢最終落空"],
+      "observable_signals": ["高控球但低威脅", "關鍵機會反覆未能把握"],
+      "counter_signals": ["優勢快速轉成進球或高品質機會", "低投入卻持續取得實際收益"]
+    },
+    {
+      "id": "cooperation",
+      "name": "相從／協作",
+      "match_terms": ["相從", "相隨", "相得", "俱", "合", "媾", "並", "輔"],
+      "classical_abstraction": "協作、相合、互助或關係建立。",
+      "football": ["局部小組配合", "協同壓迫", "球員之間的接應與默契"],
+      "observable_signals": ["多人配合連續成功", "壓迫與回防同步"],
+      "counter_signals": ["球員長時間孤立", "接應與協防反覆脫節"]
+    },
+    {
+      "id": "communication_information",
+      "name": "言語／資訊",
+      "match_terms": ["言", "語", "鳴", "請謁", "傳言", "聞"],
+      "classical_abstraction": "訊息、溝通、傳遞、名聲或誤傳。",
+      "football": ["臨場溝通", "教練指令", "賽前情報與假訊息", "裁判或VAR溝通"],
+      "observable_signals": ["戰術指令造成明顯調整", "公開資訊與實際陣型存在落差"],
+      "counter_signals": ["訊息透明且場上完全按預期發展", "溝通變化沒有造成任何影響"]
+    },
+    {
+      "id": "water_weather",
+      "name": "水勢／環境",
+      "match_terms": ["水", "雨", "河", "海", "淵", "泉", "江", "風"],
+      "classical_abstraction": "流動、環境條件、天候或跨越障礙。",
+      "football": ["比賽節奏流動性", "場地與天候", "需要跨越的壓迫線或區域"],
+      "observable_signals": ["場地或天候明顯改變球速與對抗", "比賽攻守流動性提高"],
+      "counter_signals": ["環境條件完全不影響比賽", "節奏長時間固定不變"]
+    },
+    {
+      "id": "authority_leadership",
+      "name": "權位／主導",
+      "match_terms": ["帝", "王", "君", "公卿", "侯", "邦國", "主"],
+      "classical_abstraction": "權威、統攝、制度與主導中心。",
+      "football": ["主帥與隊長決策", "核心球員主導", "整體戰術權威"],
+      "observable_signals": ["核心角色掌控節奏或關鍵決策", "換人與戰術指令改變局勢"],
+      "counter_signals": ["主導權高度分散", "核心角色失效且沒有替代中心"]
+    },
+    {
+      "id": "recovery_turn",
+      "name": "回復／轉折",
+      "match_terms": ["復", "更起", "乃得", "終安", "後", "轉禍為福", "復立"],
+      "classical_abstraction": "低點後回復、轉折、重新建立或後段改變。",
+      "football": ["落後後反撲", "中場調整後回穩", "替補帶來第二波勢頭"],
+      "observable_signals": ["調整後場面明顯改善", "後段重新取得主動"],
+      "counter_signals": ["調整後仍持續惡化", "沒有任何第二波勢頭"]
+    },
+    {
+      "id": "enclosure_defense",
+      "name": "門戶／屏障",
+      "match_terms": ["門", "墻", "室", "城", "郭", "藩屏", "固衛", "廬"],
+      "classical_abstraction": "邊界、防守、容器、封閉或庇護。",
+      "football": ["低位防守與禁區屏障", "防線間距", "封鎖進攻通道"],
+      "observable_signals": ["禁區前形成穩定防守層", "對手被迫繞行或外圍傳導"],
+      "counter_signals": ["防線邊界反覆被直接穿透", "封鎖無法維持"]
+    }
+  ]
+}
