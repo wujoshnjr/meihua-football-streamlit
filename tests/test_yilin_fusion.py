@@ -1,3 +1,4 @@
+import jarvis.yilin as yilin_module
 from jarvis.stark_vault import meihua_hexagram
 from jarvis.yilin import (
     build_meihua_yilin_bridge,
@@ -31,6 +32,7 @@ def test_yilin_materializes_complete_64_by_64_matrix():
     assert stats["coverage_ratio"] == 1.0
     assert stats["materialized_from_hexagrams"] == 64
     assert stats["catalog_status"] == "COMPLETE_4096_PAIR_COVERAGE__TEXTUAL_COLLATION_ONGOING"
+    assert stats["runtime_lookup"] == "DIRECT_64_ENTRY_BLOCK__NO_FULL_CORPUS_LOAD"
 
 
 def test_yilin_lookup_is_exact_across_first_middle_and_last_blocks():
@@ -106,6 +108,33 @@ def test_yilin_lookup_normalizes_project_name_variants_by_number():
     ]
     for row in hexagrams:
         assert yilin_entry("乾", row["name"]) is not None
+
+
+def test_yilin_name_lookup_accepts_common_orthographic_variants():
+    assert yilin_entry("乾", "無妄")["to_number"] == 25
+    assert yilin_entry("乾", "恒")["to_number"] == 32
+    assert yilin_entry("乾", "兑")["to_number"] == 58
+    assert yilin_entry("乾", "旣濟")["to_number"] == 63
+
+
+def test_bridge_hot_path_does_not_materialize_all_4096_entries(monkeypatch):
+    qian = meihua_hexagram("乾", "乾")
+    kun = meihua_hexagram("坤", "坤")
+
+    yilin_module._block_payload.cache_clear()
+    yilin_module._block_entries.cache_clear()
+    yilin_module._block_number_index.cache_clear()
+    yilin_module.yilin_catalog_stats.cache_clear()
+
+    def fail_full_corpus_load():
+        raise AssertionError("ordinary bridge lookup must not materialize the full 4096 corpus")
+
+    monkeypatch.setattr(yilin_module, "yilin_entries", fail_full_corpus_load)
+    bridge = yilin_module.build_meihua_yilin_bridge(qian, kun)
+
+    assert bridge["status"] == "MATERIALIZED"
+    assert bridge["classical_entry"]["id"] == "yilin.01.02"
+    assert bridge["catalog_stats"]["runtime_lookup"] == "DIRECT_64_ENTRY_BLOCK__NO_FULL_CORPUS_LOAD"
 
 
 def test_yilin_search_finds_transformations_classical_text_and_image_ontology():
