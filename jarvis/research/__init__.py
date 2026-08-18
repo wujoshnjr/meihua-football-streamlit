@@ -31,6 +31,7 @@ from .market_pool import (
     fit_market_incremental_value,
     logarithmic_pool,
 )
+from .promotion import PROMOTION_REVIEW_VERSION, PromotionPolicy, review_model_promotion
 from .residual import (
     GENERIC_RESIDUAL_FIT_VERSION,
     ResidualLambdaFit,
@@ -70,7 +71,9 @@ __all__ = [
     "ModelForecast",
     "MultiSignalDatasetRow",
     "MultiSignalFitBundle",
+    "PROMOTION_REVIEW_VERSION",
     "PrematchExperimentRecord",
+    "PromotionPolicy",
     "RESEARCH_CALIBRATION_VERSION",
     "RESIDUAL_TUNING_VERSION",
     "ResearchCalibrationBundle",
@@ -94,6 +97,7 @@ __all__ = [
     "paired_block_bootstrap",
     "paired_model_comparison",
     "predict_model_family",
+    "review_model_promotion",
     "rolling_block_stability",
     "tune_model_family",
     "validate_chronological_dataset",
