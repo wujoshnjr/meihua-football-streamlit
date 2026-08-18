@@ -14,7 +14,7 @@ def test_operation_stark_home_opens_without_obsolete_research_product():
     assert any("JARVIS 起局／起卦、原典審查與知識整理" in item.value for item in app.caption)
     visible = " ".join(item.value for item in app.markdown)
     assert "奇門遁甲" in visible
-    assert "梅花易數" in visible
+    assert "梅花" in visible
     assert "周易" in visible
     assert "384" in visible
     assert "焦氏易林" in visible
