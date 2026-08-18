@@ -1,14 +1,70 @@
 {
-  "schema_version": "stark-meihua-trigrams-v1.0.0",
-  "scope_note": "八卦數、五行、卦氣旺衰與基本類象依《梅花易數》卷一；football 為現代應用類比。",
+  "schema_version": "stark-meihua-trigrams-v1.1.0",
+  "scope_note": "八卦數、五行、卦氣旺衰與萬物類象依《梅花易數》卷一結構化整理；football、football_observable、football_counter 為 Operation STARK 現代應用類比。",
   "trigrams": [
-    {"name":"乾","number":1,"symbol":"☰","element":"金","direction":"西北","nature":"天","core":"健、剛、創始、主導","football":"主動掌控、強勢推進、核心領袖與高位壓迫；過強時防冒進與身後空間。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]},
-    {"name":"兌","number":2,"symbol":"☱","element":"金","direction":"正西","nature":"澤","core":"悅、口、交流、缺口","football":"士氣、溝通、球迷聲勢、定位球與心理；陰面是口舌、分心與防線缺口。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]},
-    {"name":"離","number":3,"symbol":"☲","element":"火","direction":"正南","nature":"火","core":"明、附麗、顯現、文明","football":"技術亮點、射門、明星與VAR焦點；陰面是過熱、華而不實與防守暴露。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]},
-    {"name":"震","number":4,"symbol":"☳","element":"木","direction":"正東","nature":"雷","core":"動、驚、啟動、迅速","football":"開局衝擊、前場壓迫、快攻與突發事件；陰面是躁進、犯規、失位。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]},
-    {"name":"巽","number":5,"symbol":"☴","element":"木","direction":"東南","nature":"風","core":"入、順、滲透、反覆","football":"傳控滲透、邊肋部進攻、教練細節與情報；陰面是猶豫、缺乏直接性。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]},
-    {"name":"坎","number":6,"symbol":"☵","element":"水","direction":"正北","nature":"水","core":"險、流動、隱伏、反覆","football":"低位等待、反擊、門將與風險管理；陰面是連續失誤、傷情與被壓制。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]},
-    {"name":"艮","number":7,"symbol":"☶","element":"土","direction":"東北","nature":"山","core":"止、界限、積累、穩固","football":"防線屏障、守成、限制空間與體能保存；陰面是停滯、無法推進。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]},
-    {"name":"坤","number":8,"symbol":"☷","element":"土","direction":"西南","nature":"地","core":"順、承載、群體、包容","football":"整體防守、團隊協作、場地與耐力；陰面是被動、慢熱、缺乏主動創造。","seasonal_strength":{"旺":"依《梅花易數》卦氣旺：震巽春、離夏、乾兌秋、坎冬、坤艮辰戌丑未。","衰":"依《梅花易數》卦氣衰表判定，並與體用生克合參。"},"source_ids":["meihua-yishu-wikisource"]}
+    {
+      "name":"乾","number":1,"symbol":"☰","element":"金","direction":"西北","nature":"天","core":"健、剛、創始、主導",
+      "classical_correspondences":{"people":["父","老人","官貴"],"body":["頭","骨"],"animals":["馬"],"objects":["金寶","珠玉","圓物","冠","鏡","剛物"],"colors":["大赤"],"environment":["天","寒水"],"qualities":["剛健","權威","高處","圓整"]},
+      "football":"主動掌控、強勢推進、核心領袖與高位壓迫；過強時防冒進與身後空間。",
+      "football_observable":["隊長或核心主導球權與節奏","高位壓迫或後場大幅前提","反覆主動創造進攻"],
+      "football_counter":["長時間被動低位且無法主導","核心人物影響力很低","主動前壓反覆被身後反擊懲罰"],
+      "seasonal_strength":{"旺":"秋旺","衰":"夏衰；其餘仍需依月令與體用合參"},"source_ids":["meihua-yishu-wikisource"]
+    },
+    {
+      "name":"兌","number":2,"symbol":"☱","element":"金","direction":"正西","nature":"澤","core":"悅、口、交流、缺口",
+      "classical_correspondences":{"people":["少女","巫","妾","僕婢"],"body":["舌","肺"],"animals":["羊"],"objects":["帶口之器","金屬器","毀折缺損之物"],"colors":["白／金屬色（五行延伸）"],"environment":["澤"],"qualities":["喜悅","言語","交流","缺口"]},
+      "football":"士氣、溝通、球迷聲勢、定位球與心理；陰面是口舌、分心與防線缺口。",
+      "football_observable":["隊友溝通與互動明顯","球迷或情緒帶動節奏","利用對方防線缺口創造機會"],
+      "football_counter":["更衣室或場上溝通失靈","情緒優勢無法轉成實際配合","所謂缺口被對手穩定封住"],
+      "seasonal_strength":{"旺":"秋旺","衰":"夏衰；其餘仍需依月令與體用合參"},"source_ids":["meihua-yishu-wikisource"]
+    },
+    {
+      "name":"離","number":3,"symbol":"☲","element":"火","direction":"正南","nature":"火","core":"明、附麗、顯現、文明",
+      "classical_correspondences":{"people":["中女","文人"],"body":["目"],"animals":["雉","有甲殼之物"],"objects":["文書","甲冑","兵器","爐","乾燥物","花"],"colors":["紅","赤","紫"],"environment":["火","日","電","霓霞"],"qualities":["明亮","顯現","文飾","附麗"]},
+      "football":"技術亮點、射門、明星與 VAR／裁判焦點；陰面是過熱、華而不實與防守暴露。",
+      "football_observable":["明星球員或技術動作成為焦點","高頻射門／禁區事件","裁判或 VAR 顯著介入"],
+      "football_counter":["場面低調且缺乏射門／焦點事件","技術優勢沒有創造威脅","高曝光球員實際影響很低"],
+      "seasonal_strength":{"旺":"夏旺","衰":"冬衰；其餘仍需依月令與體用合參"},"source_ids":["meihua-yishu-wikisource"]
+    },
+    {
+      "name":"震","number":4,"symbol":"☳","element":"木","direction":"正東","nature":"雷","core":"動、驚、啟動、迅速",
+      "classical_correspondences":{"people":["長男"],"body":["足","髮"],"animals":["龍","蛇","百蟲","善鳴／善動之馬"],"objects":["竹","草木","樂器","柴"],"colors":["青","碧","綠"],"environment":["雷","樹木"],"qualities":["驟動","啟動","震驚","生發"]},
+      "football":"開局衝擊、前場壓迫、快攻與突發事件；陰面是躁進、犯規、失位。",
+      "football_observable":["開局速度快或突然提速","前場壓迫與快速反擊","突發進球／碰撞／失誤改變節奏"],
+      "football_counter":["整場節奏低且沒有明顯提速","幾乎沒有壓迫或轉換","快速行動完全被對手控制"],
+      "seasonal_strength":{"旺":"春旺","衰":"秋衰；其餘仍需依月令與體用合參"},"source_ids":["meihua-yishu-wikisource"]
+    },
+    {
+      "name":"巽","number":5,"symbol":"☴","element":"木","direction":"東南","nature":"風","core":"入、順、滲透、反覆",
+      "classical_correspondences":{"people":["長女","僧尼","工匠"],"body":["股","眼（部分類象條目）"],"animals":["雞","百禽"],"objects":["繩","帆","扇","羽毛","枝葉","工巧器具"],"colors":["青綠（木類延伸）"],"environment":["風","香氣／氣味"],"qualities":["進入","滲透","順行","反覆"]},
+      "football":"傳控滲透、邊肋部進攻、教練細節與情報；陰面是猶豫、缺乏直接性。",
+      "football_observable":["短傳與肋部滲透逐步進入威脅區","邊路反覆試探與換位","教練細節部署或名單情報影響比賽"],
+      "football_counter":["主要依靠直接長傳而非滲透","持球反覆卻始終進不了威脅區","情報／部署沒有實際改變場上行為"],
+      "seasonal_strength":{"旺":"春旺","衰":"秋衰；其餘仍需依月令與體用合參"},"source_ids":["meihua-yishu-wikisource"]
+    },
+    {
+      "name":"坎","number":6,"symbol":"☵","element":"水","direction":"正北","nature":"水","core":"險、流動、隱伏、反覆",
+      "classical_correspondences":{"people":["中男","工者"],"body":["耳","血"],"animals":["豕","狐","水族","魚"],"objects":["弓輪","鹽","酒","有核之物","桎梏"],"colors":["黑"],"environment":["水","雨","雪","溝瀆","月"],"qualities":["陷險","流動","隱伏","反覆"]},
+      "football":"低位等待、反擊、門將與風險管理；陰面是連續失誤、傷情與被壓制。",
+      "football_observable":["低位承壓後快速反擊","門將或最後一道防線頻繁介入","比賽出現連續風險與反覆攻防"],
+      "football_counter":["幾乎沒有風險事件且節奏平穩","低位策略完全沒有反擊出口","防線與門將沒有受到考驗"],
+      "seasonal_strength":{"旺":"冬旺","衰":"辰戌丑未月衰；其餘仍需依月令與體用合參"},"source_ids":["meihua-yishu-wikisource"]
+    },
+    {
+      "name":"艮","number":7,"symbol":"☶","element":"土","direction":"東北","nature":"山","core":"止、界限、積累、穩固",
+      "classical_correspondences":{"people":["少男","童子","守門者"],"body":["手指","鼻"],"animals":["狗","虎","鼠","狐"],"objects":["門闕","道路","果蓏","藤生之物","爪"],"colors":["黃"],"environment":["山","徑路","門界"],"qualities":["停止","界線","守成","阻隔"]},
+      "football":"防線屏障、守成、限制空間與體能保存；陰面是停滯、無法推進。",
+      "football_observable":["禁區前形成清楚防守屏障","領先後主動降速與封鎖空間","對手推進被迫停下或繞行"],
+      "football_counter":["防守界線被快速穿透","守成策略導致完全失去球權與反擊","所謂穩固區域頻繁被打穿"],
+      "seasonal_strength":{"旺":"辰戌丑未月旺","衰":"春衰；其餘仍需依月令與體用合參"},"source_ids":["meihua-yishu-wikisource"]
+    },
+    {
+      "name":"坤","number":8,"symbol":"☷","element":"土","direction":"西南","nature":"地","core":"順、承載、群體、包容",
+      "classical_correspondences":{"people":["母","老婦"],"body":["腹"],"animals":["牛"],"objects":["布帛","文章","車輿","方物","瓦器","書米穀"],"colors":["黃","黑"],"environment":["地","田土"],"qualities":["承載","順從","群體","厚重"]},
+      "football":"整體防守、團隊協作、場地與耐力；陰面是被動、慢熱、缺乏主動創造。",
+      "football_observable":["多人協同保持陣型","依靠整體而非單一球星","耐心承壓並消化對手攻勢"],
+      "football_counter":["球員各自為戰、陣型斷裂","被動承壓沒有任何集體回應","缺乏創造導致長時間無法出球"],
+      "seasonal_strength":{"旺":"辰戌丑未月旺","衰":"春衰；其餘仍需依月令與體用合參"},"source_ids":["meihua-yishu-wikisource"]
+    }
   ]
 }
