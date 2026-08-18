@@ -5,6 +5,7 @@ from datetime import date, datetime, time, timedelta
 import pandas as pd
 import streamlit as st
 
+from jarvis.release import runtime_release_status
 from qimen.calendar import LocalTimeError, aware_local_datetime
 from qimen.engine import cast_qimen
 from qimen.evaluation import lock_prediction
@@ -28,8 +29,9 @@ from qimen.knowledge import knowledge_stats, load_knowledge, search_knowledge
 from qimen.prediction import PrematchModelInput, TeamForm, build_prediction
 from qimen.protocol import EvidenceItem, MatchInput
 from qimen.reporting import build_bundle, render_html, render_markdown
-from version import __version__
 
+
+release = runtime_release_status()
 
 st.set_page_config(
     page_title="奇門遁甲足球研究系統・JARVIS",
@@ -148,9 +150,12 @@ def _relation_rows(relations) -> list[dict[str, str]]:
 
 
 st.title("奇門遁甲足球研究系統・JARVIS")
-st.caption(f"時家奇門・轉盤・拆補法｜JARVIS Phase 2.1｜版本 {__version__}")
+st.caption(
+    f"Web App v{release.web_app_version}｜Live Predictor v{release.live_predictor_code_version}｜"
+    "時家奇門・轉盤・拆補法"
+)
 st.markdown(
-    '<div class="qimen-note">奇門層只排序候選情境，不自動輸出勝率；JARVIS 機率層是獨立、尚未校準的 Poisson 基準。奇門特徵目前只記錄、不調整機率，直到時間序列盲測證明有增量。</div>',
+    '<div class="qimen-note">JARVIS v8 網頁與研究堆疊已上線；主頁即時機率仍由 frozen Live Predictor champion compatibility path 產生。奇門／梅花與其他 v8 challenger 在沒有 frozen chronological artifact 與 promotion review 前不會自動改動 live probability。</div>',
     unsafe_allow_html=True,
 )
 
@@ -438,11 +443,11 @@ with tab_reading:
         st.caption("九星旺衰依月支計算；規則版本：" + reading.seasonal_rule_version)
 
 with tab_prediction:
-    st.subheader("JARVIS Phase 2.1：時序訓練、校準與挑戰模型")
+    st.subheader("JARVIS v8 Web：Live Predictor（frozen champion compatibility path）")
     st.info(
-        "獨立 Poisson 是 champion；Dixon–Coles 只作未驗證 challenger。每筆輸出必須註冊 EARLY 或 LINEUP，"
-        "rho 只能引用 TRAIN artifact，溫度校準只能引用 CALIBRATION artifact；"
-        "並保存來源、資料、足球特徵、奇門特徵、模型規格與 Git commit。奇門權重仍固定為零。"
+        f"目前 Live Predictor code v{release.live_predictor_code_version}；Independent Poisson 是 frozen champion，"
+        "Dixon–Coles 仍是 challenger。v8 Dynamic Football、fixture context、Qimen／Meihua residual 等研究元件"
+        "不會因 Web App 升到 v8 自動啟用；必須先有 frozen chronological artifact 與 promotion review。"
     )
     if _require_board():
         match = st.session_state.match
@@ -700,6 +705,7 @@ with tab_prediction:
                 st.caption("⚠ " + warning)
             with st.expander("模型輸入快照與奇門 shadow features"):
                 st.json({
+                    "runtime_release_status": release.to_dict(),
                     "model_input": prediction.model_input,
                     "qimen_features": prediction.qimen_features,
                     "provenance": prediction.provenance,

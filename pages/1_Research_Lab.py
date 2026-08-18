@@ -9,6 +9,7 @@ from jarvis.football import (
     FOOTBALL_CONTEXT_TUNING_VERSION,
     FOOTBALL_CONTEXT_VERSION,
 )
+from jarvis.release import runtime_release_status
 from jarvis.research import (
     GENERIC_RESIDUAL_FIT_VERSION,
     MARKET_INCREMENTAL_VALUE_VERSION,
@@ -25,24 +26,29 @@ from meihua import (
 )
 from qimen.outcome_design import QIMEN_OUTCOME_DESIGN_VERSION, qimen_outcome_numeric_features
 from qimen.outcome_features import build_qimen_outcome_feature_snapshot
-from version import __version__
 
+
+release = runtime_release_status()
 
 st.set_page_config(page_title="JARVIS v8 Research Lab", page_icon="🧪", layout="wide")
 st.title("JARVIS v8 Research Lab")
-st.caption(f"Web app v{__version__}｜多訊號研究、校準、穩定性與 Football challenger 的同一實驗工作台")
+st.caption(
+    f"Web app v{release.web_app_version}｜Live predictor code v{release.live_predictor_code_version}｜"
+    "多訊號研究、校準、穩定性與 Football challenger 的同一實驗工作台"
+)
 st.warning(
     "RESEARCH GATE：此頁可以檢視 v8 raw features 與研究模組，但沒有 frozen TRAIN/VALIDATION/CALIBRATION artifact 時，"
     "不會直接覆蓋主頁的 live prediction。",
     icon="⚠️",
 )
 
-m1, m2, m3, m4, m5 = st.columns(5)
-m1.metric("Web App", f"v{__version__}")
-m2.metric("Dynamic Football", DYNAMIC_STRENGTH_VERSION.rsplit("-v", 1)[-1])
-m3.metric("Fixture Context", FOOTBALL_CONTEXT_VERSION.rsplit("-v", 1)[-1])
-m4.metric("Qimen design", QIMEN_OUTCOME_DESIGN_VERSION.rsplit("-v", 1)[-1])
-m5.metric("Meihua design", MEIHUA_OUTCOME_DESIGN_VERSION.rsplit("-v", 1)[-1])
+m1, m2, m3, m4, m5, m6 = st.columns(6)
+m1.metric("Web App", f"v{release.web_app_version}")
+m2.metric("Live Predictor", f"v{release.live_predictor_code_version}")
+m3.metric("Dynamic Football", DYNAMIC_STRENGTH_VERSION.rsplit("-v", 1)[-1])
+m4.metric("Fixture Context", FOOTBALL_CONTEXT_VERSION.rsplit("-v", 1)[-1])
+m5.metric("Qimen design", QIMEN_OUTCOME_DESIGN_VERSION.rsplit("-v", 1)[-1])
+m6.metric("Meihua design", MEIHUA_OUTCOME_DESIGN_VERSION.rsplit("-v", 1)[-1])
 
 st.subheader("研究堆疊")
 stack_rows = [
@@ -62,7 +68,7 @@ st.dataframe(pd.DataFrame(stack_rows), hide_index=True, use_container_width=True
 with st.expander("版本與研究契約", expanded=False):
     st.json(
         {
-            "web_app_version": __version__,
+            "runtime_release_status": release.to_dict(),
             "dynamic_strength_version": DYNAMIC_STRENGTH_VERSION,
             "dynamic_strength_tuning_version": DYNAMIC_STRENGTH_TUNING_VERSION,
             "football_context_version": FOOTBALL_CONTEXT_VERSION,
