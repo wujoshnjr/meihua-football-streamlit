@@ -61,8 +61,6 @@ def build_qimen_packet(
         }
 
     chart = board.to_dict()
-    # QimenBoard.generated_at is audit metadata, not part of the deterministic chart.
-    # Removing it makes the same event/method produce the same packet fingerprint.
     chart.pop("generated_at", None)
 
     payload: dict[str, Any] = {
@@ -139,14 +137,15 @@ def build_meihua_packet(
         "yilin_bridge": yilin_bridge,
         "knowledge_context": knowledge_context,
         "ai_interpretation_contract": [
-            "不要重新起卦或修改本卦、互卦、變卦、動爻、體用。",
-            "固定合參順序：本卦 → 上下卦內外 → 體用 → 旺衰 → 互卦 → 變卦 → 動爻 → 焦氏易林本卦之變卦 → 可用外應。",
-            "焦氏易林在此是 MEIHUA_YILIN_BRIDGE：補充本卦到最終變卦的情境，不宣稱等同焦林直日占法，也不可重起一套卦。",
-            "易林 classical_text、專案 image_atoms、football modern application 必須分開；不可把專案 heuristic 冒充古籍原註。",
-            "知識庫中的 football 欄位是現代足球類比，不是《梅花易數》或《焦氏易林》古文。",
-            "不可只看一條生克或一條林辭就直接判勝負；必須處理相互支持與相互抵銷的訊號。",
-            "若易林與梅花核心呈現矛盾，直接保留矛盾並說明條件，不得強行統一。",
-            "若是足球問題，最後可給比賽走勢、可能轉折與需觀察的場上證據，但不捏造統計勝率。",
+            "不要重新起卦或修改本卦、互卦、變卦、動爻、體用；以 hexagram 為梅花盤象事實。",
+            "固定合參順序：本卦 → 上下卦內外 → 體用 → 旺衰 → 互卦 → 變卦 → 動爻 → 焦氏易林本卦之變卦 → 可用外應 → 支持／反證。",
+            "焦氏易林在此是 MEIHUA_YILIN_BRIDGE：只補充本卦到最終變卦的情境，不宣稱等同焦林直日占法，也不可重起一套卦。",
+            "先讀 yilin_bridge.classical_entry.classical_text，再讀 semantic_profile；後者是 PROJECT_HEURISTIC，不是焦氏原註。",
+            "易林數位轉錄、source editorial notes／gaiji、後世 commentary、project heuristic、football modern application 必須分層，不可互相冒充。",
+            "若 provenance 標示 source_label_order_anomaly 或 gaiji_tokens，不得自行改字、補字或假稱已校定。",
+            "不可只看一條生克、單一卦象、單條林辭或 image atom 就直接判勝負；必須處理支持、抵銷與矛盾訊號。",
+            "若易林與梅花核心矛盾，保留矛盾、解釋條件，不得強行統一。",
+            "若是足球問題，可給比賽劇本、主客趨勢、階段轉折與可觀察證據，但不捏造統計勝率或固定比分。",
         ],
     }
     payload["packet_sha256"] = _packet_hash(payload)
