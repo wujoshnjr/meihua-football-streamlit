@@ -26,8 +26,8 @@ SOURCE_FILES = tuple(f"KR3g0029_{index:03d}.txt" for index in range(1, 5))
 
 # Source transcription spellings are intentionally mapped by King Wen number,
 # then converted to the project's canonical hexagram name. This prevents
-# orthographic variants (无/無, 恒/恆, 兊/兑/兌, 暌/睽, 㤗/泰) from breaking
-# runtime lookup while preserving the source label separately.
+# orthographic variants from breaking runtime lookup while preserving the
+# source label separately.
 SOURCE_NAMES = (
     "乾", "坤", "屯", "蒙", "需", "訟", "師", "比", "小畜", "履", "泰", "否", "同人", "大有", "謙", "豫",
     "隨", "蠱", "臨", "觀", "噬嗑", "賁", "剝", "復", "无妄", "大畜", "頤", "大過", "坎", "離", "咸", "恒",
@@ -36,16 +36,37 @@ SOURCE_NAMES = (
 )
 
 EXTRA_ALIASES = {
+    # historical / glyph variants seen in WYG digital transcriptions
     "㤗": 11,
     "無妄": 25,
     "无妄": 25,
     "恆": 32,
     "恒": 32,
+    "遁": 33,
     "暌": 38,
     "睽": 38,
     "兊": 58,
     "兑": 58,
     "兌": 58,
+    # normalized/simplified glyphs that occur in Kanripo's source layer
+    "随": 17,
+    "蛊": 18,
+    "临": 19,
+    "观": 20,
+    "贲": 22,
+    "剥": 23,
+    "复": 24,
+    "颐": 27,
+    "晋": 35,
+    "损": 41,
+    "渐": 53,
+    "归妹": 54,
+    "丰": 55,
+    "涣": 59,
+    "节": 60,
+    "小过": 62,
+    "既济": 63,
+    "未济": 64,
 }
 
 SECTION_RE = re.compile(r"^\s*([^\s　]+)之第([一二三四五六七八九十百]+)¶?\s*$")
@@ -161,8 +182,6 @@ def _parse_volume(filename: str, content: str, project: dict[int, dict[str, Any]
             continue
 
         entry_match = entry_re.match(stripped)
-        # Continuation lines in the Kanripo transcription are indented; only a
-        # non-indented canonical label starts a new target entry.
         starts_indented = bool(line[:1].isspace() or line.startswith("　"))
         if entry_match and not starts_indented:
             flush_entry()
@@ -260,6 +279,7 @@ def _write_manifest(source_hashes: dict[str, str]) -> None:
                 "64×64=4096 個本卦→之卦槽位已全部 materialize，且每條都有非空林辭。"
                 "這代表 pair coverage 完整，不代表所有版本異文、標點與後世注解已完成校勘。"
             ),
+            "textual_collation_status": "WYG_BASE_COMPLETE__MULTI_EDITION_VARIANT_COLLATION_ONGOING",
             "transcription_source": {
                 "id": "yilin-kanripo-wyg-transcription",
                 "repository": UPSTREAM_REPO,
