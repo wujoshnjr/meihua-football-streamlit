@@ -108,8 +108,8 @@
   "complete_from_hexagrams": 64,
   "coverage_claim": "64×64=4096 個本卦→之卦槽位已全部 materialize，且每條都有非空林辭。這代表 pair coverage 完整，不代表所有版本異文、標點與後世注解已完成校勘。",
   "textual_collation_status": "WYG_BASE_COMPLETE__MULTI_EDITION_VARIANT_COLLATION_ONGOING",
-  "source_label_anomaly_count": 2079,
-  "source_label_policy": "轉錄中的卦名異體或疑似誤標不被靜默修正；King Wen 位置決定 lookup number，原 source label、可辨識映射與 anomaly flag 全部保留。",
+  "source_label_anomaly_count": 1,
+  "source_label_policy": "轉錄中的卦名異體或疑似誤標不被靜默修正；section ordinal + 易林 target-order convention 決定 lookup number，原 source label、可辨識映射與 anomaly flag 全部保留。",
   "transcription_source": {
     "id": "yilin-kanripo-wyg-transcription",
     "repository": "kanripo/KR3g0029",
@@ -133,5 +133,6 @@
     "complete": 64,
     "expected": 64,
     "note": "四庫 WYG 數位轉錄已解析全部 64 本卦區塊；多版本異文校勘另行追蹤。"
-  }
+  },
+  "target_order_policy": "各本卦 section 先列本卦自身，其餘之卦依文王六十四卦序排列。"
 }
