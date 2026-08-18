@@ -23,8 +23,11 @@ SOURCE_FILES = tuple(f"KR1a0001_{index:03d}.txt" for index in range(1, 65))
 
 PAGE_RE = re.compile(r"^<pb:([^>]+)>¶?$")
 HEADER_RE = re.compile(r"^\*\*\s*《(.+?)第([一二三四五六七八九十百]+)》")
-LINE_RE = re.compile(r"^(初[六九]|[六九][二三四五]|上[六九])(?:[、：:]|\s)*(.*)$")
-USE_RE = re.compile(r"^(用[六九])(?:[、：:]|\s)*(.*)$")
+# Canonical line headings in the transcription carry a delimiter (、／：).
+# Requiring it avoids accidentally treating phrases such as「九三重剛而不中」
+# in 文言 as a second line record.
+LINE_RE = re.compile(r"^(初[六九]|[六九][二三四五]|上[六九])[、：:]\s*(.*)$")
+USE_RE = re.compile(r"^(用[六九])[、：:]\s*(.*)$")
 
 
 def _download(url: str) -> bytes:
