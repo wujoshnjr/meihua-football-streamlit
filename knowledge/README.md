@@ -1,29 +1,66 @@
 # Operation STARK 術數知識庫
 
-本目錄保存 JARVIS 起局／起卦後交給 ChatGPT 的知識上下文。資料明確分成：**古典／傳統義理、專案結構化摘要、足球現代應用**；三者不得混稱。
+本目錄只服務 JARVIS 起局／起卦與 AI handoff。所有內容分成：**古籍數位轉錄／傳統義理、JARVIS 專案結構化解析、足球 modern application**；不得互相冒充。
 
 ## 奇門遁甲
 
-- `entities.json`：九宮、八門、九星、八神、十天干與基礎術語。
-- `calendar.json`：二十四節氣、陰陽遁十八局、十二地支、驛馬與五行。
-- `patterns.json`：奇儀格、三遁、三詐、五假、庚格、伏吟反吟、刑墓迫等盤勢狀態。
-- `methods.json`：時家／日家、轉盤／飛盤、拆補／置閏、時間與寄宮差異；實際引擎只採鎖定版本。
-- `interpretation.json`：問題鎖定、逐層判讀、主客版本、關係矩陣、應期邊界與錯誤防護。
-- `football_ontology.json`：奇門符號／狀態的足球衍生義、可觀察訊號、反證條件與組合順序。
+- `entities.json`：九宮、八門、九星、八神、十天干。
+- `calendar.json`：節氣、十八局、地支、驛馬、五行。
+- `patterns.json`：奇儀格、三遁、三詐、五假、庚格、伏吟反吟、刑墓迫等。
+- `methods.json`：流派差異；只有明示 `implemented` 的固定版本進入引擎。
+- `qimen_deep_layers.json` / `interpretation.json`：深層閱讀與稽核規約。
+- `football_ontology.json`：足球候選情境、observable、counter-signal。
 
-`automation=implemented` 表示引擎有固定且可測試的成立條件；`knowledge_only` 表示傳承差異大，只保留知識，不擅自混入盤面。
+`jarvis/qimen_relations.py` 的 **Core 306 Matrix** = 81 天地盤干 + 72 星門 + 72 門宮 + 81 星宮。它是四類核心矩陣，不宣稱等於奇門所有可能組合。
 
 ## 梅花易數
 
-- `meihua_trigrams.json`：八卦數、五行、方位、基本類象與足球衍生義。
-- `meihua_hexagrams.json`：六十四卦完整 catalog；每卦含卦序、卦名、上下卦、主題、一般解析與足球衍生義。
-- `meihua_rules.json`：年月日時起卦、體用五種關係及固定解讀順序。
-- `meihua_line_roles.json`：初、二、三、四、五、上六個動爻位置的階段含意與足球觀察重點。
+- `meihua_trigrams.json`：八卦數、五行、方位、萬物類象與足球現代應用。
+- `meihua_hexagrams.json`：64 卦 catalog 與專案摘要。
+- `meihua_rules.json`：年月日時起卦、體用五關係。
+- `meihua_line_roles.json`：六個爻位階段。
+- `meihua_deep_layers.json`：本／互／變、上下卦、旺衰與足球深讀。
 
-JARVIS 在實際起卦後會同時檢索本卦、互卦、變卦、動爻、體用與旺衰，不需要把 64×所有變化組合人工寫死。
+## 《周易》原典審查
 
-## 共同來源
+`zhouyi/` 是 JARVIS 10.1 新增的固定來源層：
 
-- `sources.json`：奇門／梅花古籍、曆法／時區來源與現代足球語彙來源。
+- `entries/01..08.json`：8 個 shard，共 **64/64 卦、384/384 標準爻**。
+- 每卦保存卦辭、彖、大象、六爻爻辭、來源 file/page/commit/SHA。
+- 可直接映射的小象逐爻保存；乾卦此底本的六小象與大象集中於同一 block，保留來源結構與 review status，不強行猜切。
+- `manifest.json`：固定來源與 completeness contract。
+- `zhouyi_review_policy.json`：文本真實性、卦體、動爻、體用旺衰、本互變、易林一致／矛盾與足球轉譯的審查順序。
 
-足球欄位一律是 `modern application`：它可以提供「場上可能看見什麼／什麼現象會反證」的語義，但**不能由 JARVIS 自動轉成主勝、和局、客勝、固定比分或統計勝率**。最後的盤面綜合由 ChatGPT 依 `DIVINATION_PACKET_V1` 完成。
+固定底本：`kanripo/KR1a0001 @ 8284adbf9e3435d713180e24f05bf75f8b7d1d96`。這是數位轉錄與結構化來源層，不等於所有歷代版本校勘完成。
+
+## 《焦氏易林》
+
+`yilin/entries/01..64.json` 保存完整 **4096/4096** 本卦→之卦 base transcription，並保留 raw text、校語、gaiji、來源標籤 anomaly 與 pinned provenance。
+
+`yilin/image_ontology.json` 是 JARVIS 的 project heuristic；只把具體意象召回成候選現代情境，不能冒充焦氏原註。
+
+梅花 bridge 只查：
+
+```text
+本卦 → 最終變卦
+```
+
+不把互卦冒充焦林原始占法，也不重起一套卦。
+
+## AI handoff
+
+`DIVINATION_PACKET_V2` 的梅花包固定包含：
+
+```text
+梅花 deterministic snapshot
++ 周易 source audit
++ 本／互／變卦辭、彖、大象
++ 真正動爻爻辭／可用小象
++ 體用、旺衰與深層結構
++ 唯一焦氏易林本→變
++ project heuristic / football observable / counter-signal
+```
+
+JARVIS 到此為止；最後判讀交給 ChatGPT。
+
+足球欄位一律是 `modern application`，禁止自動轉成主勝／和局／客勝、統計勝率或固定比分。
