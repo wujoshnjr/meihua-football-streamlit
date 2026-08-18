@@ -50,9 +50,9 @@ else:
     instruction = (
         f"請依這份 JARVIS {packet['schema_version']} 解梅花卦，合參 zhouyi_review 與 MEIHUA_YILIN_BRIDGE。\n"
         "不要重新起卦，也不要修改本卦、互卦、變卦、動爻、體用或 JARVIS 的來源 lookup。\n"
-        "先核對 zhouyi_review.source_audit，再依序讀本卦卦辭／彖／象、上下卦內外、體用旺衰、互卦、真正動爻爻辭、變卦。\n"
-        "周易 classical_text 是固定來源數位轉錄；project_general 與 football_modern_application 是專案層，必須分開。\n"
-        "再讀焦氏易林 classical_entry.classical_text 與 semantic_profile；semantic_profile/image_atoms 是專案 heuristic，不是焦氏原註。\n"
+        "先核對 zhouyi_review.source_audit，再依序讀本卦卦辭／彖／象、上下卦內外、體用旺衰、互卦、真正動爻爻辭／小象、變卦。\n"
+        "周易 classical_text 是固定來源數位轉錄；moving_line.semantic_profile 是來源字詞召回的 PROJECT_HEURISTIC，不是周易原註。\n"
+        "再讀焦氏易林 classical_entry.classical_text 與 semantic_profile；semantic_profile/image_atoms 同樣是專案 heuristic，不是焦氏原註。\n"
         "若周易、梅花核心與易林情境互相矛盾，要把矛盾當作解讀資訊，不得強行統一。\n"
         "古籍數位轉錄、後世注解、專案 heuristic、football modern application 必須分層陳述。\n"
         "不可把單一卦、單一爻、單條林辭直接換成勝率、固定比分或必然勝負。\n"
@@ -66,7 +66,8 @@ if packet["system"] == "MEIHUA_YISHU":
         audit = zhouyi.get("source_audit", {})
         st.write(
             f"**source audit**：{'PASS' if audit.get('all_core_alignments_match') else 'REVIEW'}｜"
-            f"**moving line**：{'PASS' if audit.get('moving_line_matches_snapshot') else 'REVIEW'}"
+            f"**moving line**：{'PASS' if audit.get('moving_line_matches_snapshot') else 'REVIEW'}｜"
+            f"**小象**：{audit.get('moving_line_xiaoxiang_status', '—')}"
         )
         for label, key in (("本卦", "original"), ("互卦", "mutual"), ("變卦", "changed")):
             row = zhouyi.get(key, {})
@@ -77,10 +78,52 @@ if packet["system"] == "MEIHUA_YISHU":
         if moving:
             st.markdown(f"**真正動爻 · {moving.get('marker', '')}**")
             st.write(moving.get("classical_text", ""))
+            small = moving.get("xiaoxiang") or {}
+            if small.get("status") == "MAPPED":
+                st.markdown("**小象**")
+                st.write(small.get("classical_text", ""))
+            elif small.get("status") == "GROUPED_IN_QIAN_XIANG_BLOCK":
+                st.info("此乾卦底本把六小象集中在同一象傳 block；JARVIS 保留來源例外，不擅自切分成假定原文。")
             st.caption(
                 f"{moving.get('source_file', '')}｜{moving.get('source_page_start', '')}｜"
-                "爻辭是古籍原文；爻位階段與足球含意是 JARVIS 專案層。"
+                "爻辭／可直接映射的小象是古籍原文；爻位階段、語義 atom 與足球含意是 JARVIS 專案層。"
             )
+
+            profile = moving.get("semantic_profile") or {}
+            if profile:
+                marker_rows = profile.get("judgment_markers", [])
+                atom_rows = profile.get("semantic_atoms", [])
+                if marker_rows:
+                    st.markdown("**經文字詞判斷標記（僅作審查，不直接定賽果）**")
+                    for row in marker_rows:
+                        st.write(f"- {'／'.join(row['matched_terms'])}：{row['project_note']}")
+                if atom_rows:
+                    st.markdown("**動爻語義 atoms · PROJECT_HEURISTIC**")
+                    st.dataframe(
+                        [
+                            {
+                                "領域": row["domain"],
+                                "意象": row["name"],
+                                "命中字詞": "、".join(row["matched_terms"]),
+                                "專案抽象": row["project_abstraction"],
+                                "足球候選情境": "；".join(row["football"]),
+                            }
+                            for row in atom_rows
+                        ],
+                        hide_index=True,
+                        use_container_width=True,
+                    )
+                    left, right = st.columns(2)
+                    with left:
+                        st.markdown("**支持訊號**")
+                        for item in profile.get("observable_signals", []):
+                            st.write(f"- {item}")
+                    with right:
+                        st.markdown("**反證訊號**")
+                        for item in profile.get("counter_signals", []):
+                            st.write(f"- {item}")
+                else:
+                    st.caption("此動爻未命中目前 ontology；ChatGPT 仍須直接閱讀經文，不能把未命中當成無義。")
 
     yilin = packet.get("yilin_bridge", {})
     with st.expander("《焦氏易林》AI 交接摘要", expanded=True):
