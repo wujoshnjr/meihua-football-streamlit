@@ -13,6 +13,7 @@ ZHOUYI_ROOT = ROOT / "knowledge" / "zhouyi"
 ENTRIES_ROOT = ZHOUYI_ROOT / "entries"
 MANIFEST_PATH = ZHOUYI_ROOT / "manifest.json"
 REVIEW_POLICY_PATH = ROOT / "knowledge" / "zhouyi_review_policy.json"
+SEMANTIC_ONTOLOGY_PATH = ROOT / "knowledge" / "zhouyi_semantic_ontology.json"
 LINE_ROLE_PATH = ROOT / "knowledge" / "meihua_line_roles.json"
 
 
@@ -45,6 +46,11 @@ def _policy() -> dict[str, Any]:
 
 
 @lru_cache(maxsize=1)
+def _semantic_ontology() -> dict[str, Any]:
+    return json.loads(SEMANTIC_ONTOLOGY_PATH.read_text(encoding="utf-8"))
+
+
+@lru_cache(maxsize=1)
 def _line_roles() -> dict[int, dict[str, Any]]:
     rows = json.loads(LINE_ROLE_PATH.read_text(encoding="utf-8"))["line_roles"]
     return {int(row["line"]): row for row in rows}
@@ -52,6 +58,7 @@ def _line_roles() -> dict[int, dict[str, Any]]:
 
 def zhouyi_catalog_stats() -> dict[str, Any]:
     manifest = _manifest()
+    ontology = _semantic_ontology()
     return {
         "materialized_shards": int(manifest["materialized_shards"]),
         "expected_shards": int(manifest["expected_shards"]),
@@ -62,6 +69,8 @@ def zhouyi_catalog_stats() -> dict[str, Any]:
         "mapped_xiaoxiang": int(manifest["mapped_xiaoxiang"]),
         "grouped_qian_xiaoxiang": int(manifest["grouped_qian_xiaoxiang"]),
         "use_lines": int(manifest["use_lines"]),
+        "semantic_atoms": len(ontology.get("atoms", [])),
+        "judgment_markers": len(ontology.get("judgment_markers", [])),
         "source_repository": manifest["source_repository"],
         "source_commit": manifest["source_commit"],
         "source_edition": manifest["source_edition"],
@@ -76,6 +85,76 @@ def zhouyi_hexagram(number: int) -> dict[str, Any]:
     if int(row["number"]) != number:
         raise RuntimeError("周易 corpus 卦序索引不一致")
     return row
+
+
+def zhouyi_line_semantic_profile(line: dict[str, Any]) -> dict[str, Any]:
+    """Retrieve project semantic atoms only from text actually present in one line record."""
+
+    ontology = _semantic_ontology()
+    xiaoxiang = line.get("xiaoxiang") or {}
+    xiaoxiang_text = xiaoxiang.get("classical_text") if xiaoxiang.get("status") == "MAPPED" else None
+    source_parts = [str(line.get("classical_text", ""))]
+    if xiaoxiang_text:
+        source_parts.append(str(xiaoxiang_text))
+    text_basis = "".join(source_parts)
+
+    judgment_hits: list[dict[str, Any]] = []
+    for marker in ontology.get("judgment_markers", []):
+        matched = sorted({term for term in marker.get("terms", []) if term and term in text_basis}, key=len, reverse=True)
+        if matched:
+            judgment_hits.append(
+                {
+                    "id": marker["id"],
+                    "matched_terms": matched,
+                    "project_note": marker["project_note"],
+                }
+            )
+
+    atom_hits: list[dict[str, Any]] = []
+    for atom in ontology.get("atoms", []):
+        matched = sorted({term for term in atom.get("match_terms", []) if term and term in text_basis}, key=len, reverse=True)
+        if not matched:
+            continue
+        atom_hits.append(
+            {
+                "id": atom["id"],
+                "name": atom["name"],
+                "domain": atom["domain"],
+                "matched_terms": matched,
+                "project_abstraction": atom["project_abstraction"],
+                "football": list(atom["football"]),
+                "observable_signals": list(atom["observable_signals"]),
+                "counter_signals": list(atom["counter_signals"]),
+            }
+        )
+
+    def unique(items: list[str]) -> list[str]:
+        return list(dict.fromkeys(items))
+
+    return {
+        "schema_version": "stark-zhouyi-line-semantic-profile-v1.0.0",
+        "inference_status": ontology["inference_status"],
+        "matching_policy": ontology["matching_policy"],
+        "text_basis": {
+            "line_classical_text": line.get("classical_text"),
+            "xiaoxiang_classical_text": xiaoxiang_text,
+            "xiaoxiang_status": xiaoxiang.get("status"),
+        },
+        "judgment_markers": judgment_hits,
+        "semantic_atoms": atom_hits,
+        "domains": unique([row["domain"] for row in atom_hits]),
+        "project_abstractions": unique([row["project_abstraction"] for row in atom_hits]),
+        "football_hypotheses": unique([item for row in atom_hits for item in row["football"]]),
+        "observable_signals": unique([item for row in atom_hits for item in row["observable_signals"]]),
+        "counter_signals": unique([item for row in atom_hits for item in row["counter_signals"]]),
+        "coverage": {
+            "has_judgment_marker": bool(judgment_hits),
+            "has_semantic_atom": bool(atom_hits),
+            "semantic_atom_count": len(atom_hits),
+            "note": "未命中 ontology 不等於經文無義；ChatGPT 仍須直接讀原文與上下文。",
+        },
+        "boundary": "此層只做來源字詞→專案語義候選召回，不是《周易》原註，也不輸出勝率或固定比分。",
+    }
 
 
 def search_zhouyi(query: str, *, limit: int = 100) -> list[dict[str, Any]]:
@@ -112,12 +191,14 @@ def search_zhouyi(query: str, *, limit: int = 100) -> list[dict[str, Any]]:
                 }
             )
         for line in row["lines"]:
+            profile = zhouyi_line_semantic_profile(line)
             line_haystack = json.dumps(
                 {
                     "name": row["name"],
                     "marker": line["marker"],
                     "classical_text": line["classical_text"],
                     "xiaoxiang": line.get("xiaoxiang"),
+                    "semantic_profile": profile,
                 },
                 ensure_ascii=False,
             ).lower()
@@ -133,6 +214,7 @@ def search_zhouyi(query: str, *, limit: int = 100) -> list[dict[str, Any]]:
                         "marker": line["marker"],
                         "classical_text": line["classical_text"],
                         "xiaoxiang": line.get("xiaoxiang"),
+                        "semantic_profile": profile,
                         "source_page_start": line["source_page_start"],
                         "source": row["source"],
                     }
@@ -183,6 +265,7 @@ def build_meihua_zhouyi_review(
     moving_line = original_source["lines"][snapshot.moving_line - 1]
     role = _line_roles()[snapshot.moving_line]
     policy = _policy()
+    semantic_profile = zhouyi_line_semantic_profile(moving_line)
 
     source_audit = {
         "original_alignment": _catalog_alignment(original_source, original_catalog),
@@ -203,7 +286,7 @@ def build_meihua_zhouyi_review(
 
     return {
         "kind": "zhouyi_source_review",
-        "schema_version": "stark-meihua-zhouyi-review-v1.1.0",
+        "schema_version": "stark-meihua-zhouyi-review-v1.2.0",
         "status": "SOURCE_AWARE_REVIEW_READY",
         "scope_note": (
             "《周易》固定底本經文用來加深本／互／變與動爻審查；"
@@ -220,11 +303,12 @@ def build_meihua_zhouyi_review(
             "classical_text": moving_line["classical_text"],
             "source_page_start": moving_line["source_page_start"],
             "xiaoxiang": moving_line["xiaoxiang"],
+            "semantic_profile": semantic_profile,
             "source_file": original_source["source"]["file"],
             "phase": role["phase"],
             "project_general": role["general"],
             "football_modern_application": role["football"],
-            "boundary": "爻辭／可直接映射的小象是古籍轉錄；phase/general/football 為 JARVIS 分層解析。",
+            "boundary": "爻辭／可直接映射的小象屬古籍原文數位轉錄；phase/general/football/semantic_profile 為 JARVIS 分層解析。",
         },
         "meihua_crosscheck": {
             "body": snapshot.body_trigram,
