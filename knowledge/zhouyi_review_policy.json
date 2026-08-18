@@ -1,0 +1,128 @@
+{
+  "schema_version": "stark-zhouyi-review-policy-v1.0.0",
+  "scope_note": "把《周易》原典層加入梅花解卦審查。古籍原文只作來源事實；project_review 與 football modern application 另外分層，不冒充經傳原義。",
+  "authority_order": [
+    "deterministic 梅花盤象",
+    "固定底本《周易》卦辭／彖／象／動爻爻辭",
+    "梅花體用、旺衰、互變規則",
+    "焦氏易林本卦→變卦 transformation lens",
+    "JARVIS project review / football modern application",
+    "ChatGPT 最終合參"
+  ],
+  "review_dimensions": [
+    {
+      "id": "textual_truth",
+      "name": "文本真實性",
+      "questions": [
+        "本卦、互卦、變卦的卦名／卦序／上下卦是否與 corpus 一致？",
+        "動爻爻辭是否取自正確卦與正確爻位？",
+        "來源 file、page、pinned commit 是否存在？",
+        "是否把數位轉錄誤稱為完成所有版本校勘？"
+      ],
+      "football_rule": "文本來源審查只保證資料鏈，不代表足球預測有效。"
+    },
+    {
+      "id": "hexagram_core",
+      "name": "卦體核心",
+      "questions": [
+        "卦辭指出的核心條件、限制、時機與行動原則是什麼？",
+        "彖傳如何補足卦辭的結構原因？",
+        "大象提供的是何種整體環境／行動倫理，而非哪一隊必勝？"
+      ],
+      "football_rule": "先抽象成節奏、資源、阻力、通道、協作或風險，再轉足球語境。"
+    },
+    {
+      "id": "moving_line",
+      "name": "動爻審查",
+      "questions": [
+        "動爻原文具體說了什麼？",
+        "它位於初、二、三、四、五、上的哪個階段？",
+        "原文是警告、允許、等待、行動、得助、過度，還是其他條件式語氣？",
+        "是否與通用爻位階段模型一致；若不一致，以實際爻辭為更具體的文本證據。"
+      ],
+      "football_rule": "動爻可轉成比賽階段與事件條件，但不得把一句爻辭直接換成比分。"
+    },
+    {
+      "id": "body_use_strength",
+      "name": "體用與旺衰",
+      "questions": [
+        "體用生克是助、耗、克、制或比和？",
+        "體旺／平／衰是否能承受該生克？",
+        "動爻經文是否強化、限制或修正體用的初步方向？"
+      ],
+      "football_rule": "必須區分『有主動能力』與『能力能否轉成有效機會』。"
+    },
+    {
+      "id": "time_layers",
+      "name": "本互變時間層",
+      "questions": [
+        "本卦描述的開局／基本劇本是什麼？",
+        "互卦揭示何種中段內在機制？",
+        "變卦呈現轉折後的後段結構？",
+        "三層是否同向、遞進、反轉或互相抵銷？"
+      ],
+      "football_rule": "用於描述開局、中段調整、後段守成／反撲等劇本，不宣稱固定分鐘。"
+    },
+    {
+      "id": "yilin_coherence",
+      "name": "易林化學效應",
+      "questions": [
+        "焦氏易林本→變林辭與梅花核心是否同向？",
+        "易林是否把抽象生克具象成阻滯、通達、傷病、爭鬥、合作、得失等事件？",
+        "若易林與周易／梅花相反，矛盾是否被保留而非硬湊？"
+      ],
+      "football_rule": "易林補劇情，不凌駕 deterministic 梅花結構，也不重起一套卦。"
+    },
+    {
+      "id": "football_translation",
+      "name": "足球含意轉譯",
+      "questions": [
+        "每個足球推論能否指出對應的經文／卦體／體用／易林來源？",
+        "是否有場上可觀察訊號？",
+        "是否至少有一個反證條件？",
+        "是否把『可能情境』誤寫成古籍固定足球公式？"
+      ],
+      "football_rule": "所有足球語義均標 modern application；禁止自動生成統計勝率與固定比分。"
+    },
+    {
+      "id": "contradiction_uncertainty",
+      "name": "矛盾與不確定性",
+      "questions": [
+        "哪些層相互支持？",
+        "哪些層互相抵銷？",
+        "哪個判斷依賴條件成立？",
+        "最終判讀是否清楚說明主要風險與替代劇本？"
+      ],
+      "football_rule": "矛盾本身是訊息；不可刪除反證只留下單一路徑。"
+    }
+  ],
+  "football_meaning_contract": {
+    "required_fields": [
+      "source_basis",
+      "abstract_meaning",
+      "possible_scenario",
+      "observable_signals",
+      "counter_signals",
+      "confidence_note"
+    ],
+    "forbidden_shortcuts": [
+      "某卦=主勝",
+      "某爻=客勝",
+      "某林辭=固定比分",
+      "吉凶字樣=統計機率",
+      "賽後事件反向填入賽前卦義"
+    ]
+  },
+  "ai_review_order": [
+    "核對來源與盤象",
+    "讀本卦卦辭／彖／象",
+    "讀上下卦與體用旺衰",
+    "讀互卦中段機制",
+    "逐字讀動爻原文並結合爻位",
+    "讀變卦卦辭／彖／象",
+    "讀焦氏易林本卦之變卦",
+    "建立足球候選劇本",
+    "列支持／反證／矛盾",
+    "最後才做 ChatGPT 綜合判讀"
+  ]
+}
