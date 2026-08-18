@@ -87,13 +87,15 @@ def test_context_features_encode_facts_without_manual_direction():
 
     assert features["home_under_96h"] == 1.0
     assert features["away_under_96h"] == 0.0
+    assert features["congestion_balance"] == 1.0
+    assert features["rest_history_balance"] == 0.0
     assert features["home_rest_days_capped"] == pytest.approx(3.0)
     assert features["away_rest_days_capped"] == pytest.approx(7.0)
     assert features["rest_days_difference"] == pytest.approx(-4.0)
     assert all(isinstance(value, float) for value in features.values())
 
 
-def test_unknown_prior_history_is_explicit_not_fake_zero_rest():
+def test_unknown_prior_history_is_explicit_without_constant_one_flags():
     cutoff = datetime(2026, 8, 10, 18, tzinfo=TZ)
     snapshot = build_fixture_context_snapshot(
         (),
@@ -105,10 +107,14 @@ def test_unknown_prior_history_is_explicit_not_fake_zero_rest():
 
     assert snapshot.home_rest_hours is None
     assert snapshot.away_rest_hours is None
-    assert features["home_rest_known"] == 0.0
-    assert features["away_rest_known"] == 0.0
+    assert features["rest_history_balance"] == 0.0
+    assert features["home_rest_days_capped"] == 0.0
+    assert features["away_rest_days_capped"] == 0.0
     assert features["home_under_96h"] == 0.0
     assert features["away_under_96h"] == 0.0
+    assert "home_rest_known" not in features
+    assert "away_rest_known" not in features
+    assert "both_rest_known" not in features
 
 
 def test_context_adapts_to_shared_residual_engine():
