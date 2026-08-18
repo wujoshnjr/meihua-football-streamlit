@@ -1,6 +1,6 @@
 {
   "schema_version": "stark-yilin-corpus-v1.0.0",
-  "release_stage": "JARVIS_10_RELEASE_CANDIDATE",
+  "release_stage": "JARVIS_10_STABLE",
   "title": "焦氏易林 4096 轉卦知識層",
   "expected_from_hexagrams": 64,
   "expected_to_hexagrams_per_from": 64,
