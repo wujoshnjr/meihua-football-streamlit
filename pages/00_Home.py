@@ -33,21 +33,25 @@ left, right = st.columns(2)
 with left:
     with st.container(border=True):
         st.markdown("## 🧭 奇門遁甲")
-        st.write("時家奇門・轉盤・拆補法。起局後輸出九宮、天地盤、八門、九星、八神、值符值使、旬空、驛馬與格局。")
+        st.write(
+            "時家奇門・轉盤・拆補法。起局後輸出九宮、天地盤、八門、九星、八神、值符值使、"
+            "旬空、驛馬、格局，以及本盤實際命中的天地盤干／星門／門宮／星宮關係。"
+        )
         st.page_link("pages/1_Qimen_Cast.py", label="開始奇門起局", icon="🧭", use_container_width=True)
 with right:
     with st.container(border=True):
         st.markdown("## ☯️ 梅花易數")
-        st.write("年月日時起卦。輸出本卦、互卦、變卦、動爻、體用、生克與旺衰，並對照六十四卦資料庫。")
+        st.write("年月日時起卦。輸出本卦、互卦、變卦、動爻、體用、生克與旺衰，並對照完整六十四卦資料庫。")
         st.page_link("pages/2_Meihua_Cast.py", label="開始梅花起卦", icon="☯️", use_container_width=True)
 
 stats = vault_stats()
-st.markdown("### 藏書庫目前內容")
-a, b, c, d = st.columns(4)
-a.metric("奇門九宮", stats["qimen_palaces"])
-b.metric("奇門門／星／神", stats["qimen_doors"] + stats["qimen_stars"] + stats["qimen_deities"])
-c.metric("梅花八卦", stats["meihua_trigrams"])
-d.metric("梅花六十四卦", stats["meihua_hexagrams"])
+st.markdown("### 藏書庫核心覆蓋")
+a, b, c, d, e = st.columns(5)
+a.metric("奇門基礎符號", stats["qimen_palaces"] + stats["qimen_doors"] + stats["qimen_stars"] + stats["qimen_deities"] + stats["qimen_stems"])
+b.metric("奇門關係矩陣", stats["qimen_relations"])
+c.metric("奇門格局", stats["qimen_patterns"])
+d.metric("梅花八卦", stats["meihua_trigrams"])
+e.metric("梅花六十四卦", stats["meihua_hexagrams"])
 
 st.markdown("### 兩個輔助入口")
 x, y = st.columns(2)
