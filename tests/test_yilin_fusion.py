@@ -6,6 +6,8 @@ from jarvis.yilin import (
     yilin_catalog_stats,
     yilin_entries,
     yilin_entry,
+    yilin_semantic_audit,
+    yilin_semantic_profile,
 )
 
 
@@ -49,10 +51,29 @@ def test_yilin_image_atoms_are_explicit_project_heuristics_with_evidence_and_cou
     atoms = infer_image_atoms(qian_qian["classical_text"])
     ids = {row["id"] for row in atoms}
 
-    assert "path_movement" in ids
+    # Do not hard-code a vague one-character keyword expectation. The ontology
+    # deliberately favors more specific phrases to reduce false positives.
     assert "obstruction" in ids
+    assert atoms
     assert all(row["authority"] == "PROJECT_HEURISTIC__NOT_CLASSICAL_COMMENTARY" for row in atoms)
+    assert all(row["domain"] and row["specificity"] for row in atoms)
     assert all(row["observable_signals"] and row["counter_signals"] for row in atoms)
+
+    profile = yilin_semantic_profile(qian_qian["classical_text"])
+    assert profile["atom_count"] == len(atoms)
+    assert profile["domains"]
+    assert profile["observable_signals"]
+    assert profile["counter_signals"]
+
+
+def test_yilin_semantic_audit_is_transparent_and_non_predictive():
+    audit = yilin_semantic_audit()
+    assert audit["total_entries"] == 4096
+    assert audit["ontology_atoms"] >= 30
+    assert audit["entries_with_image_atoms"] > 0
+    assert audit["entries_with_image_atoms"] + audit["entries_without_image_atoms"] == 4096
+    assert 0.0 <= audit["match_ratio"] <= 1.0
+    assert "not textual-critical or predictive accuracy" in audit["notice"]
 
 
 def test_meihua_yilin_bridge_uses_only_original_to_changed_pair_and_has_no_pending_pair():
@@ -66,7 +87,8 @@ def test_meihua_yilin_bridge_uses_only_original_to_changed_pair_and_has_no_pendi
     assert forward["status"] == "MATERIALIZED"
     assert forward["classical_entry"]["from_number"] == 1
     assert forward["classical_entry"]["to_number"] == 2
-    assert forward["image_atoms"]
+    assert forward["semantic_profile"]
+    assert forward["provenance"]["page_start"]
 
     assert reverse["lookup_key"] == "坤之乾"
     assert reverse["status"] == "MATERIALIZED"
