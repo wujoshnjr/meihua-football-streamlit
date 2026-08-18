@@ -11,12 +11,7 @@ st.caption("JARVIS 到這裡為止：盤與知識整理完成。接下來把完�
 
 packet = st.session_state.get("stark_packet")
 if not packet:
-    st.info("目前工作階段還沒有 AI 解卦包。請先到「奇門起局」或「梅花起卦」建立一份。")
-    left, right = st.columns(2)
-    with left:
-        st.page_link("pages/1_Qimen_Cast.py", label="🧭 去奇門起局", use_container_width=True)
-    with right:
-        st.page_link("pages/2_Meihua_Cast.py", label="☯️ 去梅花起卦", use_container_width=True)
+    st.info("目前工作階段還沒有 AI 解卦包。請從上方導覽前往「奇門起局」或「梅花起卦」建立一份。")
     st.stop()
 
 st.success(f"{packet['system']}｜{packet['schema_version']}｜{packet['packet_sha256']}")
