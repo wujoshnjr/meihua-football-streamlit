@@ -58,6 +58,12 @@ def test_meihua_packet_is_deterministic_and_contains_deep_three_hexagram_layers(
     assert first["system"] == "MEIHUA_YISHU"
     assert first["packet_sha256"] == second["packet_sha256"]
     assert first["hexagram"] == second["hexagram"]
+    assert first["yilin_bridge"] == second["yilin_bridge"]
+    assert first["yilin_bridge"]["mode"] == "MEIHUA_YILIN_BRIDGE"
+    assert first["yilin_bridge"]["status"] in {"MATERIALIZED", "SOURCE_PENDING"}
+    assert first["yilin_bridge"]["catalog_stats"]["materialized_pairs"] == 64
+    assert first["yilin_bridge"]["catalog_stats"]["expected_pairs"] == 4096
+
     kinds = {row["kind"] for row in first["knowledge_context"]}
     assert "meihua_original_hexagram" in kinds
     assert "meihua_mutual_hexagram" in kinds
@@ -66,6 +72,7 @@ def test_meihua_packet_is_deterministic_and_contains_deep_three_hexagram_layers(
     assert "meihua_moving_line_role" in kinds
     assert "meihua_deep_reading_policy" in kinds
     assert "meihua_deep_profile" in kinds
+    assert "meihua_yilin_bridge" in kinds
 
     deep = next(row for row in first["knowledge_context"] if row["kind"] == "meihua_deep_profile")
     assert deep["original"]["hexagram"]["name"]
