@@ -8,7 +8,12 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from jarvis.yilin import yilin_entries, yilin_image_ontology, yilin_manifest  # noqa: E402
+from jarvis.yilin import (  # noqa: E402
+    yilin_entries,
+    yilin_image_ontology,
+    yilin_manifest,
+    yilin_semantic_audit,
+)
 
 
 EXPECTED_HEXAGRAMS = 64
@@ -31,20 +36,13 @@ def main() -> None:
     require(manifest.get("expected_from_hexagrams") == EXPECTED_HEXAGRAMS, "expected from hexagrams must be 64")
     require(manifest.get("expected_to_hexagrams_per_from") == EXPECTED_HEXAGRAMS, "expected targets per from must be 64")
     require(manifest.get("expected_pairs") == EXPECTED_PAIRS, "expected pairs must be 4096")
+    require(manifest.get("materialized_pairs") == EXPECTED_PAIRS, "manifest materialized_pairs must be 4096")
+    require(manifest.get("complete_from_hexagrams") == EXPECTED_HEXAGRAMS, "manifest complete source blocks must be 64")
+    require(manifest.get("coverage_ratio") == 1.0, "manifest coverage ratio must be 1.0")
     require(manifest.get("bridge_mode") == "MEIHUA_YILIN_BRIDGE", "bridge mode must stay explicit")
     require(bool(manifest.get("historical_method_notice")), "historical method notice is required")
     require(bool(manifest.get("authority_order")), "authority order is required")
-
-    require(len(rows) == EXPECTED_PAIRS, f"stable corpus must contain exactly {EXPECTED_PAIRS} entries")
-    number_pairs = {(int(row["from_number"]), int(row["to_number"])) for row in rows}
-    name_pairs = {(str(row["from_name"]), str(row["to_name"])) for row in rows}
-    require(len(number_pairs) == EXPECTED_PAIRS, "numeric from/to pairs must be unique")
-    require(len(name_pairs) == EXPECTED_PAIRS, "canonical-name from/to pairs must be unique")
-    expected_matrix = {(left, right) for left in range(1, 65) for right in range(1, 65)}
-    require(number_pairs == expected_matrix, "numeric matrix must be exactly 64×64")
-
-    require(manifest.get("materialized_pairs") == EXPECTED_PAIRS, "manifest materialized_pairs must be 4096")
-    require(manifest.get("complete_from_hexagrams") == 64, "manifest complete source blocks must be 64")
+    require(bool(manifest.get("completeness_matrix")), "completeness matrix is required")
     require(
         manifest.get("catalog_status") == "COMPLETE_4096_PAIR_COVERAGE__TEXTUAL_COLLATION_ONGOING",
         "catalog status must distinguish pair completeness from textual collation",
@@ -53,6 +51,14 @@ def main() -> None:
         manifest.get("textual_collation_status") == "WYG_BASE_COMPLETE__MULTI_EDITION_VARIANT_COLLATION_ONGOING",
         "textual collation must remain explicitly ongoing",
     )
+
+    require(len(rows) == EXPECTED_PAIRS, f"stable corpus must contain exactly {EXPECTED_PAIRS} entries")
+    number_pairs = {(int(row["from_number"]), int(row["to_number"])) for row in rows}
+    name_pairs = {(str(row["from_name"]), str(row["to_name"])) for row in rows}
+    require(len(number_pairs) == EXPECTED_PAIRS, "numeric from/to pairs must be unique")
+    require(len(name_pairs) == EXPECTED_PAIRS, "canonical-name from/to pairs must be unique")
+    expected_matrix = {(left, right) for left in range(1, 65) for right in range(1, 65)}
+    require(number_pairs == expected_matrix, "numeric matrix must be exactly 64×64")
 
     from_names = {str(row["from_name"]) for row in rows}
     require(len(from_names) == 64, "must contain 64 canonical source hexagram names")
@@ -116,11 +122,13 @@ def main() -> None:
     require(snapshot.get("upstream_commit") == EXPECTED_UPSTREAM_COMMIT, "snapshot commit mismatch")
     require(snapshot.get("parsed_from_hexagrams") == 64, "snapshot must report 64 source blocks")
     require(snapshot.get("parsed_pairs") == 4096, "snapshot must report 4096 pairs")
+    require(snapshot.get("target_order_policy") == "SELF_FIRST__THEN_KING_WEN_ORDER_EXCLUDING_SELF", "snapshot target order policy mismatch")
     files = snapshot.get("files", [])
     require(len(files) == 4, "snapshot must pin four source volume files")
     require(all(item.get("name") and item.get("sha256") and len(item["sha256"]) == 64 for item in files), "source file SHA-256 metadata invalid")
     anomalies = snapshot.get("source_label_anomalies", [])
     require(len(anomalies) == manifest.get("source_label_anomaly_count"), "source-label anomaly count mismatch")
+    require(len(anomalies) == 1, "current pinned WYG transcription should expose exactly one known target-label anomaly")
 
     source = manifest.get("transcription_source", {})
     require(source.get("repository") == EXPECTED_UPSTREAM_REPO, "manifest source repo mismatch")
@@ -130,15 +138,35 @@ def main() -> None:
     require(atoms, "image ontology cannot be empty")
     ids: set[str] = set()
     for atom in atoms:
-        for field in ("id", "name", "match_terms", "classical_abstraction", "football", "observable_signals", "counter_signals"):
+        for field in (
+            "id",
+            "name",
+            "domain",
+            "specificity",
+            "match_terms",
+            "classical_abstraction",
+            "football",
+            "observable_signals",
+            "counter_signals",
+        ):
             require(atom.get(field), f"image atom {atom.get('id')} missing {field}")
         require(atom["id"] not in ids, f"duplicate image atom id: {atom['id']}")
         ids.add(atom["id"])
 
+    audit = yilin_semantic_audit()
+    require(audit["total_entries"] == 4096, "semantic audit must inspect the complete corpus")
+    require(audit["ontology_atoms"] == len(atoms), "semantic audit ontology count mismatch")
+    require(audit["entries_with_image_atoms"] > 0, "semantic ontology must match at least one classical entry")
+    require(
+        audit["entries_with_image_atoms"] + audit["entries_without_image_atoms"] == 4096,
+        "semantic audit coverage accounting mismatch",
+    )
+
     print(
         "yilin validation passed: "
         f"4096/4096 pairs, 64/64 source blocks, {len(atoms)} image atoms, "
-        f"{len(anomalies)} preserved source-label anomalies"
+        f"{len(anomalies)} preserved source-label anomaly, "
+        f"heuristic semantic match={audit['entries_with_image_atoms']}/4096"
     )
 
 
