@@ -15,6 +15,7 @@ from jarvis.research import (
     MARKET_INCREMENTAL_VALUE_VERSION,
     MULTISIGNAL_DATASET_VERSION,
     MULTISIGNAL_RUNNER_VERSION,
+    PROMOTION_REVIEW_VERSION,
     RESEARCH_CALIBRATION_VERSION,
     RESIDUAL_TUNING_VERSION,
     STABILITY_SCHEMA_VERSION,
@@ -104,6 +105,12 @@ status_rows = [
         "正式預測條件": "只讀 TEST_UNTOUCHED，不可反向調參",
     },
     {
+        "能力": "Generic promotion review gate",
+        "版本": PROMOTION_REVIEW_VERSION,
+        "網頁狀態": "可見／governance-ready",
+        "正式預測條件": "policy 必須在 TEST_UNTOUCHED 開始前預先登記；只輸出人工 review 資格",
+    },
+    {
         "能力": "Market incremental value test",
         "版本": MARKET_INCREMENTAL_VALUE_VERSION,
         "網頁狀態": "可見／benchmark-ready",
@@ -121,7 +128,7 @@ with left:
 - **TRAIN**：只學 Football / Qimen / Meihua 係數。
 - **VALIDATION**：只選 half-life、L2、xG weight、alpha 等超參數。
 - **CALIBRATION**：只擬合 1X2 temperature。
-- **TEST_UNTOUCHED**：只做最終 proper-score、rolling stability 與 bootstrap 評估。
+- **TEST_UNTOUCHED**：只做最終 proper-score、rolling stability、bootstrap 與已預先登記的 promotion review。
 """
     )
 
@@ -129,10 +136,10 @@ with right:
     st.subheader("目前升級邊界")
     st.warning(
         "v8 模組已進入網頁與部署包，但在沒有真實 chronological frozen artifacts 前，"
-        "主頁的即時 prediction 不會偷偷套用研究係數。這是避免把尚未驗證的 challenger 當成已證明更準。",
+        "主頁的即時 prediction 不會偷偷套用研究係數。Generic promotion gate 也只會回傳人工審查資格，永不自動換模。",
         icon="⚠️",
     )
-    st.write("下一個 promotion gate：產生足量真實 TRAIN/VALIDATION/CALIBRATION artifacts，然後才把選中的 Football baseline 接進 live predictor。")
+    st.write("下一個 promotion gate：產生足量真實 TRAIN/VALIDATION/CALIBRATION artifacts，凍結 policy，再完成 TEST_UNTOUCHED review。")
 
 st.subheader("目前事件")
 if "match" in st.session_state:
@@ -163,6 +170,7 @@ with st.expander("完整版本指紋", expanded=False):
             "residual_tuning_version": RESIDUAL_TUNING_VERSION,
             "research_calibration_version": RESEARCH_CALIBRATION_VERSION,
             "stability_schema_version": STABILITY_SCHEMA_VERSION,
+            "promotion_review_version": PROMOTION_REVIEW_VERSION,
             "market_incremental_value_version": MARKET_INCREMENTAL_VALUE_VERSION,
         }
     )
