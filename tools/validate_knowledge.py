@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-
-from jarvis.qimen_relations import all_relations
+import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from jarvis.qimen_relations import all_relations  # noqa: E402
+
+
 KNOWLEDGE = ROOT / "knowledge"
 TRIGRAMS = {"乾", "兌", "離", "震", "巽", "坎", "艮", "坤"}
 BODY_USE = {"生體", "體生用", "克體", "體克用", "比和"}
