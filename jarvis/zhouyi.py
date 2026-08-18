@@ -14,6 +14,7 @@ ENTRIES_ROOT = ZHOUYI_ROOT / "entries"
 MANIFEST_PATH = ZHOUYI_ROOT / "manifest.json"
 REVIEW_POLICY_PATH = ROOT / "knowledge" / "zhouyi_review_policy.json"
 SEMANTIC_ONTOLOGY_PATH = ROOT / "knowledge" / "zhouyi_semantic_ontology.json"
+SEMANTIC_COMPLETION_PATH = ROOT / "knowledge" / "zhouyi_semantic_completion.json"
 LINE_ROLE_PATH = ROOT / "knowledge" / "meihua_line_roles.json"
 
 
@@ -47,7 +48,23 @@ def _policy() -> dict[str, Any]:
 
 @lru_cache(maxsize=1)
 def _semantic_ontology() -> dict[str, Any]:
-    return json.loads(SEMANTIC_ONTOLOGY_PATH.read_text(encoding="utf-8"))
+    base = json.loads(SEMANTIC_ONTOLOGY_PATH.read_text(encoding="utf-8"))
+    completion = json.loads(SEMANTIC_COMPLETION_PATH.read_text(encoding="utf-8"))
+    if completion.get("inference_status") != base.get("inference_status"):
+        raise RuntimeError("周易 semantic completion authority boundary 與主 ontology 不一致")
+    base_atoms = list(base.get("atoms", []))
+    completion_atoms = list(completion.get("atoms", []))
+    ids = [str(row.get("id")) for row in [*base_atoms, *completion_atoms]]
+    if len(ids) != len(set(ids)):
+        raise RuntimeError("周易 semantic ontology / completion 存在重複 atom id")
+    return {
+        **base,
+        "atoms": [*base_atoms, *completion_atoms],
+        "completion_schema_version": completion.get("schema_version"),
+        "completion_scope_note": completion.get("scope_note"),
+        "base_atom_count": len(base_atoms),
+        "completion_atom_count": len(completion_atoms),
+    }
 
 
 @lru_cache(maxsize=1)
@@ -70,6 +87,8 @@ def zhouyi_catalog_stats() -> dict[str, Any]:
         "grouped_qian_xiaoxiang": int(manifest["grouped_qian_xiaoxiang"]),
         "use_lines": int(manifest["use_lines"]),
         "semantic_atoms": len(ontology.get("atoms", [])),
+        "semantic_base_atoms": int(ontology.get("base_atom_count", 0)),
+        "semantic_completion_atoms": int(ontology.get("completion_atom_count", 0)),
         "judgment_markers": len(ontology.get("judgment_markers", [])),
         "source_repository": manifest["source_repository"],
         "source_commit": manifest["source_commit"],
@@ -132,7 +151,7 @@ def zhouyi_line_semantic_profile(line: dict[str, Any]) -> dict[str, Any]:
         return list(dict.fromkeys(items))
 
     return {
-        "schema_version": "stark-zhouyi-line-semantic-profile-v1.0.0",
+        "schema_version": "stark-zhouyi-line-semantic-profile-v1.1.0",
         "inference_status": ontology["inference_status"],
         "matching_policy": ontology["matching_policy"],
         "text_basis": {
@@ -151,7 +170,8 @@ def zhouyi_line_semantic_profile(line: dict[str, Any]) -> dict[str, Any]:
             "has_judgment_marker": bool(judgment_hits),
             "has_semantic_atom": bool(atom_hits),
             "semantic_atom_count": len(atom_hits),
-            "note": "未命中 ontology 不等於經文無義；ChatGPT 仍須直接讀原文與上下文。",
+            "ontology_atom_count": len(ontology.get("atoms", [])),
+            "note": "ontology 只提供來源字詞的候選語義；ChatGPT 仍須直接讀原文與上下文。",
         },
         "boundary": "此層只做來源字詞→專案語義候選召回，不是《周易》原註，也不輸出勝率或固定比分。",
     }
@@ -286,7 +306,7 @@ def build_meihua_zhouyi_review(
 
     return {
         "kind": "zhouyi_source_review",
-        "schema_version": "stark-meihua-zhouyi-review-v1.2.0",
+        "schema_version": "stark-meihua-zhouyi-review-v1.3.0",
         "status": "SOURCE_AWARE_REVIEW_READY",
         "scope_note": (
             "《周易》固定底本經文用來加深本／互／變與動爻審查；"
