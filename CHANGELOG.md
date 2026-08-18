@@ -1,5 +1,53 @@
 # Changelog
 
+## 10.1.0 — JARVIS KNOWLEDGE COMPLETION
+
+JARVIS 10.1 strengthens the classical-review layer used before ChatGPT interpretation. The product principle is now **周易核文本 × 梅花定結構 × 易林補劇情 × ChatGPT 合參**.
+
+### Zhouyi source corpus
+
+- Add a pinned `kanripo/KR1a0001` source layer at commit `8284adbf9e3435d713180e24f05bf75f8b7d1d96`.
+- Materialize **64/64 hexagrams and 384/384 standard lines** in eight reviewable shards.
+- Preserve guaci, Tuan, Da Xiang, every standard line text, source page, source file, upstream commit and source SHA-256.
+- Preserve `用九` / `用六` separately.
+- Map **378 Xiaoxiang directly** to their line records; preserve Qian's six Xiaoxiang as an explicit grouped-source exception because this digital source combines them in one Xiang block instead of fabricating six cuts.
+- CI rebuilds the corpus from the pinned upstream source and requires a zero diff.
+
+### Source-aware meaning review
+
+- Add `knowledge/zhouyi_review_policy.json` with eight review dimensions: textual truth, hexagram core, moving line, body/use strength, original-mutual-changed time layers, Yilin coherence, football translation, contradiction/uncertainty.
+- Add `knowledge/zhouyi_semantic_ontology.json` for text-grounded line review. It separates judgment markers and semantic atoms from the original text and labels all semantic/football mappings `PROJECT_HEURISTIC__NOT_CLASSICAL_COMMENTARY`.
+- A moving line now carries the actual Zhouyi line text, mapped Xiaoxiang when available, source locator, line-phase context, semantic atoms, football hypotheses, observables and counter-signals.
+- Unmatched text remains available to ChatGPT as raw classical text; JARVIS does not invent a meaning merely to make coverage appear complete.
+
+### DIVINATION_PACKET_V2
+
+- Upgrade the packet contract to `DIVINATION_PACKET_V2` and add a formal JSON Schema.
+- Normalize event datetime to the actual event-location aware time used by the cast.
+- Add top-level `zhouyi_review` to Meihua packets.
+- Keep `yilin_bridge` top-level only instead of duplicating it inside `knowledge_context`.
+- AI instructions require source audit first, then Zhouyi text, Meihua structure, moving line, changed hexagram and Yilin transformation, with contradictions preserved.
+
+### UI and search
+
+- Home reports Zhouyi 64/384 source coverage alongside Yilin 4096/4096.
+- Meihua displays the Zhouyi source review, true moving-line text and provenance before the Yilin layer.
+- AI Packet exposes Xiaoxiang status and line semantic review, including support and counter-evidence.
+- Knowledge Vault can search Zhouyi hexagram text and individual line text in addition to Qimen, Meihua and Yilin.
+
+### Qimen completeness wording
+
+- Rename the existing four-family relation catalog to **Qimen Core 306 Matrix**: 81 stem pairs + 72 star-door + 72 door-palace + 81 star-palace.
+- Documentation explicitly states that Core 306 is not the complete universe of all Qimen combinations; deity-door, deity-star, deity-palace and other extended relations remain separately reviewable work.
+
+### Validation and boundaries
+
+- Add strict Zhouyi textual, semantic and packet-schema validators.
+- Correct third-party notices to disclose embedded pinned classical digital transcriptions rather than claiming the repository stores only summaries and links.
+- Continue to forbid direct conversion of a hexagram, line, Yilin verse or auspicious/inauspicious word into a statistical win probability or fixed score.
+
+**Completeness statement:** 10.1 claims completeness only for the pinned Zhouyi 64/384 source slots and the already-complete Yilin 4096-pair WYG base layer. It does not claim that all historical editions, punctuation, commentaries or every possible Qimen relation have been completed. No predictive-accuracy improvement is claimed.
+
 ## 10.0.0 — JARVIS 10 YILIN FUSION
 
 JARVIS 10 completes the local 《焦氏易林》 transformation matrix while preserving the Operation STARK boundary: **JARVIS casts and retrieves; ChatGPT interprets**.
