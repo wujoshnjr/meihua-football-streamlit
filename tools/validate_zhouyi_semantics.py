@@ -12,11 +12,30 @@ from jarvis.zhouyi import zhouyi_hexagram, zhouyi_line_semantic_profile  # noqa:
 
 
 ONTOLOGY_PATH = ROOT / "knowledge" / "zhouyi_semantic_ontology.json"
+FORBIDDEN_RESULT_KEYS = {
+    "win_probability",
+    "home_win_probability",
+    "draw_probability",
+    "away_win_probability",
+    "predicted_score",
+    "fixed_score",
+    "final_result",
+}
 
 
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise SystemExit(f"Zhouyi semantic validation failed: {message}")
+
+
+def _keys(value):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            yield str(key)
+            yield from _keys(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _keys(child)
 
 
 def main() -> None:
@@ -68,8 +87,11 @@ def main() -> None:
                 profile["inference_status"] == "PROJECT_HEURISTIC__NOT_CLASSICAL_COMMENTARY",
                 "line semantic profile authority boundary changed",
             )
-            require("勝率" not in json.dumps(profile, ensure_ascii=False), "semantic profile must not claim win probability")
-            require("固定比分" not in json.dumps(profile, ensure_ascii=False), "semantic profile must not claim fixed score")
+            present_keys = set(_keys(profile))
+            require(
+                not (present_keys & FORBIDDEN_RESULT_KEYS),
+                f"semantic profile contains forbidden automatic result fields: {sorted(present_keys & FORBIDDEN_RESULT_KEYS)}",
+            )
 
     require(total == 384, f"semantic audit expected 384 lines, got {total}")
     # Coverage is a retrieval-quality gate, not a divination-accuracy metric. A line
