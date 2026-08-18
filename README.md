@@ -1,17 +1,19 @@
 # JARVIS 足球賽前研究系統
 
-JARVIS 是一個可重現、可稽核的足球賽前研究系統，結合足球統計 baseline、奇門遁甲 shadow features、梅花易數 research features，以及嚴格的 chronological experiment contract。
+JARVIS 是一個可重現、可稽核的足球賽前研究系統，結合足球統計 baseline、奇門遁甲 shadow features、梅花易數 live/research features，以及嚴格的 chronological experiment contract。
 
 ## 目前版本狀態
 
-- **Web App v8.0.0**：Streamlit 已提供 JARVIS v8 Dashboard 與 Research Lab。
-- **Live Predictor v7.2.0**：主頁即時預測仍使用已存在的 frozen Football champion compatibility path；目前核心是 Independent Poisson，可選擇未驗證的 Dixon–Coles challenger。
+- **Web App v8.1.0**：Streamlit 已提供新的 JARVIS 首頁、Football + 梅花 Live Predictor、Audit Workbench、v8 Dashboard 與 Research Lab。
+- **Live Predictor v7.2.0 Football base**：數值 base 仍使用既有 frozen Football champion compatibility path；目前核心是 Independent Poisson。
+- **Meihua live bridge**：梅花年月日時卦象、體用／互卦／變卦、raw features 與 SHA-256 fingerprint 已正式進入每場 Live computation。
+- **M2 probability weight 受 artifact gate 控制**：只有 M2 完成 TRAIN fit、VALIDATION shrinkage、M2 專屬 CALIBRATION、TEST_UNTOUCHED promotion review 與人工批准後，`artifacts/live_meihua.json` 才能改動 Football λ 與 1X2。
 - **Research generation：JARVIS v8**：Dynamic Football、xG tuning、fixture context、M0–M3、calibration、rolling stability、paired block bootstrap 與 market incremental-value test 已在程式與網頁可見。
-- **模型不會自動升級**：Web App 升版不代表 live predictor 已換模。任何 v8 challenger 都必須先產生 frozen chronological artifact，完成 TRAIN → VALIDATION → CALIBRATION → TEST_UNTOUCHED，再經 promotion review 才能替換 live predictor。
+- **模型不會自動升級**：Web App 升版不代表 research challenger 已自動取得數值權重；任何 promotion 都必須有 frozen chronological artifact。
 
-上述狀態由 `jarvis.release.runtime_release_status()` 統一輸出，避免 UI、文件與 live model 版本再次漂移。
+上述 Web / Football base 狀態由 `jarvis.release.runtime_release_status()` 統一輸出。梅花 production gate 由 `jarvis.live_meihua` 驗證。
 
-> 奇門遁甲與梅花易數都是傳統術數。盤／卦特徵不是統計機率，也不得由人工規則直接轉成固定比分或 1X2。任何 Qimen／Meihua 增量只能由盤前鎖定資料學習並以 untouched out-of-sample evidence 驗證。本專案只供研究與教育，不是投注建議。
+> 奇門遁甲與梅花易數都是傳統術數。盤／卦特徵不是統計機率，也不得由人工規則直接轉成固定比分或 1X2。任何 Qimen／Meihua 數值增量只能由盤前鎖定資料學習並以 untouched out-of-sample evidence 驗證。本專案只供研究與教育，不是投注建議。
 
 ## 已完成的範圍
 
@@ -30,6 +32,7 @@ JARVIS 是一個可重現、可稽核的足球賽前研究系統，結合足球�
 - log loss、Brier、RPS、1X2 accuracy、exact-score NLL / top-k 評估。
 - 奇門完整 shadow features；未通過盲測前不調整 live probability。
 - v8 梅花年月日時 deterministic engine 與 raw outcome feature encoder。
+- **Production Meihua live bridge**：每場正式建立梅花 snapshot / feature fingerprint；只接受完整 promotion-approved M2 deployment artifact。
 - 通用 TRAIN-only residual lambda fitter：`log(mu) = log(football_baseline_lambda) + X beta`，L2 且無 hidden intercept。
 - Dynamic Football：opponent-adjusted attack / defence、時間衰減、optional xG、cold-start fallback。
 - VALIDATION-only dynamic tuning：half-life / L2 / xG weight，且強制包含 goals-only fallback。
@@ -39,6 +42,7 @@ JARVIS 是一個可重現、可稽核的足球賽前研究系統，結合足球�
 - VALIDATION-only residual shrinkage tuning、CALIBRATION-only 1X2 calibration。
 - TEST_UNTOUCHED-only rolling-block stability 與 paired block bootstrap confidence intervals。
 - VALIDATION-only market incremental-value test，用於檢查模型是否提供去水位賽前市場之外的資訊。
+- preregistered generic promotion review：只輸出 `ELIGIBLE_FOR_HUMAN_REVIEW` / `KEEP_CHALLENGER`，永不自動 promotion。
 
 ## 快速開始
 
@@ -57,41 +61,43 @@ Windows PowerShell：
 
 ## 使用流程
 
-1. 在主頁輸入比賽所在地日期、時間與 IANA 時區。
-2. 在「資料協議」加入盤前來源；時間需含 UTC offset。
-3. 建立／重建奇門盤並完成盤前稽核。
-4. 在「JARVIS 模型」建立 live predictor 輸出與盤前鎖定。
-5. 在 **JARVIS v8 Dashboard** 檢查 Web App / Live Predictor / Research Stack 三層版本與 promotion gate。
-6. 在 **JARVIS v8 Research Lab** 檢視 Qimen／Meihua raw features 與 v8 research stack；沒有 frozen artifact 時不會覆蓋主頁 live prediction。
-7. 匯出包含方法、模型輸入、機率、鎖定資格、資料完整性與 SHA-256 的研究檔。
+1. 從首頁開啟 **Live Predictor**，輸入事件所在地日期、時間與盤前 Football snapshot。
+2. 系統建立 frozen Football base，同時正式建立梅花年月日時 snapshot、raw features 與 SHA-256。
+3. 若 repository 有合法 `artifacts/live_meihua.json`，M2 依 frozen residual / alpha / calibration 改動 λ 與 1X2；沒有 artifact 時機率精確維持 Football baseline。
+4. 需要奇門九宮、來源證據、盤前鎖定與報告匯出時使用 **Audit Workbench**。
+5. 在 **JARVIS v8 Dashboard** 檢查 Web / Live / Research 與 promotion gate。
+6. 在 **Research Lab** 檢視 Qimen／Meihua raw features 與 M0–M3 research stack。
 
 ## 專案結構
 
 ```text
-app.py                          Streamlit 主入口 / live predictor UI
+app.py                          Streamlit navigation shell
+pages/00_Home.py                JARVIS product home
+pages/3_Live_Meihua.py          Football + Meihua production live page
+pages/2_Live_Predictor.py       完整奇門／來源／鎖定 Audit Workbench
 pages/0_JARVIS_v8_Dashboard.py  v8 runtime / promotion 狀態
 pages/1_Research_Lab.py         v8 multi-signal research UI
-jarvis/release.py               Web / Live / Research 單一 release-status contract
-qimen/prediction.py             Live Football predictor compatibility path
+jarvis/live_meihua.py           production Meihua artifact gate + live M2 scorer
+artifacts/README.md              M2 live deployment artifact contract
+jarvis/release.py               Web / Football base / Research release contract
+qimen/prediction.py             frozen Football predictor compatibility path
 qimen/training.py               時序切分、rho 與 temperature artifacts
 qimen/features.py               cutoff-only TeamForm snapshots
 qimen/providers/                StatsBomb Open Data 本地 provider
-meihua/                         v8 deterministic Meihua research engine/features
+meihua/                         deterministic Meihua engine/features
 jarvis/football/                Dynamic strength、xG、fixture context、tuning
-jarvis/research/                M0–M3、residual、calibration、stability、market benchmark
+jarvis/research/                M0–M3、residual、calibration、stability、market、promotion
 knowledge/*.json                奇門結構化知識庫
 docs/                           方法、架構、資料與研究規約
 tests/                          演算法不變量、leakage guard 與 Streamlit smoke tests
 schemas/                        正式預測鎖 JSON Schema
 ```
 
-## 方法邊界
+## 梅花正式部署邊界
 
-奇門 live path 仍只執行明示方法：時家、轉盤、拆補、事件所在地民用時、晚子時換日、中五寄坤二。飛盤、置閏、茅山、真太陽時、陰盤等內容可存在於知識庫，但不混入同一計算。
+「正式接入」和「已證明提高準確率」是兩件事。JARVIS v8.1 現在每場 live prediction 都會計算梅花；但目前 repository 沒有真實 M2 promoted artifact，所以 production gate 不允許任意手寫術數權重改變機率。
 
-梅花 v8 research engine 只執行可重現的年月日時 convention，不把體用生剋人工指定成足球勝負或比分。
-
-Web App 與 Live Predictor 的版本必須分開理解：**Web App v8.0.0 已上線，但 Live Predictor v7.2.0 仍是 frozen champion compatibility path**。這是刻意的 promotion safety boundary，而不是部署失敗。
+未來 `artifacts/live_meihua.json` 必須同時綁定：M2 family、MEIHUA feature schema、TRAIN residual、VALIDATION-selected alpha、Football baseline / score-model config、M2 CALIBRATION artifact、TEST_UNTOUCHED promotion report、人工批准時間／批准者、source commit 與 canonical artifact SHA-256。任何一項不一致都會拒絕載入。
 
 ## 測試
 
@@ -104,6 +110,6 @@ python tools/validate_knowledge.py
 
 ## 下一個主要里程碑
 
-目前最大的實證缺口不是再增加研究 feature，而是取得足夠大的、真正盤前可得的 chronological historical dataset，凍結 M0–M3 後完成第一次 `TEST_UNTOUCHED` 實驗。只有在 Log Loss、Brier、RPS、exact-score NLL、rolling stability 與 paired block-bootstrap CI 都支持改善後，v8 challenger 才有資格進入 live promotion review。
+目前最大的實證缺口仍是足夠大的、真正盤前可得 chronological historical dataset。下一步應建立真實 M0/M2 experiment，凍結 TRAIN / VALIDATION / CALIBRATION 後才第一次讀取 `TEST_UNTOUCHED`。只有 Log Loss、Brier、RPS、exact-score NLL、rolling stability 與 paired block-bootstrap CI 支持改善，才可生成 live M2 deployment artifact。
 
-詳見 [JARVIS v8](docs/JARVIS_V8.md)、[JARVIS 模型](docs/JARVIS_MODEL.md)、[動態足球實力](docs/DYNAMIC_STRENGTH.md)、[排盤方法](docs/QIMEN_METHOD.md)、[資料協議](docs/FOOTBALL_PROTOCOL.md)、[架構](docs/ARCHITECTURE.md)、[部署操作](docs/OPERATIONS.md) 與 [CHANGELOG.md](CHANGELOG.md)。
+詳見 [JARVIS v8](docs/JARVIS_V8.md)、[JARVIS 模型](docs/JARVIS_MODEL.md)、[Promotion Review](docs/PROMOTION_REVIEW.md)、[動態足球實力](docs/DYNAMIC_STRENGTH.md)、[資料協議](docs/FOOTBALL_PROTOCOL.md)、[架構](docs/ARCHITECTURE.md)、[部署操作](docs/OPERATIONS.md) 與 [CHANGELOG.md](CHANGELOG.md)。
