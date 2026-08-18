@@ -52,7 +52,7 @@ def test_all_64_upper_lower_hexagram_combinations_are_addressable():
 
 
 def test_vault_search_covers_deep_qimen_and_meihua_semantics():
-    qimen_results = search_vault("高位擴張")
+    qimen_results = search_vault("高位壓迫")
     meihua_results = search_vault("終局極限")
 
     assert any(
