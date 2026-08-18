@@ -4,19 +4,21 @@ import streamlit as st
 
 from jarvis.stark_vault import search_vault, vault_stats
 from jarvis.yilin import search_yilin, yilin_catalog_stats, yilin_semantic_audit
+from jarvis.zhouyi import search_zhouyi, zhouyi_catalog_stats
 
 
 st.set_page_config(page_title="術數知識庫 · JARVIS", page_icon="📚", layout="wide")
-st.title("📚 奇門遁甲 × 梅花易數 × 焦氏易林知識庫")
-st.caption("古典原義、數位轉錄、結構化深層解析與足球衍生義分層保存；JARVIS 負責檢索，最後解讀交給 ChatGPT。")
+st.title("📚 奇門遁甲 × 梅花易數 × 周易 × 焦氏易林知識庫")
+st.caption("古典原義、固定數位轉錄、結構化深層解析與足球衍生義分層保存；JARVIS 負責檢索，最後解讀交給 ChatGPT。")
 
 stats = vault_stats()
+zhouyi_stats = zhouyi_catalog_stats()
 yilin_stats = yilin_catalog_stats()
 yilin_audit = yilin_semantic_audit()
 a, b, c, d = st.columns(4)
 a.metric("奇門九宮", stats["qimen_palaces"])
 b.metric("八門／九星／八神", stats["qimen_doors"] + stats["qimen_stars"] + stats["qimen_deities"])
-c.metric("奇門關係", stats["qimen_relations"])
+c.metric("奇門 Core 關係", stats["qimen_relations"])
 d.metric("奇門深層層次", stats["qimen_deep_layers"])
 
 e, f, g, h = st.columns(4)
@@ -24,6 +26,18 @@ e.metric("八神調制", stats["qimen_deity_modulations"])
 f.metric("梅花八卦", stats["meihua_trigrams"])
 g.metric("梅花六十四卦", stats["meihua_hexagrams"])
 h.metric("梅花深層足球維度", stats["meihua_deep_dimensions"])
+
+st.markdown("### 《周易》原典審查層")
+z1, z2, z3, z4 = st.columns(4)
+z1.metric("卦體原典", f"{zhouyi_stats['materialized_hexagrams']} / {zhouyi_stats['expected_hexagrams']}")
+z2.metric("標準爻辭", f"{zhouyi_stats['materialized_standard_lines']} / {zhouyi_stats['expected_standard_lines']}")
+z3.metric("用九／用六", zhouyi_stats["use_lines"])
+z4.metric("來源", "PINNED")
+st.success("固定 Kanripo《周易》數位轉錄已結構化 materialize 64 / 64 卦與 384 / 384 標準爻。")
+st.caption(
+    f"{zhouyi_stats['source_repository']} @ {zhouyi_stats['source_commit']}｜{zhouyi_stats['source_edition']}。"
+    "這代表固定底本的資料鏈與爻位完整；不代表所有歷代版本、異文與注家校勘全部完成。"
+)
 
 st.markdown("### 《焦氏易林》完整轉卦層")
 pair_col, block_col, ontology_col, audit_col = st.columns(4)
@@ -39,11 +53,11 @@ st.caption(
 
 query = st.text_input(
     "搜尋",
-    placeholder="例如：生門、天蓬、九天、未濟、乾之坤、坤之乾、道路、傷病、轉折、反擊…",
+    placeholder="例如：生門、天蓬、未濟、潛龍勿用、乾九五、乾之坤、道路、傷病、轉折、反擊…",
 )
 if query.strip():
-    results = [*search_vault(query), *search_yilin(query)]
-    st.write(f"找到 {len(results)} 筆（單次最多顯示 200 筆跨庫結果）")
+    results = [*search_vault(query), *search_zhouyi(query), *search_yilin(query)]
+    st.write(f"找到 {len(results)} 筆（跨庫結果依各檢索器上限顯示）")
     if results:
         for index, row in enumerate(results, 1):
             label = (
@@ -53,6 +67,8 @@ if query.strip():
                 or row.get("relation")
                 or f"條目 {index}"
             )
+            if row.get("system") == "ZHOUYI" and row.get("family") == "line_source":
+                label = f"{row.get('name', '')} · {row.get('marker', '')}"
             with st.expander(f"{row.get('system', '')} · {row.get('family', '')} · {label}"):
                 if row.get("system") == "JIAOSHI_YILIN" and row.get("family") == "transformation":
                     st.markdown(f"**林辭**：{row.get('classical_text', '')}")
@@ -64,27 +80,40 @@ if query.strip():
                         st.warning("此條存在已登錄的來源卦名標籤 anomaly；原轉錄標籤已保留。")
                     with st.expander("完整 provenance / raw record"):
                         st.json(row)
+                elif row.get("system") == "ZHOUYI" and row.get("family") == "hexagram_source":
+                    st.markdown(f"**{row.get('symbol', '')} {row.get('name', '')}**")
+                    st.write(f"**卦辭**：{row.get('guaci', {}).get('classical_text', '')}")
+                    st.write(f"**彖**：{row.get('tuan', {}).get('classical_text', '')}")
+                    st.write(f"**象**：{row.get('xiang', {}).get('classical_text', '')}")
+                    st.caption(f"{row.get('source', {}).get('file', '')}｜{row.get('source', {}).get('commit', '')}")
+                elif row.get("system") == "ZHOUYI" and row.get("family") == "line_source":
+                    st.markdown(f"**{row.get('symbol', '')} {row.get('name', '')} · {row.get('marker', '')}**")
+                    st.write(row.get("classical_text", ""))
+                    st.caption(
+                        f"第 {row.get('line')} 爻｜{row.get('source_page_start', '')}｜"
+                        f"{row.get('source', {}).get('file', '')}"
+                    )
                 else:
                     st.json(row)
     else:
         st.info("沒有找到符合內容。")
 else:
     st.info(
-        "可搜尋完整 4096 焦氏易林轉卦、易林意象 ontology、梅花六十四卦／八卦／體用／動爻／本互變，"
-        "以及奇門九宮／八門／九星／八神、306 關係槽位、八神深層調制、空馬／迫墓刑與格局。"
+        "可搜尋完整《周易》64 卦／384 爻、4096 焦氏易林轉卦、易林意象 ontology、"
+        "梅花八卦／體用／動爻／本互變，以及奇門九宮／八門／九星／八神、Core 306 關係、空馬／迫墓刑與格局。"
     )
 
 st.markdown("### 資料庫邊界")
 st.markdown(
     """
-- **古籍／傳統義理**：保存來源與結構化摘要；數位轉錄不等於所有版本已完成校勘。
-- **奇門深層解析**：宮→門→星→神→天地盤干→格局／空馬，並只附本局真正命中的關係。
-- **梅花深層解析**：本卦→上下卦→體用→旺衰→互卦→變卦→動爻，保持 deterministic 起卦權威。
+- **《周易》原典層**：固定數位底本保存 64 卦、384 標準爻、卦辭、彖、象與來源頁碼；不把固定底本完整誇大成全部版本校勘完成。
+- **古籍／傳統義理**：保存來源與結構化摘要；數位轉錄、後世注解、專案解析彼此分層。
+- **奇門深層解析**：宮→門→星→神→天地盤干→格局／空馬，並只附本局真正命中的 Core 306 關係子集。
+- **梅花深層解析**：本卦→上下卦→體用→旺衰→互卦→真正動爻經文→變卦，保持 deterministic 起卦權威。
 - **焦氏易林 bridge**：4096/4096 pair 已入庫；只使用梅花「本卦 → 最終變卦」查唯一林辭，不重新起卦、不拿互卦冒充焦林原始占法。
-- **原文治理**：每條易林保存 WYG 來源卷、頁、raw transcription、校語、gaiji token；來源異體或疑似誤標不靜默修改。
+- **原文治理**：來源異體、校語、gaiji 或疑似誤標不靜默修改；AI 不可自行補寫古籍。
 - **易林意象 ontology**：Operation STARK 的 project heuristic，只幫 AI 檢索具象情境，不是《焦氏易林》原註。
 - **足球衍生義**：modern application，必須同時保留支持與反證；不冒充古籍，也不自動換算勝率或比分。
-- **多版本校勘**：Wikisource、Chinese Text Project 等作 crosscheck；異文與後世注解另層版本化，不混進林辭原文。
-- **最終解讀**：`DIVINATION_PACKET_V1` 交給 ChatGPT，AI 不得重新起局／起卦或修改 packet 盤象。
+- **最終解讀**：`DIVINATION_PACKET_V2` 交給 ChatGPT，AI 不得重新起局／起卦或修改 packet 盤象。
 """
 )
