@@ -1,199 +1,35 @@
 {
-  "schema_version": "qimen-sources-v1.3.0",
+  "schema_version": "stark-sources-v1.0.0",
   "sources": [
-    {
-      "id":"dunjia-yanyi",
-      "title":"遁甲演義（四庫全書本）",
-      "type":"primary_classic",
-      "url":"https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9",
-      "use":"陰陽十八局、九宮、值符值使、星門格局及傳統判讀的文獻依據。",
-      "license_note":"公版古籍；本站以結構化摘要為主。"
-    },
-    {
-      "id":"dunjia-yanyi-volume-3",
-      "title":"遁甲演義（四庫全書本）卷三・九星旺相休囚",
-      "type":"primary_classic",
-      "url":"https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9_(%E5%9B%9B%E5%BA%AB%E5%85%A8%E6%9B%B8%E6%9C%AC)/%E5%8D%B73",
-      "use":"逐月支核對九星旺、相、廢、休、囚表；避免以一般四季五行旺衰替代奇門九星規則。",
-      "license_note":"公版古籍；本站只實作結構化月支表。"
-    },
-    {
-      "id":"qimen-daquan",
-      "title":"奇門遁甲秘笈大全",
-      "type":"primary_classic",
-      "url":"https://ctext.org/wiki.pl?chapter=828124&if=gb&remap=gb",
-      "use":"天盤九星、中盤八門、下盤九宮及常用判斷術語的比對。",
-      "license_note":"古籍影像／文本；本站不大量轉錄。"
-    },
-    {
-      "id":"qimen-daquan-ten-stems",
-      "title":"奇門遁甲秘笈大全・卷二・十干剋應訣",
-      "type":"primary_classic",
-      "url":"https://ctext.org/wiki.pl?chapter=254334&if=gb",
-      "use":"比對天地盤十干組合、傳統格名及其條件；本站另把未命名組合標成五行推導。",
-      "license_note":"公版古籍；僅保存結構化摘要與連結，不大量轉錄。"
-    },
-    {
-      "id":"qimen-daquan-star-door",
-      "title":"諸葛武侯行兵遁甲金函玉鏡・八門遇九星斷例",
-      "type":"primary_classic",
-      "url":"https://ctext.org/wiki.pl?chapter=496054&if=gb",
-      "use":"證明門星合參有逐組判讀傳統；本站的 72 組矩陣以五行和層次推導，未冒充逐句古訣。",
-      "license_note":"公版古籍；僅保存結構化摘要與連結，不大量轉錄。"
-    },
-    {
-      "id":"qimen-daquan-host-guest",
-      "title":"奇門遁甲秘笈大全・主客占驗論／論主客",
-      "type":"primary_classic",
-      "url":"https://ctext.org/wiki.pl?chapter=961040&if=gb&remap=gb",
-      "use":"比對天地盤、先後動靜與主客分配的傳統差異，支持盤前鎖定而非看盤後換角。",
-      "license_note":"公版古籍；僅保存摘要與流派註記。"
-    },
-    {
-      "id":"qimen-daquan-door-pressure",
-      "title":"奇門遁甲秘笈大全・卷二十二・門迫宮迫",
-      "type":"primary_classic",
-      "url":"https://ctext.org/wiki.pl?chapter=799331&if=gb",
-      "use":"比對八門與九宮生剋、門迫及宮迫等功能衝突。",
-      "license_note":"公版古籍；僅保存結構化摘要與連結。"
-    },
-    {
-      "id":"hko-solar-terms",
-      "title":"香港天文台：二十四節氣",
-      "type":"official_astronomy",
-      "url":"https://www.hko.gov.hk/tc/gts/astronomy/Solar_Term.htm",
-      "use":"驗證節氣為太陽視黃經事件，以及官方 UTC+8 節氣時刻資料。",
-      "license_note":"僅連結與摘要。"
-    },
-    {
-      "id":"lunar-python",
-      "title":"6tail/lunar-python",
-      "type":"software_primary_source",
-      "url":"https://github.com/6tail/lunar-python",
-      "use":"由事件時刻計算八字干支、前後精確節氣；固定版本 1.4.8。",
-      "license_note":"MIT；程式依官方 API 使用。"
-    },
-    {
-      "id":"iana-tzdb",
-      "title":"IANA Time Zone Database",
-      "type":"official_time_standard",
-      "url":"https://www.iana.org/time-zones",
-      "use":"保存事件所在地歷史 UTC 偏移與夏令時間規則；避免只記一個固定偏移。",
-      "license_note":"公開時區資料；本站僅依 IANA 名稱查詢。"
-    },
-    {
-      "id":"python-zoneinfo",
-      "title":"Python zoneinfo：IANA time zone support",
-      "type":"software_primary_source",
-      "url":"https://docs.python.org/3/library/zoneinfo.html",
-      "use":"說明 Python 對 IANA 時區與 DST 轉換的標準實作界面。",
-      "license_note":"官方文件；僅連結與摘要。"
-    },
-    {
-      "id":"noaa-solar-time",
-      "title":"NOAA General Solar Position Calculations",
-      "type":"official_astronomy",
-      "url":"https://gml.noaa.gov/grad/solcalc/solareqns.PDF",
-      "use":"界定均時差、經度、時區與真太陽時校正所需資料；只作時間基準診斷，不證成任何奇門流派。",
-      "license_note":"美國政府科學資料；本站僅連結與摘要公式。"
-    },
-    {
-      "id":"statsbomb-open-data",
-      "title":"Hudl StatsBomb Open Data",
-      "type":"football_data_primary_source",
-      "url":"https://github.com/hudl/open-data",
-      "use":"定義可觀察的比賽事件、比賽階段、射門結果與守門事件標籤。",
-      "license_note":"依官方儲存庫授權與引用要求使用；本站只保存分類摘要。"
-    },
-    {
-      "id":"dixon-coles-1997",
-      "title":"Dixon & Coles (1997)：Modelling Association Football Scores",
-      "type":"peer_reviewed_method",
-      "url":"https://doi.org/10.1111/1467-9876.00065",
-      "use":"JARVIS 足球基準與後續動態 Poisson／低比分相關修正的研究依據。",
-      "license_note":"僅保存方法摘要與 DOI；不重製論文。"
-    },
-    {
-      "id":"sklearn-time-series-split",
-      "title":"scikit-learn TimeSeriesSplit",
-      "type":"software_primary_source",
-      "url":"https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html",
-      "use":"規範按時間順序切分訓練與測試，防止用未來比賽訓練過去預測。",
-      "license_note":"官方文件；本專案目前依其原則實作評估規約。"
-    },
-    {
-      "id":"sklearn-probability-calibration",
-      "title":"scikit-learn Probability calibration",
-      "type":"software_primary_source",
-      "url":"https://scikit-learn.org/stable/modules/calibration.html",
-      "use":"定義可靠度圖、校準曲線與校準器須使用獨立資料的評估原則。",
-      "license_note":"官方文件；本專案目前先標記機率為未校準。"
-    },
-    {
-      "id":"statsbomb-playing-style",
-      "title":"StatsBomb：Modelling Team Playing Style",
-      "type":"football_method_primary_source",
-      "url":"https://blogarchive.statsbomb.com/articles/soccer/modelling-team-playing-style/",
-      "use":"區分持球事件與無球事件，支援控球、推進、施壓與轉換等足球維度。",
-      "license_note":"僅連結與摘要。"
-    },
-    {
-      "id":"fifa-football-language",
-      "title":"FIFA Football Language",
-      "type":"official_football_framework",
-      "url":"https://inside.fifa.com/innovation/football-data",
-      "use":"提供跨賽事分析的共同足球語言與事件框架背景。",
-      "license_note":"僅連結與摘要。"
-    },
-    {
-      "id":"ifab-laws",
-      "title":"IFAB Laws of the Game",
-      "type":"official_rules",
-      "url":"https://www.theifab.com/laws-of-the-game-documents/",
-      "use":"界定重新開始、比賽狀態及官方規則語境。",
-      "license_note":"僅連結與摘要；規則變更時需更新版本。"
-    },
-    {
-      "id":"ifab-law-12",
-      "title":"IFAB Law 12：Fouls and Misconduct",
-      "type":"official_rules",
-      "url":"https://www.theifab.com/laws/latest/fouls-and-misconduct/",
-      "use":"界定犯規、不當行為、紀律處分與相關比賽事件。",
-      "license_note":"僅連結與摘要；規則變更時需更新版本。"
-    },
-    {
-      "id":"ifab-var",
-      "title":"IFAB VAR Protocol",
-      "type":"official_rules",
-      "url":"https://www.theifab.com/laws/latest/video-assistant-referee-var-protocol/",
-      "use":"界定 VAR 可介入事件與覆核語境。",
-      "license_note":"僅連結與摘要；規則變更時需更新版本。"
-    },
-    {
-      "id":"project-football-ontology",
-      "title":"本專案足球語義規約 v2",
-      "type":"project_application_spec",
-      "url":"https://github.com/wujoshnjr/meihua-football-streamlit/blob/main/docs/FOOTBALL_MEANINGS.md",
-      "use":"保存奇門符號到足球情境的類比規則、組合順序、反證要求與宣稱邊界。",
-      "license_note":"專案應用規約；不冒充古籍內容或統計模型。"
-    },
-    {
-      "id":"project-reading-protocol",
-      "title":"本專案起局與解盤規約 v1",
-      "type":"project_application_spec",
-      "url":"https://github.com/wujoshnjr/meihua-football-streamlit/blob/main/docs/READING_GUIDE.md",
-      "use":"定義盤前問題鎖定、逐層判讀、關係矩陣、證據／反證及應期宣稱邊界。",
-      "license_note":"專案方法規約；現代稽核設計不冒充古法。"
-    }
+    {"id":"dunjia-yanyi","title":"遁甲演義（四庫全書本）","type":"primary_classic","url":"https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9","use":"時家奇門、陰陽遁、九宮、值符值使、星門及格局。"},
+    {"id":"dunjia-yanyi-2","title":"遁甲演義・格局條目","type":"primary_classic","url":"https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9","use":"奇儀格、伏吟反吟、刑格等結構交叉核對。"},
+    {"id":"dunjia-yanyi-volume-3","title":"遁甲演義卷三・九星旺相休囚","type":"primary_classic","url":"https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9_(%E5%9B%9B%E5%BA%AB%E5%85%A8%E6%9B%B8%E6%9C%AC)/%E5%8D%B73","use":"九星時令旺相休囚。"},
+    {"id":"qimen-daquan","title":"奇門遁甲秘笈大全","type":"primary_classic","url":"https://ctext.org/wiki.pl?chapter=828124&if=gb&remap=gb","use":"天地人神四層、三奇六儀與常用判讀術語。"},
+    {"id":"qimen-daquan-ten-stems","title":"奇門遁甲秘笈大全・十干剋應訣","type":"primary_classic","url":"https://ctext.org/wiki.pl?chapter=254334&if=gb","use":"天地盤十干組合及傳統格名。"},
+    {"id":"qimen-daquan-star-door","title":"諸葛武侯行兵遁甲金函玉鏡・八門遇九星斷例","type":"primary_classic","url":"https://ctext.org/wiki.pl?chapter=496054&if=gb","use":"門星合參傳統。"},
+    {"id":"qimen-daquan-host-guest","title":"奇門遁甲秘笈大全・論主客","type":"primary_classic","url":"https://ctext.org/wiki.pl?chapter=961040&if=gb&remap=gb","use":"主客、先後動靜與天地盤關係。"},
+    {"id":"qimen-daquan-door-pressure","title":"奇門遁甲秘笈大全・門迫宮迫","type":"primary_classic","url":"https://ctext.org/wiki.pl?chapter=799331&if=gb","use":"八門與九宮生剋、門迫宮迫。"},
+    {"id":"meihua-yishu-wikisource","title":"梅花易數","type":"primary_classic","url":"https://zh.wikisource.org/zh-hant/%E6%A2%85%E8%8A%B1%E6%98%93%E6%95%B8","use":"八卦數、五行生克、卦氣旺衰、年月日時起卦、互卦、體用與克應。"},
+    {"id":"zhouyi-wikisource","title":"周易","type":"primary_classic","url":"https://zh.wikisource.org/zh-hant/%E5%91%A8%E6%98%93","use":"六十四卦名稱、卦序及卦體交叉核對。"},
+    {"id":"ctext-book-of-changes","title":"Chinese Text Project · Book of Changes","type":"primary_classic_crosscheck","url":"https://ctext.org/book-of-changes","use":"六十四卦卦序與文本交叉核對。"},
+    {"id":"lunar-python","title":"6tail/lunar-python","type":"software_primary_source","url":"https://github.com/6tail/lunar-python","use":"事件時刻的干支、節氣與農曆資料；專案固定 lunar_python==1.4.8。"},
+    {"id":"iana-tzdb","title":"IANA Time Zone Database","type":"official_time_standard","url":"https://www.iana.org/time-zones","use":"事件所在地歷史時區與 DST 規則。"},
+    {"id":"python-zoneinfo","title":"Python zoneinfo","type":"software_primary_source","url":"https://docs.python.org/3/library/zoneinfo.html","use":"IANA 時區處理。"},
+    {"id":"hko-solar-terms","title":"香港天文台：二十四節氣","type":"official_astronomy","url":"https://www.hko.gov.hk/tc/gts/astronomy/Solar_Term.htm","use":"節氣時間與天文概念核對。"},
+    {"id":"statsbomb-open-data","title":"Hudl StatsBomb Open Data","type":"football_data_primary_source","url":"https://github.com/hudl/open-data","use":"足球可觀察事件分類語彙；不作術數結論來源。"},
+    {"id":"statsbomb-playing-style","title":"StatsBomb：Modelling Team Playing Style","type":"football_method_source","url":"https://blogarchive.statsbomb.com/articles/soccer/modelling-team-playing-style/","use":"控球、推進、施壓與轉換等現代足球語彙。"},
+    {"id":"fifa-football-language","title":"FIFA Football Language","type":"official_football_framework","url":"https://inside.fifa.com/innovation/football-data","use":"現代足球分析共同語彙。"},
+    {"id":"ifab-laws","title":"IFAB Laws of the Game","type":"official_rules","url":"https://www.theifab.com/laws-of-the-game-documents/","use":"犯規、重新開始與比賽狀態語境。"},
+    {"id":"ifab-law-12","title":"IFAB Law 12","type":"official_rules","url":"https://www.theifab.com/laws/latest/fouls-and-misconduct/","use":"犯規與紀律語境。"},
+    {"id":"ifab-var","title":"IFAB VAR Protocol","type":"official_rules","url":"https://www.theifab.com/laws/latest/video-assistant-referee-var-protocol/","use":"VAR 與可覆核事件語境。"},
+    {"id":"project-football-ontology","title":"Operation STARK 足球術數語義規約","type":"project_application_spec","url":"https://github.com/wujoshnjr/meihua-football-streamlit/blob/main/knowledge/football_ontology.json","use":"把術數象義映射成可觀察／可反證的足球情境；明確不是古籍足球公式。"},
+    {"id":"project-reading-protocol","title":"Operation STARK AI 解讀交接規約","type":"project_application_spec","url":"https://github.com/wujoshnjr/meihua-football-streamlit/blob/main/jarvis/divination_packet.py","use":"固定問題、盤象與知識上下文後交給 ChatGPT 做最終綜合判讀。"}
   ],
   "source_policy": [
-    "古籍用來追溯概念與條件，不把單一抄本宣稱為所有流派唯一標準。",
-    "天文與曆法優先使用官方資料或所採套件的一手程式碼。",
-    "每個自動判定必須能追到方法版本與條件；傳承有爭議者標為 knowledge_only。",
-    "足球映射屬本專案應用規約，不偽稱古籍原有足球勝負算法。",
-    "足球事件標籤優先採官方規則或資料供應者一手文件；應用類比與外部事件分類分欄保存。",
-    "古籍明載、五行組合推導與現代足球類比必須分級；沒有固定古名的組合不得杜撰成古訣。",
-    "真太陽時的天文公式與是否採真太陽時排奇門是兩件事；前者可計算，後者屬方法選擇並須另立版本。",
-    "來源或規則更新不會回寫既有排盤；必須提升 schema／mapping 版本並保留歷史匯出。"
+    "古籍原義、專案摘要與現代足球類比必須分欄，不把現代推演冒充古文。",
+    "JARVIS 只 deterministic 起局／起卦與檢索，不自動決定最終吉凶、勝率或固定比分。",
+    "天文曆法與時區優先使用一手標準或所採軟體的一手來源。",
+    "足球來源只用來定義可觀察事件語彙，不能反向證成術數必然有效。",
+    "來源或方法改版不得回寫既有 packet；應提升 schema／method version。"
   ]
 }

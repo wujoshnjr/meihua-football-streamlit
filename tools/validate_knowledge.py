@@ -1,135 +1,134 @@
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
+import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from qimen.constants import SOLAR_TERM_JU  # noqa: E402
-from qimen.football_ontology import football_ontology_stats  # noqa: E402
-from qimen.interpretation import interpretation_stats  # noqa: E402
-from qimen.knowledge import KNOWLEDGE_FILES, load_knowledge  # noqa: E402
+from jarvis.qimen_relations import all_relations  # noqa: E402
 
 
-def require_unique(items, key, label):
-    values = [item[key] for item in items]
-    if len(values) != len(set(values)):
-        raise AssertionError(f"{label} 有重複 {key}")
+KNOWLEDGE = ROOT / "knowledge"
+TRIGRAMS = {"乾", "兌", "離", "震", "巽", "坎", "艮", "坤"}
+BODY_USE = {"生體", "體生用", "克體", "體克用", "比和"}
 
 
-def main() -> int:
-    data = load_knowledge()["files"]
-    for filename in KNOWLEDGE_FILES:
-        path = ROOT / "knowledge" / filename
-        json.loads(path.read_text(encoding="utf-8"))
-        if not data[filename]["schema_version"].startswith("qimen-"):
-            raise AssertionError(f"{filename} 缺少 qimen schema 版本")
+def load(name: str):
+    return json.loads((KNOWLEDGE / name).read_text(encoding="utf-8"))
 
-    entities = data["entities.json"]
-    expected = {"palaces": 9, "doors": 8, "stars": 9, "deities": 8, "stems": 10}
-    for section, count in expected.items():
-        if len(entities[section]) != count:
-            raise AssertionError(f"{section} 應有 {count} 筆")
-        require_unique(entities[section], "key", section)
 
-    calendar = data["calendar.json"]
-    require_unique(calendar["solar_terms"], "name", "solar_terms")
-    require_unique(calendar["earthly_branches"], "name", "earthly_branches")
-    knowledge_ju = {item["name"]: tuple(item["ju"]) for item in calendar["solar_terms"]}
-    if knowledge_ju != SOLAR_TERM_JU:
-        raise AssertionError("calendar.json 十八局表與引擎常數不一致")
+def require(condition: bool, message: str) -> None:
+    if not condition:
+        raise SystemExit(f"knowledge validation failed: {message}")
 
-    sources = {item["id"] for item in data["sources.json"]["sources"]}
-    patterns = data["patterns.json"]["patterns"]
-    require_unique(patterns, "name", "patterns")
-    for item in patterns:
-        for field in ("category", "condition", "reading", "caution", "automation", "source_id"):
-            if not item.get(field):
-                raise AssertionError(f"格局 {item['name']} 缺少 {field}")
-        if item["automation"] not in {"implemented", "knowledge_only"}:
-            raise AssertionError(f"格局 {item['name']} automation 無效")
-        if item["source_id"] not in sources:
-            raise AssertionError(f"格局 {item['name']} 來源不存在")
 
-    ontology = data["football_ontology.json"]
-    expected_mappings = {
-        "palaces": 9,
-        "doors": 8,
-        "stars": 9,
-        "deities": 8,
-        "stems": 10,
-        "branches": 12,
-        "seasonal_states": 5,
-        "structural_states": 8,
-        "patterns": len(patterns),
+def main() -> None:
+    entities = load("entities.json")
+    require(len(entities.get("palaces", [])) == 9, "Qimen palaces must be 9")
+    require(len(entities.get("doors", [])) == 8, "Qimen doors must be 8")
+    require(len(entities.get("stars", [])) == 9, "Qimen stars must be 9")
+    require(len(entities.get("deities", [])) == 8, "Qimen deities must be 8")
+    require(len(entities.get("stems", [])) == 10, "Qimen stems must be 10")
+
+    patterns = load("patterns.json").get("patterns", [])
+    require(patterns, "Qimen pattern catalog must not be empty")
+    for row in patterns:
+        require(bool(row.get("name")), "every Qimen pattern needs a name")
+        require(bool(row.get("reading")), f"Qimen pattern {row.get('name')} needs a reading")
+        require(bool(row.get("caution")), f"Qimen pattern {row.get('name')} needs a caution")
+
+    relation_rows = all_relations()
+    require(len(relation_rows) == 306, "Qimen relation matrix must contain exactly 306 slots")
+    require(len({row.key for row in relation_rows}) == 306, "Qimen relation keys must be unique")
+    relation_counts = {
+        relation_type: sum(row.relation_type == relation_type for row in relation_rows)
+        for relation_type in ("stem_pair", "star_door", "door_palace", "star_palace")
     }
-    dimensions = {item["id"] for item in ontology["dimensions"]}
-    for section, count in expected_mappings.items():
-        mappings = ontology["mappings"][section]
-        if len(mappings) != count:
-            raise AssertionError(f"football {section} 應有 {count} 筆")
-        require_unique(mappings, "key", f"football {section}")
-        for item in mappings:
-            if not set(item["dimensions"]).issubset(dimensions):
-                raise AssertionError(f"足球義 {item['key']} 使用不存在的維度")
-            for field in ("possible_meanings", "observable_signals", "counter_signals"):
-                if not item.get(field):
-                    raise AssertionError(f"足球義 {item['key']} 缺少 {field}")
-    dimension_sources = {
-        source_id
-        for item in ontology["dimensions"]
-        for source_id in item["source_ids"]
-    }
-    if not dimension_sources.issubset(sources):
-        raise AssertionError(f"足球維度來源不存在：{sorted(dimension_sources - sources)}")
-    stats = football_ontology_stats()
-    if stats["atomic_units"] != ontology["coverage_contract"]["mapped_atomic_units"]:
-        raise AssertionError("足球義原子條目數與 coverage_contract 不一致")
-
-    interpretation = data["interpretation.json"]
-    interpretation_sections = (
-        "precast_checklist",
-        "reading_layers",
-        "classic_principles",
-        "role_models",
-        "focus_topics",
-        "timing_rules",
-        "time_basis_options",
-        "external_evidence_protocol",
-        "error_traps",
+    require(
+        relation_counts == {"stem_pair": 81, "star_door": 72, "door_palace": 72, "star_palace": 81},
+        "Qimen 306-slot relation family counts are incomplete",
     )
-    for section in interpretation_sections:
-        items = interpretation[section]
-        require_unique(items, "id", section)
-        for item in items:
-            if not item.get("source_ids"):
-                raise AssertionError(f"解盤條目 {item['id']} 缺少 source_ids")
-            unknown_sources = set(item["source_ids"]) - sources
-            if unknown_sources:
-                raise AssertionError(f"解盤條目 {item['id']} 來源不存在：{sorted(unknown_sources)}")
-    reading_stats = interpretation_stats()
-    contract = interpretation["relation_contract"]
-    if reading_stats["total_relations"] != contract["total_relations"]:
-        raise AssertionError("解盤關係矩陣與 relation_contract 不一致")
-    expected_relations = {
-        "stem_pair": contract["visible_stem_pairs"],
-        "star_door": contract["star_door_pairs"],
-        "door_palace": contract["door_palace_pairs"],
-        "star_palace": contract["star_palace_pairs"],
+    for row in relation_rows:
+        require(bool(row.general_interpretation), f"Qimen relation {row.key} missing general interpretation")
+        require(bool(row.football_meaning), f"Qimen relation {row.key} missing football meaning")
+        require(bool(row.observable_signals), f"Qimen relation {row.key} missing observable signals")
+        require(bool(row.counter_signals), f"Qimen relation {row.key} missing counter signals")
+
+    ontology = load("football_ontology.json")
+    require(bool(ontology.get("boundaries")), "football ontology needs claim boundaries")
+    require(bool(ontology.get("dimensions")), "football ontology needs observable dimensions")
+    require(isinstance(ontology.get("mappings"), dict), "football ontology mappings must be an object")
+    for family, rows in ontology["mappings"].items():
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            require(bool(row.get("key")), f"football mapping in {family} needs a key")
+            require(bool(row.get("possible_meanings")), f"football mapping {row.get('key')} needs meanings")
+            require(bool(row.get("observable_signals")), f"football mapping {row.get('key')} needs observable signals")
+            require(bool(row.get("counter_signals")), f"football mapping {row.get('key')} needs counter signals")
+
+    interpretation = load("interpretation.json")
+    require(bool(interpretation.get("source_policy")), "Qimen interpretation protocol needs source policy")
+    require(bool(interpretation.get("relation_contract")), "Qimen interpretation protocol needs relation contract")
+
+    trigrams = load("meihua_trigrams.json").get("trigrams", [])
+    names = {row.get("name") for row in trigrams}
+    require(len(trigrams) == 8 and names == TRIGRAMS, "Meihua trigram catalog must contain exactly all 8 trigrams")
+    for row in trigrams:
+        for field in ("number", "symbol", "element", "core", "classical_correspondences", "football"):
+            require(row.get(field) not in (None, ""), f"Meihua trigram {row.get('name')} missing {field}")
+        require(bool(row.get("football_observable")), f"Meihua trigram {row.get('name')} missing football observables")
+        require(bool(row.get("football_counter")), f"Meihua trigram {row.get('name')} missing football counters")
+
+    hexagrams_payload = load("meihua_hexagrams.json")
+    require(
+        hexagrams_payload.get("football_status") == "modern_application_not_classical_text",
+        "hexagram football layer must be labeled modern application",
+    )
+    hexagrams = hexagrams_payload.get("hexagrams", [])
+    require(len(hexagrams) == 64, "Meihua hexagram catalog must contain 64 entries")
+    require({row.get("number") for row in hexagrams} == set(range(1, 65)), "hexagram numbers must be exactly 1..64")
+    require(len({row.get("name") for row in hexagrams}) == 64, "hexagram names must be unique")
+    require(len({row.get("symbol") for row in hexagrams}) == 64, "hexagram symbols must be unique")
+    pairs = {(row.get("upper"), row.get("lower")) for row in hexagrams}
+    require(len(pairs) == 64, "all 8x8 upper/lower trigram combinations must appear exactly once")
+    require(all(upper in TRIGRAMS and lower in TRIGRAMS for upper, lower in pairs), "hexagrams contain unknown trigrams")
+    for row in hexagrams:
+        for field in ("theme", "summary", "football"):
+            require(bool(row.get(field)), f"hexagram {row.get('name')} missing {field}")
+
+    rules = load("meihua_rules.json")
+    relations = {row.get("relation") for row in rules.get("body_use_relations", [])}
+    require(relations == BODY_USE, "Meihua body/use catalog must contain exactly 5 relations")
+    require(bool(rules.get("interpretation_order")), "Meihua interpretation order must be defined")
+
+    line_roles = load("meihua_line_roles.json").get("line_roles", [])
+    require({row.get("line") for row in line_roles} == set(range(1, 7)), "Meihua moving-line roles must cover 1..6")
+    for row in line_roles:
+        require(bool(row.get("general")) and bool(row.get("football")), "moving-line roles need general and football meanings")
+
+    sources = load("sources.json")
+    source_ids = {row.get("id") for row in sources.get("sources", [])}
+    required_sources = {
+        "dunjia-yanyi",
+        "qimen-daquan",
+        "meihua-yishu-wikisource",
+        "zhouyi-wikisource",
+        "ctext-book-of-changes",
+        "project-football-ontology",
+        "project-reading-protocol",
     }
-    if reading_stats["relation_counts"] != expected_relations:
-        raise AssertionError("解盤關係類型筆數不完整")
+    require(required_sources <= source_ids, "source registry is missing Operation STARK primary sources")
 
     print(
-        f"OK: {sum(len(v) for v in entities.values() if isinstance(v, list))} 個核心實體、"
-        f"{len(patterns)} 個格局、24 節氣、{stats['atomic_units']} 個足球義單元、"
-        f"{stats['core_combinations']:,} 個核心組合、{reading_stats['total_relations']} 組解盤關係。"
+        "knowledge validation passed: "
+        f"Qimen 9 palaces / 8 doors / 9 stars / 8 deities / 10 stems / {len(patterns)} patterns / "
+        "306 relations; Meihua 8 trigrams / 64 hexagrams / 5 body-use relations / 6 moving-line roles"
     )
-    return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

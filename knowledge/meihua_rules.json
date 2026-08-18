@@ -1,0 +1,21 @@
+{
+  "schema_version": "stark-meihua-rules-v1.0.0",
+  "method": {
+    "primary": "年月日時起卦",
+    "engine": "meihua.engine.build_meihua_snapshot",
+    "rule": "年支數+農曆月+農曆日取上卦，再加時支數取下卦與動爻；餘八取卦、餘六取爻。"
+  },
+  "body_use_relations": [
+    {"relation":"生體","general":"用或相關環境生助體，通常視為外力助我。","football":"比賽環境、對手失誤、場地或戰術條件可能對所問一方形成助力。"},
+    {"relation":"體生用","general":"體去生用，表示自身輸出、消耗或成全外部。","football":"所問一方可能投入較多體能、控球或攻勢，但付出不必然等於有效收益。"},
+    {"relation":"克體","general":"用或外部克制體，主受壓、阻力或代價。","football":"對手壓迫、傷停、紀律或場地等因素可能直接限制所問一方。"},
+    {"relation":"體克用","general":"體能制用，主有控制與處置能力，但仍需看旺衰。","football":"所問一方可能在對位、節奏或戰術上限制對手；若體衰則控制力可能有限。"},
+    {"relation":"比和","general":"體用同類，主同氣、平衡或膠著。","football":"雙方節奏或能力屬性接近，容易形成拉鋸；需由旺衰、互變與動爻分勝負傾向。"}
+  ],
+  "interpretation_order": ["問題與體用定位","本卦主題","體用生克","體卦旺衰","互卦中段","變卦後段","動爻轉折","外應（若有）","足球可觀察訊號與反證","AI綜合判讀"],
+  "sources": [
+    {"id":"meihua-yishu-wikisource","title":"梅花易數","url":"https://zh.wikisource.org/zh-hant/%E6%A2%85%E8%8A%B1%E6%98%93%E6%95%B8","type":"primary_classic"},
+    {"id":"zhouyi-wikisource","title":"周易","url":"https://zh.wikisource.org/zh-hant/%E5%91%A8%E6%98%93","type":"primary_classic"},
+    {"id":"ctext-book-of-changes","title":"Book of Changes","url":"https://ctext.org/book-of-changes","type":"primary_classic_crosscheck"}
+  ]
+}

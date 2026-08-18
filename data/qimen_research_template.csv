@@ -1,2 +1,0 @@
-match_id,home_team,away_team,competition,event_at,timezone_name,venue,city,question,focus_id,question_locked_at,method_version,reading_guide_version,scope
-QIMEN-EXAMPLE-001,Home Team,Away Team,Competition,2026-08-14T20:00:00+08:00,Asia/Taipei,Example Stadium,Taipei,本場雙方最可能呈現哪些可觀察的攻守結構？,whole_match,2026-08-14T12:00:00+08:00,shijia-zhuanpan-chaibu-v1.0.0,qimen-reading-guide-v1.0.0,90 分鐘＋補時，不含延長賽與點球
