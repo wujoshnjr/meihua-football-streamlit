@@ -65,6 +65,61 @@ def zhouyi_hexagram(number: int) -> dict[str, Any]:
     return row
 
 
+def search_zhouyi(query: str, *, limit: int = 100) -> list[dict[str, Any]]:
+    term = query.strip().lower()
+    if not term:
+        return []
+    results: list[dict[str, Any]] = []
+    for row in _corpus()["hexagrams"]:
+        core_haystack = json.dumps(
+            {
+                "number": row["number"],
+                "name": row["name"],
+                "source_name": row.get("source_name"),
+                "guaci": row["guaci"],
+                "tuan": row["tuan"],
+                "xiang": row["xiang"],
+            },
+            ensure_ascii=False,
+        ).lower()
+        if term in core_haystack:
+            results.append(
+                {
+                    "system": "ZHOUYI",
+                    "family": "hexagram_source",
+                    "number": row["number"],
+                    "name": row["name"],
+                    "symbol": row["symbol"],
+                    "upper": row["upper"],
+                    "lower": row["lower"],
+                    "guaci": row["guaci"],
+                    "tuan": row["tuan"],
+                    "xiang": row["xiang"],
+                    "source": row["source"],
+                }
+            )
+        for line in row["lines"]:
+            line_haystack = f"{row['name']}{line['marker']}{line['classical_text']}".lower()
+            if term in line_haystack:
+                results.append(
+                    {
+                        "system": "ZHOUYI",
+                        "family": "line_source",
+                        "number": row["number"],
+                        "name": row["name"],
+                        "symbol": row["symbol"],
+                        "line": line["line"],
+                        "marker": line["marker"],
+                        "classical_text": line["classical_text"],
+                        "source_page_start": line["source_page_start"],
+                        "source": row["source"],
+                    }
+                )
+        if len(results) >= limit:
+            return results[:limit]
+    return results[:limit]
+
+
 def _classical_core(row: dict[str, Any]) -> dict[str, Any]:
     return {
         "number": row["number"],
