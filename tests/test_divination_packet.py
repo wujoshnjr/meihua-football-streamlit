@@ -62,6 +62,7 @@ def test_meihua_packet_is_deterministic_and_contains_method_aware_deep_layers():
     assert first["meihua_method_audit"] == second["meihua_method_audit"]
     assert first["zhouyi_review"] == second["zhouyi_review"]
     assert first["yilin_bridge"] == second["yilin_bridge"]
+    assert first["review_summary"] == second["review_summary"]
 
     method = first["meihua_method_audit"]
     assert first["method"]["class"] == "XIANTIAN_NUMBER_METHOD"
@@ -85,6 +86,23 @@ def test_meihua_packet_is_deterministic_and_contains_method_aware_deep_layers():
         "late",
     ]
     assert len(method["classical_principles"]) >= 8
+
+    review = first["review_summary"]
+    assert review["kind"] == "meihua_deep_review_summary"
+    assert review["status"] == "READY_WITH_DECLARED_GAPS"
+    assert review["method_weighting"]["method_class"] == "XIANTIAN_NUMBER_METHOD"
+    assert review["method_weighting"]["zhouyi_role"] == "SUPPORTING"
+    assert len(review["relation_signals"]) == 4
+    assert {row["relative_stage"] for row in review["relation_signals"]} == {"immediate", "middle", "late"}
+    assert review["uncertainty_register"]
+    assert {row["id"] for row in review["uncertainty_register"]} >= {
+        "EXTERNAL_RESPONSES_NOT_RECORDED",
+        "MULTI_EDITION_COLLATION_INCOMPLETE",
+        "MODERN_FOOTBALL_MAPPING_IS_HEURISTIC",
+    }
+    assert review["source_coverage_audit"]["method_audit_ready"] is True
+    assert review["source_coverage_audit"]["zhouyi_core_alignments_match"] is True
+    assert review["source_coverage_audit"]["yilin_pair_materialized"] is True
 
     assert first["yilin_bridge"]["mode"] == "MEIHUA_YILIN_BRIDGE"
     assert first["yilin_bridge"]["status"] == "MATERIALIZED"
