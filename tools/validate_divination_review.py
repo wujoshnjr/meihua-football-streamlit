@@ -15,14 +15,15 @@ def require(condition: bool, message: str) -> None:
 
 def main() -> None:
     payload = json.loads(PATH.read_text(encoding="utf-8"))
-    require(payload.get("schema_version") == "stark-divination-review-framework-v1.0.0", "unexpected schema version")
+    require(payload.get("schema_version") == "stark-divination-review-framework-v1.1.0", "unexpected schema version")
     dimensions = payload.get("review_dimensions", [])
-    require(len(dimensions) >= 12, "review framework must contain at least 12 dimensions")
+    require(len(dimensions) >= 13, "review framework must contain at least 13 dimensions")
     ids = [row.get("id") for row in dimensions]
     require(len(ids) == len(set(ids)), "review dimension ids must be unique")
     required_dimensions = {
         "source_integrity",
         "cast_integrity",
+        "method_fidelity",
         "text_condition",
         "symbol_structure",
         "stage_timing",
@@ -45,6 +46,7 @@ def main() -> None:
     for system, rows in emphasis.items():
         require(bool(rows), f"{system} needs review emphasis")
         require(set(rows) <= set(ids), f"{system} references unknown review dimensions")
+    require("method_fidelity" in emphasis["MEIHUA_YISHU"], "Meihua review must emphasize method fidelity")
 
     football = payload.get("football_contract", {})
     require(football.get("status") == "MODERN_APPLICATION__NOT_CLASSICAL_FORMULA", "football status boundary missing")
@@ -58,9 +60,10 @@ def main() -> None:
     }
     require(required_football <= set(football.get("required_fields", [])), "football meaning contract incomplete")
     require("automatic_win_probability" in football.get("forbidden_outputs", []), "win-probability shortcut must be forbidden")
+    require("postmatch_backfill" in football.get("forbidden_outputs", []), "postmatch backfill must be forbidden")
     require(bool(payload.get("completion_rule")), "completion rule is required")
 
-    print("divination review validation passed: 12+ review dimensions / 4 systems / football evidence+counterevidence contract")
+    print("divination review validation passed: 13+ review dimensions / method fidelity / 4 systems / football evidence+counterevidence contract")
 
 
 if __name__ == "__main__":
