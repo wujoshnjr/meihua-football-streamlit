@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
+import sys
 from zoneinfo import ZoneInfo
 
-from jarvis.divination_packet import build_meihua_packet
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from jarvis.divination_packet import build_meihua_packet  # noqa: E402
 
 
 FORBIDDEN_RESULT_KEYS = {
