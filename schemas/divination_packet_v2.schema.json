@@ -42,6 +42,30 @@
     "football_fixture": {"type": ["object", "null"]},
     "chart": {"type": "object"},
     "hexagram": {"type": "object"},
+    "meihua_method_audit": {
+      "type": "object",
+      "required": ["kind", "status", "method", "weighting_decision", "body_use_network", "external_response_audit", "classical_principles"],
+      "properties": {
+        "kind": {"const": "meihua_classical_method_audit"},
+        "status": {"const": "METHOD_AWARE_REVIEW_READY"},
+        "method": {
+          "type": "object",
+          "required": ["name", "class", "implementation_status"],
+          "properties": {
+            "class": {"enum": ["XIANTIAN_NUMBER_METHOD", "HOUTIAN_OBJECT_METHOD"]}
+          },
+          "additionalProperties": true
+        },
+        "weighting_decision": {
+          "type": "object",
+          "required": ["zhouyi_role", "zhouyi_rule", "primary_review_order"]
+        },
+        "body_use_network": {"type": "object"},
+        "external_response_audit": {"type": "object"},
+        "classical_principles": {"type": "array", "minItems": 1}
+      },
+      "additionalProperties": true
+    },
     "zhouyi_review": {
       "type": "object",
       "required": ["kind", "status", "catalog_stats", "source_audit", "original", "mutual", "changed", "moving_line"],
@@ -67,7 +91,7 @@
     },
     {
       "if": {"properties": {"system": {"const": "MEIHUA_YISHU"}}},
-      "then": {"required": ["hexagram", "zhouyi_review", "yilin_bridge", "football_fixture"]}
+      "then": {"required": ["hexagram", "meihua_method_audit", "zhouyi_review", "yilin_bridge", "football_fixture"]}
     }
   ],
   "additionalProperties": true
