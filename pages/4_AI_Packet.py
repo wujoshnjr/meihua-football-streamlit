@@ -7,7 +7,7 @@ import streamlit as st
 
 st.set_page_config(page_title="AI 解卦包 · JARVIS", page_icon="🤖", layout="wide")
 st.title("🤖 AI 解卦包")
-st.caption("JARVIS 到這裡為止：盤、卦、原典來源、易林與相關知識已固定。接下來把完整 packet 交給 ChatGPT 解讀。")
+st.caption("JARVIS 到這裡為止：方法身份、盤／卦、原典來源、易林、矛盾與不確定性已固定。接下來把完整 packet 交給 ChatGPT 解讀。")
 
 packet = st.session_state.get("stark_packet")
 if not packet:
@@ -48,26 +48,64 @@ if packet["system"] == "QIMEN_DUNJIA":
     )
 else:
     instruction = (
-        f"請依這份 JARVIS {packet['schema_version']} 解梅花卦，合參 zhouyi_review 與 MEIHUA_YILIN_BRIDGE。\n"
+        f"請依這份 JARVIS {packet['schema_version']} 解梅花卦。\n"
         "不要重新起卦，也不要修改本卦、互卦、變卦、動爻、體用或 JARVIS 的來源 lookup。\n"
-        "先核對 zhouyi_review.source_audit，再依序讀本卦卦辭／彖／象、上下卦內外、體用旺衰、互卦、真正動爻爻辭／小象、變卦。\n"
-        "周易 classical_text 是固定來源數位轉錄；moving_line.semantic_profile 是來源字詞召回的 PROJECT_HEURISTIC，不是周易原註。\n"
-        "再讀焦氏易林 classical_entry.classical_text 與 semantic_profile；semantic_profile/image_atoms 同樣是專案 heuristic，不是焦氏原註。\n"
-        "若周易、梅花核心與易林情境互相矛盾，要把矛盾當作解讀資訊，不得強行統一。\n"
-        "古籍數位轉錄、後世注解、專案 heuristic、football modern application 必須分層陳述。\n"
+        "第一步先讀 meihua_method_audit，確認本次起卦方法分類與周易文本權重。\n"
+        "本 packet 的年月日時法屬 XIANTIAN_NUMBER_METHOD：先讀本卦／體用、旺衰、互卦與變用的作用網；《周易》卦辭／彖／象／真正動爻爻辭屬 SUPPORTING source-aware review。\n"
+        "不得讓單句爻辭覆蓋體用旺衰與互變，也不得把通用爻位直接換成固定比賽分鐘。\n"
+        "三要、十應與外應若標記 NOT_RECORDED，就是缺失資料；不可用賽後事件或想像內容補造。\n"
+        "再讀焦氏易林 classical_entry.classical_text；MEIHUA_YILIN_BRIDGE 只補本卦→最終變卦情境，不重起一套卦。\n"
+        "先檢查 review_summary.contradiction_register 與 uncertainty_register，任何衝突與資料缺口都必須保留。\n"
+        "周易／易林原文、數位轉錄、project heuristic、football modern application 必須分層陳述。\n"
         "不可把單一卦、單一爻、單條林辭直接換成勝率、固定比分或必然勝負。\n"
         "最後才給出整體劇本、可能轉折、支持與反證，以及不確定性。"
     )
 st.code(instruction, language=None)
 
 if packet["system"] == "MEIHUA_YISHU":
+    method_audit = packet.get("meihua_method_audit", {})
+    with st.expander("梅花古法方法審查", expanded=True):
+        method = method_audit.get("method", {})
+        weighting = method_audit.get("weighting_decision", {})
+        st.write(
+            f"**方法**：{method.get('name', '—')}｜**分類**：{method.get('class', '—')}｜"
+            f"**周易角色**：{weighting.get('zhouyi_role', '—')}｜**status**：{method_audit.get('status', '—')}"
+        )
+        st.info(weighting.get("zhouyi_rule", ""))
+        network = method_audit.get("body_use_network", {})
+        layers = network.get("layers", [])
+        if layers:
+            st.dataframe(
+                [
+                    {
+                        "作用層": row["layer"],
+                        "相對階段": row["relative_stage"],
+                        "卦": row["trigram"],
+                        "對體關係": row["relation_to_body"],
+                    }
+                    for row in layers
+                ],
+                hide_index=True,
+                use_container_width=True,
+            )
+        external = method_audit.get("external_response_audit", {})
+        st.warning(
+            f"三要：{external.get('three_essentials', '—')}｜十應：{external.get('ten_responses', '—')}｜"
+            f"外應：{external.get('external_omens', '—')}。{external.get('anti_backfill', '')}"
+        )
+        if method_audit.get("unimplemented_classical_layers"):
+            st.markdown("**目前未實作／未記錄的古法層**")
+            for item in method_audit["unimplemented_classical_layers"]:
+                st.write(f"- {item}")
+
     zhouyi = packet.get("zhouyi_review", {})
     with st.expander("《周易》原典 AI 交接摘要", expanded=True):
         audit = zhouyi.get("source_audit", {})
         st.write(
             f"**source audit**：{'PASS' if audit.get('all_core_alignments_match') else 'REVIEW'}｜"
             f"**moving line**：{'PASS' if audit.get('moving_line_matches_snapshot') else 'REVIEW'}｜"
-            f"**小象**：{audit.get('moving_line_xiaoxiang_status', '—')}"
+            f"**小象**：{audit.get('moving_line_xiaoxiang_status', '—')}｜"
+            f"**本次文本權重**：{method_audit.get('weighting_decision', {}).get('zhouyi_role', '—')}"
         )
         for label, key in (("本卦", "original"), ("互卦", "mutual"), ("變卦", "changed")):
             row = zhouyi.get(key, {})
@@ -136,7 +174,26 @@ if packet["system"] == "MEIHUA_YISHU":
                 f"{provenance.get('edition', '')}｜{provenance.get('volume_file', '')}｜"
                 f"{provenance.get('page_start', '')}"
             )
-        st.caption("周易核文本 × 梅花定結構 × 易林補劇情 × ChatGPT 合參。易林不重起卦，也不改變梅花 deterministic chart。")
+        st.caption("梅花定結構 × 周易依方法定權重 × 易林補劇情 × ChatGPT 合參。易林不重起卦，也不改變梅花 deterministic chart。")
+
+    review = packet.get("review_summary", {})
+    with st.expander("矛盾／不確定性／來源覆蓋", expanded=True):
+        st.write(
+            f"**review status**：{review.get('status', '—')}｜"
+            f"**張力**：{len(review.get('contradiction_register', []))}｜"
+            f"**不確定性**：{len(review.get('uncertainty_register', []))}"
+        )
+        for item in review.get("contradiction_register", []):
+            st.markdown(f"**{item['id']} · {item['type']}**")
+            st.write(item["why_tension_exists"])
+            st.caption(item["resolution_rule"])
+        for item in review.get("uncertainty_register", []):
+            st.markdown(f"**{item['id']}**")
+            st.write(item["unknown"])
+            st.caption(f"影響：{item['impact']}｜降低方式：{item['what_would_reduce_uncertainty']}")
+        if review.get("source_coverage_audit"):
+            st.markdown("**source coverage audit**")
+            st.json(review["source_coverage_audit"])
 
 packet_json = json.dumps(packet, ensure_ascii=False, indent=2)
 st.markdown("### 完整 Packet")
@@ -154,8 +211,8 @@ a, b = st.columns(2)
 with a:
     with st.container(border=True):
         st.markdown("**JARVIS**")
-        st.write("保存知識、固定起局／起卦、核對原典來源、查唯一相關條目、保存 provenance、建立深層上下文、產生 packet。")
+        st.write("保存知識、固定起局／起卦、辨別方法、核對原典來源、查唯一相關條目、登錄矛盾／不確定性、建立 packet。")
 with b:
     with st.container(border=True):
         st.markdown("**ChatGPT**")
-        st.write("不重排盤；閱讀周易原典、梅花結構、易林情境、支持／反證與現代足球語義，完成最後合參。")
+        st.write("不重排盤；按方法權重閱讀梅花結構、周易原典、易林情境、支持／反證與 modern application，完成最後合參。")
