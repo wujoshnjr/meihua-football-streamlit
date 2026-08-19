@@ -27,6 +27,112 @@ def _relation_signal(layer: str, stage: str, trigram: str, relation: str) -> dic
     }
 
 
+def _unique_strings(values: list[str]) -> list[str]:
+    return list(dict.fromkeys(value for value in values if value))
+
+
+def _build_cross_system_coherence(
+    *,
+    zhouyi_review: dict[str, Any],
+    yilin_bridge: dict[str, Any],
+) -> dict[str, Any]:
+    """Compare only source alignment and project semantic lenses, never final divinatory outcome."""
+
+    moving = zhouyi_review["moving_line"]
+    zhouyi_profile = moving.get("semantic_profile") or {}
+    yilin_profile = yilin_bridge.get("semantic_profile") or {}
+
+    zhouyi_domains = _unique_strings([str(value) for value in zhouyi_profile.get("domains", [])])
+    yilin_domains = _unique_strings([str(value) for value in yilin_profile.get("domains", [])])
+    shared_domains = sorted(set(zhouyi_domains) & set(yilin_domains))
+    zhouyi_only = sorted(set(zhouyi_domains) - set(yilin_domains))
+    yilin_only = sorted(set(yilin_domains) - set(zhouyi_domains))
+
+    original = zhouyi_review["original"]
+    changed = zhouyi_review["changed"]
+    yilin_from = yilin_bridge.get("from_hexagram") or {}
+    yilin_to = yilin_bridge.get("to_hexagram") or {}
+    pair_alignment = {
+        "from_number_matches_original": int(yilin_from.get("number", -1)) == int(original["number"]),
+        "from_name_matches_original": yilin_from.get("name") == original["name"],
+        "to_number_matches_changed": int(yilin_to.get("number", -1)) == int(changed["number"]),
+        "to_name_matches_changed": yilin_to.get("name") == changed["name"],
+    }
+    pair_alignment["all_match"] = all(pair_alignment.values())
+
+    reinforcement: list[dict[str, Any]] = []
+    if shared_domains:
+        reinforcement.append(
+            {
+                "id": "SHARED_PROJECT_SEMANTIC_DOMAINS",
+                "status": "PROJECT_HEURISTIC_REINFORCEMENT",
+                "shared_domains": shared_domains,
+                "source_basis": {
+                    "zhouyi": {
+                        "moving_line": moving.get("marker"),
+                        "classical_text": moving.get("classical_text"),
+                        "semantic_atom_ids": [row.get("id") for row in zhouyi_profile.get("semantic_atoms", [])],
+                    },
+                    "yilin": {
+                        "lookup_key": yilin_bridge.get("lookup_key"),
+                        "classical_text": (yilin_bridge.get("classical_entry") or {}).get("classical_text"),
+                        "image_atom_ids": [row.get("id") for row in yilin_profile.get("image_atoms", [])],
+                    },
+                },
+                "meaning": "周易動爻與焦氏易林的專案語義召回命中共同領域，可作同題候選觀察鏡頭；不等於古籍彼此互證或結果同向。",
+            }
+        )
+
+    independent_signal: list[dict[str, Any]] = []
+    if zhouyi_only:
+        independent_signal.append(
+            {
+                "id": "ZHOUYI_ONLY_DOMAINS",
+                "domains": zhouyi_only,
+                "meaning": "這些專案語義只由周易動爻文本召回，焦氏易林本→變條目未命中同領域；應保留為獨立訊號。",
+            }
+        )
+    if yilin_only:
+        independent_signal.append(
+            {
+                "id": "YILIN_ONLY_DOMAINS",
+                "domains": yilin_only,
+                "meaning": "這些專案語義只由焦氏易林本→變林辭召回，周易動爻未命中同領域；應保留為獨立情境補充。",
+            }
+        )
+
+    if not shared_domains:
+        coherence_status = "NO_SHARED_PROJECT_DOMAIN__READ_TEXTS_INDEPENDENTLY"
+    else:
+        coherence_status = "SHARED_PROJECT_DOMAIN__CONDITIONAL_REINFORCEMENT"
+
+    return {
+        "schema_version": "stark-meihua-cross-system-coherence-v1.0.0",
+        "status": coherence_status,
+        "source_pair_alignment": pair_alignment,
+        "zhouyi": {
+            "role": "SUPPORTING_FOR_CURRENT_XIANTIAN_NUMBER_METHOD",
+            "moving_line": moving.get("marker"),
+            "domains": zhouyi_domains,
+            "judgment_marker_ids": [row.get("id") for row in zhouyi_profile.get("judgment_markers", [])],
+        },
+        "yilin": {
+            "role": "TRANSFORMATION_CONTEXT__DOES_NOT_RECAST",
+            "lookup_key": yilin_bridge.get("lookup_key"),
+            "domains": yilin_domains,
+            "semantic_status": yilin_profile.get("status"),
+        },
+        "reinforcement": reinforcement,
+        "tension": [],
+        "independent_signal": independent_signal,
+        "shared_domains": shared_domains,
+        "interpretation_rule": (
+            "共同 domain 只代表兩個 PROJECT_HEURISTIC 召回層具有可比較語義，不是古典注解互證、吉凶投票或統計權重。"
+            "若沒有共同 domain，ChatGPT 應直接分讀兩段古文；若來源 pair 對齊失敗，應停止跨系統合參並先修資料鏈。"
+        ),
+    }
+
+
 def build_meihua_review_summary(
     snapshot: MeihuaSnapshot,
     *,
@@ -42,6 +148,10 @@ def build_meihua_review_summary(
         _relation_signal("mutual_lower", "middle", snapshot.mutual_lower_trigram, snapshot.mutual_lower_relation_to_body),
         _relation_signal("changed_use", "late", snapshot.changed_use_trigram, snapshot.changed_use_relation_to_body),
     ]
+    cross_system_coherence = _build_cross_system_coherence(
+        zhouyi_review=zhouyi_review,
+        yilin_bridge=yilin_bridge,
+    )
 
     contradiction_register: list[dict[str, Any]] = []
     relation_classes = list(dict.fromkeys(row["neutral_class"] for row in relation_signals))
@@ -74,6 +184,24 @@ def build_meihua_review_summary(
             }
         )
 
+    if not cross_system_coherence["source_pair_alignment"]["all_match"]:
+        contradiction_register.append(
+            {
+                "id": "YILIN_TRANSFORMATION_SOURCE_MISMATCH",
+                "type": "SOURCE_INTEGRITY_CONFLICT",
+                "claim_a": {
+                    "zhouyi_original": zhouyi_review["original"]["name"],
+                    "zhouyi_changed": zhouyi_review["changed"]["name"],
+                },
+                "claim_b": {
+                    "yilin_from": (yilin_bridge.get("from_hexagram") or {}).get("name"),
+                    "yilin_to": (yilin_bridge.get("to_hexagram") or {}).get("name"),
+                },
+                "why_tension_exists": "焦氏易林 bridge 的本卦→之卦與周易審查層的本卦→變卦來源鍵不一致。",
+                "resolution_rule": "停止易林跨系統合參並修復 deterministic lookup／catalog alignment；不得由 AI 猜測正確 pair。",
+            }
+        )
+
     uncertainty_register = [
         {
             "id": "EXTERNAL_RESPONSES_NOT_RECORDED",
@@ -94,6 +222,15 @@ def build_meihua_review_summary(
             "what_would_reduce_uncertainty": "保留 source basis、observable、counter-signal，並以事前資料驗證候選情境是否真的出現。",
         },
     ]
+    if not cross_system_coherence["shared_domains"]:
+        uncertainty_register.append(
+            {
+                "id": "NO_SHARED_ZHOUYI_YILIN_PROJECT_DOMAIN",
+                "unknown": "周易動爻與焦氏易林林辭目前沒有命中共同的專案語義 domain。",
+                "impact": "不能用 ontology 相交宣稱兩者同向；兩段原文應保持獨立閱讀。",
+                "what_would_reduce_uncertainty": "人工逐字審查兩段原文，或日後擴充有來源邊界的 semantic ontology；不得為了提高 coverage 強配語義。",
+            }
+        )
 
     source_coverage_audit = {
         "method_audit_ready": method_audit.get("status") == "METHOD_AWARE_REVIEW_READY",
@@ -103,12 +240,13 @@ def build_meihua_review_summary(
         "zhouyi_moving_line_source_present": bool(zhouyi_review["moving_line"].get("classical_text")),
         "yilin_pair_materialized": yilin_bridge.get("status") == "MATERIALIZED",
         "yilin_lookup_key": yilin_bridge.get("lookup_key"),
+        "yilin_pair_matches_zhouyi_original_changed": cross_system_coherence["source_pair_alignment"]["all_match"],
         "external_response_status": method_audit["external_response_audit"]["source_lock"],
     }
 
     return {
         "kind": "meihua_deep_review_summary",
-        "schema_version": "stark-meihua-deep-review-summary-v1.0.0",
+        "schema_version": "stark-meihua-deep-review-summary-v1.1.0",
         "status": "READY_WITH_DECLARED_GAPS",
         "method_weighting": {
             "method_class": method_audit["method"]["class"],
@@ -116,8 +254,9 @@ def build_meihua_review_summary(
             "rule": method_audit["weighting_decision"]["zhouyi_rule"],
         },
         "relation_signals": relation_signals,
+        "cross_system_coherence": cross_system_coherence,
         "contradiction_register": contradiction_register,
         "uncertainty_register": uncertainty_register,
         "source_coverage_audit": source_coverage_audit,
-        "handoff_rule": "ChatGPT 必須先讀 method weighting，再讀 relation signals、原典、易林、矛盾與不確定性；JARVIS 不在此輸出最後吉凶、勝率或固定比分。",
+        "handoff_rule": "ChatGPT 必須先讀 method weighting，再讀 relation signals、cross_system_coherence、原典、易林、矛盾與不確定性；JARVIS 不在此輸出最後吉凶、勝率或固定比分。",
     }
