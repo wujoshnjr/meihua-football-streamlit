@@ -139,6 +139,7 @@ def build_meihua_review_summary(
     method_audit: dict[str, Any],
     zhouyi_review: dict[str, Any],
     yilin_bridge: dict[str, Any],
+    temporal_precision_audit: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build source-aware review registers without making the final divination judgment."""
 
@@ -232,6 +233,28 @@ def build_meihua_review_summary(
             }
         )
 
+    temporal_context = None
+    if temporal_precision_audit:
+        summary = temporal_precision_audit["boundary_summary"]
+        temporal_context = {
+            "status": temporal_precision_audit["status"],
+            "horizon_minutes": temporal_precision_audit["analysis_window"]["horizon_minutes"],
+            "hour_branch_changes": summary["hour_branch_changes"],
+            "calendar_changes": summary["calendar_changes"],
+            "utc_offset_changes": summary["utc_offset_changes"],
+            "boundary_count": summary["total_boundary_events"],
+            "authority": "SECONDARY_TEMPORAL_CONTEXT_ONLY",
+        }
+        if summary["hour_branch_changes"] or summary["calendar_changes"] or summary["utc_offset_changes"]:
+            uncertainty_register.append(
+                {
+                    "id": "MATCH_CLOCK_PHASE_AT_TEMPORAL_BOUNDARY_UNVERIFIED",
+                    "unknown": "事件期間存在時支／日界／時區交界，但目前 packet 沒有逐事件官方 match-clock timeline。",
+                    "impact": "可以精確知道交界距開賽多少真實分鐘，卻不能僅憑 wall-clock 保證當時是上半場、半場、傷停、下半場或延長賽。",
+                    "what_would_reduce_uncertainty": "加入實際半場結束、下半場開始、VAR/延誤、正規時間結束與延長賽開始等 timestamped match-clock events。",
+                }
+            )
+
     source_coverage_audit = {
         "method_audit_ready": method_audit.get("status") == "METHOD_AWARE_REVIEW_READY",
         "method_class": method_audit["method"]["class"],
@@ -242,6 +265,10 @@ def build_meihua_review_summary(
         "yilin_lookup_key": yilin_bridge.get("lookup_key"),
         "yilin_pair_matches_zhouyi_original_changed": cross_system_coherence["source_pair_alignment"]["all_match"],
         "external_response_status": method_audit["external_response_audit"]["source_lock"],
+        "temporal_precision_audit_ready": (
+            temporal_precision_audit is None
+            or temporal_precision_audit.get("status") == "TEMPORAL_BOUNDARY_AUDIT_READY"
+        ),
     }
 
     return {
@@ -254,9 +281,10 @@ def build_meihua_review_summary(
             "rule": method_audit["weighting_decision"]["zhouyi_rule"],
         },
         "relation_signals": relation_signals,
+        "temporal_context": temporal_context,
         "cross_system_coherence": cross_system_coherence,
         "contradiction_register": contradiction_register,
         "uncertainty_register": uncertainty_register,
         "source_coverage_audit": source_coverage_audit,
-        "handoff_rule": "ChatGPT 必須先讀 method weighting，再讀 relation signals、cross_system_coherence、原典、易林、矛盾與不確定性；JARVIS 不在此輸出最後吉凶、勝率或固定比分。",
+        "handoff_rule": "ChatGPT 必須先讀 method weighting，再讀 relation signals、temporal context、cross_system_coherence、原典、易林、矛盾與不確定性；JARVIS 不在此輸出最後吉凶、勝率或固定比分。",
     }
