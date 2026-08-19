@@ -32,6 +32,8 @@ jobs:
         run: python tools/validate_zhouyi.py
       - name: Validate Zhouyi semantic review
         run: python tools/validate_zhouyi_semantics.py
+      - name: Validate deep divination review contract
+        run: python tools/validate_divination_review.py
       - run: ruff check .
       - run: python -m pytest -q
       - run: python tools/validate_knowledge.py
