@@ -9,6 +9,7 @@ from qimen.engine import cast_qimen
 from qimen.models import QimenBoard
 
 from .meihua_method import build_meihua_classical_method_audit
+from .meihua_review import build_meihua_review_summary
 from .stark_vault import meihua_context, meihua_hexagram, qimen_context
 from .yilin import build_meihua_yilin_bridge
 from .zhouyi import build_meihua_zhouyi_review
@@ -129,6 +130,12 @@ def build_meihua_packet(
         changed_catalog=changed,
     )
     yilin_bridge = build_meihua_yilin_bridge(original, changed)
+    review_summary = build_meihua_review_summary(
+        snapshot,
+        method_audit=method_audit,
+        zhouyi_review=zhouyi_review,
+        yilin_bridge=yilin_bridge,
+    )
 
     payload: dict[str, Any] = {
         "schema_version": DIVINATION_PACKET_VERSION,
@@ -155,6 +162,7 @@ def build_meihua_packet(
         "meihua_method_audit": method_audit,
         "zhouyi_review": zhouyi_review,
         "yilin_bridge": yilin_bridge,
+        "review_summary": review_summary,
         "knowledge_context": knowledge_context,
         "ai_interpretation_contract": [
             "不要重新起卦或修改本卦、互卦、變卦、動爻、體用；以 hexagram 為梅花盤象事實。",
@@ -164,6 +172,8 @@ def build_meihua_packet(
             "固定合參順序：方法審查 → 本卦／體用 → 旺衰 → 互卦作用 → 變卦作用 → 動靜／內外／已記錄外應 → 周易 supporting review → 焦氏易林本卦之變卦 → 支持／反證。",
             "meihua_method_audit.body_use_network 要連同體卦旺衰閱讀；不可只看單一 body_use_relation。",
             "三要、十應、外應若標記 NOT_RECORDED，就視為缺失資料，不得由 AI 或賽後事件補造。",
+            "先讀 review_summary.contradiction_register 與 uncertainty_register；矛盾和缺口必須保留，不可為了單一結論刪除。",
+            "review_summary.relation_signals 是中性的結構分類，不等於吉凶投票或統計權重。",
             "zhouyi_review 中 classical_text 是固定來源數位轉錄；project_general、football_modern_application 與 semantic_profile 是 JARVIS 專案層，必須分開陳述。",
             "焦氏易林在此是 MEIHUA_YILIN_BRIDGE：只補充本卦到最終變卦的情境，不宣稱等同焦林直日占法，也不可重起一套卦。",
             "若周易經文、梅花體用與易林情境彼此矛盾，保留矛盾、解釋成立條件，不得強行統一。",
