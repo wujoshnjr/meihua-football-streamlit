@@ -74,7 +74,9 @@ def test_meihua_football_packet_contains_deterministic_temporal_audit():
     assert first["temporal_precision_audit"] == second["temporal_precision_audit"]
     assert first["temporal_precision_audit"]["analysis_window"]["horizon_minutes"] == 180
     assert first["temporal_precision_audit"]["boundary_summary"]["hour_branch_changes"] >= 2
-    assert "跨時辰" not in str(first["temporal_precision_audit"]).replace("跨時辰=必然逆轉", "") or True
+    assert "跨時辰=必然逆轉" in first["temporal_precision_audit"]["diagnostic_recast_policy"]["forbidden"]
+    uncertainty_ids = {row["id"] for row in first["review_summary"]["uncertainty_register"]}
+    assert "MATCH_CLOCK_PHASE_AT_TEMPORAL_BOUNDARY_UNVERIFIED" in uncertainty_ids
 
 
 def test_general_meihua_packet_does_not_invent_football_timeline():
