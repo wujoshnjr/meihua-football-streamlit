@@ -131,13 +131,21 @@ def main() -> None:
         require(bool(row.get("observe")) and bool(row.get("counter")), f"Meihua {relation} needs evidence and counter-evidence")
 
     zhouyi_review = load("zhouyi_review_policy.json")
-    require(len(zhouyi_review.get("review_dimensions", [])) == 8, "Zhouyi review policy must contain 8 dimensions")
+    zhouyi_dimensions = zhouyi_review.get("review_dimensions", [])
+    require(len(zhouyi_dimensions) == 10, "Zhouyi method-aware review policy must contain 10 dimensions")
     require(bool(zhouyi_review.get("authority_order")), "Zhouyi review authority order is required")
     require(bool(zhouyi_review.get("ai_review_order")), "Zhouyi AI review order is required")
+    method_weighting = zhouyi_review.get("method_weighting_policy", {})
+    require(set(method_weighting) == {"XIANTIAN_NUMBER_METHOD", "HOUTIAN_OBJECT_METHOD"}, "Zhouyi method weighting must cover xiantian/houtian")
+    require(method_weighting["XIANTIAN_NUMBER_METHOD"].get("zhouyi_role") == "SUPPORTING", "xiantian Zhouyi role must be SUPPORTING")
+    require(method_weighting["HOUTIAN_OBJECT_METHOD"].get("zhouyi_role") == "PRIMARY_SUPPORT", "houtian Zhouyi role must be PRIMARY_SUPPORT")
     football_contract = zhouyi_review.get("football_meaning_contract", {})
     require(bool(football_contract.get("required_fields")), "Zhouyi football meaning contract needs required fields")
     require(bool(football_contract.get("forbidden_shortcuts")), "Zhouyi review must list forbidden shortcuts")
-    for dimension in zhouyi_review["review_dimensions"]:
+    dimension_ids = {dimension.get("id") for dimension in zhouyi_dimensions}
+    require("method_fidelity" in dimension_ids, "Zhouyi review must include method fidelity")
+    require("external_response" in dimension_ids, "Zhouyi review must include external-response audit")
+    for dimension in zhouyi_dimensions:
         require(bool(dimension.get("id")) and bool(dimension.get("name")), "Zhouyi review dimension needs id/name")
         require(bool(dimension.get("questions")), f"Zhouyi review dimension {dimension.get('id')} needs questions")
         require(bool(dimension.get("football_rule")), f"Zhouyi review dimension {dimension.get('id')} needs football boundary")
@@ -162,7 +170,7 @@ def main() -> None:
         f"Qimen 9 palaces / 8 doors / 9 stars / 8 deities / 10 stems / {len(patterns)} patterns / "
         "Core 306 relations / 8 deep hierarchy layers / 8 deity modulations; "
         "Meihua 8 trigrams / 64 hexagrams / 5 body-use relations / 6 moving-line roles / 8 deep football dimensions; "
-        "Zhouyi 8 source-review dimensions"
+        "Zhouyi 10 method-aware source-review dimensions"
     )
 
 
