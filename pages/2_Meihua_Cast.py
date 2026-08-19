@@ -12,8 +12,8 @@ from qimen.calendar import LocalTimeError, aware_local_datetime
 st.set_page_config(page_title="梅花起卦 · JARVIS", page_icon="☯️", layout="wide")
 st.title("☯️ 梅花易數起卦")
 st.caption(
-    "年月日時 deterministic 起卦；JARVIS 整理本卦、互卦、變卦、體用、旺衰、動爻，"
-    "再核對《周易》卦辭／彖／象／真正動爻爻辭，並加入《焦氏易林》本卦→變卦鏡頭，最後交給 ChatGPT 合參。"
+    "年月日時 deterministic 起卦；先做梅花古法方法審查，再整理本卦、互卦、變卦、體用、旺衰、動爻，"
+    "核對《周易》原典並加入《焦氏易林》本卦→變卦鏡頭，最後交給 ChatGPT 合參。"
 )
 
 with st.form("meihua_stark_form"):
@@ -62,8 +62,10 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
     mutual = next(row for row in contexts if row.get("kind") == "meihua_mutual_hexagram")
     changed = next(row for row in contexts if row.get("kind") == "meihua_changed_hexagram")
     deep = next(row for row in contexts if row.get("kind") == "meihua_deep_profile")
+    method_audit = packet["meihua_method_audit"]
     zhouyi = packet["zhouyi_review"]
     yilin = packet["yilin_bridge"]
+    review_summary = packet["review_summary"]
 
     st.success(f"起卦完成｜{packet['schema_version']}｜Packet SHA-256：{packet['packet_sha256']}")
     a, b, c = st.columns(3)
@@ -84,6 +86,41 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
     q3.metric("用卦", hx["use_trigram"])
     q4.metric("體用關係", hx["body_use_relation"])
     st.info(f"體卦旺衰：{hx['body_season_state']}｜變用關係：{hx['changed_use_relation_to_body']}")
+
+    st.markdown("### 梅花古法方法審查")
+    ma1, ma2, ma3, ma4 = st.columns(4)
+    ma1.metric("起卦方法", method_audit["method"]["name"])
+    ma2.metric("方法分類", method_audit["method"]["class"])
+    ma3.metric("《周易》角色", method_audit["weighting_decision"]["zhouyi_role"])
+    ma4.metric("外應紀錄", method_audit["external_response_audit"]["source_lock"])
+    st.warning(
+        "目前年月日時法被鎖定為 XIANTIAN_NUMBER_METHOD：體用、生克、旺衰、互變是主要梅花骨架；"
+        "《周易》卦辭／彖／象／動爻屬 source-aware SUPPORTING review，不用單句爻辭覆蓋整體結構。"
+    )
+    st.dataframe(
+        [
+            {
+                "作用層": row["layer"],
+                "相對階段": row["relative_stage"],
+                "卦": row["trigram"],
+                "對體關係": row["relation_to_body"],
+                "角色": row["role"],
+            }
+            for row in method_audit["body_use_network"]["layers"]
+        ],
+        hide_index=True,
+        use_container_width=True,
+    )
+    with st.expander("古法原則、缺失層與禁止補造"):
+        for principle in method_audit["classical_principles"]:
+            st.markdown(f"**{principle['name']}**")
+            st.write(principle["project_summary"])
+            st.caption(principle["audit_requirement"])
+        st.markdown("**目前尚未實作／未記錄**")
+        for item in method_audit["unimplemented_classical_layers"]:
+            st.write(f"- {item}")
+        st.caption(method_audit["completion_note"])
+        st.error(method_audit["external_response_audit"]["anti_backfill"])
 
     st.markdown("### 三層卦義與足球衍生義")
     rows = []
@@ -146,6 +183,7 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
         if football:
             st.caption("足球 modern application：" + moving["football_modern_application"])
         st.info(moving["boundary"])
+        st.warning("本次為先天數法：動爻原文必須閱讀，但在權重上屬 SUPPORTING，不得單句取代體用旺衰與互變。")
 
     with st.expander("易經審查維度與足球含意邊界"):
         for dimension in zhouyi["review_dimensions"]:
@@ -196,7 +234,7 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
             st.markdown(f"**第 {mline['line']} 爻｜{mline['phase']}**")
             st.write(mline["general"])
             st.caption(mline["football"])
-            st.write("**原典爻辭優先核對：** " + moving["classical_text"])
+            st.write("**原典爻辭 supporting 核對：** " + moving["classical_text"])
 
     st.markdown("### 《焦氏易林》本卦 → 變卦")
     ys = yilin["catalog_stats"]
@@ -275,6 +313,25 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
         for rule in yilin["interpretation_contract"]:
             st.write(f"- {rule}")
 
+    st.markdown("### 矛盾、不確定性與來源覆蓋")
+    ra1, ra2, ra3 = st.columns(3)
+    ra1.metric("結構訊號", len(review_summary["relation_signals"]))
+    ra2.metric("已登錄張力", len(review_summary["contradiction_register"]))
+    ra3.metric("不確定性", len(review_summary["uncertainty_register"]))
+    if review_summary["contradiction_register"]:
+        with st.expander("查看矛盾／張力登錄", expanded=True):
+            for item in review_summary["contradiction_register"]:
+                st.markdown(f"**{item['id']} · {item['type']}**")
+                st.write(item["why_tension_exists"])
+                st.caption(item["resolution_rule"])
+    with st.expander("查看不確定性登錄"):
+        for item in review_summary["uncertainty_register"]:
+            st.markdown(f"**{item['id']}**")
+            st.write(item["unknown"])
+            st.caption(f"影響：{item['impact']}｜降低方式：{item['what_would_reduce_uncertainty']}")
+    with st.expander("來源覆蓋 audit"):
+        st.json(review_summary["source_coverage_audit"])
+
     st.markdown("### 足球解讀檢查維度")
     st.dataframe(
         [{"維度": row["name"], "解讀問題": " / ".join(row["questions"])} for row in deep["football_dimensions"]],
@@ -284,8 +341,9 @@ if packet and packet.get("system") == "MEIHUA_YISHU":
 
     st.markdown("### AI 解卦包")
     st.write(
-        f"JARVIS 已附上《周易》64/384 原典審查、{len(contexts)} 筆梅花深層知識與唯一的「{yilin['lookup_key']}」易林轉卦條目；"
-        "ChatGPT 依『周易原典 → 梅花結構 → 動爻 → 易林轉變情境 → 支持／反證 → 綜合判讀』解讀。"
+        f"JARVIS 已附上古法方法審查、《周易》64/384 原典審查、{len(contexts)} 筆梅花深層知識、"
+        f"唯一的「{yilin['lookup_key']}」易林轉卦條目，以及矛盾／不確定性 register；"
+        "ChatGPT 依『方法審查 → 梅花結構 → 周易 supporting review → 易林轉變情境 → 支持／反證／矛盾 → 綜合判讀』解讀。"
     )
     packet_json = json.dumps(packet, ensure_ascii=False, indent=2)
     with st.expander(f"查看完整 {packet['schema_version']}"):
