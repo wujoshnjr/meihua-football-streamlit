@@ -36,6 +36,8 @@ jobs:
         run: python tools/validate_divination_review.py
       - name: Validate Meihua classical method audit
         run: python tools/validate_meihua_classical_method.py
+      - name: Validate Meihua temporal precision
+        run: python tools/validate_meihua_temporal_precision.py
       - name: Validate Meihua cross-system coherence
         run: python tools/validate_meihua_coherence.py
       - run: ruff check .
