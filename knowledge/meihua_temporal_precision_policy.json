@@ -18,9 +18,9 @@
     "UTC_OFFSET_CHANGE": "事件所在地 UTC offset 改變；須特別審查 DST 或歷史時區轉換。"
   },
   "football_window_policy": {
-    "default_horizon_minutes": 120,
+    "default_horizon_minutes": 180,
     "allowed_horizon_minutes": [120, 150, 180, 210],
-    "meaning": "這是從實際開賽起算的審查視窗，不是宣稱比賽一定持續這麼久。一般賽可用120；可能延長賽可擴至180；長延誤或壓力測試可用210。",
+    "meaning": "這是從實際開賽起算的審查視窗，不是宣稱比賽一定持續這麼久。預設180分鐘是為了讓同一份賽前 packet 也覆蓋可能的傷停、長中斷與延長賽時間邊界；120/150/210保留作較窄或較寬審查。",
     "clock_rule": "交界以真實 wall-clock elapsed time 記錄；傷停、半場休息、VAR、延誤與延長賽會使 wall-clock 與比賽分鐘不同。",
     "phase_rule": "未提供真實 match-clock event log 時，只能給 coarse/nominal phase hint；不得把交界硬映射成固定第幾分鐘。"
   },
