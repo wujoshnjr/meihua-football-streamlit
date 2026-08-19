@@ -47,7 +47,7 @@ def main() -> None:
     require(policy.get("anchor_rule", {}).get("name") == "ANCHOR_CAST_IMMUTABLE", "anchor cast must be immutable")
     allowed = policy.get("football_window_policy", {}).get("allowed_horizon_minutes", [])
     require(allowed == [120, 150, 180, 210], "football temporal horizons must be frozen and explicit")
-    require(policy.get("football_window_policy", {}).get("default_horizon_minutes") == 120, "default football temporal horizon must be 120")
+    require(policy.get("football_window_policy", {}).get("default_horizon_minutes") == 180, "default football temporal horizon must be 180")
     diagnostic = policy.get("diagnostic_recast_policy", {})
     require(diagnostic.get("authority") == "SECONDARY_DIAGNOSTIC_ONLY", "diagnostic recast must remain secondary")
     require("跨時辰=必然逆轉" in diagnostic.get("forbidden", []), "automatic reversal shortcut must be forbidden")
