@@ -110,7 +110,7 @@ def build_meihua_packet(
     category: str = "general",
     home_team: str = "",
     away_team: str = "",
-    timeline_horizon_minutes: int = 120,
+    timeline_horizon_minutes: int = 180,
 ) -> dict[str, Any]:
     if not question.strip():
         raise ValueError("問題不可空白")
