@@ -132,16 +132,17 @@ def build_meihua_packet(
         changed_catalog=changed,
     )
     yilin_bridge = build_meihua_yilin_bridge(original, changed)
+    temporal_precision_audit = (
+        build_football_temporal_audit(snapshot, horizon_minutes=timeline_horizon_minutes)
+        if category == "football_match"
+        else None
+    )
     review_summary = build_meihua_review_summary(
         snapshot,
         method_audit=method_audit,
         zhouyi_review=zhouyi_review,
         yilin_bridge=yilin_bridge,
-    )
-    temporal_precision_audit = (
-        build_football_temporal_audit(snapshot, horizon_minutes=timeline_horizon_minutes)
-        if category == "football_match"
-        else None
+        temporal_precision_audit=temporal_precision_audit,
     )
 
     payload: dict[str, Any] = {
