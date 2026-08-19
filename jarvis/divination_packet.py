@@ -8,6 +8,7 @@ from meihua import build_meihua_snapshot
 from qimen.engine import cast_qimen
 from qimen.models import QimenBoard
 
+from .meihua_method import build_meihua_classical_method_audit
 from .stark_vault import meihua_context, meihua_hexagram, qimen_context
 from .yilin import build_meihua_yilin_bridge
 from .zhouyi import build_meihua_zhouyi_review
@@ -120,6 +121,7 @@ def build_meihua_packet(
     original = meihua_hexagram(snapshot.upper_trigram, snapshot.lower_trigram)
     mutual = meihua_hexagram(snapshot.mutual_upper_trigram, snapshot.mutual_lower_trigram)
     changed = meihua_hexagram(snapshot.changed_upper_trigram, snapshot.changed_lower_trigram)
+    method_audit = build_meihua_classical_method_audit(snapshot)
     zhouyi_review = build_meihua_zhouyi_review(
         snapshot,
         original_catalog=original,
@@ -145,20 +147,25 @@ def build_meihua_packet(
         ),
         "method": {
             "type": "年月日時起卦",
+            "class": "XIANTIAN_NUMBER_METHOD",
             "time_basis": "事件所在地民用時間",
             "engine_version": snapshot.schema_version,
         },
         "hexagram": snapshot.to_dict(),
+        "meihua_method_audit": method_audit,
         "zhouyi_review": zhouyi_review,
         "yilin_bridge": yilin_bridge,
         "knowledge_context": knowledge_context,
         "ai_interpretation_contract": [
             "不要重新起卦或修改本卦、互卦、變卦、動爻、體用；以 hexagram 為梅花盤象事實。",
-            "先核對 zhouyi_review.source_audit；再讀本卦卦辭／彖／象與真正動爻爻辭，古籍文字不得由 AI 改寫或補造。",
-            "固定合參順序：本卦經文 → 上下卦內外 → 體用 → 旺衰 → 互卦經文 → 動爻原文 → 變卦經文 → 焦氏易林本卦之變卦 → 支持／反證。",
-            "zhouyi_review 中 classical_text 是固定來源數位轉錄；project_general、football_modern_application 與 review_dimensions 是 JARVIS 專案層，必須分開陳述。",
+            "先讀 meihua_method_audit：本 packet 是 XIANTIAN_NUMBER_METHOD（年月日時先天數法），因此體用、旺衰、互變與內外作用網是主要判讀骨架。",
+            "對目前年月日時法，zhouyi_review 的卦辭／彖／象／動爻爻辭是 source-aware SUPPORTING review；不得讓單句爻辭自動凌駕體用、旺衰與互變。",
+            "先核對 zhouyi_review.source_audit；古籍文字不得由 AI 改寫、補造或用後見資料修正。",
+            "固定合參順序：方法審查 → 本卦／體用 → 旺衰 → 互卦作用 → 變卦作用 → 動靜／內外／已記錄外應 → 周易 supporting review → 焦氏易林本卦之變卦 → 支持／反證。",
+            "meihua_method_audit.body_use_network 要連同體卦旺衰閱讀；不可只看單一 body_use_relation。",
+            "三要、十應、外應若標記 NOT_RECORDED，就視為缺失資料，不得由 AI 或賽後事件補造。",
+            "zhouyi_review 中 classical_text 是固定來源數位轉錄；project_general、football_modern_application 與 semantic_profile 是 JARVIS 專案層，必須分開陳述。",
             "焦氏易林在此是 MEIHUA_YILIN_BRIDGE：只補充本卦到最終變卦的情境，不宣稱等同焦林直日占法，也不可重起一套卦。",
-            "先讀 yilin_bridge.classical_entry.classical_text，再讀 semantic_profile；後者是 PROJECT_HEURISTIC，不是焦氏原註。",
             "若周易經文、梅花體用與易林情境彼此矛盾，保留矛盾、解釋成立條件，不得強行統一。",
             "不可只看一條生克、單一卦象、單句爻辭、單條林辭或 image atom 就直接判勝負。",
             "若是足球問題，可給比賽劇本、主客趨勢、階段轉折與可觀察證據，但不捏造統計勝率或固定比分。",
