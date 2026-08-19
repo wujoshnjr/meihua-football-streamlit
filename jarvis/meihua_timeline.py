@@ -115,7 +115,7 @@ def _diagnostic_recast(
 def build_football_temporal_audit(
     snapshot: MeihuaSnapshot,
     *,
-    horizon_minutes: int = 120,
+    horizon_minutes: int = 180,
 ) -> dict[str, Any]:
     """Audit time boundaries across a football event without replacing the anchor cast.
 
