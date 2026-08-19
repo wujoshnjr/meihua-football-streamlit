@@ -1,14 +1,25 @@
 {
-  "schema_version": "stark-zhouyi-review-policy-v1.0.0",
-  "scope_note": "把《周易》原典層加入梅花解卦審查。古籍原文只作來源事實；project_review 與 football modern application 另外分層，不冒充經傳原義。",
+  "schema_version": "stark-zhouyi-review-policy-v1.1.0",
+  "scope_note": "把《周易》原典層加入梅花解卦審查，但權重必須先由梅花起卦方法決定。古籍原文只作來源事實；project_review 與 football modern application 另外分層，不冒充經傳原義。",
   "authority_order": [
     "deterministic 梅花盤象",
-    "固定底本《周易》卦辭／彖／象／動爻爻辭",
-    "梅花體用、旺衰、互變規則",
+    "MEIHUA_CLASSICAL_METHOD_AUDIT 決定本次起卦法與經文權重",
+    "方法相符的梅花體用、旺衰、互變、動靜與內外規則",
+    "固定底本《周易》卦辭／彖／象／動爻爻辭（依 method audit 為 PRIMARY_SUPPORT 或 SUPPORTING）",
     "焦氏易林本卦→變卦 transformation lens",
     "JARVIS project review / football modern application",
     "ChatGPT 最終合參"
   ],
+  "method_weighting_policy": {
+    "XIANTIAN_NUMBER_METHOD": {
+      "zhouyi_role": "SUPPORTING",
+      "rule": "年月日時、物數、聲數、字數等先由數成卦的方法，以卦象、體用、生克、旺衰、互變為主要骨架；周易爻辭與卦辭作來源審查與輔助，不得單句凌駕整體梅花結構。"
+    },
+    "HOUTIAN_OBJECT_METHOD": {
+      "zhouyi_role": "PRIMARY_SUPPORT",
+      "rule": "後天物卦法在傳世梅花脈絡中更重爻辭／卦辭，但 JARVIS 尚未實作此 engine；未完成 deterministic method 與 tests 前不得於 UI 假裝可用。"
+    }
+  },
   "review_dimensions": [
     {
       "id": "textual_truth",
@@ -20,6 +31,17 @@
         "是否把數位轉錄誤稱為完成所有版本校勘？"
       ],
       "football_rule": "文本來源審查只保證資料鏈，不代表足球預測有效。"
+    },
+    {
+      "id": "method_fidelity",
+      "name": "古法方法一致性",
+      "questions": [
+        "本次起卦屬先天數法還是後天物卦法？",
+        "是否依方法分類調整周易爻辭／卦辭的權重？",
+        "是否把尚未實作的方法誤寫成目前 engine 能力？",
+        "三要、十應、外應若未記錄，是否明確標記缺失而不是補造？"
+      ],
+      "football_rule": "方法差異只決定審查權重，不直接決定哪一隊勝。"
     },
     {
       "id": "hexagram_core",
@@ -38,7 +60,7 @@
         "動爻原文具體說了什麼？",
         "它位於初、二、三、四、五、上的哪個階段？",
         "原文是警告、允許、等待、行動、得助、過度，還是其他條件式語氣？",
-        "是否與通用爻位階段模型一致；若不一致，以實際爻辭為更具體的文本證據。"
+        "若本次是 XIANTIAN_NUMBER_METHOD，是否把爻辭保持為 supporting review，而非用單句推翻體用旺衰與互變？"
       ],
       "football_rule": "動爻可轉成比賽階段與事件條件，但不得把一句爻辭直接換成比分。"
     },
@@ -48,7 +70,8 @@
       "questions": [
         "體用生克是助、耗、克、制或比和？",
         "體旺／平／衰是否能承受該生克？",
-        "動爻經文是否強化、限制或修正體用的初步方向？"
+        "是否把本用、互上、互下、變用組成對體作用網，而非只讀單一 relation？",
+        "周易文本是否只是強化、限制或補充此結構，而不是機械覆蓋？"
       ],
       "football_rule": "必須區分『有主動能力』與『能力能否轉成有效機會』。"
     },
@@ -56,12 +79,23 @@
       "id": "time_layers",
       "name": "本互變時間層",
       "questions": [
-        "本卦描述的開局／基本劇本是什麼？",
+        "本卦／本用描述的最直接條件是什麼？",
         "互卦揭示何種中段內在機制？",
-        "變卦呈現轉折後的後段結構？",
-        "三層是否同向、遞進、反轉或互相抵銷？"
+        "變卦呈現轉折後的較後段結構？",
+        "是否只作相對先後，而未硬換成固定分鐘？"
       ],
       "football_rule": "用於描述開局、中段調整、後段守成／反撲等劇本，不宣稱固定分鐘。"
+    },
+    {
+      "id": "external_response",
+      "name": "三要十應與外應",
+      "questions": [
+        "耳聞、目見、心感或其他外應是否在占測當時被真實記錄？",
+        "未記錄時是否標示 NOT_RECORDED？",
+        "是否區分真實強烈作用與僅有類象名稱的弱訊號？",
+        "是否禁止用賽後事件回填外應？"
+      ],
+      "football_rule": "只有事前鎖定的外應可以成為額外證據；賽後事件只能做驗證，不能回寫卦義。"
     },
     {
       "id": "yilin_coherence",
@@ -91,7 +125,7 @@
         "哪些層相互支持？",
         "哪些層互相抵銷？",
         "哪個判斷依賴條件成立？",
-        "最終判讀是否清楚說明主要風險與替代劇本？"
+        "哪些缺失來自未記錄三要十應、文本異文、方法未實作或 project heuristic？"
       ],
       "football_rule": "矛盾本身是訊息；不可刪除反證只留下單一路徑。"
     }
@@ -114,15 +148,16 @@
     ]
   },
   "ai_review_order": [
-    "核對來源與盤象",
-    "讀本卦卦辭／彖／象",
-    "讀上下卦與體用旺衰",
-    "讀互卦中段機制",
-    "逐字讀動爻原文並結合爻位",
-    "讀變卦卦辭／彖／象",
+    "核對來源、盤象與 MEIHUA_CLASSICAL_METHOD_AUDIT",
+    "依方法分類決定周易文本權重",
+    "讀本卦、上下卦與體用旺衰",
+    "讀本用、互上、互下、變用對體作用網",
+    "核對三要十應／外應是否有事前記錄",
+    "再讀本卦卦辭／彖／象與真正動爻原文",
+    "讀互卦與變卦經文作 supporting/crosscheck",
     "讀焦氏易林本卦之變卦",
     "建立足球候選劇本",
-    "列支持／反證／矛盾",
+    "列支持／反證／矛盾／不確定性",
     "最後才做 ChatGPT 綜合判讀"
   ]
 }
