@@ -66,6 +66,19 @@
       },
       "additionalProperties": true
     },
+    "temporal_precision_audit": {
+      "type": ["object", "null"],
+      "properties": {
+        "kind": {"const": "meihua_football_temporal_audit"},
+        "status": {"const": "TEMPORAL_BOUNDARY_AUDIT_READY"},
+        "anchor_cast": {"type": "object"},
+        "analysis_window": {"type": "object"},
+        "boundary_summary": {"type": "object"},
+        "boundaries": {"type": "array"},
+        "diagnostic_recast_policy": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
     "zhouyi_review": {
       "type": "object",
       "required": ["kind", "status", "catalog_stats", "source_audit", "original", "mutual", "changed", "moving_line"],
@@ -106,7 +119,24 @@
     },
     {
       "if": {"properties": {"system": {"const": "MEIHUA_YISHU"}}},
-      "then": {"required": ["hexagram", "meihua_method_audit", "zhouyi_review", "yilin_bridge", "review_summary", "football_fixture"]}
+      "then": {"required": ["hexagram", "meihua_method_audit", "temporal_precision_audit", "zhouyi_review", "yilin_bridge", "review_summary", "football_fixture"]}
+    },
+    {
+      "if": {
+        "properties": {
+          "system": {"const": "MEIHUA_YISHU"},
+          "question": {
+            "properties": {"category": {"const": "football_match"}},
+            "required": ["category"]
+          }
+        },
+        "required": ["system", "question"]
+      },
+      "then": {
+        "properties": {
+          "temporal_precision_audit": {"type": "object"}
+        }
+      }
     }
   ],
   "additionalProperties": true
