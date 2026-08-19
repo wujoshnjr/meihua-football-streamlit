@@ -94,6 +94,18 @@ def test_meihua_packet_is_deterministic_and_contains_method_aware_deep_layers():
     assert review["method_weighting"]["zhouyi_role"] == "SUPPORTING"
     assert len(review["relation_signals"]) == 4
     assert {row["relative_stage"] for row in review["relation_signals"]} == {"immediate", "middle", "late"}
+
+    coherence = review["cross_system_coherence"]
+    assert coherence["schema_version"] == "stark-meihua-cross-system-coherence-v1.0.0"
+    assert coherence["source_pair_alignment"]["all_match"] is True
+    assert coherence["zhouyi"]["role"] == "SUPPORTING_FOR_CURRENT_XIANTIAN_NUMBER_METHOD"
+    assert coherence["yilin"]["role"] == "TRANSFORMATION_CONTEXT__DOES_NOT_RECAST"
+    assert isinstance(coherence["shared_domains"], list)
+    assert isinstance(coherence["reinforcement"], list)
+    assert isinstance(coherence["tension"], list)
+    assert isinstance(coherence["independent_signal"], list)
+    assert "勝率" not in coherence["interpretation_rule"]
+
     assert review["uncertainty_register"]
     assert {row["id"] for row in review["uncertainty_register"]} >= {
         "EXTERNAL_RESPONSES_NOT_RECORDED",
@@ -103,6 +115,7 @@ def test_meihua_packet_is_deterministic_and_contains_method_aware_deep_layers():
     assert review["source_coverage_audit"]["method_audit_ready"] is True
     assert review["source_coverage_audit"]["zhouyi_core_alignments_match"] is True
     assert review["source_coverage_audit"]["yilin_pair_materialized"] is True
+    assert review["source_coverage_audit"]["yilin_pair_matches_zhouyi_original_changed"] is True
 
     assert first["yilin_bridge"]["mode"] == "MEIHUA_YILIN_BRIDGE"
     assert first["yilin_bridge"]["status"] == "MATERIALIZED"
