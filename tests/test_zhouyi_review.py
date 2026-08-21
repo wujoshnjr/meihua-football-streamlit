@@ -77,6 +77,13 @@ def test_meihua_packet_v2_contains_actual_moving_line_classical_text_and_source_
     assert review["moving_line"]["classical_text"]
     assert review["moving_line"]["source_page_start"]
     assert review["moving_line"]["semantic_profile"]["text_basis"]["line_classical_text"]
+    meaning = review["moving_line"]["meaning_review"]
+    assert meaning["authority"] == "PROJECT_REVIEW__NOT_CLASSICAL_COMMENTARY"
+    assert meaning["line"]["classical_text"] == review["moving_line"]["classical_text"]
+    assert meaning["text_conditions"]
+    assert meaning["conditional_outcome_tendency"]["status"]
+    assert meaning["football"]["observable_signals"]
+    assert meaning["football"]["counter_signals"]
     assert review["review_dimensions"]
     assert review["football_meaning_contract"]["forbidden_shortcuts"]
     assert packet["event"]["normalization"] == "ACTUAL_CAST_EVENT_LOCAL_TIME"
@@ -94,6 +101,7 @@ def test_zhouyi_review_keeps_classical_and_project_meaning_separate():
     assert line["football_modern_application"]
     assert "古籍原文" in line["boundary"]
     assert "不是《周易》原註" in line["semantic_profile"]["boundary"]
+    assert line["meaning_review"]["authority"] == "PROJECT_REVIEW__NOT_CLASSICAL_COMMENTARY"
     serialized = str(packet).lower()
     assert "home_win_probability" not in serialized
     assert "fixed_score" not in serialized
