@@ -43,6 +43,38 @@ def build_match_event_identity(
     return payload
 
 
+def verify_packet_integrity(packet: dict[str, Any]) -> dict[str, Any]:
+    """Verify the deterministic packet SHA before import or cross-system join."""
+
+    expected = str(packet.get("packet_sha256", ""))
+    if not expected:
+        return {"status": "FAIL", "reason": "PACKET_SHA_MISSING", "expected": None, "actual": None}
+    copy = dict(packet)
+    copy.pop("packet_sha256", None)
+    actual = sha256_payload(copy)
+    return {
+        "status": "PASS" if actual == expected else "FAIL",
+        "reason": "MATCH" if actual == expected else "PACKET_SHA_MISMATCH",
+        "expected": expected,
+        "actual": actual,
+    }
+
+
+def verify_bundle_integrity(bundle: dict[str, Any]) -> dict[str, Any]:
+    expected = str(bundle.get("bundle_sha256", ""))
+    if not expected:
+        return {"status": "FAIL", "reason": "BUNDLE_SHA_MISSING", "expected": None, "actual": None}
+    copy = dict(bundle)
+    copy.pop("bundle_sha256", None)
+    actual = sha256_payload(copy)
+    return {
+        "status": "PASS" if actual == expected else "FAIL",
+        "reason": "MATCH" if actual == expected else "BUNDLE_SHA_MISMATCH",
+        "expected": expected,
+        "actual": actual,
+    }
+
+
 def _football_fixture(packet: dict[str, Any]) -> tuple[str, str]:
     fixture = packet.get("football_fixture")
     if isinstance(fixture, dict):
@@ -71,9 +103,32 @@ def _derive_match_event(packet: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _clean_event_metadata(event_metadata: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not event_metadata:
+        return None
+    allowed = (
+        "competition",
+        "stage",
+        "stadium",
+        "city",
+        "country",
+        "kickoff_basis",
+        "time_verification_status",
+        "time_source",
+        "mode",
+    )
+    cleaned = {key: str(event_metadata.get(key, "")).strip() for key in allowed}
+    cleaned = {key: value for key, value in cleaned.items() if value}
+    if "mode" in cleaned and cleaned["mode"] not in {"PREMATCH", "LIVE", "HISTORICAL_BACKTEST"}:
+        raise ValueError("event_metadata.mode 必須是 PREMATCH / LIVE / HISTORICAL_BACKTEST")
+    return cleaned or None
+
+
 def build_divination_case_bundle(
     qimen_packet: dict[str, Any],
     meihua_packet: dict[str, Any],
+    *,
+    event_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Join Qimen and Meihua packets only when they describe the same match."""
 
@@ -81,6 +136,13 @@ def build_divination_case_bundle(
         raise ValueError("CASE_ALIGNMENT_FAIL: qimen_packet.system 必須是 QIMEN_DUNJIA")
     if meihua_packet.get("system") != "MEIHUA_YISHU":
         raise ValueError("CASE_ALIGNMENT_FAIL: meihua_packet.system 必須是 MEIHUA_YISHU")
+
+    qimen_integrity = verify_packet_integrity(qimen_packet)
+    meihua_integrity = verify_packet_integrity(meihua_packet)
+    if qimen_integrity["status"] != "PASS":
+        raise ValueError("CASE_ALIGNMENT_FAIL: QIMEN_PACKET_SHA_INVALID")
+    if meihua_integrity["status"] != "PASS":
+        raise ValueError("CASE_ALIGNMENT_FAIL: MEIHUA_PACKET_SHA_INVALID")
 
     qimen_event = qimen_packet.get("match_event") or _derive_match_event(qimen_packet)
     meihua_event = meihua_packet.get("match_event") or _derive_match_event(meihua_packet)
@@ -101,10 +163,15 @@ def build_divination_case_bundle(
         "schema_version": DIVINATION_CASE_BUNDLE_VERSION,
         "packet_purpose": "SAME_EVENT_QIMEN_MEIHUA_HANDOFF__CHATGPT_INTERPRETS",
         "match_event": qimen_event,
+        "event_metadata": _clean_event_metadata(event_metadata),
         "alignment_audit": {
             "status": "PASS",
             "checked_fields": list(fields),
             "fields": alignment,
+            "packet_integrity": {
+                "qimen": qimen_integrity,
+                "meihua": meihua_integrity,
+            },
         },
         "interpretation_roles": {
             "qimen": {
@@ -125,9 +192,10 @@ def build_divination_case_bundle(
         "qimen_packet": qimen_packet,
         "meihua_packet": meihua_packet,
         "ai_handoff_contract": [
-            "先做 alignment_audit；若不是 PASS，停止合參。",
+            "先做 alignment_audit 與 packet_integrity；若不是 PASS，停止合參。",
             "奇門作 RESULT_ENGINE_INPUT；梅花作 STRUCTURE_STRESS_TEST，不做兩套術數投票。",
             "兩份 packet 皆不可重新起局／起卦、改時間、換主客或更改 deterministic chart facts。",
+            "event_metadata 是來源／賽事描述層，不可反向改寫 match_event 的起局時間。",
             "古籍原文、source review、project heuristic、football modern application 必須分層。",
             "最終判讀由 ChatGPT 完成；bundle 不包含自動勝率、固定比分或最終賽果。",
         ],
