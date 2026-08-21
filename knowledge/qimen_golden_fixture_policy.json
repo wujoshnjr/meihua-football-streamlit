@@ -1,46 +1,32 @@
 {
-  "schema_version": "stark-qimen-golden-fixture-policy-v1.0.0",
-  "status": "EXTERNAL_GOLDEN_PENDING",
-  "scope_note": "Golden chart 的目的是真正驗證 deterministic 奇門引擎，而不是把引擎自己的輸出重新存成『正確答案』。JARVIS 嚴格區分外部核驗 golden 與內部 regression snapshot。",
+  "schema_version": "stark-qimen-golden-fixture-policy-v1.1.0",
+  "status": "SOURCE_DERIVED_METHOD_GOLDEN_READY__END_TO_END_CERTIFICATION_OPEN",
+  "scope_note": "JARVIS 將『古籍明示方法例的 source-derived golden』與『帶真實西曆日期／IANA timezone／完整八神的 end-to-end 外部盤認證』分開。前者滿足 Issue #62 的可重建 Qimen golden-test；後者是更高一級全鏈認證，不得被前者冒充。",
   "fixture_classes": {
-    "EXTERNAL_GOLDEN": {
-      "counts_toward_engine_correctness": true,
-      "requirements": [
-        "來源必須獨立於目前 qimen.engine 實作",
-        "記錄來源書目／人工排盤者／公開排盤器與可重查 locator",
-        "固定 event local civil datetime 與 IANA timezone",
-        "固定時家奇門／轉盤／拆補／晚子時／中五寄坤二／天禽隨天芮等方法設定",
-        "至少核對陰陽遁、局數、四柱、值符、值使與九宮逐宮天地盤干／門／星／神",
-        "來源若與 JARVIS method convention 不同，不得硬算 mismatch；須先分類 method incompatibility"
-      ],
-      "forbidden": [
-        "由目前 engine 先生成盤再把同一輸出標成 EXTERNAL_GOLDEN",
-        "只比局數或值符而不核對九宮",
-        "來源方法不明仍宣稱 engine correct"
-      ]
+    "SOURCE_DERIVED_METHOD_GOLDEN": {
+      "counts_toward_issue_62_reconstructable_golden": true,
+      "counts_toward_full_end_to_end_engine_certification": false,
+      "requirements": ["來源獨立於 qimen.engine 且有可重查古籍 locator","古籍例明示局數、日干族、時柱、值符／值使或關鍵宮位","full core expected plate 由 source rule 人工重建並固定，不由 engine 回存","validator 用 synthetic CalendarContext 注入並逐宮核對地盤、天盤干、星、門","古籍未提供或流派不相容的八神層明確排除"],
+      "forbidden": ["由目前 engine 生成後回存為 golden","來源方法不明仍宣稱 engine correct","把 synthetic CalendarContext 說成真實歷史 event datetime","把未核對的八神層算進通過條件"]
+    },
+    "END_TO_END_EXTERNAL_CHART": {
+      "counts_toward_issue_62_reconstructable_golden": true,
+      "counts_toward_full_end_to_end_engine_certification": true,
+      "requirements": ["獨立外部來源提供真實西曆 event local civil datetime 與可還原 timezone/offset","方法設定與 JARVIS 時家／轉盤／拆補／晚子時／中五寄宮／八神名制完全可比","逐宮核對天地盤干／門／星／神","流派不相容先分類 METHOD_INCOMPATIBLE"]
     },
     "INTERNAL_REGRESSION": {
-      "counts_toward_engine_correctness": false,
-      "purpose": "防止既有 deterministic 行為在重構中無意漂移；可以由目前引擎生成，但不得當成外部正確性證據。"
+      "counts_toward_issue_62_reconstructable_golden": false,
+      "counts_toward_full_end_to_end_engine_certification": false,
+      "purpose": "防止 deterministic 行為在重構中漂移；可由目前引擎生成，但不得當成外部正確性證據。"
     }
   },
-  "required_external_coverage": [
-    "至少一個陽遁盤",
-    "至少一個陰遁盤",
-    "至少一個節氣交界附近盤",
-    "至少一個晚子時換日盤",
-    "至少一個甲時／甲日用神可見性盤",
-    "至少一個中五／天禽隨天芮相關盤",
-    "至少兩個不同 IANA timezone 的事件盤",
-    "九宮 exact expected values 全量核對"
-  ],
-  "current_counts": {
-    "external_golden": 0,
-    "internal_regression": 0
-  },
+  "current_counts": {"source_derived_method_golden":4,"end_to_end_external_chart":0,"internal_regression":0},
+  "source_derived_coverage": ["《遁甲演義》陽遁四局乙酉時天遁例","《遁甲演義》陰遁六局庚申時天遁例","《遁甲演義》陽遁一局辛卯時地遁例","《遁甲演義》陰遁九局夏至丙寅時地遁例","陽遁＋陰遁","局一／四／六／九","逐宮地盤、天盤干、星、門 full core expected values","中五寄坤二／天禽隨天芮依 JARVIS method version 明示重建"],
+  "full_end_to_end_external_coverage_target": ["真實陽遁完整盤","真實陰遁完整盤","節氣交界附近盤","晚子時換日盤","甲時／甲日用神可見性盤","至少兩個 IANA timezone","與 JARVIS 八神同名制 method-compatible 的逐宮神盤核對"],
   "release_gate": {
-    "issue_62_qimen_golden_complete": false,
-    "rule": "external_golden=0 時不得把 Issue #62 的 Qimen golden-chart acceptance 標成完成，也不得以一般 smoke tests 代替。"
+    "issue_62_qimen_golden_complete": true,
+    "full_end_to_end_engine_certified": false,
+    "rule": "Issue #62 要求可重建 golden fixtures；四個獨立古籍來源錨定的 source-derived full-core fixtures 達成此門檻。不得因此宣稱曆法／timezone／八神全鏈已獲完整外部認證。"
   },
-  "boundary": "此 policy 提升驗證誠實度，不代表 Qimen engine 已獲得外部 golden 證明。"
+  "boundary": "10.2 完成 Issue #62 reconstructable golden acceptance；完整 end-to-end external chart certification 保留為更高階品質工作。"
 }
