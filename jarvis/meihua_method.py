@@ -26,43 +26,58 @@ def meihua_classical_method_policy() -> dict[str, Any]:
 
 
 def build_meihua_classical_method_audit(snapshot: MeihuaSnapshot) -> dict[str, Any]:
-    """Build a method-aware audit for the currently implemented Meihua engine.
-
-    This function does not cast or reinterpret the hexagram. It records which
-    classical method family the deterministic engine belongs to and therefore
-    how downstream Zhouyi text should be weighted during ChatGPT review.
-    """
+    """Build a method-aware audit without changing the deterministic cast."""
 
     policy = _policy()
     engine = policy["current_engine_contract"]
     method_class = str(engine["method_class"])
     profile = policy["method_profiles"][method_class]
 
+    body_is_upper = snapshot.body_trigram == snapshot.upper_trigram
+    upper_identity = "body_mutual" if body_is_upper else "use_mutual"
+    lower_identity = "use_mutual" if body_is_upper else "body_mutual"
+
     relation_network = [
         {
             "layer": "original_use",
+            "classical_identity": "original_use",
             "relative_stage": "immediate",
+            "source_position": "original_use",
             "trigram": snapshot.use_trigram,
             "relation_to_body": snapshot.body_use_relation,
             "role": "本卦用層；目前最直接作用於體。",
         },
         {
             "layer": "mutual_upper",
+            "classical_identity": upper_identity,
             "relative_stage": "middle",
+            "source_position": "upper",
             "trigram": snapshot.mutual_upper_trigram,
             "relation_to_body": snapshot.mutual_upper_relation_to_body,
-            "role": "互卦上層；作中段作用之一。",
+            "role": (
+                "互卦上層；依本卦體位判為體互。體互在互層中優先審查。"
+                if upper_identity == "body_mutual"
+                else "互卦上層；依本卦體位判為用互。用互次於體互審查。"
+            ),
         },
         {
             "layer": "mutual_lower",
+            "classical_identity": lower_identity,
             "relative_stage": "middle",
+            "source_position": "lower",
             "trigram": snapshot.mutual_lower_trigram,
             "relation_to_body": snapshot.mutual_lower_relation_to_body,
-            "role": "互卦下層；作中段作用之一。",
+            "role": (
+                "互卦下層；依本卦體位判為體互。體互在互層中優先審查。"
+                if lower_identity == "body_mutual"
+                else "互卦下層；依本卦體位判為用互。用互次於體互審查。"
+            ),
         },
         {
             "layer": "changed_use",
+            "classical_identity": "changed_use",
             "relative_stage": "late",
+            "source_position": "changed_use",
             "trigram": snapshot.changed_use_trigram,
             "relation_to_body": snapshot.changed_use_relation_to_body,
             "role": "變卦用層；作轉折後／較後段作用。",
@@ -90,6 +105,10 @@ def build_meihua_classical_method_audit(snapshot: MeihuaSnapshot) -> dict[str, A
         "body_use_network": {
             "body_trigram": snapshot.body_trigram,
             "body_season_state": snapshot.body_season_state,
+            "body_position": "upper" if body_is_upper else "lower",
+            "body_mutual_source_position": "upper" if body_is_upper else "lower",
+            "use_mutual_source_position": "lower" if body_is_upper else "upper",
+            "mutual_priority_rule": "體互最緊，用互次之；同時保留互卦原始 upper/lower 位置以便稽核。",
             "layers": relation_network,
             "rule": "體用、生克與旺衰必須連讀；不得只取單一 relation 作最後結論。",
         },
