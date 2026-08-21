@@ -103,7 +103,9 @@ def _diagnostic_recast(
         "authority": "SECONDARY_DIAGNOSTIC_ONLY",
         "local_datetime": probe.event_local_at.isoformat(),
         "hour_branch": probe.hour_branch,
+        "lunar_month_raw": probe.lunar_month_raw,
         "lunar_month": probe.lunar_month,
+        "lunar_month_is_leap": probe.lunar_month_is_leap,
         "lunar_day": probe.lunar_day,
         "snapshot_core": probe_core,
         "changed_fields_vs_anchor": changed_fields,
@@ -112,16 +114,139 @@ def _diagnostic_recast(
     }
 
 
+def _normalize_match_clock_events(
+    events: list[dict[str, Any]] | None,
+    *,
+    timezone_name: str,
+    anchor_utc: datetime,
+) -> list[dict[str, Any]]:
+    if not events:
+        return []
+
+    policy = _policy()["match_clock_event_policy"]
+    allowed = set(policy["allowed_event_types"])
+    zone = ZoneInfo(timezone_name)
+    normalized: list[dict[str, Any]] = []
+    for index, raw in enumerate(events):
+        event_type = str(raw.get("type", "")).strip()
+        if event_type not in allowed:
+            raise ValueError(f"match_clock_events[{index}].type 無效：{event_type}")
+        raw_datetime = raw.get("local_datetime")
+        if isinstance(raw_datetime, datetime):
+            local = raw_datetime
+        elif isinstance(raw_datetime, str):
+            try:
+                local = datetime.fromisoformat(raw_datetime)
+            except ValueError as exc:
+                raise ValueError(f"match_clock_events[{index}].local_datetime 不是 ISO datetime") from exc
+        else:
+            raise ValueError(f"match_clock_events[{index}].local_datetime 必須是 aware datetime 或 ISO 字串")
+        if local.tzinfo is None:
+            raise ValueError(f"match_clock_events[{index}].local_datetime 必須含 UTC offset")
+        local = local.astimezone(zone)
+        event_utc = local.astimezone(timezone.utc)
+        normalized.append(
+            {
+                "type": event_type,
+                "local_datetime": local.isoformat(),
+                "utc_datetime": event_utc.isoformat(),
+                "elapsed_real_minutes_from_kickoff": round((event_utc - anchor_utc).total_seconds() / 60.0, 3),
+                "match_clock_label": str(raw.get("match_clock_label", "")).strip() or None,
+                "source": str(raw.get("source", "")).strip() or None,
+                "verification_status": str(raw.get("verification_status", "")).strip() or "USER_PROVIDED",
+                "note": str(raw.get("note", "")).strip() or None,
+            }
+        )
+
+    normalized.sort(key=lambda row: row["utc_datetime"])
+    kickoff = [row for row in normalized if row["type"] == "ACTUAL_KICKOFF"]
+    if kickoff:
+        kickoff_utc = datetime.fromisoformat(kickoff[0]["utc_datetime"])
+        if abs((kickoff_utc - anchor_utc).total_seconds()) > 1:
+            raise ValueError("ACTUAL_KICKOFF timestamp 與 anchor cast 不一致；不可用 match-clock log 改寫主卦時間")
+    return normalized
+
+
+def _event_phase(previous_type: str | None, next_type: str | None) -> str:
+    pair = (previous_type, next_type)
+    if pair == ("ACTUAL_KICKOFF", "FIRST_HALF_END"):
+        return "FIRST_HALF_VERIFIED_WINDOW"
+    if pair == ("FIRST_HALF_END", "SECOND_HALF_KICKOFF"):
+        return "HALFTIME_VERIFIED_WINDOW"
+    if pair == ("SECOND_HALF_KICKOFF", "REGULATION_END"):
+        return "SECOND_HALF_VERIFIED_WINDOW"
+    if pair == ("REGULATION_END", "EXTRA_TIME_START"):
+        return "REGULATION_TO_EXTRA_TIME_TRANSITION"
+    if pair == ("EXTRA_TIME_START", "EXTRA_TIME_HALFTIME"):
+        return "EXTRA_TIME_FIRST_PERIOD_VERIFIED_WINDOW"
+    if pair == ("EXTRA_TIME_HALFTIME", "EXTRA_TIME_SECOND_HALF_START"):
+        return "EXTRA_TIME_HALFTIME_VERIFIED_WINDOW"
+    if pair == ("EXTRA_TIME_SECOND_HALF_START", "EXTRA_TIME_END"):
+        return "EXTRA_TIME_SECOND_PERIOD_VERIFIED_WINDOW"
+    if previous_type == "DELAY_START" and next_type == "DELAY_END":
+        return "DELAY_VERIFIED_WINDOW"
+    return "TIMESTAMPED_CONTEXT_AVAILABLE__PHASE_NOT_CANONICALLY_RESOLVED"
+
+
+def _match_clock_alignment(boundary_utc: datetime, events: list[dict[str, Any]]) -> dict[str, Any]:
+    if not events:
+        return {
+            "status": "MATCH_CLOCK_EVENTS_NOT_PROVIDED",
+            "phase": None,
+            "exact_event": None,
+            "previous_event": None,
+            "next_event": None,
+            "rule": "沒有 timestamped match-clock event log；只能保留 nominal football_phase_hint。",
+        }
+
+    event_rows = [(datetime.fromisoformat(row["utc_datetime"]), row) for row in events]
+    exact = next((row for instant, row in event_rows if abs((instant - boundary_utc).total_seconds()) <= 1), None)
+    previous = None
+    following = None
+    for instant, row in event_rows:
+        if instant <= boundary_utc:
+            previous = row
+        if instant > boundary_utc:
+            following = row
+            break
+
+    return {
+        "status": "TIMESTAMPED_MATCH_CLOCK_CONTEXT_AVAILABLE",
+        "phase": _event_phase(
+            previous.get("type") if previous else None,
+            following.get("type") if following else None,
+        ),
+        "exact_event": exact,
+        "previous_event": previous,
+        "next_event": following,
+        "seconds_from_previous_event": (
+            round((boundary_utc - datetime.fromisoformat(previous["utc_datetime"])).total_seconds(), 3)
+            if previous
+            else None
+        ),
+        "seconds_to_next_event": (
+            round((datetime.fromisoformat(following["utc_datetime"]) - boundary_utc).total_seconds(), 3)
+            if following
+            else None
+        ),
+        "rule": "timestamped events 可定位實際賽事階段，但不得在兩個事件間線性插值成虛構官方 match minute。",
+    }
+
+
 def build_football_temporal_audit(
     snapshot: MeihuaSnapshot,
     *,
     horizon_minutes: int = 180,
+    match_clock_events: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Audit time boundaries across a football event without replacing the anchor cast.
 
     The scan advances through real UTC minutes and converts each instant back to
     the event IANA timezone. This keeps elapsed time monotonic through DST while
     exposing local hour-branch, civil-date, lunar-date and UTC-offset changes.
+    Optional timestamped match-clock events can locate a boundary inside a real
+    football phase, but never modify the anchor cast or fabricate an official
+    match minute.
     """
 
     policy = _policy()
@@ -135,6 +260,11 @@ def build_football_temporal_audit(
         raise ValueError("Meihua snapshot event_local_at 必須含時區")
     start_utc = anchor_local.astimezone(timezone.utc)
     end_utc = start_utc + timedelta(minutes=horizon_minutes)
+    normalized_events = _normalize_match_clock_events(
+        match_clock_events,
+        timezone_name=timezone_name,
+        anchor_utc=start_utc,
+    )
 
     previous = _lunar_context(start_utc, timezone_name)
     cursor = start_utc.replace(second=0, microsecond=0)
@@ -187,6 +317,7 @@ def build_football_temporal_audit(
                         "utc_offset_seconds": current["utc_offset_seconds"],
                     },
                     "football_phase_hint": _phase_hint(elapsed),
+                    "match_clock_alignment": _match_clock_alignment(cursor, normalized_events),
                     "diagnostic_recast": _diagnostic_recast(
                         anchor=snapshot,
                         boundary_utc=cursor,
@@ -204,6 +335,11 @@ def build_football_temporal_audit(
         if {"CIVIL_DATE_CHANGE", "LUNAR_DATE_CHANGE"} & set(row["boundary_types"])
     ]
     offset_changes = [row for row in boundaries if "UTC_OFFSET_CHANGE" in row["boundary_types"]]
+    aligned_boundaries = [
+        row
+        for row in boundaries
+        if row["match_clock_alignment"]["status"] == "TIMESTAMPED_MATCH_CLOCK_CONTEXT_AVAILABLE"
+    ]
 
     return {
         "kind": "meihua_football_temporal_audit",
@@ -212,7 +348,9 @@ def build_football_temporal_audit(
         "anchor_cast": {
             "local_datetime": anchor_local.isoformat(),
             "hour_branch": snapshot.hour_branch,
+            "lunar_month_raw": snapshot.lunar_month_raw,
             "lunar_month": snapshot.lunar_month,
+            "lunar_month_is_leap": snapshot.lunar_month_is_leap,
             "lunar_day": snapshot.lunar_day,
             "rule": policy["anchor_rule"]["rule"],
         },
@@ -223,11 +361,19 @@ def build_football_temporal_audit(
             "meaning": policy["football_window_policy"]["meaning"],
             "clock_rule": policy["football_window_policy"]["clock_rule"],
         },
+        "match_clock_audit": {
+            "status": "TIMESTAMPED_EVENTS_AVAILABLE" if normalized_events else "NOT_PROVIDED",
+            "event_count": len(normalized_events),
+            "events": normalized_events,
+            "aligned_boundary_count": len(aligned_boundaries),
+            "policy": policy["match_clock_event_policy"],
+        },
         "boundary_summary": {
             "total_boundary_events": len(boundaries),
             "hour_branch_changes": len(hour_branch_changes),
             "calendar_changes": len(calendar_changes),
             "utc_offset_changes": len(offset_changes),
+            "match_clock_aligned_boundaries": len(aligned_boundaries),
             "crosses_hour_branch": bool(hour_branch_changes),
             "crosses_calendar_boundary": bool(calendar_changes),
             "crosses_utc_offset": bool(offset_changes),
