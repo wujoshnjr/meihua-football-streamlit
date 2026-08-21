@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from jarvis.zhouyi_line_review import (
+from pathlib import Path
+import sys
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from jarvis.zhouyi_line_review import (  # noqa: E402
     build_zhouyi_line_meaning_review,
     zhouyi_line_meaning_review_audit,
 )
