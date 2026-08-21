@@ -7,6 +7,7 @@
     "schema_version",
     "packet_purpose",
     "match_event",
+    "event_metadata",
     "alignment_audit",
     "interpretation_roles",
     "qimen_packet_sha256",
@@ -34,13 +35,37 @@
       },
       "additionalProperties": false
     },
+    "event_metadata": {
+      "type": ["object", "null"],
+      "properties": {
+        "competition": {"type": "string"},
+        "stage": {"type": "string"},
+        "stadium": {"type": "string"},
+        "city": {"type": "string"},
+        "country": {"type": "string"},
+        "kickoff_basis": {"type": "string"},
+        "time_verification_status": {"type": "string"},
+        "time_source": {"type": "string"},
+        "mode": {"enum": ["PREMATCH", "LIVE", "HISTORICAL_BACKTEST"]}
+      },
+      "additionalProperties": false
+    },
     "alignment_audit": {
       "type": "object",
-      "required": ["status", "checked_fields", "fields"],
+      "required": ["status", "checked_fields", "fields", "packet_integrity"],
       "properties": {
         "status": {"const": "PASS"},
         "checked_fields": {"type": "array", "minItems": 5},
-        "fields": {"type": "object"}
+        "fields": {"type": "object"},
+        "packet_integrity": {
+          "type": "object",
+          "required": ["qimen", "meihua"],
+          "properties": {
+            "qimen": {"type": "object", "required": ["status", "reason", "expected", "actual"]},
+            "meihua": {"type": "object", "required": ["status", "reason", "expected", "actual"]}
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": true
     },
