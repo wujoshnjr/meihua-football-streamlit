@@ -73,7 +73,7 @@ with cast_tab:
                 "事件所在地時間",
                 value=time(20, 0),
                 step=1,
-                format="HH:mm:ss",
+                format="24h",
                 help="JARVIS 10.2 使用秒級 local civil time；足球官方資料只有分鐘時可把秒留 00。",
             )
         with c3:
