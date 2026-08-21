@@ -95,6 +95,22 @@ def build_meihua_classical_method_audit(snapshot: MeihuaSnapshot) -> dict[str, A
             "implementation_status": profile["status"],
             "classification_rule": profile["classification_rule"],
         },
+        "time_convention": {
+            "engine_version": snapshot.schema_version,
+            "event_local_datetime": snapshot.event_local_at.isoformat(),
+            "timezone": snapshot.timezone_name,
+            "lunar_month_raw": snapshot.lunar_month_raw,
+            "lunar_month_numeric_for_cast": snapshot.lunar_month,
+            "lunar_month_is_leap": snapshot.lunar_month_is_leap,
+            "leap_month_policy": snapshot.leap_month_policy,
+            "lunar_day": snapshot.lunar_day,
+            "lunar_day_boundary_policy": snapshot.lunar_day_boundary_policy,
+            "hour_branch": snapshot.hour_branch,
+            "boundary": (
+                "閏月與日界處理是 JARVIS 可重建研究慣例；保留 raw input 與 policy，"
+                "不宣稱所有傳統流派採同一規則。"
+            ),
+        },
         "weighting_decision": {
             "zhouyi_role": profile["zhouyi_role"],
             "zhouyi_rule": profile["zhouyi_rule"],
