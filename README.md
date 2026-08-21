@@ -1,182 +1,154 @@
 # JARVIS 術數 AI — Operation STARK
 
-**JARVIS 10.1 · Knowledge Completion** 把產品固定在一件事：JARVIS 保存術數知識、deterministic 起局／起卦、核對原典與來源、整理成 AI 解卦包；最後的綜合解局／解卦交給 ChatGPT。
+**JARVIS 10.2 · Deep Divination Review**：JARVIS 負責事件時間、奇門起局、梅花起卦、古籍／知識檢索、來源審查、矛盾與不確定性整理；最後術數綜合判讀交給 ChatGPT。
 
-> **周易核文本 × 梅花定結構 × 易林補劇情 × ChatGPT 合參**
+> **奇門多層合參 × 梅花定結構 × 周易依方法決定權重 × 易林補轉變情境 × ChatGPT 最終解讀**
 
-JARVIS 不自動把吉凶字樣、單一卦象、爻辭或林辭換成勝率、固定比分或必然賽果。足球欄位一律是 `modern application`，必須保留可觀察訊號與反證。
+JARVIS 不自動把任何單一門、星、神、卦、爻或林辭換成勝率、固定比分或必然賽果。足球欄位屬 `modern application`，必須保留 source basis、observable 與 counter-signal。
 
-## 核心流程
+## 足球 Case 工作流
 
 ```text
-問題 + 事件所在地時間 / IANA 時區
+MATCH_EVENT_V1
+同一事件所在地 aware local datetime + IANA timezone
         ↓
-奇門 deterministic 起局
-或
-梅花 deterministic 起卦
+┌───────────────────────┬────────────────────────┐
+│ Qimen Packet          │ Meihua Packet          │
+│ RESULT_ENGINE_INPUT   │ STRUCTURE_STRESS_TEST  │
+└───────────────────────┴────────────────────────┘
         ↓
-梅花：核對《周易》本卦 / 互卦 / 變卦
-      + 卦辭 / 彖 / 大象 / 真正動爻爻辭 / 可直接映射的小象
+DIVINATION_CASE_BUNDLE_V1
+same-event alignment + packet SHA audit
         ↓
-體用 / 旺衰 / 上下卦 / 本互變深讀
-        ↓
-唯一查《焦氏易林》本卦 → 最終變卦
-        ↓
-來源 provenance + project heuristic + 足球支持 / 反證
-        ↓
-DIVINATION_PACKET_V2
-        ↓
-ChatGPT 最終合參
+ChatGPT FINAL_SYNTHESIS
 ```
 
-## 網站入口
+`pages/5_Football_Case.py` 可一次輸入主客隊、賽事／階段／球場、事件時間與 IANA timezone，同時建立奇門與梅花 packet；兩份 packet 只有在主客、事件時間與 timezone 完全一致時才能組成 Case Bundle。
 
-- **JARVIS**：流程與知識覆蓋。
-- **奇門起局**：時家奇門・轉盤・拆補法。
-- **梅花起卦**：年月日時起卦 +《周易》原典審查 +《焦氏易林》轉卦鏡頭。
-- **知識庫**：搜尋奇門、梅花、《周易》64 卦／384 爻與《焦氏易林》4096 轉卦。
-- **AI 解卦包**：下載最新 `DIVINATION_PACKET_V2` 交給 ChatGPT。
+- **奇門 = `RESULT_ENGINE_INPUT`**：提供主客用神與完整盤局，交由 ChatGPT 判斷正規時間勝負及有限比分候選；JARVIS 本身不下結果。
+- **梅花 = `STRUCTURE_STRESS_TEST`**：讀開局／中段／終局、體用、旺衰、體互／用互、變卦、動爻、周易、易林與時間交界；不另產生第二套比分和奇門投票。
+- **ChatGPT = `FINAL_SYNTHESIS`**：保留支持、反證、矛盾與未知後再作最後解讀。
+
+## 時間精準度
+
+Runtime：`streamlit==1.61.0`、`lunar_python==1.4.8`、`tzdata==2026.3`。
+
+- 事件時間支援秒級輸入。
+- 使用 IANA timezone，不只存 EST / EDT / CDT 等縮寫。
+- DST ambiguous local time 必須明確選 `fold=0` / `fold=1`；nonexistent time 直接拒絕。
+- 梅花足球 wall-clock audit 可選 120 / 150 / 180 / 210 分鐘，預設 180。
+- 偵測 `HOUR_BRANCH_CHANGE`、`CIVIL_DATE_CHANGE`、`LUNAR_DATE_CHANGE`、`UTC_OFFSET_CHANGE`。
+- kickoff anchor cast 永遠不變；交界 diagnostic recast 只屬 `SECONDARY_DIAGNOSTIC_ONLY`，**跨時辰不等於必然逆轉**。
+- 可選 timestamped match-clock events；wall-clock 不得冒充官方比賽分鐘。
 
 ## 奇門遁甲
 
-目前正式引擎鎖定：
+正式引擎鎖定：**時家奇門・轉盤・拆補法・事件所在地民用時・晚子時換日・中五寄坤二・天禽隨天芮・八神同名制。**
 
-**時家奇門・轉盤・拆補法・事件所在地民用時・晚子時換日・中五寄坤二・天禽隨天芮。**
+### Core 306 Matrix
 
-知識層包含：
+- 81 天地盤干
+- 72 星 × 門
+- 72 門 × 宮
+- 81 星 × 宮
 
-- 9 九宮、8 八門、9 九星、8 八神、10 天干／三奇六儀。
-- 陰陽遁、局數、值符值使、旬空、驛馬、刑墓迫與常用格局。
-- **Core 306 Matrix**：81 天地盤干 + 72 星門 + 72 門宮 + 81 星宮。
-- 8 層深讀：宮 → 門 → 星 → 神 → 天盤干 → 地盤干 → 格局 → 空／馬。
-- 每次 packet 只放入實際盤面命中的關係，不把 306 全部塞給 AI。
+`Core 306` 只指這四族，不宣稱等於所有奇門交互。
 
-「Core 306」只指這四類已固定的核心關係矩陣，不宣稱等於奇門所有可能組合。神×門、神×星、神×宮等 Extended Relations 屬後續審查工程。
+### Extended Review 378
 
-## 梅花易數
+10.2 另外 materialize：
 
-正式引擎目前鎖定 **年月日時起卦**：年支數 + 農曆月 + 農曆日取上卦，再加時支數取下卦與動爻；餘八取卦、餘六取爻。
+- 64 神 × 門
+- 72 神 × 星
+- 72 神 × 宮
+- 80 十天干 × 八門
+- 90 十天干 × 九星
 
-結構層包含：
+共 **378 個靜態 Extended Relations**；旬空、驛馬、伏吟、反吟、門迫、入墓、擊刑等 modifier 仍依實際盤面動態疊加。Authority 固定為 `PROJECT_HEURISTIC__COMPONENTS_SOURCE_BACKED`，不是古籍逐條專名，不得做符號投票、勝率或固定比分。
 
-- 8 八卦、64 六十四卦。
-- 本卦、互卦、變卦。
-- 體／用、五種生克關係、旺／平／衰。
-- 上下卦內外角色與五行互動。
-- 6 個爻位階段與 8 個足球觀察維度。
+### Source-derived Qimen golden fixtures
 
-## 《周易》原典審查層
+10.2 新增四個可重建 classical method fixtures，來源錨定《遁甲演義》卷二，並依傳世轉布規則人工固定 full-core expected plate：
 
-JARVIS 10.1 新增固定來源的 source-aware corpus：
+1. 陽遁四局・乙酉時・天遁例
+2. 陰遁六局・庚申時・天遁例
+3. 陽遁一局・辛卯時・地遁例
+4. 陰遁九局・夏至丙寅時・地遁例
 
-```text
-64 / 64 卦
-384 / 384 標準爻
-卦辭 / 彖 / 大象
-逐爻爻辭
-可直接映射的小象
-乾、坤另保留用九 / 用六
-upstream = kanripo/KR1a0001
-pinned commit = 8284adbf9e3435d713180e24f05bf75f8b7d1d96
-```
+CI 逐宮核對地盤、天盤干、星、門、值符／值使與 source anchor。古籍例沒有完整西曆年份／IANA timezone，且八神名制存在流派差異，因此稱為 **`SOURCE_DERIVED_METHOD_GOLDEN`**，不冒充完整 calendar + timezone + deity 的 end-to-end external certification。
 
-Corpus 以 8 個 shard 保存，每一卦與每一爻都帶 source file、page、pinned commit 與 source SHA-256。固定數位底本完整 **不等於** 所有歷代版本、異文、標點、注家已全部校勘。
+## 梅花易數古法方法審查
 
-乾卦在此底本中把大象與六小象集中在同一象傳 block；JARVIS 保守保留來源結構，不假裝能無爭議逐條切開。其他可直接映射的小象逐爻保存。
+目前 production engine 只實作 **年月日時起卦**，分類為 `XIANTIAN_NUMBER_METHOD`。
 
-### 易義審查順序
+- 先天數法：體用、旺衰、互變、動靜與內外是主要骨架，《周易》文本為 `SUPPORTING`。
+- 後天物卦法：知識層已辨識，但 production engine 尚未假裝實作。
+- `體一用百`：不只看一個 body/use relation。
+- 正式區分 `body_mutual / use_mutual`，同時保存原始 `mutual_upper / mutual_lower` 供排卦稽核。
+- 三要、十應、外應未在占測當時記錄時標為 `NOT_RECORDED`，禁止賽後回填。
+- 閏月與日界 convention 顯式版本化。
 
-1. 核對來源、卦序、卦名、卦符、上下卦。
-2. 讀本卦卦辭／彖／大象。
-3. 讀體用與旺衰。
-4. 讀互卦中段機制。
-5. **逐字讀真正動爻爻辭與可用小象**，再與通用爻位階段交叉。
-6. 讀變卦卦辭／彖／大象。
-7. 再讀《焦氏易林》本→變。
-8. 產生足球候選劇本、支持、反證與矛盾。
-9. 最後由 ChatGPT 合參。
+## 《周易》64 / 384 深層審查
 
-`knowledge/zhouyi_review_policy.json` 明確禁止：某卦=主勝、某爻=客勝、某林辭=固定比分、吉凶字樣=統計機率。
+固定來源：`kanripo/KR1a0001`，pinned commit `8284adbf9e3435d713180e24f05bf75f8b7d1d96`。
 
-## 《焦氏易林》4096 層
+- 64 / 64 卦
+- 384 / 384 標準爻
+- 卦辭、彖、大象、逐爻爻辭
+- 378 條可直接映射小象；乾卦六小象保留 grouped-source exception
+- 乾用九／坤用六另存
 
-固定 base corpus：
+10.2 對 **384 / 384** 每一標準爻新增 `meaning_review`：
 
-```text
-64 本卦 × 64 之卦 = 4096 / 4096
-source blocks = 64 / 64
-base edition = WYG / 文淵閣四庫全書
-upstream = kanripo/KR3g0029
-pinned commit = 764e995ce74aa249081918ca1b0c23bbca62bec8
-```
+`classical_text → text_conditions → action_boundary → risk_boundary → turning_point → conditional_outcome_tendency → misread_warnings → ambiguity → football evidence/counter-evidence`
 
-每條保存林辭、raw transcription、卷／頁、source section、校語、gaiji token、來源 label anomaly 與 pinned commit。`MEIHUA_YILIN_BRIDGE` **只查梅花本卦 → 最終變卦**，是本專案跨系統合參，不宣稱等同焦林直日法。
+Authority 固定為 `PROJECT_REVIEW__NOT_CLASSICAL_COMMENTARY`；原文仍是第一層證據。
 
-`knowledge/yilin/image_ontology.json` 是 JARVIS 的 project heuristic：把道路、渡涉、車馬、阻滯、門戶、對抗、刑法、資訊、協作、離散、得失、傷病、康復、轉折等意象轉成候選足球情境、observable 與 counter-signals。它不是焦氏原註，也不是預測準確率。
+## 《焦氏易林》4096
 
-## DIVINATION_PACKET_V2
+固定 base corpus：`kanripo/KR3g0029`，pinned commit `764e995ce74aa249081918ca1b0c23bbca62bec8`。
 
-`DIVINATION_PACKET_V2` 新增：
+- 64 × 64 = **4096 / 4096** 本→之卦條目
+- 保留 raw transcription、卷／頁、source notes、gaiji、source-label anomaly 與 SHA provenance
+- 梅花只查 **本卦 → 最終變卦** 作 transformation lens
+- 不宣稱等同焦林直日法
 
-- 實際排盤／起卦使用的事件所在地 aware datetime。
-- `zhouyi_review`：本／互／變原典、真正動爻、source audit、易義審查規約。
-- `yilin_bridge`：唯一的本→變易林條目，不再在 `knowledge_context` 重複一份。
-- 正式 JSON Schema：`schemas/divination_packet_v2.schema.json`。
-- deterministic SHA-256。
+`cross_system_coherence` 只有在來源 pair 對齊後才比較周易動爻與易林條目的 project semantic domains；共同 domain 是條件式候選 reinforcement，不是吉凶投票。
 
-ChatGPT 的責任是：不重起盤、不改 packet；先讀盤象與原典，再分開 project heuristic 與 football modern application；保留矛盾與反證，最後才做綜合判讀。
+## Packet contracts
 
-## 來源真實性
+### `DIVINATION_PACKET_V2`
+保存 deterministic chart/hexagram facts、來源審查、method audit、temporal audit、meaning review、Yilin bridge、contradiction register、uncertainty register 與 deterministic SHA-256。
 
-主要來源登錄於 `knowledge/sources.json`：
-
-- 《遁甲演義》與相關奇門古籍。
-- 《梅花易數》。
-- 《周易》：Kanripo `KR1a0001` pinned transcription；Wikisource / Chinese Text Project 作 crosscheck。
-- 《焦氏易林》：Kanripo `KR3g0029` WYG pinned transcription；Wikisource / Chinese Text Project 作 crosscheck。
-- lunar-python 1.4.8、IANA tzdb / Python zoneinfo。
-- FIFA / IFAB / StatsBomb 只提供足球可觀察語彙，不證成術數有效。
-
-原典數位轉錄、後世注解、專案摘要與足球現代應用必須分層；不得用 AI 補寫古籍或靜默修改來源疑點。
-
-## 主要結構
-
-```text
-app.py
-pages/00_Home.py
-pages/1_Qimen_Cast.py
-pages/2_Meihua_Cast.py
-pages/3_Knowledge_Vault.py
-pages/4_AI_Packet.py
-qimen/                              deterministic 奇門
-meihua/                             deterministic 梅花
-jarvis/qimen_relations.py           Qimen Core 306
-jarvis/stark_vault.py               術數知識檢索
-jarvis/zhouyi.py                    周易 source review / search
-jarvis/yilin.py                     易林 4096 lookup / semantic profile
-jarvis/divination_packet.py         DIVINATION_PACKET_V2
-knowledge/zhouyi/entries/01..08.json 周易 64/384 corpus shards
-knowledge/zhouyi/manifest.json
-knowledge/zhouyi_review_policy.json
-knowledge/yilin/entries/01..64.json
-schemas/divination_packet_v2.schema.json
-tools/import_zhouyi_kanripo.py
-tools/validate_zhouyi.py
-tools/import_yilin_kanripo.py
-tools/validate_yilin.py
-```
+### `DIVINATION_CASE_BUNDLE_V1`
+保存同一場足球的 Qimen + Meihua packets，強制驗證 same home/away、same aware event datetime、same IANA timezone、packet SHA integrity 與 deterministic match-event identity。任何不一致都停止合參。
 
 ## 驗證
 
 ```bash
 pip install -r requirements-dev.txt
-python tools/import_zhouyi_kanripo.py --check
-python tools/validate_zhouyi.py
 python tools/import_yilin_kanripo.py
+python tools/import_zhouyi_kanripo.py
+python tools/validate_zhouyi.py
+python tools/validate_zhouyi_semantics.py
+python tools/validate_zhouyi_line_meaning_review.py
+python tools/validate_divination_review.py
+python tools/validate_meihua_classical_method.py
+python tools/validate_meihua_temporal_precision.py
+python tools/validate_meihua_coherence.py
+python tools/validate_qimen_source_golden.py
+python tools/validate_qimen_extended_review.py
+python tools/validate_qimen_review_gates.py
 ruff check .
 python -m pytest -q
 python tools/validate_knowledge.py
 python tools/validate_yilin.py
 ```
 
-**JARVIS 負責盤、原典與知識；ChatGPT 負責解。**
+## 完整性邊界
+
+JARVIS 10.2 完成 pinned Zhouyi/Yilin source review、384 爻條件式 review、Meihua method-aware/temporal review、Qimen Core 306 + Extended 378、source-derived Qimen method golden tests，以及 deterministic Case Bundle handoff。
+
+它**不宣稱**所有歷代版本已校勘、所有奇門流派已統一、所有古法起卦法都已實作、Qimen 已完成跨 timezone 的 end-to-end 外部盤認證，或足球預測準確率有所提升。
+
+**JARVIS 負責盤、原典、知識與稽核；ChatGPT 負責最後解局／解卦。**
