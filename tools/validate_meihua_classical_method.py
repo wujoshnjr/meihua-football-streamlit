@@ -11,7 +11,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from jarvis.meihua_method import build_meihua_classical_method_audit  # noqa: E402
-from meihua.engine import build_meihua_snapshot_from_numbers  # noqa: E402
+from meihua.engine import (  # noqa: E402
+    LEAP_MONTH_POLICY,
+    LUNAR_DAY_BOUNDARY_POLICY,
+    build_meihua_snapshot_from_numbers,
+)
 
 
 PATH = ROOT / "knowledge" / "meihua_classical_method_audit.json"
@@ -44,7 +48,7 @@ def _keys(value):
 def main() -> None:
     payload = json.loads(PATH.read_text(encoding="utf-8"))
     require(
-        payload.get("schema_version") == "stark-meihua-classical-method-audit-v1.0.0",
+        payload.get("schema_version") == "stark-meihua-classical-method-audit-v1.1.0",
         "unexpected schema version",
     )
     profiles = payload.get("method_profiles", {})
@@ -77,9 +81,15 @@ def main() -> None:
         require(bool(row.get("audit_requirement")), f"principle {row.get('id')} missing audit requirement")
 
     current = payload.get("current_engine_contract", {})
+    require(current.get("engine_version") == "jarvis-meihua-year-month-day-hour-v0.3.0", "current engine version mismatch")
     require(current.get("method") == "年月日時起卦", "current method contract mismatch")
     require(current.get("method_class") == "XIANTIAN_NUMBER_METHOD", "current method must be classified as xiantian number method")
     require(current.get("zhouyi_role") == "SUPPORTING", "current engine must not promote Zhouyi line text above Meihua structure")
+    require(current.get("leap_month_policy") == LEAP_MONTH_POLICY, "leap-month policy must be explicit and synchronized")
+    require(
+        current.get("lunar_day_boundary_policy") == LUNAR_DAY_BOUNDARY_POLICY,
+        "lunar day-boundary policy must be explicit and synchronized",
+    )
     require(current.get("external_response_status") == "NOT_RECORDED_BY_CURRENT_UI", "external-response gap must be explicit")
     require(bool(current.get("unimplemented_classical_layers")), "unimplemented classical layers must stay visible")
 
@@ -98,13 +108,18 @@ def main() -> None:
     require(audit["weighting_decision"]["zhouyi_role"] == "SUPPORTING", "runtime Zhouyi role mismatch")
     layers = audit["body_use_network"]["layers"]
     require([row["layer"] for row in layers] == ["original_use", "mutual_upper", "mutual_lower", "changed_use"], "body/use network must expose four action layers")
+    mutual_identities = {row.get("classical_identity") for row in layers if row["layer"].startswith("mutual_")}
+    require(mutual_identities == {"body_mutual", "use_mutual"}, "mutual layers must expose body_mutual/use_mutual identities")
     require(audit["external_response_audit"]["three_essentials"] == "NOT_RECORDED", "three essentials missing-state must be explicit")
     require(audit["external_response_audit"]["ten_responses"] == "NOT_RECORDED", "ten responses missing-state must be explicit")
 
     present_keys = set(_keys(audit))
     require(not (present_keys & FORBIDDEN_RESULT_KEYS), f"method audit contains forbidden automatic result fields: {sorted(present_keys & FORBIDDEN_RESULT_KEYS)}")
 
-    print("Meihua classical method audit passed: xiantian/houtian separated / current method xiantian / Zhouyi supporting / body-use network / external-response gaps explicit")
+    print(
+        "Meihua classical method audit passed: xiantian/houtian separated / time conventions versioned / "
+        "Zhouyi supporting / body-mutual-use-mutual network / external-response gaps explicit"
+    )
 
 
 if __name__ == "__main__":
