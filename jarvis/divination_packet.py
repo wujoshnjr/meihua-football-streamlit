@@ -150,6 +150,7 @@ def build_meihua_packet(
     home_team: str = "",
     away_team: str = "",
     timeline_horizon_minutes: int = 180,
+    match_clock_events: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     if not question.strip():
         raise ValueError("問題不可空白")
@@ -157,6 +158,8 @@ def build_meihua_packet(
         raise ValueError("event_at 必須含時區")
     if category == "football_match" and (not home_team.strip() or not away_team.strip()):
         raise ValueError("足球比賽必須填主隊與客隊")
+    if category != "football_match" and match_clock_events:
+        raise ValueError("match_clock_events 只適用 football_match")
 
     snapshot = build_meihua_snapshot(event_at, timezone_name)
     knowledge_context = meihua_context(snapshot)
@@ -175,7 +178,11 @@ def build_meihua_packet(
     )
     yilin_bridge = build_meihua_yilin_bridge(original, changed)
     temporal_precision_audit = (
-        build_football_temporal_audit(snapshot, horizon_minutes=timeline_horizon_minutes)
+        build_football_temporal_audit(
+            snapshot,
+            horizon_minutes=timeline_horizon_minutes,
+            match_clock_events=match_clock_events,
+        )
         if category == "football_match"
         else None
     )
@@ -250,12 +257,13 @@ def build_meihua_packet(
             "先讀 meihua_method_audit：本 packet 是 XIANTIAN_NUMBER_METHOD（年月日時先天數法），因此體用、旺衰、互變與內外作用網是主要判讀骨架。",
             "body_use_network 同時保存互卦 upper/lower 的機械位置與 body_mutual/use_mutual 古法身份；體互優先於用互審查。",
             "足球問題再讀 temporal_precision_audit：開賽 anchor cast 永遠不變；時支/日界/DST交界只作 SECONDARY_DIAGNOSTIC，不得自動解讀為逆轉。",
-            "temporal_precision_audit 的 elapsed_real_minutes_from_kickoff 是 wall-clock 真實經過時間，不等同官方比賽分鐘；傷停、半場、VAR、延誤與延長賽須用實際 match clock 再定位。",
+            "temporal_precision_audit 的 elapsed_real_minutes_from_kickoff 是 wall-clock 真實經過時間，不等同官方比賽分鐘。",
+            "若提供 temporal_precision_audit.match_clock_audit.events，只用 timestamped event log 定位實際賽事階段；不得在事件之間線性插值出虛構官方分鐘。",
             "若 temporal_precision_audit 有 diagnostic_recast，只比較它相對 anchor 哪些欄位改變；禁止用 secondary recast 取代主卦或投票生成勝率/比分。",
             "對目前年月日時法，zhouyi_review 的卦辭／彖／象／動爻爻辭是 source-aware SUPPORTING review；不得讓單句爻辭自動凌駕體用、旺衰與互變。",
             "先核對 zhouyi_review.source_audit；古籍文字不得由 AI 改寫、補造或用後見資料修正。",
             "真正動爻的 meaning_review 是 PROJECT_REVIEW__NOT_CLASSICAL_COMMENTARY：先讀原文，再讀 text_conditions、risk_boundary、turning_point、misread_warnings 與 football evidence/counter-evidence。",
-            "固定合參順序：方法審查 → anchor 本卦／體用 → 旺衰 → 體互／用互 → 變卦作用 → 時間邊界審查 → 動靜／內外／已記錄外應 → 周易 supporting review → 焦氏易林本卦之變卦 → 支持／反證。",
+            "固定合參順序：方法審查 → anchor 本卦／體用 → 旺衰 → 體互／用互 → 變卦作用 → 時間邊界／match-clock 審查 → 動靜／內外／已記錄外應 → 周易 supporting review → 焦氏易林本卦之變卦 → 支持／反證。",
             "meihua_method_audit.body_use_network 要連同體卦旺衰閱讀；不可只看單一 body_use_relation。",
             "三要、十應、外應若標記 NOT_RECORDED，就視為缺失資料，不得由 AI 或賽後事件補造。",
             "先讀 review_summary.contradiction_register 與 uncertainty_register；矛盾和缺口必須保留，不可為了單一結論刪除。",
