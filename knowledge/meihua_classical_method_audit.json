@@ -1,11 +1,12 @@
 {
-  "schema_version": "stark-meihua-classical-method-audit-v1.0.0",
-  "scope_note": "JARVIS 10.2 用來先辨《梅花易數》起卦方法，再決定解讀權重。此檔不改變 deterministic 起卦結果；它只防止把不同古法方法用同一套權威順序解讀。",
+  "schema_version": "stark-meihua-classical-method-audit-v1.1.0",
+  "scope_note": "JARVIS 10.2 用來先辨《梅花易數》起卦方法，再決定解讀權重。此檔不改變 deterministic 起卦結果；它只防止把不同古法方法用同一套權威順序解讀，並把閏月與日界等工程時間慣例顯式版本化。",
   "source_ids": ["meihua-yishu-wikisource", "project-reading-protocol"],
   "classical_boundary": [
     "傳世《梅花易數》把『未得卦先得數』與『未得數先得卦』分作不同方法脈絡；JARVIS 以 XIANTIAN_NUMBER_METHOD / HOUTIAN_OBJECT_METHOD 作工程分類。",
     "工程分類名稱與 status 是 JARVIS 規格；不得冒充古籍原文標題。",
-    "年月日時法屬目前唯一 implemented 的梅花起卦引擎；其他方法未實作前只能 knowledge_only。"
+    "年月日時法屬目前唯一 implemented 的梅花起卦引擎；其他方法未實作前只能 knowledge_only。",
+    "閏月以本月數參與年月日時數法、以及事件所在地 civil wall date 交給 lunar-python 取得農曆日，都是 JARVIS 可重建研究慣例，不宣稱所有傳統流派完全一致。"
   ],
   "method_profiles": {
     "XIANTIAN_NUMBER_METHOD": {
@@ -17,7 +18,7 @@
       "primary_review_order": [
         "deterministic 本卦／體用定位",
         "體用生克與體卦旺衰",
-        "互卦對體之作用",
+        "體互／用互對體之作用",
         "變卦／變用對體之作用",
         "動靜、內外與可用外應",
         "《周易》卦辭／彖／象／動爻作 source-aware supporting review",
@@ -26,8 +27,8 @@
       ],
       "zhouyi_role": "SUPPORTING",
       "zhouyi_rule": "不得讓單句動爻爻辭凌駕體用、旺衰與互變；若經文與梅花結構衝突，必須登錄矛盾與成立條件。",
-      "body_use_rule": "體為主，用為事；不能只讀一個 body_use_relation，需把互與變等作用層一併看作對體的作用網。",
-      "time_layer_rule": "用層最緊，互層次之，變層偏後；只作相對先後，不機械換算固定分鐘。",
+      "body_use_rule": "體為主，用為事；不能只讀一個 body_use_relation，需把體互、用互與變等作用層一併看作對體的作用網。",
+      "time_layer_rule": "用層最緊，體互較緊、用互次之，變層偏後；只作相對先後，不機械換算固定分鐘。",
       "external_response_rule": "三要、十應、外應若無人工輸入，必須標示 unavailable，不得由 AI 事後補造。"
     },
     "HOUTIAN_OBJECT_METHOD": {
@@ -55,13 +56,13 @@
       "id": "body_one_uses_many",
       "name": "體一用百",
       "project_summary": "體為主體核心，除本卦用之外，互、變與外應都可能成為作用於體的用層。",
-      "audit_requirement": "packet 必須列本用、互上、互下、變用對體關係；缺外應時明示缺失。"
+      "audit_requirement": "packet 必須列本用、體互、用互、變用對體關係；缺外應時明示缺失。"
     },
     {
       "id": "use_mutual_change_sequence",
       "name": "用緊、互次、變後",
-      "project_summary": "把用、互、變分成相對作用先後與距離，不把它們壓成同一權重。",
-      "audit_requirement": "輸出 immediate/middle/late 的相對層次，但禁止映射固定比賽分鐘。"
+      "project_summary": "把用、體互／用互、變分成相對作用先後與距離，不把它們壓成同一權重。",
+      "audit_requirement": "輸出 immediate/middle/late 的相對層次並保留體互／用互身份，但禁止映射固定比賽分鐘。"
     },
     {
       "id": "strength_modulates_relation",
@@ -102,11 +103,14 @@
   ],
   "current_engine_contract": {
     "engine": "meihua.engine.build_meihua_snapshot",
+    "engine_version": "jarvis-meihua-year-month-day-hour-v0.3.0",
     "method": "年月日時起卦",
     "method_class": "XIANTIAN_NUMBER_METHOD",
     "zhouyi_role": "SUPPORTING",
+    "leap_month_policy": "LEAP_MONTH_USES_BASE_MONTH_NUMBER",
+    "lunar_day_boundary_policy": "EVENT_LOCATION_CIVIL_WALL_DATE_TO_LUNAR_PYTHON",
     "external_response_status": "NOT_RECORDED_BY_CURRENT_UI",
     "unimplemented_classical_layers": ["後天物卦法", "聲音占 engine", "字占 engine", "物數占 engine", "三要輸入", "十應輸入", "外應證據鎖定"],
-    "completion_note": "目前可稱年月日時先天數法已實作；不可稱完整《梅花易數》所有起卦法均已實作。"
+    "completion_note": "目前可稱年月日時先天數法已實作且時間慣例已版本化；不可稱完整《梅花易數》所有起卦法均已實作。"
   }
 }
