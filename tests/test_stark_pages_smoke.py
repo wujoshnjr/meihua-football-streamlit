@@ -32,3 +32,9 @@ def test_ai_packet_page_starts_without_packet():
     app = run_page("pages/4_AI_Packet.py")
     assert not app.exception
     assert any("AI 解卦包" in item.value for item in app.title)
+
+
+def test_football_case_workspace_starts():
+    app = run_page("pages/5_Football_Case.py")
+    assert not app.exception
+    assert any("足球雙術數案件" in item.value for item in app.title)

@@ -1,0 +1,116 @@
+{
+  "schema_version": "stark-meihua-classical-method-audit-v1.1.0",
+  "scope_note": "JARVIS 10.2 用來先辨《梅花易數》起卦方法，再決定解讀權重。此檔不改變 deterministic 起卦結果；它只防止把不同古法方法用同一套權威順序解讀，並把閏月與日界等工程時間慣例顯式版本化。",
+  "source_ids": ["meihua-yishu-wikisource", "project-reading-protocol"],
+  "classical_boundary": [
+    "傳世《梅花易數》把『未得卦先得數』與『未得數先得卦』分作不同方法脈絡；JARVIS 以 XIANTIAN_NUMBER_METHOD / HOUTIAN_OBJECT_METHOD 作工程分類。",
+    "工程分類名稱與 status 是 JARVIS 規格；不得冒充古籍原文標題。",
+    "年月日時法屬目前唯一 implemented 的梅花起卦引擎；其他方法未實作前只能 knowledge_only。",
+    "閏月以本月數參與年月日時數法、以及事件所在地 civil wall date 交給 lunar-python 取得農曆日，都是 JARVIS 可重建研究慣例，不宣稱所有傳統流派完全一致。"
+  ],
+  "method_profiles": {
+    "XIANTIAN_NUMBER_METHOD": {
+      "name": "先天數法",
+      "status": "implemented_for_year_month_day_hour",
+      "implemented_methods": ["年月日時起卦"],
+      "knowledge_only_examples": ["物數占", "聲音占", "字數占", "丈尺占", "尺寸占"],
+      "classification_rule": "先由數取得卦；目前 JARVIS 的年月日時 deterministic engine 歸入此類。",
+      "primary_review_order": [
+        "deterministic 本卦／體用定位",
+        "體用生克與體卦旺衰",
+        "體互／用互對體之作用",
+        "變卦／變用對體之作用",
+        "動靜、內外與可用外應",
+        "《周易》卦辭／彖／象／動爻作 source-aware supporting review",
+        "《焦氏易林》本卦→變卦補充 transformation context",
+        "ChatGPT 最終合參"
+      ],
+      "zhouyi_role": "SUPPORTING",
+      "zhouyi_rule": "不得讓單句動爻爻辭凌駕體用、旺衰與互變；若經文與梅花結構衝突，必須登錄矛盾與成立條件。",
+      "body_use_rule": "體為主，用為事；不能只讀一個 body_use_relation，需把體互、用互與變等作用層一併看作對體的作用網。",
+      "time_layer_rule": "用層最緊，體互較緊、用互次之，變層偏後；只作相對先後，不機械換算固定分鐘。",
+      "external_response_rule": "三要、十應、外應若無人工輸入，必須標示 unavailable，不得由 AI 事後補造。"
+    },
+    "HOUTIAN_OBJECT_METHOD": {
+      "name": "後天物卦法",
+      "status": "knowledge_only_not_implemented",
+      "implemented_methods": [],
+      "knowledge_only_examples": ["物象取上卦＋方位取下卦＋時數定爻"],
+      "classification_rule": "先由物象／方位取得卦，再以時間等定動爻。",
+      "primary_review_order": [
+        "物象與方位的起卦來源",
+        "deterministic 本卦／動爻／體用",
+        "《周易》爻辭與卦辭作較高權重文本審查",
+        "旺衰、互變、動靜與外應",
+        "ChatGPT 最終合參"
+      ],
+      "zhouyi_role": "PRIMARY_SUPPORT",
+      "zhouyi_rule": "此方法未在 JARVIS 實作；在正式 engine 與 tests 完成前不得於 UI 假裝可用。",
+      "body_use_rule": "仍須以體用、生克、旺衰與外應合參，不能只憑爻辭下結論。",
+      "time_layer_rule": "應期與先後仍須依所採古法另行鎖定，不從動爻號碼直接換成固定時間。",
+      "external_response_rule": "物象本身就是起卦資料的一部分，來源、觀察者與記錄時間必須可追溯。"
+    }
+  },
+  "core_classical_principles": [
+    {
+      "id": "body_one_uses_many",
+      "name": "體一用百",
+      "project_summary": "體為主體核心，除本卦用之外，互、變與外應都可能成為作用於體的用層。",
+      "audit_requirement": "packet 必須列本用、體互、用互、變用對體關係；缺外應時明示缺失。"
+    },
+    {
+      "id": "use_mutual_change_sequence",
+      "name": "用緊、互次、變後",
+      "project_summary": "把用、體互／用互、變分成相對作用先後與距離，不把它們壓成同一權重。",
+      "audit_requirement": "輸出 immediate/middle/late 的相對層次並保留體互／用互身份，但禁止映射固定比賽分鐘。"
+    },
+    {
+      "id": "strength_modulates_relation",
+      "name": "旺衰修正生克",
+      "project_summary": "體旺／平／衰會改變生、克、耗、制的承受與落實程度。",
+      "audit_requirement": "任何生克含意都必須連同 body_season_state 解讀。"
+    },
+    {
+      "id": "true_generation_true_control",
+      "name": "真生真克",
+      "project_summary": "外應與五行類象必須考慮實際力量、持續性與具體作用，不能只看名目五行。",
+      "audit_requirement": "足球 modern application 必須有 observable 與 counter-signal，並說明證據強弱。"
+    },
+    {
+      "id": "three_essentials_ten_responses",
+      "name": "三要十應",
+      "project_summary": "耳、目、心與其他外應是古法重要外層，但必須來自當時實際記錄。",
+      "audit_requirement": "未提供時標示 NOT_RECORDED；禁止賽後補入。"
+    },
+    {
+      "id": "movement_stillness",
+      "name": "動靜",
+      "project_summary": "動象與靜象需要區分實際作用強度；不動之象不能與真實強烈事件同權。",
+      "audit_requirement": "project heuristic 必須區分 symbol-only 與 observed-event evidence。"
+    },
+    {
+      "id": "inside_outside",
+      "name": "內外合參",
+      "project_summary": "卦內體用與卦外應象不能互相割裂；外應只用來驗證、修正或補充內卦。",
+      "audit_requirement": "外應不得反向改寫原始本卦、動爻或體用。"
+    },
+    {
+      "id": "timing_is_conditional",
+      "name": "應期活法",
+      "project_summary": "應期依卦氣、五行、干支、用互變與實際條件綜合，不把爻數直接等同唯一日期或分鐘。",
+      "audit_requirement": "若沒有鎖定應期流派與條件，只能輸出相對階段，不輸出確定時間。"
+    }
+  ],
+  "current_engine_contract": {
+    "engine": "meihua.engine.build_meihua_snapshot",
+    "engine_version": "jarvis-meihua-year-month-day-hour-v0.3.0",
+    "method": "年月日時起卦",
+    "method_class": "XIANTIAN_NUMBER_METHOD",
+    "zhouyi_role": "SUPPORTING",
+    "leap_month_policy": "LEAP_MONTH_USES_BASE_MONTH_NUMBER",
+    "lunar_day_boundary_policy": "EVENT_LOCATION_CIVIL_WALL_DATE_TO_LUNAR_PYTHON",
+    "external_response_status": "NOT_RECORDED_BY_CURRENT_UI",
+    "unimplemented_classical_layers": ["後天物卦法", "聲音占 engine", "字占 engine", "物數占 engine", "三要輸入", "十應輸入", "外應證據鎖定"],
+    "completion_note": "目前可稱年月日時先天數法已實作且時間慣例已版本化；不可稱完整《梅花易數》所有起卦法均已實作。"
+  }
+}

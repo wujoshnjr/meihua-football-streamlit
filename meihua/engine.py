@@ -6,7 +6,9 @@ from typing import Any
 
 from jarvis.time import aware_event_local_datetime
 
-MEIHUA_ENGINE_VERSION = "jarvis-meihua-year-month-day-hour-v0.2.0"
+MEIHUA_ENGINE_VERSION = "jarvis-meihua-year-month-day-hour-v0.3.0"
+LEAP_MONTH_POLICY = "LEAP_MONTH_USES_BASE_MONTH_NUMBER"
+LUNAR_DAY_BOUNDARY_POLICY = "EVENT_LOCATION_CIVIL_WALL_DATE_TO_LUNAR_PYTHON"
 
 TRIGRAM_BY_NUMBER = {
     1: "乾",
@@ -64,8 +66,12 @@ class MeihuaSnapshot:
     event_local_at: datetime
     timezone_name: str
     lunar_year_branch: str
+    lunar_month_raw: int
     lunar_month: int
+    lunar_month_is_leap: bool
+    leap_month_policy: str
     lunar_day: int
+    lunar_day_boundary_policy: str
     hour_branch: str
     upper_trigram: str
     lower_trigram: str
@@ -147,10 +153,16 @@ def build_meihua_snapshot_from_numbers(
 ) -> MeihuaSnapshot:
     """Build the fixed year-month-day-hour Meihua snapshot.
 
-    The arithmetic follows the traditional year/month/day/hour example: year +
+    The arithmetic follows the transmitted year/month/day/hour example: year +
     lunar month + lunar day chooses the upper trigram; adding the branch-hour
-    number chooses the lower trigram and moving line. The research convention is
-    event-location civil time and the same deterministic method for every match.
+    number chooses the lower trigram and moving line.
+
+    JARVIS v0.3 makes two previously implicit research conventions explicit:
+    ``lunar_python`` negative leap-month numbers are preserved in
+    ``lunar_month_raw`` while the cast uses their base month number, and the
+    local civil wall date is the input date supplied to ``lunar_python``. These
+    are versioned project conventions, not claims that every traditional school
+    uses the same leap-month or day-boundary treatment.
     """
 
     if event_local_at.tzinfo is None:
@@ -159,7 +171,8 @@ def build_meihua_snapshot_from_numbers(
         raise ValueError(f"無效年支：{year_branch}")
     if hour_branch not in BRANCH_NUMBER:
         raise ValueError(f"無效時支：{hour_branch}")
-    month = abs(lunar_month)
+    raw_month = int(lunar_month)
+    month = abs(raw_month)
     if month not in range(1, 13):
         raise ValueError("農曆月份必須在 1..12")
     if lunar_day not in range(1, 31):
@@ -193,8 +206,12 @@ def build_meihua_snapshot_from_numbers(
         event_local_at=event_local_at,
         timezone_name=timezone_name,
         lunar_year_branch=year_branch,
+        lunar_month_raw=raw_month,
         lunar_month=month,
+        lunar_month_is_leap=raw_month < 0,
+        leap_month_policy=LEAP_MONTH_POLICY,
         lunar_day=lunar_day,
+        lunar_day_boundary_policy=LUNAR_DAY_BOUNDARY_POLICY,
         hour_branch=hour_branch,
         upper_trigram=upper,
         lower_trigram=lower,

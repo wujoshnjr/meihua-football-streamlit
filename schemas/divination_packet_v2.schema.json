@@ -42,16 +42,136 @@
     "football_fixture": {"type": ["object", "null"]},
     "chart": {"type": "object"},
     "hexagram": {"type": "object"},
+    "meihua_method_audit": {
+      "type": "object",
+      "required": ["kind", "status", "method", "time_convention", "weighting_decision", "body_use_network", "external_response_audit", "classical_principles"],
+      "properties": {
+        "kind": {"const": "meihua_classical_method_audit"},
+        "status": {"const": "METHOD_AWARE_REVIEW_READY"},
+        "method": {
+          "type": "object",
+          "required": ["name", "class", "implementation_status"],
+          "properties": {
+            "class": {"enum": ["XIANTIAN_NUMBER_METHOD", "HOUTIAN_OBJECT_METHOD"]}
+          },
+          "additionalProperties": true
+        },
+        "time_convention": {
+          "type": "object",
+          "required": [
+            "engine_version",
+            "event_local_datetime",
+            "timezone",
+            "lunar_month_raw",
+            "lunar_month_numeric_for_cast",
+            "lunar_month_is_leap",
+            "leap_month_policy",
+            "lunar_day",
+            "lunar_day_boundary_policy",
+            "hour_branch",
+            "boundary"
+          ],
+          "properties": {
+            "leap_month_policy": {"const": "LEAP_MONTH_USES_BASE_MONTH_NUMBER"},
+            "lunar_day_boundary_policy": {"const": "EVENT_LOCATION_CIVIL_WALL_DATE_TO_LUNAR_PYTHON"}
+          },
+          "additionalProperties": true
+        },
+        "weighting_decision": {
+          "type": "object",
+          "required": ["zhouyi_role", "zhouyi_rule", "primary_review_order"]
+        },
+        "body_use_network": {"type": "object"},
+        "external_response_audit": {"type": "object"},
+        "classical_principles": {"type": "array", "minItems": 1}
+      },
+      "additionalProperties": true
+    },
+    "temporal_precision_audit": {
+      "type": ["object", "null"],
+      "properties": {
+        "kind": {"const": "meihua_football_temporal_audit"},
+        "status": {"const": "TEMPORAL_BOUNDARY_AUDIT_READY"},
+        "anchor_cast": {"type": "object"},
+        "analysis_window": {"type": "object"},
+        "match_clock_audit": {
+          "type": "object",
+          "required": ["status", "event_count", "events", "aligned_boundary_count", "policy"],
+          "properties": {
+            "status": {"enum": ["NOT_PROVIDED", "TIMESTAMPED_EVENTS_AVAILABLE"]},
+            "event_count": {"type": "integer", "minimum": 0},
+            "events": {"type": "array"},
+            "aligned_boundary_count": {"type": "integer", "minimum": 0},
+            "policy": {"type": "object"}
+          },
+          "additionalProperties": true
+        },
+        "boundary_summary": {"type": "object"},
+        "boundaries": {"type": "array"},
+        "diagnostic_recast_policy": {"type": "object"}
+      },
+      "required": ["kind", "status", "anchor_cast", "analysis_window", "match_clock_audit", "boundary_summary", "boundaries", "diagnostic_recast_policy"],
+      "additionalProperties": true
+    },
     "zhouyi_review": {
       "type": "object",
       "required": ["kind", "status", "catalog_stats", "source_audit", "original", "mutual", "changed", "moving_line"],
       "properties": {
         "kind": {"const": "zhouyi_source_review"},
-        "status": {"const": "SOURCE_AWARE_REVIEW_READY"}
+        "status": {"const": "SOURCE_AWARE_REVIEW_READY"},
+        "moving_line": {
+          "type": "object",
+          "required": ["line", "marker", "classical_text", "meaning_review"],
+          "properties": {
+            "meaning_review": {
+              "type": "object",
+              "required": [
+                "schema_version",
+                "authority",
+                "hexagram",
+                "line",
+                "text_conditions",
+                "action_boundary",
+                "risk_boundary",
+                "turning_point",
+                "conditional_outcome_tendency",
+                "misread_warnings",
+                "ambiguity",
+                "football",
+                "boundary"
+              ],
+              "properties": {
+                "schema_version": {"const": "stark-zhouyi-line-meaning-review-v1.0.0"},
+                "authority": {"const": "PROJECT_REVIEW__NOT_CLASSICAL_COMMENTARY"},
+                "football": {
+                  "type": "object",
+                  "required": ["source_basis", "abstract_meaning", "possible_scenario", "observable_signals", "counter_signals", "confidence_note"]
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        }
       },
       "additionalProperties": true
     },
     "yilin_bridge": {"type": "object"},
+    "review_summary": {
+      "type": "object",
+      "required": ["kind", "status", "method_weighting", "relation_signals", "contradiction_register", "uncertainty_register", "source_coverage_audit", "handoff_rule"],
+      "properties": {
+        "kind": {"const": "meihua_deep_review_summary"},
+        "status": {"const": "READY_WITH_DECLARED_GAPS"},
+        "method_weighting": {"type": "object"},
+        "relation_signals": {"type": "array", "minItems": 4},
+        "contradiction_register": {"type": "array"},
+        "uncertainty_register": {"type": "array", "minItems": 1},
+        "source_coverage_audit": {"type": "object"},
+        "handoff_rule": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
     "knowledge_context": {"type": "array"},
     "ai_interpretation_contract": {
       "type": "array",
@@ -67,7 +187,24 @@
     },
     {
       "if": {"properties": {"system": {"const": "MEIHUA_YISHU"}}},
-      "then": {"required": ["hexagram", "zhouyi_review", "yilin_bridge", "football_fixture"]}
+      "then": {"required": ["hexagram", "meihua_method_audit", "temporal_precision_audit", "zhouyi_review", "yilin_bridge", "review_summary", "football_fixture"]}
+    },
+    {
+      "if": {
+        "properties": {
+          "system": {"const": "MEIHUA_YISHU"},
+          "question": {
+            "properties": {"category": {"const": "football_match"}},
+            "required": ["category"]
+          }
+        },
+        "required": ["system", "question"]
+      },
+      "then": {
+        "properties": {
+          "temporal_precision_audit": {"type": "object"}
+        }
+      }
     }
   ],
   "additionalProperties": true

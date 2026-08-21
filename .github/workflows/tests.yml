@@ -32,6 +32,18 @@ jobs:
         run: python tools/validate_zhouyi.py
       - name: Validate Zhouyi semantic review
         run: python tools/validate_zhouyi_semantics.py
+      - name: Validate Zhouyi 384-line conditional meaning review
+        run: python tools/validate_zhouyi_line_meaning_review.py
+      - name: Validate deep divination review contract
+        run: python tools/validate_divination_review.py
+      - name: Validate Meihua classical method audit
+        run: python tools/validate_meihua_classical_method.py
+      - name: Validate Meihua temporal precision
+        run: python tools/validate_meihua_temporal_precision.py
+      - name: Validate Meihua cross-system coherence
+        run: python tools/validate_meihua_coherence.py
+      - name: Validate Qimen golden / extended review gates
+        run: python tools/validate_qimen_review_gates.py
       - run: ruff check .
       - run: python -m pytest -q
       - run: python tools/validate_knowledge.py

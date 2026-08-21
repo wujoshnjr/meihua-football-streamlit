@@ -1,0 +1,41 @@
+{
+  "schema_version": "stark-divination-review-framework-v1.1.0",
+  "scope_note": "JARVIS 10.2 的跨系統審查骨架。它不改變任何 deterministic 起局／起卦結果，而是要求在交給 ChatGPT 前，把方法身份、原典、術數結構、現代應用、支持、反證、矛盾與不確定性分層整理。",
+  "authority_order": [
+    "deterministic chart / hexagram facts",
+    "method identity and method-specific weighting",
+    "pinned classical source text and provenance",
+    "method-specific structural rules",
+    "cross-text transformation context",
+    "project semantic review",
+    "football modern application",
+    "ChatGPT final synthesis"
+  ],
+  "review_dimensions": [
+    {"id":"source_integrity","name":"來源完整性","required":["source_id","edition_or_method","locator_or_version","verification_status"],"question":"所有關鍵判讀材料是否可追溯到固定來源或明示的專案規則？"},
+    {"id":"cast_integrity","name":"盤卦一致性","required":["event_local_time","timezone","method_version","deterministic_result"],"question":"AI 收到的盤／卦是否與真正運算結果完全一致，沒有在審查層重排？"},
+    {"id":"method_fidelity","name":"方法一致性","required":["method_class","weighting_rule","text_role","missing_classical_layers"],"question":"是否先辨起局／起卦方法，再依該方法決定文本、結構與外應的權重，而不是所有方法共用同一模板？"},
+    {"id":"text_condition","name":"經文條件","required":["classical_text","explicit_conditions","judgment_markers"],"question":"吉凶、利不利、往來、待行等語氣是否連同成立條件一起閱讀，而非抽字判斷？"},
+    {"id":"symbol_structure","name":"象與結構","required":["primary_structure","supporting_structure","limiting_structure"],"question":"卦體、體用、旺衰、門星神宮或本互變之間如何互相支持、限制或改寫初步象義？"},
+    {"id":"stage_timing","name":"階段與轉折","required":["opening","middle","turning_point","late_stage"],"question":"哪些訊號屬開局、中段、轉折與後段；是否避免硬換成固定分鐘？"},
+    {"id":"meaning_depth","name":"含意深讀","required":["literal_image","abstract_meaning","conditional_meaning","misread_warning"],"question":"是否同時保存字面象、抽象義、條件式義與最容易誤讀的地方？"},
+    {"id":"cross_system_coherence","name":"跨系統化學效應","required":["reinforcement","tension","independent_signal"],"question":"周易、梅花、易林或奇門之間是同向、互補還是衝突？不得為了單一答案硬湊。"},
+    {"id":"football_translation","name":"足球轉譯","required":["source_basis","abstract_meaning","possible_scenario","observable_signals","counter_signals","confidence_note"],"question":"每個足球含意是否能回指來源，且同時有可觀察與反證？"},
+    {"id":"contradiction_register","name":"矛盾登錄","required":["claim_a","claim_b","why_tension_exists","resolution_rule"],"question":"互相衝突的訊號是否被明示保存，而非刪掉其中一邊？"},
+    {"id":"uncertainty_register","name":"不確定性登錄","required":["unknown","impact","what_would_reduce_uncertainty"],"question":"哪些部分來自流派差異、文本異文、語義 heuristic、未記錄外應或現代情境缺失？"},
+    {"id":"overreach_guard","name":"過度解讀防護","required":["forbidden_shortcut","safe_restatement"],"question":"是否阻止把單卦、單爻、單門、單星、單林辭直接換成勝率、比分或必然事件？"},
+    {"id":"handoff_quality","name":"AI 交接品質","required":["facts","sources","review","evidence","counterevidence","uncertainty"],"question":"ChatGPT 是否能不重起盤就取得足夠材料完成合參？"}
+  ],
+  "system_emphasis": {
+    "ZHOUYI": ["source_integrity","method_fidelity","text_condition","meaning_depth","stage_timing","contradiction_register"],
+    "MEIHUA_YISHU": ["cast_integrity","method_fidelity","symbol_structure","stage_timing","cross_system_coherence","uncertainty_register"],
+    "JIAOSHI_YILIN": ["source_integrity","meaning_depth","cross_system_coherence","overreach_guard"],
+    "QIMEN_DUNJIA": ["cast_integrity","method_fidelity","symbol_structure","stage_timing","contradiction_register","overreach_guard"]
+  },
+  "football_contract": {
+    "status": "MODERN_APPLICATION__NOT_CLASSICAL_FORMULA",
+    "required_fields": ["source_basis","abstract_meaning","possible_scenario","observable_signals","counter_signals","confidence_note"],
+    "forbidden_outputs": ["automatic_win_probability","fixed_score_from_symbol","single_symbol_final_result","postmatch_backfill"]
+  },
+  "completion_rule": "完整不是條目數量本身；只有當方法身份、來源、結構、含意、支持、反證、矛盾與不確定性都可審查時，該層才可標記 review-complete。"
+}

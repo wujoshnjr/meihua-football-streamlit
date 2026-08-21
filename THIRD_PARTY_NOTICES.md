@@ -6,8 +6,9 @@ Operation STARK 的直接 runtime dependencies：
 |---|---|---|
 | Streamlit | Web 介面 | Apache-2.0 |
 | 6tail/lunar-python | 干支、農曆與節氣 API | MIT |
+| Python tzdata | 固定 IANA timezone database fallback，使事件所在地 civil-time / DST 規則可重建 | Apache-2.0 |
 
-完整套件來源與版本見 `requirements.txt` / `requirements-dev.txt`。
+完整套件來源與版本見 `requirements.txt` / `requirements-dev.txt`。JARVIS 對時間敏感，因此 `tzdata` 以明確版本固定；runtime 仍會在 packet / calendar context 中記錄實際可用的 tzdb 版本，不宣稱部署環境自動等同最新 IANA release。
 
 ## 內嵌古籍數位轉錄
 

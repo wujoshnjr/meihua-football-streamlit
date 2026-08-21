@@ -11,6 +11,7 @@ st.set_page_config(
 )
 
 home = st.Page("pages/00_Home.py", title="JARVIS", icon="🏠", default=True)
+football_case = st.Page("pages/5_Football_Case.py", title="足球雙術數", icon="⚽", url_path="football-case")
 qimen = st.Page("pages/1_Qimen_Cast.py", title="奇門起局", icon="🧭", url_path="qimen")
 meihua = st.Page("pages/2_Meihua_Cast.py", title="梅花起卦", icon="☯️", url_path="meihua")
 vault = st.Page("pages/3_Knowledge_Vault.py", title="知識庫", icon="📚", url_path="knowledge")
@@ -18,7 +19,8 @@ packet = st.Page("pages/4_AI_Packet.py", title="AI 解卦包", icon="🤖", url_
 
 navigation = st.navigation(
     {
-        "術數": [home, qimen, meihua],
+        "足球": [home, football_case],
+        "單術數": [qimen, meihua],
         "知識與 AI": [vault, packet],
     },
     position="top",
