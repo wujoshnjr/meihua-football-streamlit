@@ -42,6 +42,10 @@ jobs:
         run: python tools/validate_meihua_temporal_precision.py
       - name: Validate Meihua cross-system coherence
         run: python tools/validate_meihua_coherence.py
+      - name: Validate Qimen source-derived golden fixtures
+        run: python tools/validate_qimen_source_golden.py
+      - name: Validate Qimen extended relations
+        run: python tools/validate_qimen_extended_review.py
       - name: Validate Qimen golden / extended review gates
         run: python tools/validate_qimen_review_gates.py
       - run: ruff check .
