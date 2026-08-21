@@ -1,11 +1,12 @@
 {
-  "schema_version": "stark-meihua-temporal-precision-v1.0.0",
+  "schema_version": "stark-meihua-temporal-precision-v1.1.0",
   "scope_note": "足球賽事可能跨時辰、跨民用日界或遇時區/DST邊界。此層用來做事件時間審查，不改寫開賽時刻的主卦，也不把跨時辰自動解讀為逆轉。",
   "source_ids": ["meihua-yishu-wikisource", "iana-tzdb", "python-zoneinfo", "project-reading-protocol"],
   "classical_boundary": [
     "年月日時起卦的主卦固定錨定於事件起始時刻；傳世文本使用年、月、日、時成卦，但沒有足夠依據把同一場事件每逢時辰交界自動重起為新的主卦。",
     "時辰交界、民用日界與DST變化在 JARVIS 中屬 temporal audit / diagnostic context；不得冒充《梅花易數》原文規定的連續重起法。",
-    "若建立交界時刻的 diagnostic recast，只能作 SECONDARY_DIAGNOSTIC，不得覆蓋 anchor cast，不得自動判定反轉、勝負、比分或機率。"
+    "若建立交界時刻的 diagnostic recast，只能作 SECONDARY_DIAGNOSTIC，不得覆蓋 anchor cast，不得自動判定反轉、勝負、比分或機率。",
+    "timestamped match-clock event log 是現代足球事件定位資料，不是古法本身；只用來判斷某個 wall-clock 邊界落在什麼實際賽事階段。"
   ],
   "anchor_rule": {
     "name": "ANCHOR_CAST_IMMUTABLE",
@@ -24,6 +25,25 @@
     "clock_rule": "交界以真實 wall-clock elapsed time 記錄；傷停、半場休息、VAR、延誤與延長賽會使 wall-clock 與比賽分鐘不同。",
     "phase_rule": "未提供真實 match-clock event log 時，只能給 coarse/nominal phase hint；不得把交界硬映射成固定第幾分鐘。"
   },
+  "match_clock_event_policy": {
+    "status": "OPTIONAL_TIMESTAMPED_EVIDENCE",
+    "allowed_event_types": [
+      "ACTUAL_KICKOFF",
+      "FIRST_HALF_END",
+      "SECOND_HALF_KICKOFF",
+      "REGULATION_END",
+      "EXTRA_TIME_START",
+      "EXTRA_TIME_HALFTIME",
+      "EXTRA_TIME_SECOND_HALF_START",
+      "EXTRA_TIME_END",
+      "DELAY_START",
+      "DELAY_END"
+    ],
+    "required_fields": ["type", "local_datetime"],
+    "optional_fields": ["match_clock_label", "source", "verification_status", "note"],
+    "rule": "只有帶 aware local timestamp 且可追溯的事件才能把 wall-clock boundary 放入較精確的實際比賽階段；即使有事件 log，也不得從兩個 timestamp 線性插值成虛構的官方 match minute。",
+    "anti_backfill": "賽前 packet 不得使用事後才知道的 match-clock events。HISTORICAL_BACKTEST 只有在回測協議允許且不洩漏賽果時才可加入時間定位事件。"
+  },
   "diagnostic_recast_policy": {
     "status": "PROJECT_DIAGNOSTIC__NOT_PRIMARY_CLASSICAL_CAST",
     "rule": "只在偵測到時支、日期、農曆日或UTC offset交界時，計算該交界瞬間若『重新提出同一問題』會得到的獨立 snapshot，並只輸出與 anchor 的差異。",
@@ -40,9 +60,10 @@
     "先讀 anchor cast，保持主卦不變",
     "再看整場 wall-clock 審查視窗是否跨時支/日界/DST",
     "把交界換算成距開賽多少真實分鐘",
+    "若有 timestamped match-clock events，先用它們定位實際比賽階段；不得線性猜測官方分鐘",
     "若有 diagnostic recast，只比較哪些盤面欄位改變，不把它升格為新的主卦",
-    "再和體用旺衰、本互變、動靜、外應與實際 match-clock 證據合參",
+    "再和體用旺衰、體互／用互、變卦、動靜、外應與可驗證 match-clock 證據合參",
     "若交界接近半場、傷停或延長賽階段，只列為候選時間轉折，不宣稱必然逆轉"
   ],
-  "completion_rule": "時間精準不是把兩小時時辰硬切成比分模型，而是保留 anchor cast，同時把事件期間所有可驗證的時間輸入邊界顯式化並標示權威層級。"
+  "completion_rule": "時間精準不是把兩小時時辰硬切成比分模型，而是保留 anchor cast，同時把事件期間所有可驗證的時間輸入邊界顯式化並標示權威層級；有真實 match-clock timestamps 時再提升階段定位精度。"
 }
