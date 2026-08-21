@@ -1,208 +1,70 @@
 # Changelog
 
+## 10.2.0 — JARVIS DEEP DIVINATION REVIEW
+
+JARVIS 10.2 completes Issue #62's deep-review acceptance while preserving the product boundary: **JARVIS casts, retrieves, audits, and packages; ChatGPT performs final interpretation.** No predictive-accuracy improvement is claimed.
+
+### Football case workflow
+- Add `MATCH_EVENT_V1` deterministic same-event identity.
+- Add `DIVINATION_CASE_BUNDLE_V1` with packet SHA verification and strict home/away/event-datetime/IANA-timezone alignment.
+- Add the `⚽ 足球 Case` workspace to create Qimen + Meihua from one event input or re-import existing packets.
+- Formalize Qimen=`RESULT_ENGINE_INPUT`, Meihua=`STRUCTURE_STRESS_TEST`, ChatGPT=`FINAL_SYNTHESIS`.
+
+### Time precision
+- Upgrade runtime to `streamlit==1.61.0`; support second-level event time.
+- Pin `tzdata==2026.3` as IANA tzdb fallback.
+- Add DST nonexistent/ambiguous local-time inspection and explicit `fold=0/1` handling.
+- Add configurable 120/150/180/210-minute Meihua football wall-clock audit, default 180.
+- Detect hour-branch, civil-date, lunar-date and UTC-offset boundaries with immutable kickoff anchor and `SECONDARY_DIAGNOSTIC_ONLY` recasts.
+- Add optional timestamped match-clock events; wall-clock is never silently presented as official match minute.
+
+### Meihua classical-method fidelity
+- Add `MEIHUA_CLASSICAL_METHOD_AUDIT` and distinguish `XIANTIAN_NUMBER_METHOD` from `HOUTIAN_OBJECT_METHOD`.
+- Current year/month/day/hour engine is Xianti-number method; Zhouyi text is `SUPPORTING` while body/use, strength and mutual/change remain primary.
+- Add explicit `body_mutual` / `use_mutual` identities while preserving raw `mutual_upper` / `mutual_lower`.
+- Preserve 三要／十應／外應 as `NOT_RECORDED` until contemporaneous inputs exist; prohibit post-event backfill.
+- Version leap-month and day-boundary conventions explicitly.
+
+### Zhouyi 384-line deep review
+- Materialize conditional `meaning_review` for **384/384** standard lines.
+- Each review includes source text/provenance, text conditions, action/risk boundaries, turning-point lens, conditional tendency, misread warnings, ambiguity and football source-basis/observable/counter-signal fields.
+- Authority is `PROJECT_REVIEW__NOT_CLASSICAL_COMMENTARY`; CI rejects automatic probability/fixed-score/final-result fields.
+
+### Meihua × Zhouyi × Yilin coherence
+- Verify Zhouyi original/changed ↔ Yilin from/to source pair before synthesis.
+- Compare semantic domains only as `PROJECT_HEURISTIC`; preserve non-overlapping domains as independent signals.
+- Source mismatch becomes a blocking contradiction.
+- Add contradiction, uncertainty, source-coverage, method-weighting and temporal-context registers.
+
+### Qimen review completion
+- Keep the existing four-family catalog correctly named **Qimen Core 306 Matrix**.
+- Materialize **378 static Extended Relations** with `PROJECT_HEURISTIC__COMPONENTS_SOURCE_BACKED` authority: 64 deity×door, 72 deity×star, 72 deity×palace, 80 stem×door, 90 stem×star.
+- Keep void/horse/Fu Yin/Fan Yin/door pressure/tomb/punishment and related state modifiers as runtime condition stacks, not votes.
+- Add four `SOURCE_DERIVED_METHOD_GOLDEN` fixtures anchored to 《遁甲演義》卷二: Yang4/Yiyou Tian Dun, Yin6/Gengshen Tian Dun, Yang1/Xinmao Di Dun, Yin9/Xiazhi Bingyin Di Dun.
+- Golden validation checks full core earth plate, heaven stems, stars, doors, chief star/door and source anchor palace.
+- These classical examples do not provide a complete Gregorian/IANA event and deity naming is method-dependent, so 10.2 **does not** claim full end-to-end calendar+timezone+deity external certification.
+
+### Validation / release gates
+CI requires pinned Yilin/Zhouyi rebuilds and zero diffs; Zhouyi textual/semantic/384-line validators; deep review; Meihua method/temporal/coherence validators; Qimen source-golden, Extended Relations and honesty-gate validators; Ruff; pytest; knowledge and Yilin validation.
+
+**Completeness statement:** 10.2 completes Issue #62 acceptance for source-aware 64/384 review, Meihua deep packet review, football evidence/counter-evidence, reconstructable Qimen method-golden tests and extended Qimen review. It does not claim all historical editions, all Qimen schools, every Meihua casting method, or full end-to-end external Qimen chart certification are complete.
+
 ## 10.1.0 — JARVIS KNOWLEDGE COMPLETION
-
-JARVIS 10.1 strengthens the classical-review layer used before ChatGPT interpretation. The product principle is now **周易核文本 × 梅花定結構 × 易林補劇情 × ChatGPT 合參**.
-
-### Zhouyi source corpus
-
-- Add a pinned `kanripo/KR1a0001` source layer at commit `8284adbf9e3435d713180e24f05bf75f8b7d1d96`.
-- Materialize **64/64 hexagrams and 384/384 standard lines** in eight reviewable shards.
-- Preserve guaci, Tuan, Da Xiang, every standard line text, source page, source file, upstream commit and source SHA-256.
-- Preserve `用九` / `用六` separately.
-- Map **378 Xiaoxiang directly** to their line records; preserve Qian's six Xiaoxiang as an explicit grouped-source exception because this digital source combines them in one Xiang block instead of fabricating six cuts.
-- CI rebuilds the corpus from the pinned upstream source and requires a zero diff.
-
-### Source-aware meaning review
-
-- Add `knowledge/zhouyi_review_policy.json` with eight review dimensions: textual truth, hexagram core, moving line, body/use strength, original-mutual-changed time layers, Yilin coherence, football translation, contradiction/uncertainty.
-- Add `knowledge/zhouyi_semantic_ontology.json` for text-grounded line review. It separates judgment markers and semantic atoms from the original text and labels all semantic/football mappings `PROJECT_HEURISTIC__NOT_CLASSICAL_COMMENTARY`.
-- A moving line now carries the actual Zhouyi line text, mapped Xiaoxiang when available, source locator, line-phase context, semantic atoms, football hypotheses, observables and counter-signals.
-- Unmatched text remains available to ChatGPT as raw classical text; JARVIS does not invent a meaning merely to make coverage appear complete.
-
-### DIVINATION_PACKET_V2
-
-- Upgrade the packet contract to `DIVINATION_PACKET_V2` and add a formal JSON Schema.
-- Normalize event datetime to the actual event-location aware time used by the cast.
-- Add top-level `zhouyi_review` to Meihua packets.
-- Keep `yilin_bridge` top-level only instead of duplicating it inside `knowledge_context`.
-- AI instructions require source audit first, then Zhouyi text, Meihua structure, moving line, changed hexagram and Yilin transformation, with contradictions preserved.
-
-### UI and search
-
-- Home reports Zhouyi 64/384 source coverage alongside Yilin 4096/4096.
-- Meihua displays the Zhouyi source review, true moving-line text and provenance before the Yilin layer.
-- AI Packet exposes Xiaoxiang status and line semantic review, including support and counter-evidence.
-- Knowledge Vault can search Zhouyi hexagram text and individual line text in addition to Qimen, Meihua and Yilin.
-
-### Qimen completeness wording
-
-- Rename the existing four-family relation catalog to **Qimen Core 306 Matrix**: 81 stem pairs + 72 star-door + 72 door-palace + 81 star-palace.
-- Documentation explicitly states that Core 306 is not the complete universe of all Qimen combinations; deity-door, deity-star, deity-palace and other extended relations remain separately reviewable work.
-
-### Validation and boundaries
-
-- Add strict Zhouyi textual, semantic and packet-schema validators.
-- Correct third-party notices to disclose embedded pinned classical digital transcriptions rather than claiming the repository stores only summaries and links.
-- Continue to forbid direct conversion of a hexagram, line, Yilin verse or auspicious/inauspicious word into a statistical win probability or fixed score.
-
-**Completeness statement:** 10.1 claims completeness only for the pinned Zhouyi 64/384 source slots and the already-complete Yilin 4096-pair WYG base layer. It does not claim that all historical editions, punctuation, commentaries or every possible Qimen relation have been completed. No predictive-accuracy improvement is claimed.
+- Add pinned `kanripo/KR1a0001` Zhouyi source review at commit `8284adbf9e3435d713180e24f05bf75f8b7d1d96`.
+- Materialize 64/64 hexagrams, 384/384 standard lines, guaci/Tuan/Da Xiang/line texts, 378 directly mapped Xiaoxiang, Qian grouped-source exception and Qian/Kun special lines.
+- Add source-aware semantic review and `DIVINATION_PACKET_V2` with formal JSON Schema.
+- Rename the existing Qimen relation catalog **Core 306 Matrix** and explicitly stop calling it all Qimen relations.
 
 ## 10.0.0 — JARVIS 10 YILIN FUSION
+- Complete pinned WYG `kanripo/KR3g0029` Yilin matrix at **4096/4096** unique pairs and 64/64 source blocks.
+- Preserve source text, raw transcription, page/volume, notes, gaiji, source-label anomaly, pinned commit and hashes.
+- Add `MEIHUA_YILIN_BRIDGE`: original Meihua hexagram → final changed hexagram as transformation lens, not Jiaolin day-assignment practice.
 
-JARVIS 10 completes the local 《焦氏易林》 transformation matrix while preserving the Operation STARK boundary: **JARVIS casts and retrieves; ChatGPT interprets**.
+## 9.1.0 — OPERATION STARK DEEP READING
+- Add Qimen 8-layer palace reading hierarchy and deity/state-modifier deep profiles.
+- Add Meihua original/mutual/changed roles, body/use strength, moving-line depth roles and football observation dimensions.
 
-### Complete Yilin base corpus
-
-- Expand from the alpha 64/4096 block to **4096/4096 unique pairs**: 64 source hexagrams × 64 target hexagrams.
-- Materialize all **64/64 source blocks** from a pinned WYG / 文淵閣四庫全書 digital transcription in `kanripo/KR3g0029` at commit `764e995ce74aa249081918ca1b0c23bbca62bec8`.
-- Preserve exact source provenance: source volume, section, page locator, raw transcription, editorial parenthetical notes, gaiji tokens, upstream repository and pinned commit.
-- Add source-file SHA-256 hashes and `knowledge/yilin/source_snapshot.json` so the corpus can be audited and reproduced.
-- Never use AI to create, complete or silently rewrite missing classical text.
-
-### Textual integrity
-
-- Runtime lookup is keyed by canonical King Wen numeric pairs, preventing glyph variants such as 无/無, 恒/恆, 兊/兌 and 㢲/巽 from breaking the bridge.
-- Reconstruct each source block using the documented 易林 order: the block's own hexagram first, followed by the remaining King Wen hexagrams.
-- Preserve one detected WYG source-target label anomaly instead of silently correcting it: 艮 block target position #9 is transcribed as `小過`; JARVIS keeps that source label and records the anomaly while the canonical lookup remains `艮之小畜`.
-- Add `knowledge/yilin/collation_status.json` to distinguish **pair-matrix completeness** from still-ongoing multi-edition variant collation, modern punctuation and commentary work.
-
-### Deep semantic layer
-
-- Expand the Yilin image ontology to dozens of explicit semantic atoms spanning movement, crossing, vehicles, obstruction, timing, access, defense, conflict, discipline, deception, communication, cooperation, isolation, authority, resources, gain/loss, supply, growth, fitness, recovery, reversal, collapse, ascent, weather, visibility, psychology and collective structure.
-- Every atom retains `PROJECT_HEURISTIC__NOT_CLASSICAL_COMMENTARY` authority and includes football hypotheses, observable evidence and counter-evidence.
-- Add `yilin_semantic_profile()` to aggregate matched domains, football hypotheses, support signals and counter-signals for the single active forest verse.
-- Add `yilin_semantic_audit()` to expose heuristic retrieval coverage without presenting it as textual completeness or predictive accuracy.
-
-### Runtime and AI handoff
-
-- Harden `MEIHUA_YILIN_BRIDGE` so Meihua remains the authority for original/mutual/changed hexagrams, moving line, body/use and strength.
-- Consult exactly one Yilin pair: **original hexagram → final changed hexagram**.
-- Include classical text, source apparatus, provenance, semantic profile and compatibility image atoms in `DIVINATION_PACKET_V1`.
-- AI instructions explicitly separate: digital transcription → source apparatus → sourced commentary → project heuristic → football modern application → ChatGPT final synthesis.
-- Keep the historical-method notice: this bridge is a project cross-system synthesis, not a claim that it reproduces Jiaolin day-assignment practice.
-
-### UI
-
-- Home page now reports complete 4096/4096 Yilin pair coverage and clearly states the textual-collation boundary.
-- Meihua page exposes the active `本卦之變卦`, forest verse, edition, volume/page, raw transcription, notes, gaiji warnings, anomaly warnings, semantic domains, football support and counter-evidence.
-- Knowledge Vault searches the complete 4096 corpus and the expanded image ontology.
-- AI Packet page gives ChatGPT the exact Meihua → Yilin → evidence/counter-evidence interpretation order.
-
-### Validation and reproducibility
-
-- `tools/import_yilin_kanripo.py` deterministically reproduces the complete corpus from the pinned upstream source.
-- `tools/validate_yilin.py` rejects anything other than an exact 64×64 matrix with complete required provenance and consistent snapshot/hash metadata.
-- Tests cover first/middle/last source blocks, forward/reverse lookups, orthographic normalization, semantic profiles, search and packet-level full coverage.
-- No Yilin content is converted directly into a probability, fixed score or automatic match result.
-
-**Completeness statement:** JARVIS 10 is complete at the 4096-pair / WYG-base-transcription layer. Multi-edition textual variants, editorial punctuation and historical commentary remain explicitly separate ongoing scholarly layers.
-
-## 10.0.0-alpha.1 — JARVIS 10 YILIN FUSION
-
-Operation STARK begins the staged integration of the full 《焦氏易林》 64×64 transformation corpus.
-
-### Yilin catalog
-
-- Add `knowledge/yilin/manifest.json` with a hard target of **4096/4096** unique `from_hexagram → to_hexagram` records.
-- Materialize the first complete 64-entry source block: 《易林（四庫全書本）》卷一「乾之第一」.
-- The catalog is explicitly marked `PARTIAL_BUILD__DO_NOT_CLAIM_4096_COMPLETE`; missing pairs are never fabricated.
-- Every materialized record keeps classical text, source provenance, verification status, pending variant status and semantic-status boundaries.
-
-### Meihua bridge
-
-- Add `jarvis/yilin.py` and `MEIHUA_YILIN_BRIDGE`.
-- Meihua still determines the original, mutual and changed hexagrams, moving line, body/use and strength.
-- Yilin is consulted only as **original hexagram → final changed hexagram** transformation context.
-- Mutual hexagrams are not silently reinterpreted as a historical Yilin method.
-- Missing source pairs return `SOURCE_PENDING` with no generated classical text.
-
-### Image ontology and football semantics
-
-- Add an initial Yilin image ontology for path/movement, obstruction, conflict, injury/fatigue, gain/support, loss/failure, cooperation, communication, environment, authority, recovery and defensive enclosure.
-- Image matching is explicitly labeled `PROJECT_HEURISTIC__NOT_CLASSICAL_COMMENTARY`.
-- Football mappings remain modern application hypotheses with observable evidence and counter-evidence, never classical quotations or automatic probabilities.
-
-### UI and AI packet
-
-- The Meihua page now displays the Yilin transformation lookup, source text when materialized, project image atoms, coverage and method boundary.
-- The knowledge vault now searches Yilin materialized entries and image ontology alongside Qimen and Meihua.
-- `DIVINATION_PACKET_V1` gains an additive `yilin_bridge` field while preserving the existing deterministic packet contract.
-- ChatGPT is instructed to read: Meihua core → Yilin transformation context → modern application → support/counter-evidence → final synthesis.
-
-### Validation
-
-- Add `tests/test_yilin_fusion.py`.
-- Add `tools/validate_yilin.py` and run it in GitHub Actions.
-- Alpha validation requires each materialized source hexagram to be imported as a complete 64-target block and manifest coverage to match the files exactly.
-
-## 9.1.0 — Operation STARK Deep Reading
-
-JARVIS keeps the same responsibility boundary — **cast + retrieve + package** — but the divination packet now carries materially deeper structured knowledge for ChatGPT to interpret.
-
-### Qimen Dunjia
-
-- Add an 8-layer reading hierarchy: palace → door → star → deity → heaven stem → earth stem → structural pattern → void/horse modifiers.
-- Add deep modulation profiles for all 8 deities, each with general meaning, football modern-application meaning, observable evidence and counter-evidence.
-- Add explicit deep state modifiers for void, horse, Fu Yin, Fan Yin, door/palace pressure, tomb and punishment.
-- Every cast now receives 9 `qimen_palace_deep_profile` records that synthesize the actual stack and active 306-matrix relations in that palace.
-- The Qimen page exposes the deep palace profiles instead of limiting the UI to raw symbols and relation rows.
-
-### Meihua Yishu
-
-- Add explicit roles for original / mutual / changed hexagrams.
-- Add upper/lower trigram internal-external reading roles and their five-element interaction.
-- Expand all 5 body/use relations with strength-sensitive general meaning, football application, observables and counter-evidence.
-- Add deep 旺 / 平 / 衰 rules and detailed phase meanings for all 6 moving-line positions.
-- Every cast now receives one `meihua_deep_profile` containing original/mutual/changed stage structures, body/use, strength, moving line and 8 football reading dimensions.
-- The Meihua page now shows these deeper layers directly before packet download.
-
-### Knowledge vault and AI handoff
-
-- Add `knowledge/qimen_deep_layers.json` and `knowledge/meihua_deep_layers.json`.
-- Deep-layer content is searchable from the knowledge vault.
-- AI packet instructions now explicitly tell ChatGPT which deep reading order to use for Qimen and Meihua.
-- Football meanings remain labeled modern application; no symbol is converted into an automatic probability, fixed score or deterministic match result.
-
-## 9.0.0 — Operation STARK
-
-JARVIS product scope has been reset around divination knowledge and AI handoff.
-
-### Product
-
-- Keep only: JARVIS home, Qimen casting, Meihua casting, knowledge vault, AI packet.
-- Remove Dashboard, Research Lab, Football Live Predictor and the former model-governance product UI.
-- JARVIS responsibility is now fixed as **cast + retrieve + package**; final interpretation belongs to ChatGPT.
-
-### Qimen Dunjia
-
-- Retain the deterministic Shijia / rotating-plate / Chaibu engine.
-- Retain structured palaces, doors, stars, deities, stems, patterns, interpretation protocol and football ontology.
-- Football semantics remain observable/counter-observable modern application hypotheses, never classical quotations or automatic probabilities.
-
-### Meihua Yishu
-
-- Retain the deterministic year-month-day-hour engine.
-- Add all eight trigrams with element/direction/core/football semantics.
-- Add all 64 King-Wen-order hexagrams with upper/lower trigram, theme, structured interpretation summary and football application meaning.
-- Add all five body/use relations and six moving-line position roles.
-- Original, mutual and changed hexagrams are retrieved automatically for each cast.
-
-### AI handoff
-
-- Add `DIVINATION_PACKET_V1` and JSON Schema.
-- Packets contain immutable question/event/method/chart facts plus only relevant knowledge context.
-- Packet SHA-256 is deterministic for the same event and method.
-- The contract explicitly forbids the AI from recasting or silently changing the chart.
-
-### Repository cleanup
-
-- Remove Football ML / M0–M3 / Poisson / xG / StatsBomb ingestion / training / calibration / promotion infrastructure.
-- Remove the former research artifacts, schemas, docs and tests associated with those systems.
-- Runtime dependencies are reduced to Streamlit and lunar-python.
-
-### Knowledge validation
-
-- CI checks exact core coverage: Qimen 9 palaces / 8 doors / 9 stars / 8 deities / 10 stems; Meihua 8 trigrams / 64 hexagrams / 5 body-use relations / 6 moving-line roles.
-- All 64 upper/lower trigram combinations must exist exactly once.
-- Every football mapping must retain observable and counter-signal fields.
+## 9.0.0 — OPERATION STARK
+- Reset product scope to divination knowledge/casting/AI handoff.
+- Remove former Football ML/research predictor product and calibration/training infrastructure.
+- Establish: **JARVIS provides chart/book/source/review; ChatGPT interprets.**
