@@ -17,14 +17,24 @@ FAVORABLE_MARKERS = {"auspicious", "favorable_action", "success_flow", "no_blame
 RISK_MARKERS = {"danger", "regret", "difficulty"}
 
 
-def _relation_signal(layer: str, stage: str, trigram: str, relation: str) -> dict[str, str]:
-    return {
+def _relation_signal(
+    layer: str,
+    stage: str,
+    trigram: str,
+    relation: str,
+    *,
+    classical_identity: str | None = None,
+) -> dict[str, str]:
+    payload = {
         "layer": layer,
         "relative_stage": stage,
         "trigram": trigram,
         "relation_to_body": relation,
         "neutral_class": RELATION_CLASS[relation],
     }
+    if classical_identity:
+        payload["classical_identity"] = classical_identity
+    return payload
 
 
 def _unique_strings(values: list[str]) -> list[str]:
@@ -36,7 +46,7 @@ def _build_cross_system_coherence(
     zhouyi_review: dict[str, Any],
     yilin_bridge: dict[str, Any],
 ) -> dict[str, Any]:
-    """Compare only source alignment and project semantic lenses, never final divinatory outcome."""
+    """Compare source alignment and project semantic lenses, never final outcome."""
 
     moving = zhouyi_review["moving_line"]
     zhouyi_profile = moving.get("semantic_profile") or {}
@@ -101,10 +111,11 @@ def _build_cross_system_coherence(
             }
         )
 
-    if not shared_domains:
-        coherence_status = "NO_SHARED_PROJECT_DOMAIN__READ_TEXTS_INDEPENDENTLY"
-    else:
-        coherence_status = "SHARED_PROJECT_DOMAIN__CONDITIONAL_REINFORCEMENT"
+    coherence_status = (
+        "SHARED_PROJECT_DOMAIN__CONDITIONAL_REINFORCEMENT"
+        if shared_domains
+        else "NO_SHARED_PROJECT_DOMAIN__READ_TEXTS_INDEPENDENTLY"
+    )
 
     return {
         "schema_version": "stark-meihua-cross-system-coherence-v1.0.0",
@@ -133,6 +144,16 @@ def _build_cross_system_coherence(
     }
 
 
+def _mutual_identities(method_audit: dict[str, Any]) -> dict[str, str]:
+    identities: dict[str, str] = {}
+    for row in method_audit.get("body_use_network", {}).get("layers", []):
+        layer = str(row.get("layer", ""))
+        identity = str(row.get("classical_identity", ""))
+        if layer in {"mutual_upper", "mutual_lower"} and identity:
+            identities[layer] = identity
+    return identities
+
+
 def build_meihua_review_summary(
     snapshot: MeihuaSnapshot,
     *,
@@ -141,13 +162,26 @@ def build_meihua_review_summary(
     yilin_bridge: dict[str, Any],
     temporal_precision_audit: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Build source-aware review registers without making the final divination judgment."""
+    """Build source-aware review registers without making the final judgment."""
 
+    mutual_ids = _mutual_identities(method_audit)
     relation_signals = [
-        _relation_signal("original_use", "immediate", snapshot.use_trigram, snapshot.body_use_relation),
-        _relation_signal("mutual_upper", "middle", snapshot.mutual_upper_trigram, snapshot.mutual_upper_relation_to_body),
-        _relation_signal("mutual_lower", "middle", snapshot.mutual_lower_trigram, snapshot.mutual_lower_relation_to_body),
-        _relation_signal("changed_use", "late", snapshot.changed_use_trigram, snapshot.changed_use_relation_to_body),
+        _relation_signal("original_use", "immediate", snapshot.use_trigram, snapshot.body_use_relation, classical_identity="original_use"),
+        _relation_signal(
+            "mutual_upper",
+            "middle",
+            snapshot.mutual_upper_trigram,
+            snapshot.mutual_upper_relation_to_body,
+            classical_identity=mutual_ids.get("mutual_upper"),
+        ),
+        _relation_signal(
+            "mutual_lower",
+            "middle",
+            snapshot.mutual_lower_trigram,
+            snapshot.mutual_lower_relation_to_body,
+            classical_identity=mutual_ids.get("mutual_lower"),
+        ),
+        _relation_signal("changed_use", "late", snapshot.changed_use_trigram, snapshot.changed_use_relation_to_body, classical_identity="changed_use"),
     ]
     cross_system_coherence = _build_cross_system_coherence(
         zhouyi_review=zhouyi_review,
@@ -163,8 +197,8 @@ def build_meihua_review_summary(
                 "type": "STRUCTURAL_TENSION",
                 "claim_a": relation_signals[0],
                 "claim_b": relation_signals[-1],
-                "why_tension_exists": "本用、互層與變用對體的五行作用並非單一同向類型。",
-                "resolution_rule": "保留各層相對先後與體旺衰，由 ChatGPT 合參；不得用單一 relation 覆蓋其他層。",
+                "why_tension_exists": "本用、體互／用互與變用對體的五行作用並非單一同向類型。",
+                "resolution_rule": "保留各層相對先後、體互／用互身份與體旺衰，由 ChatGPT 合參；不得用單一 relation 覆蓋其他層。",
                 "all_relation_classes": relation_classes,
             }
         )
@@ -181,7 +215,7 @@ def build_meihua_review_summary(
                 "claim_a": {"marker_family": "favorable_or_permissive", "hits": favorable_hits},
                 "claim_b": {"marker_family": "risk_or_regret", "hits": risk_hits},
                 "why_tension_exists": "同一動爻文本同時命中允許／有利與風險／悔吝語氣，不能抽單字斷定。",
-                "resolution_rule": "回到完整爻辭上下文，並依本次 XIANTIAN_NUMBER_METHOD 把爻辭保持為 supporting review。",
+                "resolution_rule": "回到完整爻辭與 meaning_review.text_conditions，並依 XIANTIAN_NUMBER_METHOD 把爻辭保持為 supporting review。",
             }
         )
 
@@ -234,33 +268,57 @@ def build_meihua_review_summary(
         )
 
     temporal_context = None
+    match_clock_status = "NOT_APPLICABLE"
+    match_clock_event_count = 0
+    match_clock_aligned_boundaries = 0
     if temporal_precision_audit:
         summary = temporal_precision_audit["boundary_summary"]
+        match_clock = temporal_precision_audit.get("match_clock_audit") or {}
+        match_clock_status = str(match_clock.get("status", "NOT_PROVIDED"))
+        match_clock_event_count = int(match_clock.get("event_count", 0))
+        match_clock_aligned_boundaries = int(match_clock.get("aligned_boundary_count", 0))
+        boundary_count = int(summary["total_boundary_events"])
         temporal_context = {
             "status": temporal_precision_audit["status"],
             "horizon_minutes": temporal_precision_audit["analysis_window"]["horizon_minutes"],
             "hour_branch_changes": summary["hour_branch_changes"],
             "calendar_changes": summary["calendar_changes"],
             "utc_offset_changes": summary["utc_offset_changes"],
-            "boundary_count": summary["total_boundary_events"],
+            "boundary_count": boundary_count,
+            "match_clock_status": match_clock_status,
+            "match_clock_event_count": match_clock_event_count,
+            "match_clock_aligned_boundaries": match_clock_aligned_boundaries,
+            "all_boundaries_have_timestamped_context": (
+                boundary_count == 0 or match_clock_aligned_boundaries == boundary_count
+            ),
             "authority": "SECONDARY_TEMPORAL_CONTEXT_ONLY",
         }
-        if summary["hour_branch_changes"] or summary["calendar_changes"] or summary["utc_offset_changes"]:
+        has_boundary = bool(
+            summary["hour_branch_changes"] or summary["calendar_changes"] or summary["utc_offset_changes"]
+        )
+        all_aligned = boundary_count > 0 and match_clock_aligned_boundaries == boundary_count
+        if has_boundary and not all_aligned:
             uncertainty_register.append(
                 {
                     "id": "MATCH_CLOCK_PHASE_AT_TEMPORAL_BOUNDARY_UNVERIFIED",
-                    "unknown": "事件期間存在時支／日界／時區交界，但目前 packet 沒有逐事件官方 match-clock timeline。",
-                    "impact": "可以精確知道交界距開賽多少真實分鐘，卻不能僅憑 wall-clock 保證當時是上半場、半場、傷停、下半場或延長賽。",
-                    "what_would_reduce_uncertainty": "加入實際半場結束、下半場開始、VAR/延誤、正規時間結束與延長賽開始等 timestamped match-clock events。",
+                    "unknown": (
+                        "事件期間存在時支／日界／時區交界，但並非每一個 boundary 都有 timestamped match-clock context。"
+                    ),
+                    "impact": "可以精確知道交界距開賽多少真實分鐘；未對齊的 boundary 仍不能僅憑 wall-clock 保證實際賽事階段。",
+                    "what_would_reduce_uncertainty": "加入可追溯的 ACTUAL_KICKOFF、半場、下半場開始、正規時間結束、延長賽或 delay timestamps；不得線性猜官方分鐘。",
                 }
             )
 
+    moving_meaning = zhouyi_review["moving_line"].get("meaning_review") or {}
     source_coverage_audit = {
         "method_audit_ready": method_audit.get("status") == "METHOD_AWARE_REVIEW_READY",
         "method_class": method_audit["method"]["class"],
         "zhouyi_role": method_audit["weighting_decision"]["zhouyi_role"],
         "zhouyi_core_alignments_match": bool(zhouyi_review["source_audit"]["all_core_alignments_match"]),
         "zhouyi_moving_line_source_present": bool(zhouyi_review["moving_line"].get("classical_text")),
+        "zhouyi_moving_line_meaning_review_ready": (
+            moving_meaning.get("authority") == "PROJECT_REVIEW__NOT_CLASSICAL_COMMENTARY"
+        ),
         "yilin_pair_materialized": yilin_bridge.get("status") == "MATERIALIZED",
         "yilin_lookup_key": yilin_bridge.get("lookup_key"),
         "yilin_pair_matches_zhouyi_original_changed": cross_system_coherence["source_pair_alignment"]["all_match"],
@@ -269,11 +327,14 @@ def build_meihua_review_summary(
             temporal_precision_audit is None
             or temporal_precision_audit.get("status") == "TEMPORAL_BOUNDARY_AUDIT_READY"
         ),
+        "match_clock_status": match_clock_status,
+        "match_clock_event_count": match_clock_event_count,
+        "match_clock_aligned_boundaries": match_clock_aligned_boundaries,
     }
 
     return {
         "kind": "meihua_deep_review_summary",
-        "schema_version": "stark-meihua-deep-review-summary-v1.1.0",
+        "schema_version": "stark-meihua-deep-review-summary-v1.2.0",
         "status": "READY_WITH_DECLARED_GAPS",
         "method_weighting": {
             "method_class": method_audit["method"]["class"],
@@ -286,5 +347,9 @@ def build_meihua_review_summary(
         "contradiction_register": contradiction_register,
         "uncertainty_register": uncertainty_register,
         "source_coverage_audit": source_coverage_audit,
-        "handoff_rule": "ChatGPT 必須先讀 method weighting，再讀 relation signals、temporal context、cross_system_coherence、原典、易林、矛盾與不確定性；JARVIS 不在此輸出最後吉凶、勝率或固定比分。",
+        "handoff_rule": (
+            "ChatGPT 必須先讀 method weighting，再讀 relation signals（保留體互／用互身份）、temporal context、"
+            "cross_system_coherence、動爻 meaning_review、原典、易林、矛盾與不確定性；"
+            "JARVIS 不在此輸出最後吉凶、勝率或固定比分。"
+        ),
     }
