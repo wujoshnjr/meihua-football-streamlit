@@ -96,6 +96,21 @@ with cast_tab:
         with t4:
             time_source = st.text_input("時間來源（選填）", placeholder="FIFA / UEFA / 官方聯賽…")
 
+        match_clock_events_text = st.text_area(
+            "LIVE 專用：timestamped match-clock events JSON（選填）",
+            value="",
+            height=130,
+            placeholder=(
+                '[{"type":"ACTUAL_KICKOFF","local_datetime":"2026-06-15T22:50:00+08:00","source":"official"},'
+                '{"type":"FIRST_HALF_END","local_datetime":"2026-06-15T23:40:00+08:00","match_clock_label":"HT"},'
+                '{"type":"SECOND_HALF_KICKOFF","local_datetime":"2026-06-15T23:55:00+08:00"}]'
+            ),
+            help=(
+                "只接受可追溯的 aware local timestamps。PREMATCH / HISTORICAL_BACKTEST 預設禁止填入，"
+                "避免把事後比賽資訊回填進原始占測。"
+            ),
+        )
+
         submitted = st.form_submit_button("建立奇門＋梅花 Case Bundle", type="primary", use_container_width=True)
 
     if submitted:
@@ -113,6 +128,14 @@ with cast_tab:
             fold = 1 if fold_mode == "SECOND_FOLD_1" else 0
             event_at = aware_event_local_datetime(wall, timezone_name.strip(), fold=fold)
 
+            match_clock_events = None
+            if match_clock_events_text.strip():
+                if mode != "LIVE":
+                    raise ValueError("timestamped match-clock events 目前只允許 LIVE 模式，避免 PREMATCH／歷史盲測後見回填。")
+                match_clock_events = json.loads(match_clock_events_text)
+                if not isinstance(match_clock_events, list):
+                    raise ValueError("match-clock JSON 必須是 event objects 的 array")
+
             qimen_packet = build_qimen_packet(
                 question=qimen_question,
                 event_at=event_at,
@@ -129,6 +152,7 @@ with cast_tab:
                 home_team=home_team,
                 away_team=away_team,
                 timeline_horizon_minutes=int(horizon),
+                match_clock_events=match_clock_events,
             )
             metadata = {
                 "competition": competition,
@@ -147,7 +171,7 @@ with cast_tab:
             st.session_state["stark_case_bundle"] = bundle
             st.session_state["stark_packet"] = meihua_packet
             st.success("雙術數案件建立完成：event alignment + packet SHA integrity = PASS")
-        except (ValueError, EventLocalTimeError, RuntimeError) as exc:
+        except (ValueError, EventLocalTimeError, RuntimeError, json.JSONDecodeError) as exc:
             st.error(str(exc))
 
 with import_tab:
@@ -199,15 +223,19 @@ if bundle:
     if temporal:
         st.markdown("## ⏱️ 梅花時間邊界 Timeline")
         summary = temporal.get("boundary_summary", {})
-        x1, x2, x3, x4 = st.columns(4)
+        match_clock_audit = temporal.get("match_clock_audit", {})
+        x1, x2, x3, x4, x5 = st.columns(5)
         x1.metric("審查窗", f"{temporal.get('analysis_window', {}).get('horizon_minutes', '—')} min")
         x2.metric("時支變化", summary.get("hour_branch_changes", 0))
         x3.metric("日期變化", summary.get("calendar_changes", 0))
         x4.metric("UTC offset 變化", summary.get("utc_offset_changes", 0))
+        x5.metric("Match Clock", match_clock_audit.get("status", "—"))
 
         rows = []
         for boundary in temporal.get("boundaries", []):
             diagnostic = boundary.get("diagnostic_recast") or {}
+            alignment = boundary.get("match_clock_alignment") or {}
+            hint = boundary.get("football_phase_hint") or {}
             rows.append(
                 {
                     "local timestamp": boundary.get("local_datetime"),
@@ -215,7 +243,8 @@ if bundle:
                     "boundary": " / ".join(boundary.get("boundary_types", [])),
                     "from hour": (boundary.get("from") or {}).get("hour_branch"),
                     "to hour": (boundary.get("to") or {}).get("hour_branch"),
-                    "match-clock": boundary.get("football_phase_hint"),
+                    "verified phase": alignment.get("phase"),
+                    "nominal hint": hint.get("phase"),
                     "diagnostic changed": diagnostic.get("changed_field_count", 0),
                 }
             )
@@ -223,7 +252,19 @@ if bundle:
             st.dataframe(rows, hide_index=True, use_container_width=True)
         else:
             st.success("目前審查窗內沒有偵測到時支／日界／UTC offset 邊界。")
-        st.caption("wall-clock 不等於官方 match minute；diagnostic recast 永遠是 SECONDARY_DIAGNOSTIC_ONLY。")
+        if match_clock_audit.get("events"):
+            with st.expander("查看 timestamped match-clock evidence"):
+                st.json(match_clock_audit)
+        st.caption(
+            "wall-clock 不等於官方 match minute；timestamped events 只用於定位實際賽事階段，"
+            "不做線性分鐘猜測；diagnostic recast 永遠是 SECONDARY_DIAGNOSTIC_ONLY。"
+        )
+
+    method_audit = meihua_packet.get("meihua_method_audit") or {}
+    time_convention = method_audit.get("time_convention") or {}
+    if time_convention:
+        with st.expander("梅花時間慣例 audit"):
+            st.json(time_convention)
 
     moving = (meihua_packet.get("zhouyi_review") or {}).get("moving_line") or {}
     meaning_review = moving.get("meaning_review") or {}
