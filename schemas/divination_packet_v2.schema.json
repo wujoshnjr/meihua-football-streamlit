@@ -44,7 +44,7 @@
     "hexagram": {"type": "object"},
     "meihua_method_audit": {
       "type": "object",
-      "required": ["kind", "status", "method", "weighting_decision", "body_use_network", "external_response_audit", "classical_principles"],
+      "required": ["kind", "status", "method", "time_convention", "weighting_decision", "body_use_network", "external_response_audit", "classical_principles"],
       "properties": {
         "kind": {"const": "meihua_classical_method_audit"},
         "status": {"const": "METHOD_AWARE_REVIEW_READY"},
@@ -53,6 +53,27 @@
           "required": ["name", "class", "implementation_status"],
           "properties": {
             "class": {"enum": ["XIANTIAN_NUMBER_METHOD", "HOUTIAN_OBJECT_METHOD"]}
+          },
+          "additionalProperties": true
+        },
+        "time_convention": {
+          "type": "object",
+          "required": [
+            "engine_version",
+            "event_local_datetime",
+            "timezone",
+            "lunar_month_raw",
+            "lunar_month_numeric_for_cast",
+            "lunar_month_is_leap",
+            "leap_month_policy",
+            "lunar_day",
+            "lunar_day_boundary_policy",
+            "hour_branch",
+            "boundary"
+          ],
+          "properties": {
+            "leap_month_policy": {"const": "LEAP_MONTH_USES_BASE_MONTH_NUMBER"},
+            "lunar_day_boundary_policy": {"const": "EVENT_LOCATION_CIVIL_WALL_DATE_TO_LUNAR_PYTHON"}
           },
           "additionalProperties": true
         },
@@ -73,10 +94,23 @@
         "status": {"const": "TEMPORAL_BOUNDARY_AUDIT_READY"},
         "anchor_cast": {"type": "object"},
         "analysis_window": {"type": "object"},
+        "match_clock_audit": {
+          "type": "object",
+          "required": ["status", "event_count", "events", "aligned_boundary_count", "policy"],
+          "properties": {
+            "status": {"enum": ["NOT_PROVIDED", "TIMESTAMPED_EVENTS_AVAILABLE"]},
+            "event_count": {"type": "integer", "minimum": 0},
+            "events": {"type": "array"},
+            "aligned_boundary_count": {"type": "integer", "minimum": 0},
+            "policy": {"type": "object"}
+          },
+          "additionalProperties": true
+        },
         "boundary_summary": {"type": "object"},
         "boundaries": {"type": "array"},
         "diagnostic_recast_policy": {"type": "object"}
       },
+      "required": ["kind", "status", "anchor_cast", "analysis_window", "match_clock_audit", "boundary_summary", "boundaries", "diagnostic_recast_policy"],
       "additionalProperties": true
     },
     "zhouyi_review": {
