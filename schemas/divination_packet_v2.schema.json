@@ -84,7 +84,41 @@
       "required": ["kind", "status", "catalog_stats", "source_audit", "original", "mutual", "changed", "moving_line"],
       "properties": {
         "kind": {"const": "zhouyi_source_review"},
-        "status": {"const": "SOURCE_AWARE_REVIEW_READY"}
+        "status": {"const": "SOURCE_AWARE_REVIEW_READY"},
+        "moving_line": {
+          "type": "object",
+          "required": ["line", "marker", "classical_text", "meaning_review"],
+          "properties": {
+            "meaning_review": {
+              "type": "object",
+              "required": [
+                "schema_version",
+                "authority",
+                "hexagram",
+                "line",
+                "text_conditions",
+                "action_boundary",
+                "risk_boundary",
+                "turning_point",
+                "conditional_outcome_tendency",
+                "misread_warnings",
+                "ambiguity",
+                "football",
+                "boundary"
+              ],
+              "properties": {
+                "schema_version": {"const": "stark-zhouyi-line-meaning-review-v1.0.0"},
+                "authority": {"const": "PROJECT_REVIEW__NOT_CLASSICAL_COMMENTARY"},
+                "football": {
+                  "type": "object",
+                  "required": ["source_basis", "abstract_meaning", "possible_scenario", "observable_signals", "counter_signals", "confidence_note"]
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        }
       },
       "additionalProperties": true
     },
