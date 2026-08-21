@@ -15,6 +15,7 @@ from .meihua_timeline import build_football_temporal_audit
 from .stark_vault import meihua_context, meihua_hexagram, qimen_context
 from .yilin import build_meihua_yilin_bridge
 from .zhouyi import build_meihua_zhouyi_review
+from .zhouyi_line_review import build_zhouyi_line_meaning_review
 
 
 DIVINATION_PACKET_VERSION = "DIVINATION_PACKET_V2"
@@ -169,6 +170,9 @@ def build_meihua_packet(
         mutual_catalog=mutual,
         changed_catalog=changed,
     )
+    zhouyi_review["moving_line"]["meaning_review"] = build_zhouyi_line_meaning_review(
+        int(original["number"]), snapshot.moving_line
+    )
     yilin_bridge = build_meihua_yilin_bridge(original, changed)
     temporal_precision_audit = (
         build_football_temporal_audit(snapshot, horizon_minutes=timeline_horizon_minutes)
@@ -250,12 +254,13 @@ def build_meihua_packet(
             "若 temporal_precision_audit 有 diagnostic_recast，只比較它相對 anchor 哪些欄位改變；禁止用 secondary recast 取代主卦或投票生成勝率/比分。",
             "對目前年月日時法，zhouyi_review 的卦辭／彖／象／動爻爻辭是 source-aware SUPPORTING review；不得讓單句爻辭自動凌駕體用、旺衰與互變。",
             "先核對 zhouyi_review.source_audit；古籍文字不得由 AI 改寫、補造或用後見資料修正。",
+            "真正動爻的 meaning_review 是 PROJECT_REVIEW__NOT_CLASSICAL_COMMENTARY：先讀原文，再讀 text_conditions、risk_boundary、turning_point、misread_warnings 與 football evidence/counter-evidence。",
             "固定合參順序：方法審查 → anchor 本卦／體用 → 旺衰 → 體互／用互 → 變卦作用 → 時間邊界審查 → 動靜／內外／已記錄外應 → 周易 supporting review → 焦氏易林本卦之變卦 → 支持／反證。",
             "meihua_method_audit.body_use_network 要連同體卦旺衰閱讀；不可只看單一 body_use_relation。",
             "三要、十應、外應若標記 NOT_RECORDED，就視為缺失資料，不得由 AI 或賽後事件補造。",
             "先讀 review_summary.contradiction_register 與 uncertainty_register；矛盾和缺口必須保留，不可為了單一結論刪除。",
             "review_summary.relation_signals 是中性的結構分類，不等於吉凶投票或統計權重。",
-            "zhouyi_review 中 classical_text 是固定來源數位轉錄；project_general、football_modern_application 與 semantic_profile 是 JARVIS 專案層，必須分開陳述。",
+            "zhouyi_review 中 classical_text 是固定來源數位轉錄；project_general、football_modern_application、semantic_profile 與 meaning_review 是 JARVIS 專案層，必須分開陳述。",
             "焦氏易林在此是 MEIHUA_YILIN_BRIDGE：只補充本卦到最終變卦的情境，不宣稱等同焦林直日占法，也不可重起一套卦。",
             "若周易經文、梅花體用與易林情境彼此矛盾，保留矛盾、解釋成立條件，不得強行統一。",
             "不可只看一條生克、單一卦象、單句爻辭、單條林辭、image atom 或一次時辰交界就直接判勝負。",
