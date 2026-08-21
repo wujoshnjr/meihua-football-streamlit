@@ -1,0 +1,73 @@
+{
+  "schema_version": "stark-qimen-extended-review-policy-v1.0.0",
+  "status": "DESIGN_READY__RELATIONS_NOT_MATERIALIZED",
+  "scope_note": "Core 306 只覆蓋天地盤干、星×門、門×宮、星×宮四族。Extended Review 規劃其他盤內交互，但不把組合數量本身誤稱為古典完整性。",
+  "core_306_families": [
+    "heaven_stem_x_earth_stem",
+    "star_x_door",
+    "door_x_palace",
+    "star_x_palace"
+  ],
+  "planned_extended_families": [
+    {
+      "id": "deity_x_door",
+      "status": "PLANNED",
+      "review_goal": "八神如何調制門的顯現方式、可信度、速度與風險。",
+      "authority_rule": "優先保留神與門各自 classical/knowledge basis；組合足球語義若無直接古典出處，一律 PROJECT_HEURISTIC。"
+    },
+    {
+      "id": "deity_x_star",
+      "status": "PLANNED",
+      "review_goal": "八神如何調制星的能力、心理／組織表現與事件顯化。",
+      "authority_rule": "不得把吉神×吉星機械加分，也不得把凶神×凶星直接判敗。"
+    },
+    {
+      "id": "deity_x_palace",
+      "status": "PLANNED",
+      "review_goal": "神臨宮與宮五行／方位／旺衰的情境修正。",
+      "authority_rule": "宮位狀態與旬空、刑墓迫等 modifier 必須共同閱讀。"
+    },
+    {
+      "id": "stem_x_door",
+      "status": "PLANNED",
+      "review_goal": "用神干與門的可行性／受制／資源通道關係。",
+      "authority_rule": "先保留天干格局與門義，再建條件式組合，不做符號投票。"
+    },
+    {
+      "id": "stem_x_star",
+      "status": "PLANNED",
+      "review_goal": "用神干與星的能力／行動品質組合。",
+      "authority_rule": "必須區分主客用神所在宮與背景宮，不能全盤同權。"
+    },
+    {
+      "id": "state_modifier_stack",
+      "status": "PARTIALLY_IMPLEMENTED_IN_DEEP_PROFILE",
+      "review_goal": "旬空、驛馬、伏吟、反吟、門迫、入墓、擊刑等狀態如何改變其他訊號強度。",
+      "authority_rule": "modifier 是條件修正，不單獨生成勝負或比分。"
+    }
+  ],
+  "materialization_contract": {
+    "required_fields": [
+      "key",
+      "family",
+      "objects",
+      "source_basis",
+      "general_interpretation",
+      "conditions",
+      "observable_signals",
+      "counter_signals",
+      "football_modern_application",
+      "authority",
+      "caution"
+    ],
+    "forbidden": [
+      "automatic_win_probability",
+      "fixed_score_from_relation",
+      "single_relation_final_result",
+      "un sourced classical quotation",
+      "postmatch_backfill"
+    ]
+  },
+  "priority_rule": "先完成 external golden chart correctness gate，再大量 materialize Extended Relations；錯盤上的豐富語義沒有價值。",
+  "boundary": "此檔是設計與驗收契約，不宣稱 Extended Relations 已全部建成。"
+}
