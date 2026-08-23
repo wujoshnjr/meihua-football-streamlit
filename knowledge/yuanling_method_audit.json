@@ -1,0 +1,114 @@
+{
+  "schema_version": "stark-yuanling-method-audit-v1.0.0",
+  "work_title": "奇門遁甲元靈經",
+  "editorial_attribution": "海昌 許松如署",
+  "project_status": "SOURCE_AUDIT_READY__ENGINES_SEPARATED",
+  "source_policy": {
+    "primary_reading": "Wikisource transcription crosschecked against Chinese Text Project and public scan metadata",
+    "do_not_invent_missing_rules": true,
+    "do_not_merge_adjacent_sections_without_explicit_text": true,
+    "do_not_reuse_shijia_star_registry_for_qiyao_by_default": true,
+    "football_score_mapping": "DISABLED"
+  },
+  "sources": [
+    {
+      "id": "yuanling-wikisource",
+      "type": "PUBLIC_DOMAIN_TRANSCRIPTION",
+      "url": "https://zh.wikisource.org/zh-hant/%E5%A5%87%E9%96%80%E9%81%81%E7%94%B2%E5%85%83%E9%9D%88%E7%B6%93",
+      "scope": "卷一、卷三及全書目錄 crosscheck"
+    },
+    {
+      "id": "yuanling-ctext-vol1",
+      "type": "SECONDARY_DIGITAL_TRANSCRIPTION_CROSSCHECK",
+      "url": "https://ctext.org/wiki.pl?chapter=118579&if=en",
+      "scope": "卷一演數七要、數主吉凶歌訣、日奇門"
+    },
+    {
+      "id": "yuanling-public-scan",
+      "type": "PUBLIC_SCAN_METADATA",
+      "url": "https://commons.wikimedia.org/wiki/File:NLC416-12jh005343-45282_%E5%A5%87%E9%96%80%E5%85%83%E9%9D%88%E7%B6%93.pdf",
+      "scope": "版面與目錄存在性 crosscheck"
+    }
+  ],
+  "section_separation": {
+    "evidence": [
+      "卷一目錄依次列演數七要、數主吉凶歌訣、日奇門為獨立條目",
+      "演數七要正文先列七項；日奇門在下一節另起自己的排法"
+    ],
+    "project_rule": "YANSHU_QIYAO and RI_QIMEN are independent modules. A bridge may be experimental only and may not be treated as classical fact."
+  },
+  "yanshu_qiyao": {
+    "status": "PARTIAL_RULES_TEXTUALLY_EXPLICIT",
+    "seven_factors": [
+      "數宮",
+      "數主",
+      "飛星",
+      "入門",
+      "直日星",
+      "日干",
+      "時支"
+    ],
+    "explicit_rules": [
+      "數主為遁至本時之星",
+      "數主落宮最為緊要",
+      "並看臨本宮之星、門宮吉凶、直日星、日干、時支",
+      "數宮吉不代表必成；數主受難仍可難成"
+    ],
+    "unresolved_algorithmic_points": [
+      "數宮的完整取法與數值候選生成規則尚未由本節單獨充分確定",
+      "遁至本時之星的完整飛遁起點與序列需結合前後文校勘",
+      "飛星與入門的機械步驟不可僅按現有時家引擎猜測",
+      "直日星的求法需以卷三值日九星系統進一步校勘"
+    ]
+  },
+  "ri_qimen": {
+    "status": "PARTIAL_RULES_TEXTUALLY_EXPLICIT",
+    "explicit_rules": [
+      "以本節三元定局作地盤",
+      "本甲旬頭加本日干上論數",
+      "本甲旬頭即值符",
+      "值符之上星加本日干穿宮數去",
+      "陰遁奇直皆逆，星門皆順",
+      "60日逐三日分組明載某宮起休"
+    ],
+    "unresolved_algorithmic_points": [
+      "穿宮數去的完整機械步驟需另作 source reconstruction",
+      "日奇門所用星系與演數數主星系不可先行視為同一套",
+      "在未完成 golden examples 前不得聲稱 end-to-end 排盤已校準"
+    ]
+  },
+  "star_system_audit": {
+    "shijia_qimen_nine_stars": {
+      "names": ["天蓬", "天芮", "天沖", "天輔", "天禽", "天心", "天柱", "天任", "天英"],
+      "status": "TEXTUALLY_EXPLICIT_IN_VOL1",
+      "project_rule": "Keep inside qimen/; do not alias into Yanshu Qiyao number-chief logic."
+    },
+    "yuanling_numeric_nine_stars": {
+      "status": "TEXTUALLY_DISTINCT_AND_STRONGLY_SUPPORTED",
+      "color_number_names": ["一白", "二黑", "三碧", "四綠", "五黃", "六白", "七赤", "八白", "九紫"],
+      "evidence": [
+        "伏身訣直接使用一白、二黑、三碧、四綠、五黃",
+        "數主吉凶歌訣以黑星為主，所述離為生、震巽為難、艮坤為和符合二黑土星的生克結構",
+        "卷三中宮值日九星歌訣明確建立一白至九紫及貪狼/巨門等別名"
+      ],
+      "project_rule": "Use an independent Yuanling numeric-star registry with explicit alias families and authority labels."
+    }
+  },
+  "experiment_modes": {
+    "QIYAO_RAW": {
+      "status": "ALLOWED",
+      "rule": "Seven-factor analysis remains independent and may contain unresolved fields."
+    },
+    "RIQIMEN_QIYAO_EXPERIMENT": {
+      "status": "ALLOWED_AS_EXPERIMENT_ONLY",
+      "rule": "May pass independently generated Ri-Qimen facts to Qiyao review, but must preserve both outputs and cannot claim the bridge is mandated by the classic."
+    }
+  },
+  "forbidden": [
+    "數宮3直接等於3球",
+    "數主單一吉凶直接等於勝負",
+    "以賽後比分回填演數規則",
+    "用時家天蓬九星替代演數數主星而不標示假設",
+    "把實驗串接描述成元靈經原文明文"
+  ]
+}
