@@ -13,6 +13,7 @@ KNOWLEDGE_ROOT = ROOT / "knowledge"
 SOURCE_CATALOG_PATH = KNOWLEDGE_ROOT / "yuanling_source_catalog.json"
 EXTENDED_SOURCE_CATALOG_PATH = KNOWLEDGE_ROOT / "yuanling_extended_source_catalog.json"
 WORK_INDEX_PATH = KNOWLEDGE_ROOT / "yuanling_work_index.json"
+CASTING_REFERENCE_PATH = KNOWLEDGE_ROOT / "yuanling_casting_reference.json"
 CASTING_CATALOG_PATH = KNOWLEDGE_ROOT / "casting_method_catalog.json"
 
 SEARCH_ALIASES = {
@@ -29,7 +30,7 @@ SEARCH_ALIASES = {
     "十干吉凶宜忌": ("STEM_SOURCE_PROFILE",),
     "九星克應": ("NUMERIC_STAR_RESPONSE_SOURCE_PROFILE",),
     "九遁": ("SPECIAL_PATTERN_SOURCE_SECTION",),
-    "占勝敗": ("卷24", "占勝敗", "competition_research_priority_volume"),
+    "占勝敗": ("占勝敗", "INDEXED_HIGH_PRIORITY_FOR_COMPETITION_RESEARCH"),
 }
 
 
@@ -47,32 +48,40 @@ def yuanling_catalog_stats() -> dict[str, Any]:
     casting = _load(CASTING_CATALOG_PATH)
     base_sections = list(source.get("sections", []))
     extended_sections = list(extended.get("sections", []))
-    all_sections = [*base_sections, *extended_sections]
     yuanling_methods = [
         row
         for row in casting.get("methods", [])
         if str(row.get("system", "")).startswith("YUANLING")
     ]
-    unresolved = sum(len(row.get("unresolved", [])) for row in all_sections)
+    unresolved = sum(
+        len(row.get("unresolved", []))
+        for row in [*base_sections, *extended_sections]
+    )
     coverage = extended.get("coverage", {})
     return {
-        "structured_sections": len(all_sections),
-        "base_structured_sections": len(base_sections),
+        # Compatibility: legacy consumers read structured_sections as the core count.
+        "structured_sections": len(base_sections),
+        "combined_structured_sections": len(base_sections) + len(extended_sections),
         "extended_structured_sections": len(extended_sections),
         "work_volumes_indexed": len(work_index.get("volumes", [])),
         "numeric_stars": int(star_registry_audit()["count"]),
         "riqimen_day_rows": len(riqimen_60_day_table()),
         "yuanling_methods": len(yuanling_methods),
         "unresolved_source_points": unresolved,
-        "preheaven_relation_markers": int(source.get("completion", {}).get("preheaven_relation_markers", 0)),
+        "preheaven_relation_markers": int(
+            source.get("completion", {}).get("preheaven_relation_markers", 0)
+        ),
         "door_source_profiles": int(coverage.get("door_source_profiles", 0)),
         "palace_source_profiles": int(coverage.get("palace_source_profiles", 0)),
         "stem_source_profiles": int(coverage.get("stem_source_profiles", 0)),
-        "shortcut_numeric_star_profiles": int(coverage.get("shortcut_numeric_star_profiles", 0)),
+        "shortcut_numeric_star_profiles": int(
+            coverage.get("shortcut_numeric_star_profiles", 0)
+        ),
         "response_star_profiles": int(coverage.get("response_star_profiles", 0)),
         "source_schema": source.get("schema_version"),
         "extended_source_schema": extended.get("schema_version"),
         "work_index_schema": work_index.get("schema_version"),
+        "casting_reference_schema": _load(CASTING_REFERENCE_PATH).get("schema_version"),
         "casting_schema": casting.get("schema_version"),
     }
 
@@ -111,6 +120,7 @@ def search_yuanling(query: str, *, limit: int = 60) -> list[dict[str, Any]]:
     source, extended = _source_catalogs()
     work_index = _load(WORK_INDEX_PATH)
     casting = _load(CASTING_CATALOG_PATH)
+    reference = _load(CASTING_REFERENCE_PATH)
     found: list[dict[str, Any]] = []
 
     for tier, catalog in (("CORE_SOURCE", source), ("EXTENDED_SOURCE", extended)):
@@ -119,6 +129,20 @@ def search_yuanling(query: str, *, limit: int = 60) -> list[dict[str, Any]]:
                 found.append(_source_result(row, catalog_tier=tier))
             if len(found) >= limit:
                 return found
+
+    for row in reference.get("methods", []):
+        if _matches(row, needle):
+            found.append(
+                {
+                    "system": "YUANLING_METHOD_REFERENCE",
+                    "family": "CASTING_REFERENCE",
+                    "key": row.get("id"),
+                    "name": row.get("display_name"),
+                    **row,
+                }
+            )
+        if len(found) >= limit:
+            return found
 
     for row in work_index.get("volumes", []):
         if _matches(row, needle):
@@ -196,6 +220,14 @@ def casting_method(method_id: str) -> dict[str, Any]:
     raise KeyError(f"找不到起局/起卦方法：{method_id}")
 
 
+def casting_reference(method_id: str) -> dict[str, Any]:
+    catalog = _load(CASTING_REFERENCE_PATH)
+    for row in catalog.get("methods", []):
+        if row.get("id") == method_id:
+            return row
+    raise KeyError(f"找不到元靈方法參考：{method_id}")
+
+
 def source_section(section_id: str) -> dict[str, Any]:
     source, extended = _source_catalogs()
     for catalog in (source, extended):
@@ -232,7 +264,9 @@ def yuanling_packet_knowledge_context(mode: str) -> dict[str, Any]:
     return {
         "kind": "YUANLING_PACKET_KNOWLEDGE_CONTEXT_V2",
         "method": casting_method("YUANLING_YANSHU_QIYAO_RAW"),
-        "qimen_casting_reference": casting_method("YUANLING_QIMEN_CASTING_REFERENCE"),
+        "qimen_casting_reference": casting_method(
+            "YUANLING_QIMEN_CASTING_REFERENCE"
+        ),
         "source_sections": [source_section(section_id) for section_id in section_ids],
         "riqimen_method": (
             casting_method("YUANLING_RI_QIMEN")
