@@ -1,5 +1,5 @@
 {
-  "schema_version": "stark-sources-v1.3.0",
+  "schema_version": "stark-sources-v1.4.0",
   "sources": [
     {"id":"dunjia-yanyi","title":"遁甲演義（四庫全書本）","type":"primary_classic","url":"https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9","use":"時家奇門、陰陽遁、九宮、值符值使、星門及格局。"},
     {"id":"dunjia-yanyi-2","title":"遁甲演義・格局條目","type":"primary_classic","url":"https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9","use":"奇儀格、伏吟反吟、刑格等結構交叉核對。"},
@@ -9,6 +9,11 @@
     {"id":"qimen-daquan-star-door","title":"諸葛武侯行兵遁甲金函玉鏡・八門遇九星斷例","type":"primary_classic","url":"https://ctext.org/wiki.pl?chapter=496054&if=gb","use":"門星合參傳統。"},
     {"id":"qimen-daquan-host-guest","title":"奇門遁甲秘笈大全・論主客","type":"primary_classic","url":"https://ctext.org/wiki.pl?chapter=961040&if=gb&remap=gb","use":"主客、先後動靜與天地盤關係。"},
     {"id":"qimen-daquan-door-pressure","title":"奇門遁甲秘笈大全・門迫宮迫","type":"primary_classic","url":"https://ctext.org/wiki.pl?chapter=799331&if=gb","use":"八門與九宮生剋、門迫宮迫。"},
+    {"id":"yuanling-wikisource","title":"奇門遁甲元靈經・維基文庫","type":"primary_classic_transcription","url":"https://zh.wikisource.org/zh-hant/%E5%A5%87%E9%96%80%E9%81%81%E7%94%B2%E5%85%83%E9%9D%88%E7%B6%93","use":"JARVIS 10.3 演數七要、數主吉凶歌訣、日奇門與卷三中宮值日九星的主要公開文本核對。演數七要與日奇門維持獨立方法層。"},
+    {"id":"yuanling-ctext-vol1","title":"Chinese Text Project・奇門遁甲元靈經卷一","type":"primary_classic_crosscheck","url":"https://ctext.org/wiki.pl?chapter=118579&if=en","use":"交叉核對演數七要七項、數主落宮歌訣、日奇門六十日起休表及其法。"},
+    {"id":"yuanling-public-scan","title":"國圖藏本《奇門元靈經》公開掃描・Wikimedia Commons","type":"primary_scan_metadata_crosscheck","url":"https://commons.wikimedia.org/wiki/File:NLC416-12jh005343-45282_%E5%A5%87%E9%96%80%E5%85%83%E9%9D%88%E7%B6%93.pdf","use":"目錄、卷次與版面存在性 crosscheck；未經逐頁人工校勘的影像內容不以 OCR 自動改寫。"},
+    {"id":"jinhanyujing-ctext-day-nine-stars","title":"諸葛武侯行兵遁甲金函玉鏡卷一・九星落局法","type":"collateral_classic_reconstruction","url":"https://ctext.org/wiki.pl?chapter=496054&if=en","use":"旁證日遁太乙、攝提、軒轅、招搖、天符、青龍、咸池、太陰、天乙九星順逆與甲子完整落宮；只作 Yuanling 省略算法候選，不冒充《元靈經》本節明文。"},
+    {"id":"qimen-baojian-dongting-collateral","title":"奇門寶鑑卷之四・洞庭老人奇門捷徑占法／演數七要","type":"collateral_classic_reconstruction","url":"https://ichingtrilogy.com/post/qi-men-bao-jian-06/","use":"旁證從中宮起六甲日、依日干與時支順逆求時宮，再布日遁九星及八門的演數候選步驟；保留與《元靈經》入門/八門、乾宮/坤宮等跨文本差異。"},
     {"id":"meihua-yishu-wikisource","title":"梅花易數","type":"primary_classic","url":"https://zh.wikisource.org/zh-hant/%E6%A2%85%E8%8A%B1%E6%98%93%E6%95%B8","use":"八卦數、五行生克、卦氣旺衰、年月日時起卦、互卦、體用與克應。"},
     {"id":"zhouyi-wikisource","title":"周易","type":"primary_classic_crosscheck","url":"https://zh.wikisource.org/zh-hant/%E5%91%A8%E6%98%93","use":"六十四卦、卦辭、彖、象與爻辭交叉核對。"},
     {"id":"zhouyi-kanripo-tls-transcription","title":"Kanripo KR1a0001 · 周易 · TLS 數位轉錄","type":"primary_edition_digital_transcription","url":"https://github.com/kanripo/KR1a0001","pinned_commit":"8284adbf9e3435d713180e24f05bf75f8b7d1d96","use":"JARVIS 10.1 周易原典審查底本：64 卦、384 標準爻、卦辭、彖、象與來源頁碼；固定來源數位轉錄，不宣稱完成所有版本校勘。"},
@@ -32,6 +37,9 @@
   "source_policy": [
     "古籍原義、數位轉錄、後世注解、專案摘要與現代足球類比必須分層，不把任何後設內容冒充古文。",
     "JARVIS 只 deterministic 起局／起卦、檢索、原典審查與打包，不自動決定最終吉凶、勝率或固定比分。",
+    "《元靈經》演數七要與日奇門相鄰但獨立；沒有直接文本證據時不得將兩者寫死成單一古法。",
+    "元靈演數的一白/二黑等數術九星與時家天蓬/天芮等九星保持獨立 registry；旁證 reconstruction 只能作候選，不自動填入 primary factors。",
+    "元靈旁證若與主文本有入門/八門、乾宮/坤宮等差異，必須保留 variant register，不靜默改正文。",
     "周易原典層固定保存 64 卦／384 標準爻與來源頁碼；固定數位底本完整不等於所有歷代版本已完成校勘。",
     "焦氏易林 bridge 只用梅花本卦→最終變卦；不把互卦當作焦林原始占法，也不宣稱等同直日法。",
     "焦氏易林已達 4096/4096 pair coverage 與 WYG base transcription 完整；這不等於多版本異文、標點與歷代注解已完成。",

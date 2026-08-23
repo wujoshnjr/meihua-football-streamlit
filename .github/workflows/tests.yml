@@ -48,6 +48,8 @@ jobs:
         run: python tools/validate_qimen_extended_review.py
       - name: Validate Qimen golden / extended review gates
         run: python tools/validate_qimen_review_gates.py
+      - name: Validate Yuanling Yanshu / Ri-Qimen source contract
+        run: python tools/validate_yuanling.py
       - run: ruff check .
       - run: python -m pytest -q
       - run: python tools/validate_knowledge.py

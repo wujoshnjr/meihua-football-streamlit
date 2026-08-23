@@ -1,5 +1,49 @@
 # Changelog
 
+## 10.3.0-alpha.1 — YUANLING SOURCE RECONSTRUCTION
+
+JARVIS 10.3 begins a source-first 《奇門遁甲元靈經》 layer. The alpha deliberately prioritizes reconstructable classical facts and explicit uncertainty over producing numeric football answers.
+
+### Method separation
+- Add independent `yuanling.yanshu_qiyao` and `yuanling.riqimen` modules.
+- Do **not** claim that 演數七要 must use 日奇門 as its base chart merely because the sections are adjacent.
+- Add `RIQIMEN_QIYAO_EXPERIMENT` only as an explicitly project-level bridge that preserves both source objects separately.
+
+### Yanshu Qiyao
+- Fix the primary seven-factor contract at 數宮 / 數主 / 飛星 / 入門 / 直日星 / 日干 / 時支.
+- Preserve source wording `遁至本時之星即為數主` while leaving the complete star-flight algorithm unresolved until source reconstruction is stronger.
+- Add number-chief landing-state review using the primary black-star example; Luoshu element assignments remain clearly labeled project normalization.
+- Keep unresolved factors as `UNRESOLVED_BY_SOURCE_AUDIT` rather than inferring them from the Shijia rotating-plate engine.
+
+### Numeric-star registry
+- Add an independent 一白/二黑/三碧/四綠/五黃/六白/七赤/八白/九紫 registry with 太乙/攝提/軒轅/招搖/天符/青龍/咸池/太陰/天乙 and Beidou-style aliases where source-supported.
+- Explicitly prohibit silent reuse of Shijia 天蓬/天芮/天沖/... as Yanshu numeric stars.
+
+### Ri-Qimen
+- Materialize and exact-test the full 60-day `某宮起休` table from the Yuanling Ri-Qimen section.
+- Build a source-grounded base with event-local calendar, solar term, three-yuan, dun, Ju, earth plate and day xun.
+- Keep `值符之上星加本日干穿宮數去` as unresolved; current status is `PARTIAL_SOURCE_GROUNDED__HEAVEN_PLATE_PENDING`.
+
+### Collateral reconstruction
+- Add a separate `COLLATERAL_QIMEN_TEXT_RECONSTRUCTION` authority tier.
+- Reconstruct day-nine-star candidate charts from 《金函玉鏡》 with exact Yang/Yin 甲子 anchors.
+- Reconstruct a candidate current-time/數宮 from 《奇門寶鑑》洞庭老人法, including 酉/戌/亥 repeating 子/丑/寅.
+- Expose candidate number palace, daily-nine-star chart, star at number palace and center daily star without populating Yuanling primary slots.
+- Preserve cross-text variants rather than silently emending the Yuanling transcription: `入門` vs `八門`; black-star example `乾宮` vs `坤宮`.
+
+### Packet / UI / validation
+- Add deterministic `YUANLING_YANSHU_PACKET_V1` and JSON Schema.
+- Add `/yuanling` Streamlit research page with DST-aware time entry, primary-factor audit, collateral candidate display and optional Ri-Qimen experiment view.
+- Add dedicated `tools/validate_yuanling.py`, pytest coverage and CI step.
+- Register Yuanling primary/crosscheck/collateral sources in `knowledge/sources.json`.
+
+### Hard boundaries
+- `raw_numeric_candidates=[]` until algorithm source-lock.
+- `score_synthesis=DEFERRED_UNTIL_BLIND_TEST_PROTOCOL`.
+- No `數宮3 → 3球`, no automatic total-goals/score/probability, no post-match fitting, no silent Shijia substitution and no promotion of collateral candidates to Yuanling primary facts.
+
+**Alpha completeness statement:** this release establishes a reproducible Yuanling research architecture and several source/collateral mechanical layers. It does not yet claim the exact relationship among 數主 / 飛星 / 直日星 or the Ri-Qimen `穿宮數去` heaven-plate mechanics are fully source-locked.
+
 ## 10.2.0 — JARVIS DEEP DIVINATION REVIEW
 
 JARVIS 10.2 completes Issue #62's deep-review acceptance while preserving the product boundary: **JARVIS casts, retrieves, audits, and packages; ChatGPT performs final interpretation.** No predictive-accuracy improvement is claimed.
