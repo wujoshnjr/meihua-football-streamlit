@@ -16,6 +16,12 @@ from jarvis.yuanling_packet import (  # noqa: E402
     build_yuanling_yanshu_packet,
     verify_yuanling_packet_integrity,
 )
+from jarvis.yuanling_vault import (  # noqa: E402
+    casting_method,
+    football_question_templates,
+    yuanling_catalog_stats,
+)
+from qimen.constants import SOLAR_TERM_JU  # noqa: E402
 from yuanling.collateral import (  # noqa: E402
     collateral_daily_nine_star_chart,
     collateral_number_palace,
@@ -33,15 +39,116 @@ def require(condition: bool, message: str) -> None:
         raise SystemExit(f"Yuanling validation failed: {message}")
 
 
+def _load(name: str) -> dict:
+    return json.loads((KNOWLEDGE / name).read_text(encoding="utf-8"))
+
+
+def _validate_expanded_catalogs() -> None:
+    catalog = _load("yuanling_source_catalog.json")
+    casting = _load("casting_method_catalog.json")
+    sources = _load("sources.json")
+
+    require(
+        catalog.get("schema_version") == "stark-yuanling-source-catalog-v1.0.0",
+        "source catalog schema drift",
+    )
+    sections = catalog.get("sections", [])
+    require(len(sections) == 18, "source catalog must contain 18 reviewed sections")
+    ids = [row.get("id") for row in sections]
+    require(len(ids) == len(set(ids)), "source catalog section ids must be unique")
+    require(
+        catalog["completion"]["source_locked_riqimen_day_table"] == 60,
+        "source catalog Ri-Qimen day coverage drift",
+    )
+    require(
+        catalog["completion"]["numeric_star_daily_judgments"] == 9,
+        "value-day numeric-star coverage drift",
+    )
+
+    by_id = {row["id"]: row for row in sections}
+    qiyao = by_id["yuanling.vol1.qiyao"]
+    require(
+        qiyao["machine_facts"]["ordered_factors"]
+        == ["數宮", "數主", "飛星", "入門", "直日星", "日干", "時支"],
+        "expanded source catalog qiyao order mismatch",
+    )
+    source_ju = by_id["yuanling.vol1.solar_term_ju"]["machine_facts"]
+    require(
+        {term: tuple(values) for term, values in source_ju.items()} == SOLAR_TERM_JU,
+        "Yuanling source solar-term Ju table diverges from production Qimen table",
+    )
+    value_day = by_id["yuanling.vol3.value_day_nine_stars"]["machine_facts"]
+    shefu = by_id["yuanling.vol3.shefu_numeric_associations"]["machine_facts"]
+    require(len(value_day) == 9, "value-day nine-star records must cover 1..9")
+    require(len(shefu) == 9, "Shefu numeric association records must cover 1..9")
+    require(
+        [row["number"] for row in value_day] == list(range(1, 10)),
+        "value-day nine-star ordering must be 1..9",
+    )
+    require(
+        [row["number"] for row in shefu] == list(range(1, 10)),
+        "Shefu numeric association ordering must be 1..9",
+    )
+
+    source_ids = {row["id"] for row in sources.get("sources", [])}
+    require(
+        set(catalog.get("source_ids", [])) <= source_ids,
+        "Yuanling source catalog references an unregistered global source id",
+    )
+    require("yuanling-ctext-vol3" in source_ids, "Yuanling volume-three source missing")
+
+    require(
+        casting.get("schema_version") == "stark-casting-method-catalog-v1.0.0",
+        "casting method catalog schema drift",
+    )
+    methods = {row["id"]: row for row in casting.get("methods", [])}
+    require(
+        set(methods)
+        == {
+            "QIMEN_SHIJIA_ZHUANPAN_CHAIBU",
+            "MEIHUA_YEAR_MONTH_DAY_HOUR",
+            "YUANLING_YANSHU_QIYAO_RAW",
+            "YUANLING_RI_QIMEN",
+        },
+        "casting method catalog must contain the four current method contracts",
+    )
+    require(
+        methods["QIMEN_SHIJIA_ZHUANPAN_CHAIBU"]["interpretation_role"]
+        == "RESULT_ENGINE_INPUT",
+        "Qimen interpretation role drift",
+    )
+    require(
+        methods["MEIHUA_YEAR_MONTH_DAY_HOUR"]["interpretation_role"]
+        == "STRUCTURE_STRESS_TEST",
+        "Meihua interpretation role drift",
+    )
+    require(
+        methods["YUANLING_RI_QIMEN"]["status"] == "PARTIAL_RESEARCH_ALPHA",
+        "Ri-Qimen must remain explicitly partial",
+    )
+    templates = football_question_templates()
+    require(
+        "不判比分與進球" in templates["meihua"],
+        "Meihua football question must not duplicate Qimen score output",
+    )
+    require(
+        "不直接將宮數或星數換算為比分" in templates["yuanling"],
+        "Yuanling football question must preserve score firewall",
+    )
+
+    serialized = json.dumps(catalog, ensure_ascii=False).lower()
+    require("automatic_win_probability" not in serialized, "source catalog contains auto probability key")
+    require("數宮3直接等於3球" not in serialized, "source catalog contains forbidden fixed goal rule")
+
+    stats = yuanling_catalog_stats()
+    require(stats["structured_sections"] == 18, "vault stats section count mismatch")
+    require(stats["riqimen_day_rows"] == 60, "vault stats Ri-Qimen count mismatch")
+    require(casting_method("YUANLING_YANSHU_QIYAO_RAW")["status"] == "RESEARCH_ALPHA", "Qiyao method status drift")
+
+
 def main() -> None:
-    audit = json.loads(
-        (KNOWLEDGE / "yuanling_method_audit.json").read_text(encoding="utf-8")
-    )
-    collateral_audit = json.loads(
-        (KNOWLEDGE / "yuanling_collateral_reconstruction.json").read_text(
-            encoding="utf-8"
-        )
-    )
+    audit = _load("yuanling_method_audit.json")
+    collateral_audit = _load("yuanling_collateral_reconstruction.json")
     require(
         audit.get("schema_version") == "stark-yuanling-method-audit-v1.0.0",
         "method audit schema drift",
@@ -73,6 +180,8 @@ def main() -> None:
         len(audit["ri_qimen"]["unresolved_algorithmic_points"]) >= 2,
         "Ri-Qimen uncertainty must remain explicit",
     )
+
+    _validate_expanded_catalogs()
 
     require(
         collateral_audit.get("status")
@@ -209,15 +318,15 @@ def main() -> None:
         mode="QIYAO_RAW",
     )
     schema = json.loads(
-        (ROOT / "schemas" / "yuanling_yanshu_packet_v1_1.schema.json").read_text(
+        (ROOT / "schemas" / "yuanling_yanshu_packet_v1_2.schema.json").read_text(
             encoding="utf-8"
         )
     )
     validate(packet, schema)
     require(verify_yuanling_packet_integrity(packet), "packet SHA integrity failed")
     require(
-        packet["schema_version"] == "YUANLING_YANSHU_PACKET_V1_1",
-        "packet version must be v1.1",
+        packet["schema_version"] == "YUANLING_YANSHU_PACKET_V1_2",
+        "packet version must be v1.2",
     )
     require(
         packet["riqimen_base"] is None,
@@ -244,12 +353,26 @@ def main() -> None:
         "numeric candidates must stay disabled",
     )
     require(
+        packet["knowledge_context"]["method"]["id"] == "YUANLING_YANSHU_QIYAO_RAW",
+        "knowledge context method mismatch",
+    )
+    context_ids = {row["id"] for row in packet["knowledge_context"]["source_sections"]}
+    require(
+        {"yuanling.vol1.qiyao", "yuanling.vol1.number_chief_song", "yuanling.vol3.value_day_nine_stars"}
+        <= context_ids,
+        "packet source context incomplete",
+    )
+    require(
         "AUTOMATIC_FOOTBALL_SCORE_FROM_PALACE_NUMBER" in packet["forbidden_outputs"],
         "score shortcut guard missing",
     )
     require(
         "COLLATERAL_CANDIDATE_PROMOTED_TO_PRIMARY_FACT" in packet["forbidden_outputs"],
         "collateral promotion guard missing",
+    )
+    require(
+        "SHEFU_NUMBER_ASSOCIATION_TO_FOOTBALL_GOALS" in packet["forbidden_outputs"],
+        "Shefu-to-goals guard missing",
     )
 
     experiment = build_yuanling_yanshu_packet(
@@ -277,11 +400,16 @@ def main() -> None:
         "riqimen_experiment_input" not in experiment["qiyao_review"],
         "experiment must not duplicate Ri-Qimen inside Qiyao review",
     )
+    require(
+        experiment["knowledge_context"]["riqimen_method"]["id"] == "YUANLING_RI_QIMEN",
+        "experiment knowledge context must expose Ri-Qimen method",
+    )
 
     print(
-        "Yuanling: PASS | packet=v1.1 | sections=separate | numeric_stars=9 | "
-        "riqimen=sibling-only | collateral-reconstruction=candidates-only | "
-        "riqimen_day_table=60 | score_mapping=disabled | unresolved_rules=preserved"
+        "Yuanling: PASS | packet=v1.2 | source_sections=18 | casting_methods=4 | "
+        "sections=separate | numeric_stars=9 | riqimen=sibling-only | "
+        "collateral=candidates-only | riqimen_day_table=60 | score_mapping=disabled | "
+        "source-context=embedded | unresolved_rules=preserved"
     )
 
 

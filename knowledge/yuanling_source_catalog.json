@@ -1,0 +1,264 @@
+{
+  "schema_version": "stark-yuanling-source-catalog-v1.0.0",
+  "title": "《奇門遁甲元靈經》可重建方法與數術資料庫",
+  "scope": "以卷一、卷三中與排盤、用神、伏身、六親、演數、值日九星直接相關的公開傳本文本建立 machine-readable source catalog；只保存可核對規則、來源定位、摘要與未決點，不以專案猜測補完古法。",
+  "authority_policy": {
+    "primary_transcription": "YUANLING_PRIMARY_TEXT",
+    "crosscheck": "YUANLING_PRIMARY_CROSSCHECK",
+    "project_normalization": "PROJECT_NORMALIZATION__NOT_CLASSICAL_QUOTATION",
+    "collateral": "COLLATERAL_TEXT__NOT_YUANLING_PRIMARY_FACT",
+    "forbidden": [
+      "把旁證規則靜默升格成《元靈經》正文",
+      "把數宮直接換算成足球進球數",
+      "把值日九星吉凶直接換算成勝負或比分",
+      "把射覆數目直接換算成足球總進球",
+      "用時家天蓬九星替代一白至九紫數術星系而不標示假設",
+      "把先天定六親訣的青龍白虎等名目靜默等同現有時家八神",
+      "用賽後結果回填或選擇演算法"
+    ]
+  },
+  "source_ids": [
+    "yuanling-wikisource",
+    "yuanling-ctext-vol1",
+    "yuanling-ctext-vol3",
+    "yuanling-public-scan"
+  ],
+  "sections": [
+    {
+      "id": "yuanling.vol1.qimen_casting_example",
+      "volume": 1,
+      "name": "奇門起例",
+      "family": "RIQIMEN_OR_SHIJIA_SOURCE_CONTEXT",
+      "source_locator": "CTEXT 卷一 lines 1-3",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "summary": "先辨陰陽與節氣，再察符頭，依陰陽順逆布六儀三奇成地盤；再以符頭加用時干、布星門，定值符與值使而成天盤。正文另給陽遁九局與陰遁八局兩個具體例盤。",
+      "machine_facts": {
+        "step_order": ["辨陰陽遁", "定節氣", "定三元符頭", "布六儀三奇成地盤", "符頭加用時干", "定值符", "布星", "定值使", "成天盤"],
+        "examples": [
+          {"label": "芒種後癸亥日丙辰時", "dun": "陽遁", "yuan": "下元", "ju": 9, "hour_xun_head": "甲寅", "chief_star_source_statement": "中宮天禽移至兌宮", "chief_door_source_statement": "借坤宮死門加兌宮"},
+          {"label": "霜降後甲寅日辛未時", "dun": "陰遁", "ju": 8, "hour_xun_head": "甲子", "chief_star_source_statement": "艮宮天任移至中宮", "chief_door_source_statement": "艮宮生門加坎宮"}
+        ]
+      },
+      "caution": "此條是卷一一般奇門起例的文本背景；不得直接當成日奇門『穿宮數去』的完整算法。"
+    },
+    {
+      "id": "yuanling.vol1.yinyang_dun",
+      "volume": 1,
+      "name": "陰陽遁",
+      "family": "CALENDAR_RULE",
+      "source_locator": "CTEXT 卷一 lines 4-5",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "summary": "冬至後陽遁、夏至後陰遁。",
+      "machine_facts": {"yang_start_term": "冬至", "yin_start_term": "夏至"}
+    },
+    {
+      "id": "yuanling.vol1.solar_term_ju",
+      "volume": 1,
+      "name": "陰陽各局",
+      "family": "SOLAR_TERM_THREE_YUAN_JU",
+      "source_locator": "CTEXT 卷一 lines 6-14",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "summary": "二十四節氣各配上中下三元局數，可與 production 時家拆補局表逐條交叉核對。",
+      "machine_facts": {
+        "冬至": [1,7,4], "小寒": [2,8,5], "大寒": [3,9,6], "立春": [8,5,2], "雨水": [9,6,3], "驚蟄": [1,7,4],
+        "春分": [3,9,6], "清明": [4,1,7], "穀雨": [5,2,8], "立夏": [4,1,7], "小滿": [5,2,8], "芒種": [6,3,9],
+        "夏至": [9,3,6], "小暑": [8,2,5], "大暑": [7,1,4], "立秋": [2,5,8], "處暑": [1,4,7], "白露": [9,3,6],
+        "秋分": [7,1,4], "寒露": [6,9,3], "霜降": [5,8,2], "立冬": [6,9,3], "小雪": [5,8,2], "大雪": [4,7,1]
+      }
+    },
+    {
+      "id": "yuanling.vol1.three_yuan_head",
+      "volume": 1,
+      "name": "三元符頭",
+      "family": "YUAN_RULE",
+      "source_locator": "CTEXT 卷一 lines 15-16",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "summary": "甲己符頭配地支分上中下三元。",
+      "machine_facts": {"上元": ["子","午","卯","酉"], "中元": ["寅","申","巳","亥"], "下元": ["辰","戌","丑","未"]}
+    },
+    {
+      "id": "yuanling.vol1.three_wonders",
+      "volume": 1,
+      "name": "三奇",
+      "family": "QIMEN_COMPONENT",
+      "source_locator": "CTEXT 卷一 lines 17-18",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "machine_facts": {"乙": "日奇", "丙": "月奇", "丁": "星奇"}
+    },
+    {
+      "id": "yuanling.vol1.six_instruments",
+      "volume": 1,
+      "name": "六儀",
+      "family": "QIMEN_COMPONENT",
+      "source_locator": "CTEXT 卷一 lines 19-20",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "machine_facts": {"甲子": "戊", "甲戌": "己", "甲申": "庚", "甲午": "辛", "甲辰": "壬", "甲寅": "癸"}
+    },
+    {
+      "id": "yuanling.vol1.shijia_nine_stars",
+      "volume": 1,
+      "name": "九星",
+      "family": "SHIJIA_QIMEN_STAR_REGISTRY",
+      "source_locator": "CTEXT 卷一 lines 21-22",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "machine_facts": {"1": "天蓬", "2": "天芮", "3": "天沖", "4": "天輔", "5": "天禽", "6": "天心", "7": "天柱", "8": "天任", "9": "天英"},
+      "caution": "一般奇門九星，不等於演數七要的一白、二黑等數術星。"
+    },
+    {
+      "id": "yuanling.vol1.qiyi_direction",
+      "volume": 1,
+      "name": "奇儀順逆",
+      "family": "PLACEMENT_RULE",
+      "source_locator": "CTEXT 卷一 lines 23-24",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "machine_facts": {"陽遁": {"六儀": "順布", "三奇": "逆布"}, "陰遁": {"六儀": "逆布", "三奇": "順布"}}
+    },
+    {
+      "id": "yuanling.vol1.chief_star",
+      "volume": 1,
+      "name": "值符",
+      "family": "CHIEF_RULE",
+      "source_locator": "CTEXT 卷一 lines 25-26",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "summary": "察用時由何宮儀所轄，以該宮之儀與星加於時干上定值符。"
+    },
+    {
+      "id": "yuanling.vol1.chief_door",
+      "volume": 1,
+      "name": "值使",
+      "family": "CHIEF_RULE",
+      "source_locator": "CTEXT 卷一 lines 27-28",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "summary": "從所轄宮數至用時所到宮，把該宮地盤門加至所得宮；陽遁順數、陰遁逆數。"
+    },
+    {
+      "id": "yuanling.vol1.yongshen",
+      "volume": 1,
+      "name": "定用神訣",
+      "family": "INTERPRETATION_SELECTION",
+      "source_locator": "CTEXT 卷一 lines 29-35",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "summary": "一般數少者為先、數多者為後；占官反用。年月日時皆可依事情遠近取用。",
+      "machine_facts": {"general_order": "數少者先，數多者後", "official_matter_exception": "占官以數多者先，數少者後", "time_layers": ["年","月","日","時"]},
+      "caution": "不得直接等同現代足球主客用神規則。"
+    },
+    {
+      "id": "yuanling.vol1.fushen",
+      "volume": 1,
+      "name": "伏身訣",
+      "family": "BODY_PALACE_RULE",
+      "source_locator": "CTEXT 卷一 lines 36-45",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "summary": "以一白至五黃入中推身宮，酉戌亥有特殊條件；另分己占己事與問他人。",
+      "machine_facts": {
+        "center_star_to_body_palace": {"一白": 6, "二黑": 7, "三碧": 8, "四綠": 9, "五黃": 1},
+        "special_notes": ["酉居坎時另有一白入中身在五", "戌亥亦記一白入中身居五", "中五涉戊己大煞，原文有常人不用限制"]
+      }
+    },
+    {
+      "id": "yuanling.vol1.preheaven_six_relations",
+      "volume": 1,
+      "name": "先天定六親訣",
+      "family": "QUESTION_DOMAIN_SELECTION",
+      "source_locator": "CTEXT 卷一 lines 46-52",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "summary": "正文用青龍、田宅明堂、天刑、朱雀、天財金匱、天德恩星、白虎武名、玉堂、天牢、玄武陰宮、司命、勾陳等名目對應不同所問事類。",
+      "machine_facts": [
+        {"marker": "青龍", "domain": "求財"},
+        {"marker": "田宅明堂", "domain": "父母"},
+        {"marker": "天刑", "domain": "官鬼/詞訟"},
+        {"marker": "朱雀", "domain": "文書/遠人"},
+        {"marker": "天財金匱", "domain": "交易"},
+        {"marker": "天德恩星", "domain": "官祿"},
+        {"marker": "白虎武名", "domain": "口舌"},
+        {"marker": "玉堂", "domain": "功名"},
+        {"marker": "天牢", "domain": "奴僕/六畜"},
+        {"marker": "玄武陰宮", "domain": "妻妾"},
+        {"marker": "司命", "domain": "子孫/福德"},
+        {"marker": "勾陳", "domain": "疾病"}
+      ],
+      "caution": "這是卷一自身的事類標記層；青龍、白虎、玄武等名稱不得因同名而靜默等同 production 時家八神。"
+    },
+    {
+      "id": "yuanling.vol1.qiyao",
+      "volume": 1,
+      "name": "演數七要",
+      "family": "YANSHU_QIYAO",
+      "source_locator": "CTEXT 卷一 lines 53-55",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "summary": "七要依次為數宮、數主、飛星、入門、直日星、日干、時支；遁至本時之星為數主，數主落宮最緊要，並合看本宮星、門宮、值日星、日干、時支。",
+      "machine_facts": {"ordered_factors": ["數宮","數主","飛星","入門","直日星","日干","時支"], "priority": ["數主落宮","臨本宮之星","門宮","直日星","日干","時支"]},
+      "unresolved": ["數宮完整原法", "數主飛遁起點與順逆", "飛星與數主的確切關係", "入門完整機械步驟", "直日星與卷三中宮值日九星的確切接口"]
+    },
+    {
+      "id": "yuanling.vol1.number_chief_song",
+      "volume": 1,
+      "name": "數主吉凶歌訣",
+      "family": "NUMBER_CHIEF_STATE",
+      "source_locator": "CTEXT 卷一 lines 56-59",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "summary": "先看數主落宮之生、難、和；數宮自身好壞不能越過數主狀態。",
+      "machine_facts": {
+        "source_example": {"number_palace": "乾宮", "chief_star_label": "黑星", "landing_state": {"離": "生", "震": "難", "巽": "難", "艮": "和", "坤": "和"}},
+        "precedence_rule": "數宮吉而數主受難仍難成；數宮凶而數主居吉地則凶性可削弱"
+      },
+      "caution": "把黑星正規化為二黑土只屬 project normalization。"
+    },
+    {
+      "id": "yuanling.vol1.riqimen",
+      "volume": 1,
+      "name": "日奇門",
+      "family": "RI_QIMEN",
+      "source_locator": "CTEXT 卷一 lines 60-66",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "summary": "六十日每三日一組定某宮起休；以本節三元定局作地盤，本甲旬頭加本日干，本甲旬頭為值符，再穿宮數去；陰遁奇直皆逆、星門皆順。",
+      "machine_facts": {"rest_door_day_table": "yuanling.riqimen.riqimen_60_day_table()", "earth_plate_basis": "本節三元定局", "xun_head_role": "本甲旬頭即值符", "direction_rule": "陰遁奇直皆逆，星門皆順"},
+      "unresolved": ["值符之上星加本日干穿宮數去的完整逐宮算法", "日奇門移動星層與演數數主星系的同異"]
+    },
+    {
+      "id": "yuanling.vol3.value_day_nine_stars",
+      "volume": 3,
+      "name": "中宮值日九星歌訣",
+      "family": "NUMERIC_STAR_DAILY_JUDGMENT",
+      "source_locator": "CTEXT 卷三 lines 39-57",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "summary": "一白至九紫配太乙/攝提等星名與貪狼/巨門等別名，並附值日行事傾向。",
+      "machine_facts": [
+        {"number": 1, "color": "一白", "alias": "太乙/貪狼", "source_tendency": "多利求謀，但帶貪財好色之戒"},
+        {"number": 2, "color": "二黑", "alias": "巨門", "source_tendency": "多阻滯災病"},
+        {"number": 3, "color": "三碧", "alias": "祿存", "source_tendency": "財傷與謀事不遂風險"},
+        {"number": 4, "color": "四綠", "alias": "文曲", "source_tendency": "勞而未成、行動不通"},
+        {"number": 5, "color": "五黃", "alias": "廉貞/天符", "source_tendency": "宜靜不宜妄動"},
+        {"number": 6, "color": "六白", "alias": "武曲/青龍", "source_tendency": "多利求財與出入"},
+        {"number": 7, "color": "七赤", "alias": "破軍/咸池", "source_tendency": "行動、災危與乖離風險"},
+        {"number": 8, "color": "八白", "alias": "左輔/太陰", "source_tendency": "多利用事、行兵"},
+        {"number": 9, "color": "九紫", "alias": "右弼/天乙", "source_tendency": "多利求謀、策劃與功名"}
+      ],
+      "caution": "古典吉凶只作數術語義層，不可直接當足球結果公式。"
+    },
+    {
+      "id": "yuanling.vol3.shefu_numeric_associations",
+      "volume": 3,
+      "name": "射覆數目與物象",
+      "family": "NUMERIC_STAR_ASSOCIATIONS",
+      "source_locator": "Wikisource 卷三射覆條",
+      "authority": "YUANLING_PRIMARY_TEXT",
+      "summary": "一白至九紫有物類、色味與數目聯想，可作古典數術關聯資料，但不等於演數七要的足球進球映射。",
+      "machine_facts": [
+        {"number": 1, "classical_number_associations": [1,6]}, {"number": 2, "classical_number_associations": [8,10,5]},
+        {"number": 3, "classical_number_associations": [4,8,3]}, {"number": 4, "classical_number_associations": [4,5,8]},
+        {"number": 5, "classical_number_associations": [5,10,8]}, {"number": 6, "classical_number_associations": [1,6,9]},
+        {"number": 7, "classical_number_associations": [2,10,9]}, {"number": 8, "classical_number_associations": [5,1,8]},
+        {"number": 9, "classical_number_associations": [2,7,9]}
+      ],
+      "caution": "射覆數目不是總進球或隊伍進球數。"
+    }
+  ],
+  "completion": {
+    "structured_sections": 18,
+    "source_locked_riqimen_day_table": 60,
+    "numeric_star_daily_judgments": 9,
+    "preheaven_relation_markers": 12,
+    "status": "RELEVANT_METHOD_CORPUS_STRUCTURED__UNRESOLVED_ALGORITHMS_PRESERVED"
+  }
+}

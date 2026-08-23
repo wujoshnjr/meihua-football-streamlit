@@ -11,6 +11,12 @@ from jarvis.yuanling_packet import (
     build_yuanling_yanshu_packet,
     verify_yuanling_packet_integrity,
 )
+from jarvis.yuanling_vault import (
+    casting_method,
+    football_question_templates,
+    search_yuanling,
+    yuanling_catalog_stats,
+)
 from yuanling.collateral import (
     collateral_daily_nine_star_chart,
     collateral_number_palace,
@@ -146,6 +152,38 @@ def test_qiyao_review_never_embeds_riqimen_payload() -> None:
     assert experiment["raw_numeric_candidates"]["values"] == []
 
 
+def test_yuanling_source_catalog_and_casting_catalog_are_searchable() -> None:
+    stats = yuanling_catalog_stats()
+    assert stats["structured_sections"] == 18
+    assert stats["numeric_stars"] == 9
+    assert stats["riqimen_day_rows"] == 60
+    assert stats["yuanling_methods"] == 2
+    assert stats["source_schema"] == "stark-yuanling-source-catalog-v1.0.0"
+    assert stats["casting_schema"] == "stark-casting-method-catalog-v1.0.0"
+
+    qiyao_hits = search_yuanling("演數七要")
+    assert any(row.get("key") == "yuanling.vol1.qiyao" for row in qiyao_hits)
+    riqimen_hits = search_yuanling("甲子")
+    assert any(row.get("family") == "RIQIMEN_60_DAY_REST_DOOR_TABLE" for row in riqimen_hits)
+    casting_hits = search_yuanling("年月日時起卦")
+    assert any(row.get("key") == "MEIHUA_YEAR_MONTH_DAY_HOUR" for row in casting_hits)
+
+
+def test_casting_method_catalog_keeps_system_roles_and_question_templates() -> None:
+    qimen = casting_method("QIMEN_SHIJIA_ZHUANPAN_CHAIBU")
+    meihua = casting_method("MEIHUA_YEAR_MONTH_DAY_HOUR")
+    qiyao = casting_method("YUANLING_YANSHU_QIYAO_RAW")
+    riqimen = casting_method("YUANLING_RI_QIMEN")
+    templates = football_question_templates()
+
+    assert qimen["interpretation_role"] == "RESULT_ENGINE_INPUT"
+    assert meihua["interpretation_role"] == "STRUCTURE_STRESS_TEST"
+    assert qiyao["interpretation_role"] == "NUMERIC_DIVINATION_RESEARCH_INPUT"
+    assert riqimen["status"] == "PARTIAL_RESEARCH_ALPHA"
+    assert "不判比分與進球" in templates["meihua"]
+    assert "不直接將宮數或星數換算為比分" in templates["yuanling"]
+
+
 def test_yuanling_packet_is_deterministic_integrity_checked_and_schema_valid() -> None:
     kwargs = dict(
         question="依《元靈經》演數七要整理此事件之數術原始資料，不直接轉成足球比分。",
@@ -157,19 +195,27 @@ def test_yuanling_packet_is_deterministic_integrity_checked_and_schema_valid() -
     second = build_yuanling_yanshu_packet(**kwargs)
     assert first == second
     assert verify_yuanling_packet_integrity(first)
-    assert first["schema_version"] == "YUANLING_YANSHU_PACKET_V1_1"
+    assert first["schema_version"] == "YUANLING_YANSHU_PACKET_V1_2"
     assert first["mode"] == "QIYAO_RAW"
     assert first["riqimen_base"] is None
     assert first["qiyao_review"]["riqimen_bridge"]["status"] == "NOT_REQUESTED"
+    assert first["knowledge_context"]["method"]["id"] == "YUANLING_YANSHU_QIYAO_RAW"
+    assert first["knowledge_context"]["riqimen_method"] is None
+    source_ids = {row["id"] for row in first["knowledge_context"]["source_sections"]}
+    assert "yuanling.vol1.qiyao" in source_ids
+    assert "yuanling.vol1.number_chief_song" in source_ids
+    assert "yuanling.vol3.value_day_nine_stars" in source_ids
+    assert "yuanling.vol3.shefu_numeric_associations" in source_ids
     assert (
         first["ai_interpretation_contract"]["score_synthesis"]
         == "DEFERRED_UNTIL_BLIND_TEST_PROTOCOL"
     )
     assert "AUTOMATIC_FOOTBALL_SCORE_FROM_PALACE_NUMBER" in first["forbidden_outputs"]
     assert "COLLATERAL_CANDIDATE_PROMOTED_TO_PRIMARY_FACT" in first["forbidden_outputs"]
+    assert "SHEFU_NUMBER_ASSOCIATION_TO_FOOTBALL_GOALS" in first["forbidden_outputs"]
 
     schema = json.loads(
-        (ROOT / "schemas" / "yuanling_yanshu_packet_v1_1.schema.json").read_text(
+        (ROOT / "schemas" / "yuanling_yanshu_packet_v1_2.schema.json").read_text(
             encoding="utf-8"
         )
     )
@@ -184,7 +230,7 @@ def test_riqimen_experiment_uses_single_packet_layer_sibling() -> None:
         mode="RIQIMEN_QIYAO_EXPERIMENT",
     )
     schema = json.loads(
-        (ROOT / "schemas" / "yuanling_yanshu_packet_v1_1.schema.json").read_text(
+        (ROOT / "schemas" / "yuanling_yanshu_packet_v1_2.schema.json").read_text(
             encoding="utf-8"
         )
     )
@@ -194,3 +240,7 @@ def test_riqimen_experiment_uses_single_packet_layer_sibling() -> None:
     assert packet["riqimen_base"]["kind"] == "YUANLING_RI_QIMEN_BASE_V1"
     assert packet["qiyao_review"]["riqimen_bridge"]["status"] == "PACKET_LAYER_SIBLING_ENABLED"
     assert "riqimen_experiment_input" not in packet["qiyao_review"]
+    assert packet["knowledge_context"]["riqimen_method"]["id"] == "YUANLING_RI_QIMEN"
+    source_ids = {row["id"] for row in packet["knowledge_context"]["source_sections"]}
+    assert "yuanling.vol1.riqimen" in source_ids
+    assert "yuanling.vol1.solar_term_ju" in source_ids

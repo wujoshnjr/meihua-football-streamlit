@@ -26,6 +26,8 @@ def test_knowledge_vault_page_starts():
     app = run_page("pages/3_Knowledge_Vault.py")
     assert not app.exception
     assert any("知識庫" in item.value for item in app.title)
+    markdown_text = " ".join(item.value for item in app.markdown)
+    assert "元靈" in markdown_text
 
 
 def test_ai_packet_page_starts_without_packet():
@@ -38,3 +40,12 @@ def test_football_case_workspace_starts():
     app = run_page("pages/5_Football_Case.py")
     assert not app.exception
     assert any("足球雙術數案件" in item.value for item in app.title)
+
+
+def test_yuanling_research_page_starts_with_casting_guide():
+    app = run_page("pages/6_Yuanling_Yanshu.py")
+    assert not app.exception
+    assert any("元靈經" in item.value for item in app.title)
+    markdown_text = " ".join(item.value for item in app.markdown)
+    assert "演數七要" in markdown_text
+    assert "日奇門" in markdown_text
