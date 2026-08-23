@@ -1,0 +1,83 @@
+{
+  "schema_version": "stark-yuanling-collateral-reconstruction-v1.0.0",
+  "status": "COLLATERAL_RECONSTRUCTION_AVAILABLE__NOT_PRIMARY_YUANLING_FACT",
+  "purpose": "用相鄰/同系奇門文本重建《元靈經》省略的機械步驟候選，但絕不把旁證自動升格為《元靈經》原文明文。",
+  "authority_ladder": [
+    "YUANLING_PRIMARY_TEXT",
+    "INDEPENDENT_DIGITAL_CROSSCHECK",
+    "COLLATERAL_QIMEN_TEXT_RECONSTRUCTION",
+    "PROJECT_NORMALIZATION",
+    "EXPERIMENT_ONLY"
+  ],
+  "collateral_sources": [
+    {
+      "id": "jinhanyujing-ctext-day-nine-stars",
+      "work": "諸葛武侯行兵遁甲金函玉鏡卷一",
+      "locator": "九星落局法",
+      "url": "https://ctext.org/wiki.pl?chapter=496054&if=en",
+      "authority": "COLLATERAL_QIMEN_TEXT_RECONSTRUCTION",
+      "relevance": [
+        "與《元靈經》附圖附近甲子旬頭起艮等歌訣高度同文",
+        "明列太乙、攝提、軒轅、招搖、天符、青龍、咸池、太陰、天乙九星次序",
+        "明示冬至後陽遁順行九宮、夏至後陰遁逆行九宮",
+        "提供甲子日完整九宮 star placement，可作 deterministic golden anchor"
+      ]
+    },
+    {
+      "id": "qimen-baojian-dongting-collateral",
+      "work": "奇門寶鑑卷之四",
+      "locator": "洞庭老人奇門捷徑占法／演數七要",
+      "url": "https://ichingtrilogy.com/post/qi-men-bao-jian-06/",
+      "authority": "COLLATERAL_QIMEN_TEXT_RECONSTRUCTION",
+      "relevance": [
+        "演數七要前直接記載從中宮起六甲日、依日干順逆到本日宮",
+        "再於本日宮起子時，順逆遁至本時宮；酉戌亥重子丑寅",
+        "其後再以日遁九星順逆布九宮，再移八門看數宮何門",
+        "可提供數宮與日遁九星的候選機械 reconstruction，但不是《元靈經》本節的直接明文"
+      ]
+    }
+  ],
+  "daily_nine_star_candidate": {
+    "status": "RECONSTRUCTABLE_FROM_COLLATERAL",
+    "star_order": ["太乙", "攝提", "軒轅", "招搖", "天符", "青龍", "咸池", "太陰", "天乙"],
+    "yang_anchor": {
+      "day": "甲子",
+      "placements": {"8": "太乙", "9": "攝提", "1": "軒轅", "2": "招搖", "3": "天符", "4": "青龍", "5": "咸池", "6": "太陰", "7": "天乙"}
+    },
+    "yin_anchor": {
+      "day": "甲子",
+      "placements": {"2": "太乙", "1": "攝提", "9": "軒轅", "8": "招搖", "7": "天符", "6": "青龍", "5": "咸池", "4": "太陰", "3": "天乙"}
+    },
+    "project_use": "Expose as collateral daily-star chart/candidate. Do not silently assign it to 數主 or 直日星 until Yuanling-specific linkage is demonstrated."
+  },
+  "number_palace_candidate": {
+    "status": "RECONSTRUCTABLE_FROM_QIMEN_BAOJIAN_COLLATERAL",
+    "yang_day_stem_palaces": {"甲": 5, "乙": 6, "丙": 7, "丁": 8, "戊": 9, "己": 1, "庚": 2, "辛": 3, "壬": 4, "癸": 5},
+    "yin_day_stem_palaces": {"甲": 5, "乙": 4, "丙": 3, "丁": 2, "戊": 1, "己": 9, "庚": 8, "辛": 7, "壬": 6, "癸": 5},
+    "hour_rule": "本日宮起子時，同方向遁至本時；酉戌亥重在子丑寅三宮。",
+    "project_use": "Expose as collateral number-palace candidate, not as settled Yuanling primary algorithm."
+  },
+  "variant_register": [
+    {
+      "id": "QIYAO_FACTOR_4_VARIANT",
+      "yuanling_primary": "四曰入門",
+      "qimen_baojian_collateral": "四曰八門",
+      "classification": "CROSS_TEXT_VARIANT",
+      "resolution": "UNRESOLVED__PRESERVE_BOTH"
+    },
+    {
+      "id": "NUMBER_CHIEF_EXAMPLE_PALACE_VARIANT",
+      "yuanling_primary": "假如數在乾宮，黑星為主",
+      "qimen_baojian_collateral": "假如數在坤宮，黑星為主",
+      "classification": "CROSS_TEXT_VARIANT",
+      "resolution": "UNRESOLVED__DO_NOT_SILENTLY_EMEND_PRIMARY"
+    }
+  ],
+  "non_equivalences": [
+    "daily_star_at_number_palace != automatically 數主",
+    "center daily star != automatically 直日星",
+    "number_palace_candidate != automatically raw numeric candidate",
+    "collateral reconstruction != Yuanling primary text"
+  ],
+  "football_boundary": "旁證重建只服務術數資料復原；不得因此啟用比分、總進球或勝率自動映射。"
+}
