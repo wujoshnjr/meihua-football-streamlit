@@ -131,6 +131,49 @@ def casting_method(method_id: str) -> dict[str, Any]:
     raise KeyError(f"找不到起局/起卦方法：{method_id}")
 
 
+def source_section(section_id: str) -> dict[str, Any]:
+    catalog = _load(SOURCE_CATALOG_PATH)
+    for row in catalog.get("sections", []):
+        if row.get("id") == section_id:
+            return row
+    raise KeyError(f"找不到元靈原典條目：{section_id}")
+
+
+def yuanling_packet_knowledge_context(mode: str) -> dict[str, Any]:
+    section_ids = [
+        "yuanling.vol1.qiyao",
+        "yuanling.vol1.number_chief_song",
+        "yuanling.vol3.value_day_nine_stars",
+        "yuanling.vol3.shefu_numeric_associations",
+    ]
+    method_id = "YUANLING_YANSHU_QIYAO_RAW"
+    if mode == "RIQIMEN_QIYAO_EXPERIMENT":
+        section_ids.extend(
+            [
+                "yuanling.vol1.riqimen",
+                "yuanling.vol1.solar_term_ju",
+                "yuanling.vol1.three_yuan_head",
+            ]
+        )
+
+    return {
+        "kind": "YUANLING_PACKET_KNOWLEDGE_CONTEXT_V1",
+        "method": casting_method(method_id),
+        "source_sections": [source_section(section_id) for section_id in section_ids],
+        "riqimen_method": (
+            casting_method("YUANLING_RI_QIMEN")
+            if mode == "RIQIMEN_QIYAO_EXPERIMENT"
+            else None
+        ),
+        "source_catalog_schema": _load(SOURCE_CATALOG_PATH).get("schema_version"),
+        "casting_catalog_schema": _load(CASTING_CATALOG_PATH).get("schema_version"),
+        "boundary": (
+            "此 context 是 source-aware 方法與語義資料，不是比分公式。"
+            "射覆數目關聯、值日星吉凶與旁證候選均不得直接轉成足球進球或勝率。"
+        ),
+    }
+
+
 def football_question_templates() -> dict[str, str]:
     catalog = _load(CASTING_CATALOG_PATH)
     return dict(catalog.get("football_question_templates", {}))
