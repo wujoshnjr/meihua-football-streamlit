@@ -64,6 +64,8 @@ jobs:
         run: python tools/validate_qimen_review_gates.py
       - name: Validate Yuanling Yanshu / Ri-Qimen source contract
         run: python tools/validate_yuanling.py
+      - name: Validate expanded Yuanling source database and method reference
+        run: python tools/validate_yuanling_expanded.py
       - name: Ruff
         run: ruff check .
       - name: Pytest
