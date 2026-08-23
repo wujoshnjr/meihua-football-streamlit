@@ -5,7 +5,9 @@ from typing import Any
 
 from qimen.calendar import build_calendar_context
 from qimen.constants import ELEMENT_CONTROLS, ELEMENT_GENERATES, PALACES
+from qimen.engine import determine_dun
 
+from .collateral import build_collateral_qiyao_reconstruction
 from .riqimen import build_riqimen_base
 from .stars import numeric_star, star_registry_audit
 
@@ -13,7 +15,13 @@ from .stars import numeric_star, star_registry_audit
 ALLOWED_MODES = {"QIYAO_RAW", "RIQIMEN_QIYAO_EXPERIMENT"}
 
 
-def _factor(name: str, value: Any = None, *, status: str | None = None, note: str = "") -> dict[str, Any]:
+def _factor(
+    name: str,
+    value: Any = None,
+    *,
+    status: str | None = None,
+    note: str = "",
+) -> dict[str, Any]:
     resolved = value is not None
     return {
         "name": name,
@@ -69,11 +77,12 @@ def build_qiyao_review(
     entry_door: Any = None,
     daily_star_number: int | None = None,
 ) -> dict[str, Any]:
-    """Build a machine-readable seven-factor review without inventing missing rules.
+    """Build seven-factor review while keeping unresolved classical rules visible.
 
-    Inputs whose algorithms are not yet reconstructed may be supplied only as raw
-    facts for audit/testing.  The engine preserves their status and never converts
-    a palace number into a football score.
+    Raw research inputs can be supplied for fields whose Yuanling algorithm is not
+    yet fully reconstructed.  A separate collateral block gives candidate
+    mechanics from related Qimen texts but does not silently populate the primary
+    seven factors or convert palace numbers into football scores.
     """
 
     if mode not in ALLOWED_MODES:
@@ -86,8 +95,21 @@ def build_qiyao_review(
         numeric_star(daily_star_number)
 
     calendar = build_calendar_context(event_at, timezone_name)
+    dun = determine_dun(calendar.solar_term)
+    collateral = build_collateral_qiyao_reconstruction(
+        calendar.day_ganzhi,
+        calendar.hour_ganzhi,
+        dun,
+    )
     factors = [
-        _factor("數宮", number_palace, note="完整取法仍待原典 reconstruction；不得把宮數直接當球數。"),
+        _factor(
+            "數宮",
+            number_palace,
+            note=(
+                "《元靈經》本節完整取法仍待 reconstruction；旁證文本已有候選算法，"
+                "但不自動升格為 primary factor，更不得把宮數直接當球數。"
+            ),
+        ),
         _factor(
             "數主",
             (
@@ -100,26 +122,54 @@ def build_qiyao_review(
             ),
             note="原典明示『遁至本時之星即為數主』，但完整飛遁算法尚未鎖定。",
         ),
-        _factor("飛星", flying_star, note="機械算法待前後文校勘。"),
-        _factor("入門", entry_door, note="不得直接借用時家盤的值使門作替代。"),
+        _factor(
+            "飛星",
+            flying_star,
+            note="旁證可重建數宮上的日遁九星候選，但尚不直接寫回《元靈經》飛星欄。",
+        ),
+        _factor(
+            "入門",
+            entry_door,
+            note="《奇門寶鑑》旁證作『八門』；不得直接借用時家盤值使門作替代。",
+        ),
         _factor(
             "直日星",
             numeric_star(daily_star_number).__dict__ if daily_star_number is not None else None,
-            note="卷三有中宮值日九星歌訣，但求直日星的完整算法仍待 reconstruction。",
+            note=(
+                "卷三有中宮值日九星歌訣；旁證日遁九星可得中宮星候選，"
+                "但尚未證成兩者必然等同。"
+            ),
         ),
-        _factor("日干", calendar.day_ganzhi[0], status="CALENDAR_FACT", note="由事件所在地 civil time 的日柱取得。"),
-        _factor("時支", calendar.hour_ganzhi[1], status="CALENDAR_FACT", note="由事件所在地 civil time 的時柱取得。"),
+        _factor(
+            "日干",
+            calendar.day_ganzhi[0],
+            status="CALENDAR_FACT",
+            note="由事件所在地 civil time 的日柱取得。",
+        ),
+        _factor(
+            "時支",
+            calendar.hour_ganzhi[1],
+            status="CALENDAR_FACT",
+            note="由事件所在地 civil time 的時柱取得。",
+        ),
     ]
 
     chief_state = None
     if number_chief_star_number is not None and number_chief_landing_palace is not None:
-        chief_state = _chief_landing_relation(number_chief_star_number, number_chief_landing_palace)
+        chief_state = _chief_landing_relation(
+            number_chief_star_number,
+            number_chief_landing_palace,
+        )
 
     riqimen = None
     if mode == "RIQIMEN_QIYAO_EXPERIMENT":
         riqimen = build_riqimen_base(event_at, timezone_name)
 
-    unresolved = [factor["name"] for factor in factors if factor["status"] == "UNRESOLVED_BY_SOURCE_AUDIT"]
+    unresolved = [
+        factor["name"]
+        for factor in factors
+        if factor["status"] == "UNRESOLVED_BY_SOURCE_AUDIT"
+    ]
     return {
         "kind": "YUANLING_YANSHU_QIYAO_REVIEW_V1",
         "mode": mode,
@@ -130,10 +180,12 @@ def build_qiyao_review(
             "solar_term": calendar.solar_term,
             "day_ganzhi": calendar.day_ganzhi,
             "hour_ganzhi": calendar.hour_ganzhi,
+            "dun": dun,
         },
         "seven_factors": factors,
         "number_chief_landing_state": chief_state,
         "numeric_star_registry": star_registry_audit(),
+        "collateral_reconstruction": collateral,
         "riqimen_experiment_input": riqimen,
         "raw_numeric_candidates": {
             "status": "DISABLED_UNTIL_ALGORITHM_SOURCE_LOCK",
@@ -149,7 +201,8 @@ def build_qiyao_review(
         ],
         "authority": "YUANLING_SOURCE_REVIEW_WITH_EXPLICIT_PROJECT_NORMALIZATION",
         "boundary": (
-            "演數七要與日奇門保持獨立。RIQIMEN_QIYAO_EXPERIMENT 只是一條可測試橋接，"
-            "不宣稱《元靈經》明文要求七要必須以日奇門盤為底。"
+            "演數七要與日奇門保持獨立；旁證 reconstruction 也與 primary factors 分層。"
+            "RIQIMEN_QIYAO_EXPERIMENT 只是一條可測試橋接，不宣稱《元靈經》明文要求"
+            "七要必須以日奇門盤為底。"
         ),
     }
