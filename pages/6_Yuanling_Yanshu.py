@@ -14,6 +14,11 @@ from jarvis.yuanling_packet import (
     build_yuanling_yanshu_packet,
     verify_yuanling_packet_integrity,
 )
+from jarvis.yuanling_vault import (
+    casting_method,
+    football_question_templates,
+    yuanling_catalog_stats,
+)
 
 
 st.set_page_config(page_title="元靈經演數 · JARVIS", page_icon="🔢", layout="wide")
@@ -21,23 +26,44 @@ st.title("🔢 《元靈經》演數七要 / 日奇門")
 st.caption(
     "兩個模組保持獨立：QIYAO_RAW 只整理演數七要；"
     "RIQIMEN_QIYAO_EXPERIMENT 才在 packet layer 另外保存日奇門 sibling。"
-    "目前不自動把數宮或數主轉成足球比分。"
+    "目前不自動把數宮、值日星或射覆數目轉成足球比分。"
 )
 
+stats = yuanling_catalog_stats()
+qiyao_method = casting_method("YUANLING_YANSHU_QIYAO_RAW")
+riqimen_method = casting_method("YUANLING_RI_QIMEN")
+question_templates = football_question_templates()
+
+with st.expander("📖 目前起法、資料庫內容與完成度", expanded=True):
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("原典結構化條目", stats["structured_sections"])
+    m2.metric("數術九星", stats["numeric_stars"])
+    m3.metric("日奇門60日表", stats["riqimen_day_rows"])
+    m4.metric("保留未決點", stats["unresolved_source_points"])
+
+    st.markdown("**演數七要 QIYAO_RAW**")
+    st.write("必要輸入：" + "、".join(qiyao_method["required_inputs"]))
+    for index, step in enumerate(qiyao_method["casting_steps"], 1):
+        st.write(f"{index}. {step}")
+    st.caption(qiyao_method["boundary"])
+
+    st.markdown("**日奇門 Source-grounded Base**")
+    for index, step in enumerate(riqimen_method["casting_steps"], 1):
+        st.write(f"{index}. {step}")
+    st.caption(riqimen_method["boundary"])
+
 st.warning(
-    "原典已能確定七要項目、數主落宮的重要性、日奇門60日『某宮起休』表與部分排法；"
-    "『遁至本時之星』與日奇門『穿宮數去』仍未完全 source-lock。"
-    "相關奇門旁證現在只以候選 reconstruction 顯示，不會自動寫回原典七要欄。"
+    "原典已能確定奇門起例、三元局表、伏身、七要項目、數主落宮的重要性、"
+    "日奇門60日『某宮起休』表、卷三值日九星與射覆數目關聯；"
+    "但『遁至本時之星』與日奇門『穿宮數去』仍未完全 source-lock。"
+    "相關旁證只以候選 reconstruction 顯示，不會自動寫回原典七要欄。"
 )
 
 with st.form("yuanling_yanshu_form"):
     question = st.text_area(
         "問題",
-        value=(
-            "依《元靈經》演數七要整理此事件之數術原始資料；"
-            "保留未決項，不直接換算足球比分。"
-        ),
-        height=90,
+        value=question_templates["yuanling"],
+        height=110,
     )
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -71,7 +97,7 @@ with st.form("yuanling_yanshu_form"):
     with st.expander("研究輸入（只有在你已由原典/人工重建取得時才填）"):
         st.caption(
             "這些欄位不是 JARVIS 猜出來的；未提供就維持 "
-            "UNRESOLVED_BY_SOURCE_AUDIT。"
+            "UNRESOLVED_BY_SOURCE_AUDIT。旁證候選不會偷偷寫進這些欄位。"
         )
         options = ["未提供", 1, 2, 3, 4, 5, 6, 7, 8, 9]
         r1, r2, r3 = st.columns(3)
@@ -94,7 +120,7 @@ with st.form("yuanling_yanshu_form"):
             daily_star = st.selectbox("直日星號", options)
 
     submitted = st.form_submit_button(
-        "建立 YUANLING_YANSHU_PACKET_V1_1",
+        "建立 YUANLING_YANSHU_PACKET_V1_2",
         type="primary",
         use_container_width=True,
     )
@@ -139,7 +165,7 @@ if submitted:
         st.session_state["stark_yuanling_packet"] = packet
         st.success(
             "Yuanling packet 已建立；七要與日奇門保持 sibling separation，"
-            "未解規則維持 unresolved，比分映射保持 disabled。"
+            "原典知識 context 已一併打包，比分映射保持 disabled。"
         )
     except (ValueError, EventLocalTimeError, RuntimeError) as exc:
         st.error(str(exc))
@@ -229,6 +255,18 @@ if packet:
         )
         with st.expander("地盤與 unresolved steps"):
             st.json(base)
+
+    st.markdown("## 原典知識 Context")
+    context = packet["knowledge_context"]
+    kc1, kc2, kc3 = st.columns(3)
+    kc1.metric("方法", context["method"]["display_name"])
+    kc2.metric("來源條目", len(context["source_sections"]))
+    kc3.metric("資料庫", context["source_catalog_schema"])
+    with st.expander("查看起法、原典條目、值日九星與射覆數目關聯"):
+        st.json(context)
+    st.caption(
+        "射覆數目關聯只作古典數術資料；禁止直接換成足球總進球。"
+    )
 
     st.markdown("## 邊界")
     st.info(qiyao["boundary"])
