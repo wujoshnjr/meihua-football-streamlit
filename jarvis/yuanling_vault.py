@@ -13,6 +13,16 @@ KNOWLEDGE_ROOT = ROOT / "knowledge"
 SOURCE_CATALOG_PATH = KNOWLEDGE_ROOT / "yuanling_source_catalog.json"
 CASTING_CATALOG_PATH = KNOWLEDGE_ROOT / "casting_method_catalog.json"
 
+SEARCH_ALIASES = {
+    "年月日時起卦": ("MEIHUA_YEAR_MONTH_DAY_HOUR", "年月日時先天數法"),
+    "梅花起卦": ("MEIHUA_YEAR_MONTH_DAY_HOUR", "年月日時先天數法"),
+    "奇門起局": ("QIMEN_SHIJIA_ZHUANPAN_CHAIBU", "時家奇門"),
+    "時家奇門": ("QIMEN_SHIJIA_ZHUANPAN_CHAIBU",),
+    "演數起法": ("YUANLING_YANSHU_QIYAO_RAW", "演數七要"),
+    "七要起法": ("YUANLING_YANSHU_QIYAO_RAW", "演數七要"),
+    "日奇門起局": ("YUANLING_RI_QIMEN", "日奇門"),
+}
+
 
 def _load(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -34,6 +44,7 @@ def yuanling_catalog_stats() -> dict[str, Any]:
         "riqimen_day_rows": len(riqimen_60_day_table()),
         "yuanling_methods": len(yuanling_methods),
         "unresolved_source_points": unresolved,
+        "preheaven_relation_markers": int(source.get("completion", {}).get("preheaven_relation_markers", 0)),
         "source_schema": source.get("schema_version"),
         "casting_schema": casting.get("schema_version"),
     }
@@ -41,7 +52,11 @@ def yuanling_catalog_stats() -> dict[str, Any]:
 
 def _matches(row: dict[str, Any], query: str) -> bool:
     haystack = json.dumps(row, ensure_ascii=False).lower()
-    return query.lower() in haystack
+    needle = query.lower()
+    if needle in haystack:
+        return True
+    aliases = SEARCH_ALIASES.get(query.strip(), ())
+    return any(alias.lower() in haystack for alias in aliases)
 
 
 def search_yuanling(query: str, *, limit: int = 40) -> list[dict[str, Any]]:
