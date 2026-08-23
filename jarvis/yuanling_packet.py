@@ -8,7 +8,7 @@ from yuanling.riqimen import build_riqimen_base
 from yuanling.yanshu_qiyao import build_qiyao_review
 
 
-YUANLING_PACKET_VERSION = "YUANLING_YANSHU_PACKET_V1"
+YUANLING_PACKET_VERSION = "YUANLING_YANSHU_PACKET_V1_1"
 
 
 def _packet_hash(payload: dict[str, Any]) -> str:
@@ -46,7 +46,11 @@ def build_yuanling_yanshu_packet(
         entry_door=entry_door,
         daily_star_number=daily_star_number,
     )
-    riqimen = build_riqimen_base(event_at, timezone_name) if mode == "RIQIMEN_QIYAO_EXPERIMENT" else None
+    riqimen = (
+        build_riqimen_base(event_at, timezone_name)
+        if mode == "RIQIMEN_QIYAO_EXPERIMENT"
+        else None
+    )
 
     payload: dict[str, Any] = {
         "schema_version": YUANLING_PACKET_VERSION,
@@ -65,16 +69,18 @@ def build_yuanling_yanshu_packet(
                 "source/method boundary",
                 "seven qiyao factors",
                 "number-chief landing state",
-                "riqimen base only when experiment mode is active",
+                "collateral candidate reconstruction",
+                "riqimen sibling only when experiment mode is active",
                 "uncertainty and unresolved algorithms",
-                "final human/ChatGPT interpretation"
+                "final human/ChatGPT interpretation",
             ],
             "rules": [
                 "Do not merge QIYAO_RAW and RI-QIMEN into one classical method claim.",
+                "Qiyao review and Ri-Qimen are sibling objects; neither is silently nested into the other.",
                 "Do not infer missing Yuanling algorithms from the existing Shijia engine.",
                 "Do not convert a palace number directly into goals or a scoreline.",
                 "Do not use post-match results to select or mutate numeric candidates.",
-                "Unresolved fields remain unresolved; uncertainty is evidence, not a defect to hide."
+                "Unresolved fields remain unresolved; uncertainty is evidence, not a defect to hide.",
             ],
             "score_synthesis": "DEFERRED_UNTIL_BLIND_TEST_PROTOCOL",
         },
@@ -82,7 +88,8 @@ def build_yuanling_yanshu_packet(
             "AUTOMATIC_FOOTBALL_SCORE_FROM_PALACE_NUMBER",
             "AUTOMATIC_WIN_PROBABILITY",
             "POSTMATCH_RULE_FITTING",
-            "SILENT_SHIJIA_STAR_SUBSTITUTION"
+            "SILENT_SHIJIA_STAR_SUBSTITUTION",
+            "COLLATERAL_CANDIDATE_PROMOTED_TO_PRIMARY_FACT",
         ],
     }
     payload["packet_sha256"] = _packet_hash(payload)
