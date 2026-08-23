@@ -9,7 +9,7 @@ from yuanling.riqimen import build_riqimen_base
 from yuanling.yanshu_qiyao import build_qiyao_review
 
 
-YUANLING_PACKET_VERSION = "YUANLING_YANSHU_PACKET_V1_2"
+YUANLING_PACKET_VERSION = "YUANLING_YANSHU_PACKET_V1_3"
 
 
 def _packet_hash(payload: dict[str, Any]) -> str:
@@ -69,12 +69,14 @@ def build_yuanling_yanshu_packet(
         "knowledge_context": knowledge_context,
         "ai_interpretation_contract": {
             "read_order": [
-                "knowledge_context.method and source/method boundary",
+                "knowledge_context method separation and source authority",
                 "seven qiyao primary factors",
                 "number-chief landing state",
-                "source sections: qiyao / number-chief song / daily-nine-stars",
+                "volume-2 door/stem source context",
+                "volume-3 numeric-star shortcut/response/value-day context",
                 "collateral candidate reconstruction",
-                "riqimen sibling and riqimen source sections only when experiment mode is active",
+                "riqimen sibling plus cutoff-void/palace-chief context only when experiment mode is active",
+                "work-index coverage versus materialized-source distinction",
                 "uncertainty and unresolved algorithms",
                 "final human/ChatGPT interpretation",
             ],
@@ -83,9 +85,11 @@ def build_yuanling_yanshu_packet(
                 "Qiyao review and Ri-Qimen are sibling objects; neither is silently nested into the other.",
                 "Do not infer missing Yuanling algorithms from the existing Shijia engine.",
                 "Classical source sections are evidence context, not automatic football outputs.",
+                "Do not collapse conflicting chapter-specific numeric-star meanings into one fixed good/bad label.",
                 "Do not convert a palace number, daily-star number, or Shefu number association directly into goals or a scoreline.",
-                "Do not use post-match results to select or mutate numeric candidates.",
+                "Do not use post-match results to select chapters, rules, or numeric candidates.",
                 "Collateral candidates may not be promoted into primary Yuanling facts without an explicit method-version change.",
+                "Indexed table-of-contents coverage is not equivalent to full rule materialization.",
                 "Unresolved fields remain unresolved; uncertainty is evidence, not a defect to hide.",
             ],
             "score_synthesis": "DEFERRED_UNTIL_BLIND_TEST_PROTOCOL",
@@ -97,6 +101,8 @@ def build_yuanling_yanshu_packet(
             "SILENT_SHIJIA_STAR_SUBSTITUTION",
             "COLLATERAL_CANDIDATE_PROMOTED_TO_PRIMARY_FACT",
             "SHEFU_NUMBER_ASSOCIATION_TO_FOOTBALL_GOALS",
+            "TABLE_OF_CONTENTS_INDEX_PROMOTED_TO_RULE",
+            "CHAPTER_PICKING_BY_POSTMATCH_RESULT",
         ],
     }
     payload["packet_sha256"] = _packet_hash(payload)
