@@ -10,14 +10,17 @@ from jarvis.time import (
     aware_event_local_datetime,
     inspect_local_civil_time,
 )
-from jarvis.yuanling_packet import build_yuanling_yanshu_packet
+from jarvis.yuanling_packet import (
+    build_yuanling_yanshu_packet,
+    verify_yuanling_packet_integrity,
+)
 
 
 st.set_page_config(page_title="元靈經演數 · JARVIS", page_icon="🔢", layout="wide")
 st.title("🔢 《元靈經》演數七要 / 日奇門")
 st.caption(
     "兩個模組保持獨立：QIYAO_RAW 只整理演數七要；"
-    "RIQIMEN_QIYAO_EXPERIMENT 才額外保存日奇門 base。"
+    "RIQIMEN_QIYAO_EXPERIMENT 才在 packet layer 另外保存日奇門 sibling。"
     "目前不自動把數宮或數主轉成足球比分。"
 )
 
@@ -54,7 +57,10 @@ with st.form("yuanling_yanshu_form"):
         mode = st.selectbox(
             "模式",
             ["QIYAO_RAW", "RIQIMEN_QIYAO_EXPERIMENT"],
-            help="實驗模式只串接並列保存日奇門 base，不宣稱古法明文要求此串接。",
+            help=(
+                "實驗模式只在 packet 最上層並列保存日奇門 sibling；"
+                "Qiyao review 本身不嵌入日奇門，也不宣稱古法明文要求此串接。"
+            ),
         )
     with m2:
         fold_mode = st.selectbox(
@@ -88,7 +94,7 @@ with st.form("yuanling_yanshu_form"):
             daily_star = st.selectbox("直日星號", options)
 
     submitted = st.form_submit_button(
-        "建立 YUANLING_YANSHU_PACKET_V1",
+        "建立 YUANLING_YANSHU_PACKET_V1_1",
         type="primary",
         use_container_width=True,
     )
@@ -132,7 +138,8 @@ if submitted:
         )
         st.session_state["stark_yuanling_packet"] = packet
         st.success(
-            "Yuanling packet 已建立；未解規則維持 unresolved，比分映射保持 disabled。"
+            "Yuanling packet 已建立；七要與日奇門保持 sibling separation，"
+            "未解規則維持 unresolved，比分映射保持 disabled。"
         )
     except (ValueError, EventLocalTimeError, RuntimeError) as exc:
         st.error(str(exc))
@@ -141,6 +148,17 @@ packet = st.session_state.get("stark_yuanling_packet")
 if packet:
     st.divider()
     qiyao = packet["qiyao_review"]
+    integrity = verify_yuanling_packet_integrity(packet)
+
+    s1, s2, s3, s4 = st.columns(4)
+    s1.metric("Packet", packet["schema_version"])
+    s2.metric("SHA integrity", "PASS" if integrity else "FAIL")
+    s3.metric("Mode", packet["mode"])
+    s4.metric("Ri-Qimen bridge", qiyao["riqimen_bridge"]["status"])
+
+    if not integrity:
+        st.error("Packet SHA integrity 驗證失敗；請勿將此 packet 交給下游解讀。")
+
     st.markdown("## 演數七要 · Primary Review")
     rows = [
         {
@@ -196,7 +214,7 @@ if packet:
         )
 
     if packet["riqimen_base"]:
-        st.markdown("## 日奇門 Base（實驗串接）")
+        st.markdown("## 日奇門 Base · Packet-layer Sibling")
         base = packet["riqimen_base"]
         b1, b2, b3, b4 = st.columns(4)
         b1.metric("狀態", base["status"])
@@ -205,6 +223,9 @@ if packet:
         b4.metric(
             "起休宮",
             base["source_reconstructed"]["rest_door_start_palace"],
+        )
+        st.caption(
+            "此物件與 qiyao_review 平級保存；Qiyao review 不再重複嵌入第二份 Ri-Qimen。"
         )
         with st.expander("地盤與 unresolved steps"):
             st.json(base)
@@ -217,10 +238,12 @@ if packet:
     )
 
     packet_json = json.dumps(packet, ensure_ascii=False, indent=2)
+    version_slug = packet["schema_version"].lower()
     st.download_button(
-        "下載 YUANLING_YANSHU_PACKET_V1",
+        f"下載 {packet['schema_version']}",
         data=packet_json,
-        file_name="yuanling_yanshu_packet_v1.json",
+        file_name=f"{version_slug}.json",
         mime="application/json",
+        disabled=not integrity,
         use_container_width=True,
     )

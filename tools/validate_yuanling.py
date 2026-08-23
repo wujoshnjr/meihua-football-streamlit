@@ -12,7 +12,10 @@ from jsonschema import validate
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from jarvis.yuanling_packet import build_yuanling_yanshu_packet  # noqa: E402
+from jarvis.yuanling_packet import (  # noqa: E402
+    build_yuanling_yanshu_packet,
+    verify_yuanling_packet_integrity,
+)
 from yuanling.collateral import (  # noqa: E402
     collateral_daily_nine_star_chart,
     collateral_number_palace,
@@ -206,14 +209,27 @@ def main() -> None:
         mode="QIYAO_RAW",
     )
     schema = json.loads(
-        (ROOT / "schemas" / "yuanling_yanshu_packet_v1.schema.json").read_text(
+        (ROOT / "schemas" / "yuanling_yanshu_packet_v1_1.schema.json").read_text(
             encoding="utf-8"
         )
     )
     validate(packet, schema)
+    require(verify_yuanling_packet_integrity(packet), "packet SHA integrity failed")
+    require(
+        packet["schema_version"] == "YUANLING_YANSHU_PACKET_V1_1",
+        "packet version must be v1.1",
+    )
     require(
         packet["riqimen_base"] is None,
         "QIYAO_RAW must not silently inject Ri-Qimen",
+    )
+    require(
+        packet["qiyao_review"]["riqimen_bridge"]["status"] == "NOT_REQUESTED",
+        "raw mode Ri-Qimen bridge status mismatch",
+    )
+    require(
+        "riqimen_experiment_input" not in packet["qiyao_review"],
+        "Qiyao review must not duplicate Ri-Qimen payload",
     )
     reconstruction = packet["qiyao_review"]["collateral_reconstruction"]
     require(
@@ -221,8 +237,8 @@ def main() -> None:
         "collateral candidates were promoted",
     )
     factors = {row["name"]: row for row in packet["qiyao_review"]["seven_factors"]}
-    require(factors["數宮"]["value"] is None, "collateral 数宫 must not fill primary slot")
-    require(factors["飛星"]["value"] is None, "collateral 飞星 must not fill primary slot")
+    require(factors["數宮"]["value"] is None, "collateral 數宮 must not fill primary slot")
+    require(factors["飛星"]["value"] is None, "collateral 飛星 must not fill primary slot")
     require(
         packet["qiyao_review"]["raw_numeric_candidates"]["values"] == [],
         "numeric candidates must stay disabled",
@@ -231,6 +247,10 @@ def main() -> None:
         "AUTOMATIC_FOOTBALL_SCORE_FROM_PALACE_NUMBER" in packet["forbidden_outputs"],
         "score shortcut guard missing",
     )
+    require(
+        "COLLATERAL_CANDIDATE_PROMOTED_TO_PRIMARY_FACT" in packet["forbidden_outputs"],
+        "collateral promotion guard missing",
+    )
 
     experiment = build_yuanling_yanshu_packet(
         question="以實驗串接保存日奇門 base 與演數七要，兩者不得混成古法定論。",
@@ -238,6 +258,8 @@ def main() -> None:
         timezone_name="Asia/Taipei",
         mode="RIQIMEN_QIYAO_EXPERIMENT",
     )
+    validate(experiment, schema)
+    require(verify_yuanling_packet_integrity(experiment), "experiment packet SHA integrity failed")
     require(
         experiment["riqimen_base"] is not None,
         "experiment mode must expose Ri-Qimen independently",
@@ -246,11 +268,20 @@ def main() -> None:
         experiment["riqimen_base"]["status"].startswith("PARTIAL_SOURCE_GROUNDED"),
         "Ri-Qimen status must remain honest",
     )
+    require(
+        experiment["qiyao_review"]["riqimen_bridge"]["status"]
+        == "PACKET_LAYER_SIBLING_ENABLED",
+        "experiment bridge must point to packet-layer sibling",
+    )
+    require(
+        "riqimen_experiment_input" not in experiment["qiyao_review"],
+        "experiment must not duplicate Ri-Qimen inside Qiyao review",
+    )
 
     print(
-        "Yuanling: PASS | sections=separate | numeric_stars=9 | "
-        "collateral-reconstruction=candidates-only | riqimen_day_table=60 | "
-        "score_mapping=disabled | unresolved_rules=preserved"
+        "Yuanling: PASS | packet=v1.1 | sections=separate | numeric_stars=9 | "
+        "riqimen=sibling-only | collateral-reconstruction=candidates-only | "
+        "riqimen_day_table=60 | score_mapping=disabled | unresolved_rules=preserved"
     )
 
 

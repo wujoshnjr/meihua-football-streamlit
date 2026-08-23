@@ -8,7 +8,6 @@ from qimen.constants import ELEMENT_CONTROLS, ELEMENT_GENERATES, PALACES
 from qimen.engine import determine_dun
 
 from .collateral import build_collateral_qiyao_reconstruction
-from .riqimen import build_riqimen_base
 from .stars import numeric_star, star_registry_audit
 
 
@@ -80,9 +79,14 @@ def build_qiyao_review(
     """Build seven-factor review while keeping unresolved classical rules visible.
 
     Raw research inputs can be supplied for fields whose Yuanling algorithm is not
-    yet fully reconstructed.  A separate collateral block gives candidate
-    mechanics from related Qimen texts but does not silently populate the primary
-    seven factors or convert palace numbers into football scores.
+    yet fully reconstructed. A separate collateral block gives candidate mechanics
+    from related Qimen texts but does not silently populate the primary seven
+    factors or convert palace numbers into football scores.
+
+    Even in ``RIQIMEN_QIYAO_EXPERIMENT`` mode this function does not construct or
+    embed a Ri-Qimen chart. The packet layer owns that optional sibling object so
+    the two classical sections remain structurally independent and are computed
+    only once.
     """
 
     if mode not in ALLOWED_MODES:
@@ -161,17 +165,13 @@ def build_qiyao_review(
             number_chief_landing_palace,
         )
 
-    riqimen = None
-    if mode == "RIQIMEN_QIYAO_EXPERIMENT":
-        riqimen = build_riqimen_base(event_at, timezone_name)
-
     unresolved = [
         factor["name"]
         for factor in factors
         if factor["status"] == "UNRESOLVED_BY_SOURCE_AUDIT"
     ]
     return {
-        "kind": "YUANLING_YANSHU_QIYAO_REVIEW_V1",
+        "kind": "YUANLING_YANSHU_QIYAO_REVIEW_V1_1",
         "mode": mode,
         "status": "PARTIAL_SOURCE_GROUNDED",
         "event": {
@@ -186,7 +186,17 @@ def build_qiyao_review(
         "number_chief_landing_state": chief_state,
         "numeric_star_registry": star_registry_audit(),
         "collateral_reconstruction": collateral,
-        "riqimen_experiment_input": riqimen,
+        "riqimen_bridge": {
+            "status": (
+                "PACKET_LAYER_SIBLING_ENABLED"
+                if mode == "RIQIMEN_QIYAO_EXPERIMENT"
+                else "NOT_REQUESTED"
+            ),
+            "rule": (
+                "Qiyao review never embeds or computes Ri-Qimen. In experiment mode the packet layer "
+                "stores Ri-Qimen as a separate sibling object."
+            ),
+        },
         "raw_numeric_candidates": {
             "status": "DISABLED_UNTIL_ALGORITHM_SOURCE_LOCK",
             "values": [],
@@ -202,7 +212,7 @@ def build_qiyao_review(
         "authority": "YUANLING_SOURCE_REVIEW_WITH_EXPLICIT_PROJECT_NORMALIZATION",
         "boundary": (
             "演數七要與日奇門保持獨立；旁證 reconstruction 也與 primary factors 分層。"
-            "RIQIMEN_QIYAO_EXPERIMENT 只是一條可測試橋接，不宣稱《元靈經》明文要求"
-            "七要必須以日奇門盤為底。"
+            "RIQIMEN_QIYAO_EXPERIMENT 只在 packet layer 並列兩個 sibling objects，"
+            "不宣稱《元靈經》明文要求七要必須以日奇門盤為底。"
         ),
     }

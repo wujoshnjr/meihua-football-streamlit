@@ -130,18 +130,18 @@ def test_collateral_candidates_do_not_fill_primary_qiyao_factors() -> None:
     assert review["raw_numeric_candidates"]["values"] == []
 
 
-def test_qiyao_raw_and_riqimen_experiment_remain_separate() -> None:
+def test_qiyao_review_never_embeds_riqimen_payload() -> None:
     raw = build_qiyao_review(_event(), "Asia/Taipei", mode="QIYAO_RAW")
     experiment = build_qiyao_review(
         _event(),
         "Asia/Taipei",
         mode="RIQIMEN_QIYAO_EXPERIMENT",
     )
-    assert raw["riqimen_experiment_input"] is None
-    assert experiment["riqimen_experiment_input"]["kind"] == "YUANLING_RI_QIMEN_BASE_V1"
-    assert experiment["riqimen_experiment_input"]["status"].startswith(
-        "PARTIAL_SOURCE_GROUNDED"
-    )
+
+    assert "riqimen_experiment_input" not in raw
+    assert "riqimen_experiment_input" not in experiment
+    assert raw["riqimen_bridge"]["status"] == "NOT_REQUESTED"
+    assert experiment["riqimen_bridge"]["status"] == "PACKET_LAYER_SIBLING_ENABLED"
     assert raw["raw_numeric_candidates"]["values"] == []
     assert experiment["raw_numeric_candidates"]["values"] == []
 
@@ -157,17 +157,40 @@ def test_yuanling_packet_is_deterministic_integrity_checked_and_schema_valid() -
     second = build_yuanling_yanshu_packet(**kwargs)
     assert first == second
     assert verify_yuanling_packet_integrity(first)
+    assert first["schema_version"] == "YUANLING_YANSHU_PACKET_V1_1"
     assert first["mode"] == "QIYAO_RAW"
     assert first["riqimen_base"] is None
+    assert first["qiyao_review"]["riqimen_bridge"]["status"] == "NOT_REQUESTED"
     assert (
         first["ai_interpretation_contract"]["score_synthesis"]
         == "DEFERRED_UNTIL_BLIND_TEST_PROTOCOL"
     )
     assert "AUTOMATIC_FOOTBALL_SCORE_FROM_PALACE_NUMBER" in first["forbidden_outputs"]
+    assert "COLLATERAL_CANDIDATE_PROMOTED_TO_PRIMARY_FACT" in first["forbidden_outputs"]
 
     schema = json.loads(
-        (ROOT / "schemas" / "yuanling_yanshu_packet_v1.schema.json").read_text(
+        (ROOT / "schemas" / "yuanling_yanshu_packet_v1_1.schema.json").read_text(
             encoding="utf-8"
         )
     )
     validate(first, schema)
+
+
+def test_riqimen_experiment_uses_single_packet_layer_sibling() -> None:
+    packet = build_yuanling_yanshu_packet(
+        question="並列保存七要與日奇門，但不混成單一古法。",
+        event_at=_event(),
+        timezone_name="Asia/Taipei",
+        mode="RIQIMEN_QIYAO_EXPERIMENT",
+    )
+    schema = json.loads(
+        (ROOT / "schemas" / "yuanling_yanshu_packet_v1_1.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    validate(packet, schema)
+    assert verify_yuanling_packet_integrity(packet)
+    assert packet["riqimen_base"]["kind"] == "YUANLING_RI_QIMEN_BASE_V1"
+    assert packet["qiyao_review"]["riqimen_bridge"]["status"] == "PACKET_LAYER_SIBLING_ENABLED"
+    assert "riqimen_experiment_input" not in packet["qiyao_review"]
