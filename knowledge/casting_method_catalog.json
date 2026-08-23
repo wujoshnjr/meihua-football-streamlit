@@ -1,0 +1,169 @@
+{
+  "schema_version": "stark-casting-method-catalog-v1.0.0",
+  "purpose": "把目前 JARVIS 真正實作或研究中的起局/起卦/演數方法、必要輸入、運算順序、輸出與未完成邊界放在同一份 machine-readable catalog，供 UI、Packet 與 ChatGPT 查閱。",
+  "methods": [
+    {
+      "id": "QIMEN_SHIJIA_ZHUANPAN_CHAIBU",
+      "system": "QIMEN",
+      "display_name": "時家奇門・轉盤・拆補法",
+      "status": "PRODUCTION",
+      "engine_version": "shijia-zhuanpan-chaibu-v1.0.0",
+      "required_inputs": [
+        "事件所在地 aware local datetime",
+        "IANA timezone",
+        "占問問題",
+        "足球時主隊",
+        "足球時客隊"
+      ],
+      "time_policy": {
+        "basis": "事件所在地民用時",
+        "zi_hour_boundary": "晚子時換日（lunar-python sect=1）",
+        "dst": "IANA tzdb + explicit fold when ambiguous"
+      },
+      "casting_steps": [
+        "由事件時刻取得節氣、四柱、旬空",
+        "依節氣判陰遁/陽遁",
+        "依符頭定上中下元",
+        "依節氣三元表定局數",
+        "布地盤三奇六儀",
+        "定時旬旬首儀",
+        "定值符星、值使門及其落宮",
+        "轉布天盤干、九星、八門、八神",
+        "標記旬空、驛馬與盤內格局/狀態",
+        "足球用神固定：主隊取日干、客隊取時干；甲取值符宮"
+      ],
+      "primary_outputs": [
+        "陰陽遁、三元、局數",
+        "四柱與旬空",
+        "九宮地盤/天盤干",
+        "八門、九星、八神",
+        "值符、值使",
+        "驛馬、空亡、格局與 modifiers",
+        "主客用神宮位"
+      ],
+      "interpretation_role": "RESULT_ENGINE_INPUT",
+      "boundary": "JARVIS 只排盤與整理證據；不自動把單一門星神或格局換成勝率與固定比分。"
+    },
+    {
+      "id": "MEIHUA_YEAR_MONTH_DAY_HOUR",
+      "system": "MEIHUA",
+      "display_name": "梅花易數・年月日時先天數法",
+      "status": "PRODUCTION",
+      "engine_version": "jarvis-meihua-year-month-day-hour-v0.3.0",
+      "required_inputs": [
+        "事件所在地 aware local datetime",
+        "IANA timezone",
+        "占問問題"
+      ],
+      "time_policy": {
+        "basis": "事件所在地 civil wall date/time 轉 lunar-python",
+        "leap_month": "閏月使用本月數，raw 閏月標記另存",
+        "hour": "使用時支數",
+        "football_temporal_audit": "anchor cast 固定；跨時辰/日界只作 secondary diagnostic"
+      },
+      "casting_steps": [
+        "取農曆年支數、月數、日數",
+        "年支數+月+日，除8取餘定上卦",
+        "再加時支數，除8取餘定下卦",
+        "總數除6取餘定動爻",
+        "由動爻所在上下卦分體與用：動者為用、靜者為體",
+        "由二至四爻、三至五爻取互卦",
+        "翻動該爻得到變卦",
+        "計算本用、體互/用互、變用對體的五行關係",
+        "依農曆月份判體卦旺/平/衰",
+        "查真正動爻《周易》原文與本卦→變卦《焦氏易林》"
+      ],
+      "number_tables": {
+        "trigrams": {"乾": 1, "兌": 2, "離": 3, "震": 4, "巽": 5, "坎": 6, "艮": 7, "坤": 8},
+        "branches": {"子": 1, "丑": 2, "寅": 3, "卯": 4, "辰": 5, "巳": 6, "午": 7, "未": 8, "申": 9, "酉": 10, "戌": 11, "亥": 12}
+      },
+      "primary_outputs": [
+        "本卦",
+        "上卦/下卦",
+        "動爻",
+        "體卦/用卦",
+        "體卦旺衰",
+        "體互/用互",
+        "互卦",
+        "變卦/變用",
+        "周易動爻 review",
+        "焦氏易林本→變 transformation lens",
+        "跨時辰 temporal audit"
+      ],
+      "interpretation_role": "STRUCTURE_STRESS_TEST",
+      "boundary": "目前只實作年月日時先天數法；後天物卦法與三要十應真實外應輸入尚未 productionize。"
+    },
+    {
+      "id": "YUANLING_YANSHU_QIYAO_RAW",
+      "system": "YUANLING_YANSHU",
+      "display_name": "《元靈經》演數七要・原始模式",
+      "status": "RESEARCH_ALPHA",
+      "required_inputs": [
+        "事件所在地 aware local datetime",
+        "IANA timezone",
+        "占問問題"
+      ],
+      "optional_research_inputs": [
+        "數宮",
+        "數主星號",
+        "數主落宮",
+        "飛星",
+        "入門",
+        "直日星"
+      ],
+      "casting_steps": [
+        "由事件時刻取得節氣、日干支、時干支與陰陽遁",
+        "建立七個 primary slots：數宮、數主、飛星、入門、直日星、日干、時支",
+        "日干與時支由曆法直接填入",
+        "尚未 source-lock 的數宮/數主/飛星/入門/直日星不以猜測補值",
+        "若研究者已有原典重建結果，可作 raw research input",
+        "另計算《奇門寶鑑》《金函玉鏡》的 collateral candidate，但不寫回 primary slots",
+        "若數主與落宮均已知，依 source example + 洛書五行 project normalization 標記生/難/和/未分類"
+      ],
+      "primary_outputs": [
+        "七要 primary review",
+        "數術九星 registry",
+        "數主落宮狀態（若資料足夠）",
+        "旁證候選數宮/日遁九星",
+        "未決算法清單",
+        "source/authority boundary",
+        "deterministic packet SHA"
+      ],
+      "interpretation_role": "NUMERIC_DIVINATION_RESEARCH_INPUT",
+      "boundary": "raw numeric candidates 維持 disabled；不把宮數或射覆數目直接轉足球總進球。"
+    },
+    {
+      "id": "YUANLING_RI_QIMEN",
+      "system": "YUANLING_RIQIMEN",
+      "display_name": "《元靈經》日奇門・Source-grounded Base",
+      "status": "PARTIAL_RESEARCH_ALPHA",
+      "required_inputs": [
+        "事件所在地 aware local datetime",
+        "IANA timezone"
+      ],
+      "casting_steps": [
+        "依本節節氣與三元定局作地盤",
+        "由日干支取得日旬與本甲旬頭",
+        "依六十日表取得本日起休宮",
+        "保存本甲旬頭即值符的原典規則",
+        "保留『值符之上星加本日干穿宮數去』為 unresolved，不用時家轉盤算法補空白",
+        "保留陰遁奇直皆逆、星門皆順的方向規則"
+      ],
+      "primary_outputs": [
+        "節氣、三元、陰陽遁、局數",
+        "日干支/時干支",
+        "地盤奇儀",
+        "日旬頭",
+        "60日起休宮",
+        "unresolved 穿宮步驟"
+      ],
+      "interpretation_role": "INDEPENDENT_RI_QIMEN_RESEARCH_OBJECT",
+      "boundary": "目前不是完整日奇門天盤；演數七要也不被預設必須以此盤為底。"
+    }
+  ],
+  "football_question_templates": {
+    "qimen": "［主隊］對［客隊］，在正規時間90分鐘及傷停補時結束後，最終勝負為主勝、和局或客勝？請依奇門主客用神及全局綜合判斷最可能的比分候選，並列支持與反證盤象。",
+    "meihua": "以［主隊］為體、［客隊］為用，不判比分與進球，請判體方在比賽初段、中段、末段分別是得助、耗力、受制還是制用；體旺衰能否承受生克；是否存在明顯轉勢；最後形成的是控制、受壓、守成、失守或僵持，並列出對奇門結果的支持與反證。",
+    "yuanling": "依《元靈經》演數七要整理此場足球事件的數術原始資料；只輸出數宮、數主、飛星、入門、直日星、日干、時支及 source/uncertainty，不直接將宮數或星數換算為比分。"
+  }
+}
