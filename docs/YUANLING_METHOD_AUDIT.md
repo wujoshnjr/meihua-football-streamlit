@@ -45,7 +45,7 @@ JARVIS 不建立一個混合的「日奇門・演數七要盤」。目前拆成�
 
 ### 「黑星為主」提供的重要證據
 
-《數主吉凶歌訣》舉乾宮、黑星為例，並稱黑星落離為生、落震巽為難、落艮坤為和。若把黑星按二黑土的洛書五行正規化，三個方向完全吻合：
+《數主吉凶歌訣》在目前《元靈經》公開轉錄舉「乾宮、黑星為主」，並稱黑星落離為生、落震巽為難、落艮坤為和。若把黑星按二黑土的洛書五行正規化，三個方向吻合：
 
 - 離火生土 → 生
 - 震巽木克土 → 難
@@ -53,7 +53,73 @@ JARVIS 不建立一個混合的「日奇門・演數七要盤」。目前拆成�
 
 因此目前可高置信度判斷：**演數數主至少不能預設成時家天蓬/天芮九星。**
 
-但完整「遁至本時之星」如何起飛、如何定飛星，仍需 source reconstruction；JARVIS 不用相似術數算法補空白。
+但完整「遁至本時之星」如何起飛、如何定飛星，仍不能只靠這一例完成；JARVIS 不用現有時家引擎類推補空白。
+
+## 旁證 reconstruction：能前進，但不能升格成《元靈經》明文
+
+新的 `knowledge/yuanling_collateral_reconstruction.json` 把旁證獨立成 authority tier：
+
+`COLLATERAL_QIMEN_TEXT_RECONSTRUCTION`
+
+### 1. 《金函玉鏡》日遁九星
+
+《諸葛武侯行兵遁甲金函玉鏡卷一・九星落局法》明列：
+
+`太乙 → 攝提 → 軒轅 → 招搖 → 天符 → 青龍 → 咸池 → 太陰 → 天乙`
+
+並給出甲子日完整 anchor：
+
+- 冬至後陽遁：太乙在艮八，九星順行九宮。
+- 夏至後陰遁：太乙在坤二，九星逆行九宮。
+
+這與《元靈經》附圖附近「甲子旬頭起艮……太乙臨之」及其同系星名高度相合，所以 JARVIS 新增：
+
+`collateral_daily_nine_star_chart(day_ganzhi, dun)`
+
+它可以 deterministic 重建一份 **日遁九星候選盤**，並以甲子陽/陰兩個完整盤作 tests。
+
+但是：
+
+- 數宮上的該星只標成 `飛星候選`；
+- 中宮該星只標成 `直日星候選`；
+- 不自動等同數主；
+- 不自動寫回演數七要 primary slots。
+
+### 2. 《奇門寶鑑》洞庭老人捷徑占法
+
+《奇門寶鑑》在「演數七要」之前保存一段洞庭老人捷徑占法：
+
+- 中宮起六甲日；
+- 陽遁按乙乾、丙兌、丁艮、戊離、己坎、庚坤、辛震、壬巽、癸中順行；
+- 陰遁反向；
+- 在本日宮起子時，同方向遁至本時；
+- 酉、戌、亥重在子、丑、寅三宮；
+- 再布日遁九星；
+- 再移八門，看數宮何門。
+
+這提供了一條很強的 **數宮候選 reconstruction**。JARVIS 已新增：
+
+`collateral_number_palace(day_ganzhi, hour_branch, dun)`
+
+但結果仍標成：
+
+`CANDIDATES_ONLY__NOT_PRIMARY_YUANLING_FACTS`
+
+也就是它可以讓研究工作從「完全不知道怎麼算」前進到「有可重建旁證候選」，卻不會被程式寫成《元靈經》已明文確定。
+
+## 必須保留的跨文本差異
+
+旁證同時證明不能把不同文本靜默拼成一篇。現在正式記錄至少兩個差異：
+
+1. 七要第四項：
+   - 《元靈經》公開本：`四曰入門`
+   - 《奇門寶鑑》旁證：`四曰八門`
+
+2. 黑星例的數宮：
+   - 《元靈經》公開本：`假如數在乾宮`
+   - 《奇門寶鑑》旁證：`假如數在坤宮`
+
+這兩者目前都是 `UNRESOLVED`。JARVIS 不因為旁證看起來更完整就擅自改《元靈經》正文。
 
 ## 日奇門目前可重建部分
 
@@ -84,11 +150,23 @@ JARVIS 不建立一個混合的「日奇門・演數七要盤」。目前拆成�
 
 ## 演數七要目前輸出策略
 
-`build_qiyao_review()` 固定輸出七個 factor slot。能由曆法確定的 `日干`、`時支` 直接填入；尚未完成古法算法 reconstruction 的項目保留：
+`build_qiyao_review()` 固定輸出七個 primary factor slots。能由曆法確定的 `日干`、`時支` 直接填入；尚未完成《元靈經》本法 reconstruction 的項目保留：
 
 `UNRESOLVED_BY_SOURCE_AUDIT`
 
-研究者可以人工填入已由原典重建的 raw facts，但這些輸入必須保持 raw/audit 性質。
+同一物件另帶：
+
+`collateral_reconstruction`
+
+其中可以看到：
+
+- 候選數宮；
+- 候選日遁九星盤；
+- 數宮上的日遁星候選；
+- 中宮日遁星候選；
+- 每一項的 non-equivalence rule 與 source IDs。
+
+**旁證候選存在，不代表 primary slot 已解決。**
 
 ## Packet
 
@@ -96,9 +174,10 @@ JARVIS 不建立一個混合的「日奇門・演數七要盤」。目前拆成�
 
 - event local datetime / IANA timezone
 - 模式 A/B
-- 七要 slots
+- 七要 primary slots
 - 數主落宮 source-song state（若已有研究輸入）
 - numeric-star registry audit
+- collateral reconstruction block
 - optional Ri-Qimen base
 - uncertainty
 - deterministic SHA-256
@@ -111,14 +190,17 @@ JARVIS 不建立一個混合的「日奇門・演數七要盤」。目前拆成�
 - 自動勝率
 - 賽後回填規則
 - 把天蓬/天芮系靜默當作數主星系
+- 把旁證候選靜默升格成《元靈經》原文明文
 
 `score_synthesis` 明確為 `DEFERRED_UNTIL_BLIND_TEST_PROTOCOL`。
 
 ## 下一個 source-reconstruction 工作
 
-優先解決兩個文本技術問題：
+現在最重要的未決問題已縮小為：
 
-1. 演數：「遁至本時之星」的起點、順逆、星序與數宮算法。
-2. 日奇門：「值符之上星加本日干穿宮數去」的逐步機械算法與可核對例盤。
+1. **數主**：確認《元靈經》「遁至本時之星」究竟如何從數宮/日遁星層形成數主，以及數主與飛星是否確為不同 star facts。
+2. **直日星**：確認卷三值日九星與旁證日遁中宮星的精確關係，不能只因名稱相近就合併。
+3. **入門**：重建其門盤機械法，並處理《元靈經》「入門」與《奇門寶鑑》「八門」差異。
+4. **日奇門穿宮**：把「值符之上星加本日干穿宮數去」做成逐步、可核對的 golden examples。
 
-只有這兩項取得可重建 golden examples 後，才應把 raw numeric candidates 自動化；足球總進球的實驗規則必須再另開盲測層。
+只有這些關係取得足夠 source lock 後，才應啟用任何自動 `raw_numeric_candidates`。足球總進球的實驗規則仍必須在這之後另開盲測層。
