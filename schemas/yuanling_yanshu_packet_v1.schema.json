@@ -50,6 +50,7 @@
         "seven_factors",
         "number_chief_landing_state",
         "numeric_star_registry",
+        "collateral_reconstruction",
         "riqimen_experiment_input",
         "raw_numeric_candidates",
         "uncertainty",
@@ -72,6 +73,32 @@
         },
         "number_chief_landing_state": {"type": ["object", "null"]},
         "numeric_star_registry": {"type": "object"},
+        "collateral_reconstruction": {
+          "type": "object",
+          "required": [
+            "kind",
+            "authority",
+            "status",
+            "number_palace_candidate",
+            "daily_nine_star_chart_candidate",
+            "daily_star_at_number_palace_candidate",
+            "center_daily_star_candidate",
+            "non_equivalence_rules",
+            "source_ids"
+          ],
+          "properties": {
+            "kind": {"const": "YUANLING_COLLATERAL_QIYAO_RECONSTRUCTION_V1"},
+            "authority": {"const": "COLLATERAL_QIMEN_TEXT_RECONSTRUCTION"},
+            "status": {"const": "CANDIDATES_ONLY__NOT_PRIMARY_YUANLING_FACTS"},
+            "number_palace_candidate": {"type": "object"},
+            "daily_nine_star_chart_candidate": {"type": "object"},
+            "daily_star_at_number_palace_candidate": {"type": "object"},
+            "center_daily_star_candidate": {"type": "object"},
+            "non_equivalence_rules": {"type": "array", "minItems": 5},
+            "source_ids": {"type": "array", "minItems": 2},
+            "inputs": {"type": "object"}
+          }
+        },
         "riqimen_experiment_input": {"type": ["object", "null"]},
         "raw_numeric_candidates": {
           "type": "object",
