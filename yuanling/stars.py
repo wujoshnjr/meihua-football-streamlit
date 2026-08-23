@@ -16,7 +16,7 @@ class YuanlingNumericStar:
 
 # This registry is intentionally NOT qimen.constants.STAR_BY_HOME.
 # The transmitted Yuanling text uses a distinct 一白/二黑/... layer around 伏身,
-# 數主 and 中宮值日九星.  Element labels are a project normalization of the
+# 數主 and 中宮值日九星. Element labels are a project normalization of the
 # standard Luoshu five-element associations; they are not presented as a direct
 # quotation from the reviewed passage.
 NUMERIC_STARS: tuple[YuanlingNumericStar, ...] = (
@@ -61,8 +61,10 @@ def star_registry_audit() -> dict[str, object]:
         "independent_from_shijia_qimen_star_registry": True,
         "authority": "SOURCE_NAMES_PLUS_PROJECT_NORMALIZED_ELEMENTS",
         "warning": (
-            "一白/二黑等數術星不可靜默等同天蓬/天芮等時家奇門九星；"
-            "演數『遁至本時之星』的完整飛遁算法仍需原典校勘。"
+            "一白/二黑等數術星不可靜默等同天蓬/天芮等日奇門九星。"
+            "數主/飛星/直日星的角色關係已有 source-crosschecked reconstruction，"
+            "但《元靈經》『乾宮黑星』與《奇門寶鑑》『坤宮黑星』存在傳本文字差異，"
+            "所以 raw primary slots 與旁證計算值仍分層保存。"
         ),
         "stars": [star.__dict__ for star in NUMERIC_STARS],
     }
