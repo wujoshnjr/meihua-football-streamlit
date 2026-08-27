@@ -126,6 +126,113 @@ def _element_relation(actor: str, target: str) -> str:
     raise AssertionError("五行關係不完整")
 
 
+def _source_enemy_rival_elements(use_element: str) -> dict[str, str]:
+    source = next(element for element, target in ELEMENT_GENERATES.items() if target == use_element)
+    enemy = next(element for element, target in ELEMENT_CONTROLS.items() if target == use_element)
+    rival = next(
+        element
+        for element in ELEMENT_GENERATES
+        if ELEMENT_CONTROLS[element] == source and ELEMENT_GENERATES[element] == enemy
+    )
+    return {"用神五行": use_element, "元神五行": source, "忌神五行": enemy, "仇神五行": rival}
+
+
+def _line_role_matches(chart: LiuyaoChart, element: str) -> list[int]:
+    return [line.position for line in chart.lines if line.element == element]
+
+
+def build_use_god_review(
+    chart: LiuyaoChart,
+    role: LiuyaoQuestionRole,
+) -> dict[str, Any]:
+    primary = role.primary_use
+    if primary is None:
+        return {
+            "schema_version": LIUYAO_REVIEW_VERSION,
+            "status": "NO_SINGLE_PRIMARY_USE_SELECTED",
+            "question_role_status": role.status,
+            "candidates": [],
+            "rule": (
+                "題型未 source-lock 單一用神時不強選。若屬足球，必須先固定 candidate protocol，"
+                "再在同一 cohort 比較，不得逐場切換。"
+            ),
+        }
+
+    candidates: list[dict[str, Any]] = []
+    if primary == "世爻":
+        selected = [line for line in chart.lines if line.is_shi]
+    elif primary == "應爻":
+        selected = [line for line in chart.lines if line.is_ying]
+    else:
+        selected = [line for line in chart.lines if line.relative == primary]
+
+    for line in selected:
+        elements = _source_enemy_rival_elements(line.element)
+        candidates.append(
+            {
+                "source": "VISIBLE_LINE",
+                "position": line.position,
+                "relative": line.relative,
+                "branch": line.branch,
+                "element": line.element,
+                "moving": line.moving,
+                "void": line.is_void,
+                "month_relation": line.month_relation,
+                "day_relation": line.day_relation,
+                "spirit_roles": {
+                    **elements,
+                    "元神現爻": _line_role_matches(chart, elements["元神五行"]),
+                    "忌神現爻": _line_role_matches(chart, elements["忌神五行"]),
+                    "仇神現爻": _line_role_matches(chart, elements["仇神五行"]),
+                },
+            }
+        )
+
+    if not candidates and primary in {"父母", "兄弟", "官鬼", "妻財", "子孫"}:
+        for line in chart.lines:
+            if line.hidden_relative == primary and line.hidden_element:
+                elements = _source_enemy_rival_elements(line.hidden_element)
+                candidates.append(
+                    {
+                        "source": "HIDDEN_GOD_CANDIDATE",
+                        "position": line.position,
+                        "relative": line.hidden_relative,
+                        "branch": line.hidden_branch,
+                        "element": line.hidden_element,
+                        "moving": False,
+                        "void": line.hidden_branch in chart.void_branches,
+                        "month_relation": None,
+                        "day_relation": None,
+                        "spirit_roles": {
+                            **elements,
+                            "元神現爻": _line_role_matches(chart, elements["元神五行"]),
+                            "忌神現爻": _line_role_matches(chart, elements["忌神五行"]),
+                            "仇神現爻": _line_role_matches(chart, elements["仇神五行"]),
+                        },
+                    }
+                )
+
+    if not candidates:
+        status = "PRIMARY_USE_NOT_FOUND__REQUIRES_SOURCE_REVIEW"
+    elif len(candidates) == 1:
+        status = "SINGLE_CANDIDATE_READY"
+    else:
+        status = "MULTIPLE_USE_CANDIDATES__DO_NOT_PICK_BY_OUTCOME"
+
+    return {
+        "schema_version": LIUYAO_REVIEW_VERSION,
+        "status": status,
+        "primary_use_category": primary,
+        "candidates": candidates,
+        "selection_rule": [
+            "同類用神多現時，不以爻位或吉凶直覺隨意挑一；須依日月旺衰、動靜、空破及題意綜合。",
+            "元神＝生用神者；忌神＝克用神者；仇神＝克元神而生忌神者。",
+            "元神、忌神、仇神是否有力仍取決於旺衰、動變、空破等，不因名目存在就自動有效。",
+            "若用神伏藏，先標伏神候選；飛神生克、日月扶抑與是否得出仍須另審。",
+        ],
+    }
+
+
 def build_strength_review(chart: LiuyaoChart) -> dict[str, Any]:
     month_element = BRANCH_ELEMENT[chart.month_branch]
     day_element = BRANCH_ELEMENT[chart.day_branch]
@@ -359,6 +466,7 @@ def build_liuyao_review(
             "authority": role.authority,
             "football_adaptation": role.football_adaptation,
         },
+        use_god_review=build_use_god_review(chart, role),
         strength_review=build_strength_review(chart),
         motion_review=build_motion_review(chart),
         source_audit=build_source_audit(),
