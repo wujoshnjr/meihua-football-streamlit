@@ -63,6 +63,7 @@ def build_liuyao_packet(
             "schema_version": review.schema_version,
             "status": review.status,
             "question_role": review.question_role,
+            "use_god_review": review.use_god_review,
             "strength_review": review.strength_review,
             "motion_review": review.motion_review,
             "source_audit": review.source_audit,
