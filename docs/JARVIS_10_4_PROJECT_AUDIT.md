@@ -95,11 +95,14 @@ If temporal signatures are identical but fixture identities differ, any differin
 
 ### P1 — engineering / product
 
+Completed in 10.4.0-alpha.2:
+- batch collision-group audit for a whole kickoff cohort;
+- submitted-state Streamlit regressions for Yuanling experiment and football Case Bundle construction;
+- migration guide for legacy Packet / Case Bundle / Yuanling artifacts.
+
+Still open:
 1. Add a persistent blind-test case registry with immutable `input_frozen_at`, source URLs/IDs, method versions and final pre-match interpretation.
-2. Add batch collision-group audit so a whole kickoff window can be checked for temporal duplicates before interpretation.
-3. Add stronger stateful Streamlit tests for submitted forms, not only page-start smoke tests.
-4. Add a migration note for legacy `DIVINATION_CASE_BUNDLE_V1` and old Yuanling packet schemas.
-5. Normalize repository/product metadata that still describes the project as an “automatic predictor”.
+2. Normalize repository/product metadata that still describes the project as an “automatic predictor”.
 
 ### P2 — validation / research program
 
@@ -120,3 +123,15 @@ JARVIS does not claim:
 - that repository completeness implies football predictive accuracy.
 
 The intended boundary remains: **JARVIS casts, retrieves, reconstructs, validates and packages evidence; ChatGPT performs the final interpretation under the frozen case contract.**
+
+
+## 10.4.0-alpha.2 follow-up hardening
+
+After PR #71 was merged, the production `main` workflow passed again. The follow-up QA branch adds cohort-level collision auditing without changing any divination method:
+
+- `FOOTBALL_COLLISION_GROUP_AUDIT_V1` groups SHA-valid V2 cases by temporal signature.
+- Cross-fixture temporal collisions are considered auditable only when prematch event identity is present.
+- Missing event identity remains an explicit REVIEW state.
+- The audit artifact has its own JSON Schema.
+- Streamlit tests now execute submitted result branches instead of checking page startup only.
+- Legacy artifact migration is documented with a strict non-backfill rule.
