@@ -24,7 +24,7 @@ alignment + SHA + temporal/event/participant signatures + collision gate
 ChatGPT FINAL_SYNTHESIS
 ```
 
-`pages/5_Football_Case.py` 可一次建立奇門、梅花與可選 Yuanling temporal sibling；canonical fixture identity 另以賽事、賽季、官方英文主客隊名、官方原定開球 UTC 固定，主教練出生年干可選作 participant layer。所有 packet 必須通過 SHA 與時間對齊。
+`pages/5_Football_Case.py` 可一次建立奇門、梅花與可選 Yuanling temporal sibling；canonical fixture identity 另以賽事、賽季、官方英文主客隊名、官方原定開球 UTC 固定，主教練出生年干可選作 participant layer。所有 packet 必須通過 SHA 與時間對齊。第三個頁籤可一次匯入最多 50 份 V2 Case Bundle，先做 cohort-level temporal collision audit，再進入人工解讀。
 
 - **奇門 = `RESULT_ENGINE_INPUT`**：提供主客用神與完整盤局，交由 ChatGPT 判斷正規時間勝負及有限比分候選；JARVIS 本身不下結果。
 - **梅花 = `STRUCTURE_STRESS_TEST`**：讀開局／中段／終局、體用、旺衰、體互／用互、變卦、動爻、周易、易林與時間交界；不另產生第二套比分和奇門投票。
@@ -209,6 +209,11 @@ Authority 固定為 `PROJECT_REVIEW__NOT_CLASSICAL_COMMENTARY`；原文仍是第
 
 ### `YUANLING_YANSHU_PACKET_V1_3`
 保存元靈演數研究資料；可作 `DIVINATION_CASE_BUNDLE_V2` 的 `TEMPORAL_NUMERIC_CONTEXT` sibling，但仍不參與自動比分 synthesis。
+
+### `FOOTBALL_COLLISION_GROUP_AUDIT_V1`
+將一批 SHA-valid `DIVINATION_CASE_BUNDLE_V2` 依 temporal signature 分組；若同時不同 fixture 缺 canonical event identity，狀態固定為 REVIEW，而不是讓共同時間盤自行分叉。Schema：`schemas/football_collision_group_audit_v1.schema.json`。
+
+舊 artifact 遷移規則見 `docs/MIGRATION_10_4.md`；禁止用賽後資訊補造 prematch identity。
 
 ## 驗證
 

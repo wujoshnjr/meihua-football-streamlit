@@ -5,7 +5,11 @@ from datetime import date, datetime, time, timezone
 
 import streamlit as st
 
-from jarvis.case_bundle import build_divination_case_bundle, verify_bundle_integrity
+from jarvis.case_bundle import (
+    audit_case_collision_group,
+    build_divination_case_bundle,
+    verify_bundle_integrity,
+)
 from jarvis.divination_packet import build_meihua_packet, build_qimen_packet
 from jarvis.yuanling_packet import build_yuanling_yanshu_packet
 from jarvis.yuanling_vault import football_question_templates
@@ -20,7 +24,7 @@ st.caption(
     "最後下載 DIVINATION_CASE_BUNDLE_V2 交給 ChatGPT。"
 )
 
-cast_tab, import_tab = st.tabs(["同時起局／起卦", "匯入既有 Packets"])
+cast_tab, import_tab, collision_tab = st.tabs(["同時起局／起卦", "匯入既有 Packets", "批次 Collision Audit"])
 
 with cast_tab:
     with st.form("football_case_form"):
@@ -292,6 +296,81 @@ with import_tab:
                 st.success("匯入成功：packet integrity + multi-layer alignment = PASS")
             except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
                 st.error(str(exc))
+
+with collision_tab:
+    st.write(
+        "一次匯入同一輪開球的多份 DIVINATION_CASE_BUNDLE_V2。"
+        "JARVIS 只比較 SHA / temporal / event identity；不做勝負解讀，也不會修改原案件。"
+    )
+    collision_uploads = st.file_uploader(
+        "Case Bundle JSON（可多選，最多 50 份）",
+        type=["json"],
+        accept_multiple_files=True,
+        key="collision_bundle_imports",
+    )
+    if st.button("執行批次 Collision Audit", key="run_collision_group_audit", use_container_width=True):
+        if not collision_uploads:
+            st.error("請至少提供 1 份 Case Bundle。")
+        else:
+            try:
+                collision_bundles = [
+                    json.loads(upload.getvalue().decode("utf-8"))
+                    for upload in collision_uploads
+                ]
+                collision_audit = audit_case_collision_group(collision_bundles)
+                st.session_state["stark_collision_group_audit"] = collision_audit
+            except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+                st.error(str(exc))
+
+    collision_audit = st.session_state.get("stark_collision_group_audit")
+    if collision_audit:
+        g1, g2, g3, g4 = st.columns(4)
+        g1.metric("Audit", collision_audit["status"])
+        g2.metric("Bundles", collision_audit["bundle_count"])
+        g3.metric(
+            "Temporal collisions",
+            collision_audit.get("temporal_collision_group_count", 0),
+        )
+        g4.metric(
+            "Unsafe groups",
+            collision_audit.get("unsafe_collision_group_count", 0),
+        )
+        if collision_audit["status"] == "PASS":
+            st.success(
+                "批次 collision audit 通過：任何跨 fixture temporal collision 都有可稽核的 event identity，"
+                "或只是同一 canonical event 的重複案件。"
+            )
+        elif collision_audit["status"] == "REVIEW_UNSAFE_COLLISION":
+            st.warning(
+                "存在相同 temporal signature 但缺 event identity 的群組；"
+                "這些案件禁止只靠共同時間盤產生不同結論。"
+            )
+        else:
+            st.error("批次 audit 無法通過；請先修正 bundle version / SHA / temporal signature。")
+
+        group_rows = [
+            {
+                "temporal signature": row["temporal_signature_sha256"][:12] + "…",
+                "bundles": row["bundle_count"],
+                "event identities": row["event_signature_count"],
+                "missing event identity": row["missing_event_identity_count"],
+                "status": row["status"],
+            }
+            for row in collision_audit.get("groups", [])
+        ]
+        if group_rows:
+            st.dataframe(group_rows, hide_index=True, use_container_width=True)
+        with st.expander("查看完整 Collision Group Audit"):
+            st.json(collision_audit)
+
+        collision_json = json.dumps(collision_audit, ensure_ascii=False, indent=2)
+        st.download_button(
+            "下載 Collision Group Audit",
+            collision_json,
+            file_name=f"collision-audit-{collision_audit['group_audit_sha256'][:12]}.json",
+            mime="application/json",
+            use_container_width=True,
+        )
 
 bundle = st.session_state.get("stark_case_bundle")
 if bundle:

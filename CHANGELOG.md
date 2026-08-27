@@ -1,5 +1,26 @@
 # Changelog
 
+## 10.4.0-alpha.2 — COLLISION COHORT + QA HARDENING
+
+### Batch collision audit
+- Add `FOOTBALL_COLLISION_GROUP_AUDIT_V1` for up to 50 `DIVINATION_CASE_BUNDLE_V2` artifacts.
+- Group cases by deterministic temporal signature before interpretation.
+- Distinguish safe cross-fixture collisions only when prematch event identities are present.
+- Mark missing event identity as `REVIEW_UNSAFE_COLLISION`; tampered/unsupported bundles fail before comparison.
+- Add downloadable collision-audit JSON and formal JSON Schema.
+
+### Stateful UI regression
+- Add submitted-state Streamlit tests for the Yuanling Ri-Qimen experiment branch.
+- Add submitted-state Streamlit test for full football Case Bundle construction.
+- Keep page-start smoke tests, but no longer rely on them as the only UI coverage.
+
+### Migration safety
+- Add `docs/MIGRATION_10_4.md`.
+- Explicitly prohibit relabeling legacy artifacts or reconstructing prematch identity from post-match knowledge.
+- Keep legacy Packet V1 / Bundle V1 schemas for compatibility only.
+
+**No method/accuracy claim:** alpha.2 changes QA, cohort auditing and artifact lifecycle only; it does not alter source-locked divination rules or claim predictive improvement.
+
 ## 10.4.0-alpha.1 — MULTI-LAYER FOOTBALL CASE + PROJECT AUDIT
 
 ### Football event differentiation

@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from jarvis.case_bundle import build_divination_case_bundle
+from jarvis.case_bundle import audit_case_collision_group, build_divination_case_bundle
 from jarvis.divination_packet import build_meihua_packet, build_qimen_packet
 from jarvis.event_layers import (
     audit_case_collision,
@@ -200,3 +200,81 @@ def test_invalid_coach_ganzhi_is_rejected_before_interpretation() -> None:
             fixture=_fixture("Team A", "Team B"),
             coaches={"home_birth_ganzhi": "2020", "away_birth_ganzhi": "辛酉"},
         )
+
+
+def test_collision_group_audit_distinguishes_same_time_fixtures() -> None:
+    q1, m1 = _packets(
+        home_display="紐卡索聯",
+        away_display="利物浦",
+        fixture=_fixture("Newcastle United", "Liverpool"),
+    )
+    q2, m2 = _packets(
+        home_display="葉士域治",
+        away_display="桑德蘭",
+        fixture=_fixture("Ipswich Town", "Sunderland"),
+    )
+    q3, m3 = _packets(
+        home_display="兵工廠",
+        away_display="柯芬特里城",
+        fixture=_fixture("Arsenal", "Coventry City"),
+    )
+
+    audit = audit_case_collision_group(
+        [
+            build_divination_case_bundle(q1, m1),
+            build_divination_case_bundle(q2, m2),
+            build_divination_case_bundle(q3, m3),
+        ]
+    )
+
+    assert audit["status"] == "PASS"
+    assert audit["bundle_count"] == 3
+    assert audit["temporal_collision_group_count"] == 1
+    assert audit["cross_fixture_collision_group_count"] == 1
+    assert audit["unsafe_collision_group_count"] == 0
+    assert audit["groups"][0]["status"] == "TEMPORAL_COLLISION__DISTINGUISHED_BY_EVENT_LAYER"
+    assert audit["groups"][0]["event_signature_count"] == 3
+    assert len(audit["groups"][0]["pairwise"]) == 3
+    assert len(audit["group_audit_sha256"]) == 64
+
+
+def test_collision_group_audit_marks_missing_event_identity_for_review() -> None:
+    q1, m1 = _packets(
+        home_display="紐卡索聯",
+        away_display="利物浦",
+        fixture=_fixture("Newcastle United", "Liverpool"),
+    )
+    q2, m2 = _packets(
+        home_display="葉士域治",
+        away_display="桑德蘭",
+        fixture=None,
+    )
+
+    audit = audit_case_collision_group(
+        [
+            build_divination_case_bundle(q1, m1),
+            build_divination_case_bundle(q2, m2),
+        ]
+    )
+
+    assert audit["status"] == "REVIEW_UNSAFE_COLLISION"
+    assert audit["unsafe_collision_group_count"] == 1
+    assert audit["groups"][0]["status"] == "UNSAFE_TEMPORAL_COLLISION__EVENT_IDENTITY_MISSING"
+    assert audit["groups"][0]["missing_event_identity_count"] == 1
+
+
+def test_collision_group_audit_rejects_tampered_bundle() -> None:
+    qimen, meihua = _packets(
+        home_display="A隊",
+        away_display="B隊",
+        fixture=_fixture("Team A", "Team B"),
+    )
+    bundle = build_divination_case_bundle(qimen, meihua)
+    tampered = dict(bundle)
+    tampered["match_event"] = dict(bundle["match_event"])
+    tampered["match_event"]["home_team"] = "被竄改"
+
+    audit = audit_case_collision_group([tampered])
+
+    assert audit["status"] == "FAIL_INVALID_BUNDLE"
+    assert audit["invalid"][0]["reason"] == "BUNDLE_SHA_MISMATCH"

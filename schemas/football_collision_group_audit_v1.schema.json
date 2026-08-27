@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wujoshnjr/meihua-football-streamlit/schemas/football_collision_group_audit_v1.schema.json",
+  "title": "JARVIS FOOTBALL_COLLISION_GROUP_AUDIT_V1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "bundle_count",
+    "groups",
+    "rule",
+    "group_audit_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "FOOTBALL_COLLISION_GROUP_AUDIT_V1"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "REVIEW_UNSAFE_COLLISION",
+        "FAIL_INVALID_BUNDLE",
+        "FAIL_TEMPORAL_SIGNATURE_MISSING"
+      ]
+    },
+    "bundle_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50
+    },
+    "temporal_group_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "temporal_collision_group_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "cross_fixture_collision_group_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "unsafe_collision_group_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "invalid": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "input_index",
+          "reason"
+        ],
+        "properties": {
+          "input_index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "schema_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "missing_temporal_bundle_sha256": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "uniqueItems": true
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "temporal_signature_sha256",
+          "bundle_count",
+          "status",
+          "event_signature_count",
+          "missing_event_identity_count",
+          "bundles",
+          "pairwise"
+        ],
+        "properties": {
+          "temporal_signature_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "bundle_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "enum": [
+              "NO_TEMPORAL_COLLISION",
+              "SAME_TEMPORAL_AND_EVENT_IDENTITY",
+              "TEMPORAL_COLLISION__DISTINGUISHED_BY_EVENT_LAYER",
+              "UNSAFE_TEMPORAL_COLLISION__EVENT_IDENTITY_MISSING"
+            ]
+          },
+          "event_signature_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "missing_event_identity_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bundles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "bundle_sha256",
+                "match_event",
+                "event_signature_sha256",
+                "participant_status"
+              ],
+              "properties": {
+                "bundle_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "match_event": {
+                  "type": "object"
+                },
+                "event_signature_sha256": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "participant_status": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "pairwise": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "left_bundle_sha256",
+                "right_bundle_sha256",
+                "audit"
+              ],
+              "properties": {
+                "left_bundle_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "right_bundle_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "audit": {
+                  "type": "object",
+                  "required": [
+                    "schema_version",
+                    "status",
+                    "same_temporal_signature",
+                    "same_event_signature",
+                    "rule"
+                  ]
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "rule": {
+      "type": "string",
+      "minLength": 1
+    },
+    "group_audit_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false
+}
