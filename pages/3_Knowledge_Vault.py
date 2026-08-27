@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import streamlit as st
 
+from jarvis.liuyao_vault import liuyao_catalog_stats, search_liuyao
 from jarvis.stark_vault import search_vault, vault_stats
 from jarvis.yilin import search_yilin, yilin_catalog_stats, yilin_semantic_audit
 from jarvis.yuanling_vault import search_yuanling, yuanling_catalog_stats
@@ -9,7 +10,7 @@ from jarvis.zhouyi import search_zhouyi, zhouyi_catalog_stats
 
 
 st.set_page_config(page_title="術數知識庫 · JARVIS", page_icon="📚", layout="wide")
-st.title("📚 奇門遁甲 × 梅花易數 × 周易 × 焦氏易林 × 元靈經知識庫")
+st.title("📚 奇門 × 梅花 × 六爻 × 周易 × 焦氏易林 × 元靈經知識庫")
 st.caption(
     "古典原義、固定數位轉錄、結構化深層解析與足球衍生義分層保存；"
     "JARVIS 負責檢索，最後解讀交給 ChatGPT。"
@@ -20,6 +21,7 @@ zhouyi_stats = zhouyi_catalog_stats()
 yilin_stats = yilin_catalog_stats()
 yilin_audit = yilin_semantic_audit()
 yuanling_stats = yuanling_catalog_stats()
+liuyao_stats = liuyao_catalog_stats()
 a, b, c, d = st.columns(4)
 a.metric("奇門九宮", stats["qimen_palaces"])
 b.metric("八門／九星／八神", stats["qimen_doors"] + stats["qimen_stars"] + stats["qimen_deities"])
@@ -72,6 +74,20 @@ st.caption(
     "射覆數目與值日九星只屬古典數術資料，不直接轉足球總進球或比分。"
 )
 
+st.markdown("### 六爻納甲 Source-aware 層")
+l1, l2, l3, l4 = st.columns(4)
+l1.metric("八宮", liuyao_stats["bagong_palaces"])
+l2.metric("六十四卦", liuyao_stats["implemented_hexagrams"])
+l3.metric("古典主來源", liuyao_stats["primary_classical_sources"])
+l4.metric("指定影片", "PENDING" if "NO_METADATA" in str(liuyao_stats["user_video_status"]) else "REVIEW")
+st.success(
+    "六爻已建立獨立納甲 core：本變卦、八宮、世應、六親、六神、旬空、月建日辰、動變與伏神候選；"
+    "用神／旺衰／暗動／應期等另作 source-aware review。"
+)
+st.caption(
+    "指定影片 -qgDHCHaDpo 目前搜尋端未取得可核對 transcript，因此只登錄為 pending source，未把未知說法寫入 core。"
+)
+
 query = st.text_input(
     "搜尋",
     placeholder=(
@@ -85,6 +101,7 @@ if query.strip():
         *search_zhouyi(query),
         *search_yilin(query),
         *search_yuanling(query),
+        *search_liuyao(query),
     ]
     st.write(f"找到 {len(results)} 筆（跨庫結果依各檢索器上限顯示）")
     if results:
@@ -122,7 +139,7 @@ if query.strip():
                         f"第 {row.get('line')} 爻｜{row.get('source_page_start', '')}｜"
                         f"{row.get('source', {}).get('file', '')}"
                     )
-                elif row.get("system") in {"YUANLING", "CASTING_METHOD"}:
+                elif row.get("system") in {"YUANLING", "CASTING_METHOD", "LIUYAO"}:
                     if row.get("summary"):
                         st.write(row["summary"])
                     if row.get("source_locator"):
@@ -138,7 +155,7 @@ else:
     st.info(
         "可搜尋完整《周易》64 卦／384 爻、4096 焦氏易林轉卦、易林意象 ontology、"
         "梅花八卦／體用／動爻／本互變、奇門九宮／八門／九星／八神、Core 306 關係，"
-        "以及《元靈經》演數七要、伏身、值日九星、日奇門60日表與四種起局/起卦方法說明。"
+        "以及六爻《增刪卜易》《卜筮正宗》《火珠林》《黃金策》來源索引、《元靈經》演數七要、伏身、值日九星、日奇門60日表與方法說明。"
     )
 
 st.markdown("### 資料庫邊界")
@@ -148,7 +165,7 @@ st.markdown(
 - **古籍／傳統義理**：保存來源與結構化摘要；數位轉錄、後世注解、專案解析彼此分層。
 - **奇門深層解析**：宮→門→星→神→天地盤干→格局／空馬，並只附本局真正命中的 Core 306 關係子集。
 - **梅花深層解析**：本卦→上下卦→體用→旺衰→互卦→真正動爻經文→變卦，保持 deterministic 起卦權威。
-- **元靈 source catalog**：卷一與卷三相關排盤／演數條目分層保存；演數七要與日奇門保持獨立，旁證候選不寫回 primary facts。
+- **六爻 source catalog**：《增刪卜易》《卜筮正宗》《火珠林》《黃金策》作 core/review 錨點；影片只作 discovery，未取得 transcript 者不升格。\n- **元靈 source catalog**：卷一與卷三相關排盤／演數條目分層保存；演數七要與日奇門保持獨立，旁證候選不寫回 primary facts。
 - **元靈數目資料**：射覆所列數目只作古典數術關聯資料，不能直接轉成足球總進球、比分或概率。
 - **焦氏易林 bridge**：4096/4096 pair 已入庫；只使用梅花「本卦 → 最終變卦」查唯一林辭，不重新起卦、不拿互卦冒充焦林原始占法。
 - **原文治理**：來源異體、校語、gaiji 或疑似誤標不靜默修改；AI 不可自行補寫古籍。
