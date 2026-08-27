@@ -13,7 +13,7 @@ from jarvis.liuyao_packet import (
 from jarvis.time import EventLocalTimeError, aware_event_local_datetime, inspect_local_civil_time
 
 
-st.set_page_config(page_title="六爻納甲 · JARVIS", page_icon="☷", layout="wide")
+st.set_page_config(page_title="六爻納甲 · JARVIS", page_icon="🪙", layout="wide")
 st.title("☷ 六爻納甲 · 文王卦")
 st.caption(
     "Source-aware 六爻子系統：先固定六次爻值，再排本／變卦、納甲、八宮、世應、六親、六神、旬空與日月動變；"
@@ -80,7 +80,7 @@ with st.form("liuyao_cast"):
     submitted = st.form_submit_button(
         f"建立 {LIUYAO_PACKET_VERSION}",
         type="primary",
-        use_container_width=True,
+        width="stretch",
     )
 
 if submitted:
@@ -168,7 +168,7 @@ if packet and packet.get("system") == "LIUYAO_WENWANGGUA":
                 ),
             }
         )
-    st.dataframe(rows, hide_index=True, use_container_width=True)
+    st.dataframe(rows, hide_index=True, width="stretch")
 
     role = review["question_role"]
     st.markdown("### 用神／題型入口")
@@ -217,10 +217,10 @@ if packet and packet.get("system") == "LIUYAO_WENWANGGUA":
             packet_json,
             file_name=f"liuyao-{packet['packet_sha256'][:12]}.json",
             mime="application/json",
-            use_container_width=True,
+            width="stretch",
         )
     with b:
-        st.page_link("pages/4_AI_Packet.py", label="交給 AI 解卦包", icon="🤖", use_container_width=True)
+        st.info("Packet 已存入本次 session；請由頂部導覽進入「AI 解卦包」。", icon="🤖")
 
 st.divider()
 st.caption(
