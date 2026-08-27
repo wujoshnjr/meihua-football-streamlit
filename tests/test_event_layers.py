@@ -82,6 +82,12 @@ def test_event_identity_is_normalized_deterministic_and_prematch_only() -> None:
     assert cast["upper_number"] in range(1, 9)
     assert cast["lower_number"] in range(1, 9)
     assert cast["moving_line"] in range(1, 7)
+    assert cast["body_use_relation"] in {"比和", "生體", "體生用", "克體", "體克用"}
+    assert cast["mutual_upper_trigram"]
+    assert cast["mutual_lower_trigram"]
+    assert cast["changed_use_trigram"]
+    assert cast["changed_use_relation_to_body"] in {"比和", "生體", "體生用", "克體", "體克用"}
+    assert cast["season_state"] == "NOT_COMPUTED_IN_EVENT_IDENTITY_LAYER"
     assert first["meihua_event_cast"]["authority"].startswith("PROJECT_ADAPTATION")
     serialized = str(first).lower()
     assert "score" not in serialized
