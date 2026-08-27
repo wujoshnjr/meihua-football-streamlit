@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from jarvis.provenance import sha256_payload
+from jarvis.event_layers import build_differentiation_audit
 
 MATCH_EVENT_VERSION = "MATCH_EVENT_V1"
 DIVINATION_CASE_BUNDLE_VERSION = "DIVINATION_CASE_BUNDLE_V1"
@@ -159,11 +160,14 @@ def build_divination_case_bundle(
     if mismatches:
         raise ValueError("CASE_ALIGNMENT_FAIL: " + ", ".join(mismatches))
 
+    differentiation_audit = build_differentiation_audit(qimen_packet, meihua_packet)
+
     payload: dict[str, Any] = {
         "schema_version": DIVINATION_CASE_BUNDLE_VERSION,
         "packet_purpose": "SAME_EVENT_QIMEN_MEIHUA_HANDOFF__CHATGPT_INTERPRETS",
         "match_event": qimen_event,
         "event_metadata": _clean_event_metadata(event_metadata),
+        "differentiation_audit": differentiation_audit,
         "alignment_audit": {
             "status": "PASS",
             "checked_fields": list(fields),
@@ -196,6 +200,8 @@ def build_divination_case_bundle(
             "奇門作 RESULT_ENGINE_INPUT；梅花作 STRUCTURE_STRESS_TEST，不做兩套術數投票。",
             "兩份 packet 皆不可重新起局／起卦、改時間、換主客或更改 deterministic chart facts。",
             "event_metadata 是來源／賽事描述層，不可反向改寫 match_event 的起局時間。",
+            "若 differentiation_audit 顯示 TEMPORAL_ONLY__UNSAFE_FOR_CROSS_FIXTURE_DIFFERENTIATION，同時不同賽事不得只靠共同時間盤輸出不同結論。",
+            "若 temporal signature 相同而 event signature 不同，差異判讀必須指向 event/participant layer，不得以事後挑象冒充分辨能力。",
             "古籍原文、source review、project heuristic、football modern application 必須分層。",
             "最終判讀由 ChatGPT 完成；bundle 不包含自動勝率、固定比分或最終賽果。",
         ],
