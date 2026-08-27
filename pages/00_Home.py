@@ -14,7 +14,7 @@ st.title("JARVIS 術數 AI")
 st.caption(f"Operation STARK｜v{__version__}｜JARVIS 起局／起卦、原典審查與知識整理，ChatGPT 負責最後解讀")
 
 st.success(
-    "核心：奇門遁甲知識庫 × 梅花易數 ×《周易》64卦/384爻原典＋條件式審查 ×《焦氏易林》4096轉卦 ×《元靈經》演數七要/日奇門 source catalog × deterministic 起局／起卦 × AI 解卦包。",
+    "核心：奇門遁甲 × 梅花易數 × 六爻納甲／文王卦 ×《周易》64卦/384爻 ×《焦氏易林》4096轉卦 ×《元靈經》演數七要/日奇門 × deterministic 起局／起卦 × AI 解卦包。",
     icon="⚡",
 )
 
@@ -43,32 +43,39 @@ st.markdown(
 4. **元靈演數**：七要 raw slots 與 crosschecked reconstruction 分層；數主／飛星／直日星角色已解，數宮完整古法與入門完整 mechanics 仍保持 source-tiered。若選實驗模式，另建立日奇門 sibling。
 5. 《周易》真正動爻附 source-grounded conditional review；《焦氏易林》只查唯一「本卦→最終變卦」作 transformation lens。
 6. 元靈卷三值日九星與射覆數目已入庫，但只作古典數術資料，禁止「宮數/星數/射覆數目 → 足球進球」直譯。
-7. 產生 packet 後交給 ChatGPT；AI 不得重新起局／起卦或修改 deterministic 盤象。
+8. 產生 packet 後交給 ChatGPT；AI 不得重新起局／起卦或修改 deterministic 盤象。
 
 **原則：同一時間 → 共同 temporal layers；不同 fixture → 賽前固定 event / participant identity；奇門主結果證據 × 梅花定結構 × 元靈共同數勢 × ChatGPT 最終合參。**
 """
 )
 
-q_col, m_col, y_col = st.columns(3)
+q_col, m_col, l_col, y_col = st.columns(4)
 with q_col:
     with st.container(border=True):
         st.markdown("## 🧭 奇門遁甲")
         st.write(
-            "時家奇門・轉盤・拆補法。輸出九宮、天地盤、八門、九星、八神、值符值使、旬空、驛馬、格局與主客用神。"
+            "時家奇門・轉盤・拆補法。輸出九宮、天地盤、八門、九星、八神、值符值使、旬空、驛馬與格局。"
         )
         st.page_link("pages/1_Qimen_Cast.py", label="單獨奇門起局", icon="🧭", use_container_width=True)
 with m_col:
     with st.container(border=True):
         st.markdown("## ☯️ 梅花 × 周易 × 易林")
         st.write(
-            "年月日時起卦。輸出本卦、體用、旺衰、體互／用互、變卦、動爻，再核對《周易》與本→變《焦氏易林》。"
+            "年月日時起卦。輸出本卦、體用、互變與旺衰，再核對《周易》與本→變《焦氏易林》。"
         )
         st.page_link("pages/2_Meihua_Cast.py", label="單獨梅花起卦", icon="☯️", use_container_width=True)
+with l_col:
+    with st.container(border=True):
+        st.markdown("## ☷ 六爻納甲")
+        st.write(
+            "六次 6/7/8/9 排文王卦：納甲、八宮、世應、六親、六神、日月空破、動變與伏神候選；斷法分層審查。"
+        )
+        st.page_link("pages/7_Liuyao_Cast.py", label="六爻起卦", icon="☷", use_container_width=True)
 with y_col:
     with st.container(border=True):
         st.markdown("## 🔢 元靈演數 × 日奇門")
         st.write(
-            "演數七要與日奇門獨立保存；角色關係與穿宮已 crosschecked，primary、旁證、project normalization 仍分層，不直接產生比分。"
+            "演數七要與日奇門獨立保存；角色關係與穿宮已 crosschecked，primary、旁證、project normalization 仍分層。"
         )
         st.page_link("pages/6_Yuanling_Yanshu.py", label="元靈演數研究", icon="🔢", use_container_width=True)
 
@@ -106,7 +113,7 @@ st.caption(
 st.markdown("### 輔助入口")
 x, y = st.columns(2)
 with x:
-    st.page_link("pages/3_Knowledge_Vault.py", label="📚 搜尋奇門／梅花／周易／易林／元靈", use_container_width=True)
+    st.page_link("pages/3_Knowledge_Vault.py", label="📚 搜尋奇門／梅花／六爻／周易／易林／元靈", use_container_width=True)
 with y:
     st.page_link("pages/4_AI_Packet.py", label="🤖 查看最新單一 AI 解卦包", use_container_width=True)
 

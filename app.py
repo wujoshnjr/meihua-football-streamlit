@@ -15,13 +15,14 @@ football_case = st.Page("pages/5_Football_Case.py", title="足球多層案件", 
 qimen = st.Page("pages/1_Qimen_Cast.py", title="奇門起局", icon="🧭", url_path="qimen")
 meihua = st.Page("pages/2_Meihua_Cast.py", title="梅花起卦", icon="☯️", url_path="meihua")
 yuanling = st.Page("pages/6_Yuanling_Yanshu.py", title="元靈演數", icon="🔢", url_path="yuanling")
+liuyao = st.Page("pages/7_Liuyao_Cast.py", title="六爻納甲", icon="☷", url_path="liuyao")
 vault = st.Page("pages/3_Knowledge_Vault.py", title="知識庫", icon="📚", url_path="knowledge")
 packet = st.Page("pages/4_AI_Packet.py", title="AI 解卦包", icon="🤖", url_path="packet")
 
 navigation = st.navigation(
     {
         "足球": [home, football_case],
-        "單術數": [qimen, meihua, yuanling],
+        "單術數": [qimen, meihua, liuyao, yuanling],
         "知識與 AI": [vault, packet],
     },
     position="top",

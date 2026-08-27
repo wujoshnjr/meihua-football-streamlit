@@ -1,5 +1,34 @@
 # Changelog
 
+## 10.5.0-alpha.1 — LIUYAO SOURCE-AWARE CORE
+
+### Dedicated Liuyao subsystem
+- Add independent `liuyao/` package and `/liuyao` Streamlit workspace.
+- Add deterministic 6/7/8/9 bottom-to-top casting input.
+- Implement original/changed hexagrams, full 64-hexagram Bagong mapping, Shi/Ying, Najia, six relatives, six spirits, void, month/day direct relations, moving transformations and hidden-god candidates.
+- Add advance/retreat transformation tags and six-clash/six-harmony chart flags.
+- Preserve the classical rule that transformed-line relatives are calculated from the original hexagram palace element.
+
+### Source-aware review
+- Add question-category use-god mapping for source-reviewed categories.
+- Add multiple-use-god guard: no outcome-driven candidate picking.
+- Add source / enemy / rival spirit candidates (元神／忌神／仇神).
+- Add explicit dark-motion firewall: a day-clashed static line is not automatically 暗動.
+- Preserve contradictions among moving, void, month-break and day-clash facts.
+
+### Sources / video
+- Register 《增刪卜易》《卜筮正宗》《火珠林》《黃金策》 as Liuyao source anchors.
+- Register user-provided video `-qgDHCHaDpo` as `PENDING_TRANSCRIPT__NOT_SOURCE_LOCKED`; no guessed video claim is promoted to core.
+
+### Packet / UI / validation
+- Add `LIUYAO_PACKET_V1` and JSON Schema.
+- Integrate Liuyao into AI handoff and Knowledge Vault.
+- Add `tools/validate_liuyao.py` to CI.
+- Add source golden tests including 《增刪卜易》水天需→天水訟 transformed-relative rule.
+- Add detailed architecture at `docs/LIUYAO_SYSTEM_DESIGN.md`.
+
+**Research boundary:** advanced 三合、反伏、隨鬼入墓、完整應期、神煞與 school-dependent layers remain source-tiered/conditional rather than being guessed into the core.
+
 ## Unreleased — FOOTBALL CAST-METHOD EVALUATION DIRECTION
 
 - Clarify that JARVIS will not build a persistent per-match cast / blind-test registry.

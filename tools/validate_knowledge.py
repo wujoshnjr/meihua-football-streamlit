@@ -162,6 +162,10 @@ def main() -> None:
         "yilin-kanripo-wyg-transcription",
         "project-football-ontology",
         "project-reading-protocol",
+        "liuyao-zengshan-buyi",
+        "liuyao-bosizhengzong",
+        "liuyao-huozhulin",
+        "liuyao-huangjince",
     }
     require(required_sources <= source_ids, "source registry is missing Operation STARK primary sources")
 
@@ -170,7 +174,8 @@ def main() -> None:
         f"Qimen 9 palaces / 8 doors / 9 stars / 8 deities / 10 stems / {len(patterns)} patterns / "
         "Core 306 relations / 8 deep hierarchy layers / 8 deity modulations; "
         "Meihua 8 trigrams / 64 hexagrams / 5 body-use relations / 6 moving-line roles / 8 deep football dimensions; "
-        "Zhouyi 10 method-aware source-review dimensions"
+        "Zhouyi 10 method-aware source-review dimensions; "
+        "Liuyao 4 classical source anchors"
     )
 
 

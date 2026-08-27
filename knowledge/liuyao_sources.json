@@ -1,0 +1,93 @@
+{
+  "schema_version": "JARVIS_LIUYAO_SOURCE_CATALOG_V1",
+  "status": "SOURCE_TIERED",
+  "primary_classical": [
+    {
+      "id": "LIUYAO_ZENGSHAN_BUYI",
+      "title": "《增刪卜易》",
+      "authority": "PRIMARY_CLASSICAL_TEXT",
+      "urls": [
+        "https://zh.wikisource.org/zh-hant/%E5%A2%9E%E5%88%AA%E5%8D%9C%E6%98%93"
+      ],
+      "covers": [
+        "渾天甲子/納甲",
+        "六親",
+        "用神/元神/忌神/仇神",
+        "月建",
+        "日辰",
+        "旬空",
+        "暗動/日破",
+        "動變",
+        "伏神",
+        "六合六沖"
+      ],
+      "implementation_rule": "原典可直接機械化者進 deterministic core；判斷性條文進 review layer。"
+    },
+    {
+      "id": "LIUYAO_BOSHI_ZHENGZONG",
+      "title": "《卜筮正宗》",
+      "authority": "PRIMARY_CLASSICAL_TEXT",
+      "urls": [
+        "https://ctext.org/wiki.pl?if=gb&res=466455"
+      ],
+      "covers": [
+        "納甲",
+        "世應",
+        "六神起例",
+        "裝卦歌訣"
+      ]
+    },
+    {
+      "id": "LIUYAO_HUOZHULIN",
+      "title": "《火珠林》",
+      "authority": "EARLY_CLASSICAL_LIUYAO_TEXT",
+      "urls": [
+        "https://zh.wikisource.org/zh-hant/%E7%81%AB%E7%8F%A0%E6%9E%97"
+      ],
+      "covers": [
+        "六親根源",
+        "飛伏",
+        "征戰占",
+        "子孫/官鬼",
+        "世應"
+      ]
+    },
+    {
+      "id": "LIUYAO_HUANGJINCE",
+      "title": "《黃金策》",
+      "authority": "CLASSICAL_LIUYAO_TEXT",
+      "urls": [
+        "https://zh.wikisource.org/zh-hant/%E9%BB%83%E9%87%91%E7%AD%96"
+      ],
+      "covers": [
+        "月建日辰",
+        "世應",
+        "動變",
+        "用神綱領"
+      ]
+    }
+  ],
+  "modern_teaching": [
+    {
+      "id": "MODERN_VIDEO_USE_GOD_ORDER",
+      "title": "六爻斷卦思路及用神選擇次序",
+      "authority": "MODERN_TEACHING__DISCOVERY_ONLY",
+      "url": "https://www.youtube.com/",
+      "rule": "只用於發現現代實務候選流程；任何規則仍須回查古籍或標記 modern lineage。"
+    }
+  ],
+  "user_provided_video": {
+    "id": "USER_VIDEO_-qgDHCHaDpo",
+    "url": "https://youtu.be/-qgDHCHaDpo",
+    "authority": "USER_PROVIDED_VIDEO__PENDING_TRANSCRIPT",
+    "retrieval_status": "SEARCH_INDEX_RETURNED_NO_METADATA_OR_TRANSCRIPT",
+    "implementation_status": "NOT_PROMOTED_TO_CORE",
+    "rule": "在能逐條核對影片內容前，不把推測的影片說法寫成六爻規則。"
+  },
+  "source_policy": [
+    "古籍原文、後世解釋、現代影片、JARVIS project adaptation 分層保存。",
+    "影片可提出候選技巧，但不能單獨覆蓋 primary classical rule。",
+    "古籍有異文或流派分歧時，保留 method ID，不靜默統一。",
+    "足球映射必須標 modern/project adaptation，不能稱為古法足球規則。"
+  ]
+}

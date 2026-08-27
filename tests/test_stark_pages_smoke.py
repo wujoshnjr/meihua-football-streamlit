@@ -56,6 +56,28 @@ def test_football_case_workspace_starts():
     assert any("足球多層術數案件" in item.value for item in app.title)
 
 
+def test_liuyao_page_starts():
+    app = run_page("pages/7_Liuyao_Cast.py")
+    assert not app.exception
+    assert any("六爻納甲" in item.value for item in app.title)
+
+
+def test_liuyao_submit_executes_chart_branch():
+    app = run_page("pages/7_Liuyao_Cast.py")
+    _widget_by_label(app.text_area, "占問內容").set_value("測試六爻納甲排盤。")
+    _button_by_label(app, "建立 LIUYAO_PACKET_V1").click()
+    app.run()
+
+    assert not app.exception
+    assert any("六爻 packet 已建立" in item.value for item in app.success)
+    metric_values = {item.label: str(item.value) for item in app.metric}
+    assert metric_values["本卦"] == "坤為地"
+    assert metric_values["卦宮"].startswith("坤宮")
+    markdown_text = " ".join(item.value for item in app.markdown)
+    assert "六爻排盤" in markdown_text
+    assert "用神／題型入口" in markdown_text
+
+
 def test_yuanling_research_page_starts_with_casting_guide():
     app = run_page("pages/6_Yuanling_Yanshu.py")
     assert not app.exception
