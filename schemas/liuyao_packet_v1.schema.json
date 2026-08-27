@@ -293,6 +293,7 @@
         "schema_version",
         "status",
         "question_role",
+        "use_god_review",
         "strength_review",
         "motion_review",
         "source_audit",
@@ -323,6 +324,9 @@
         },
         "uncertainty_register": {
           "type": "array"
+        },
+        "use_god_review": {
+          "type": "object"
         }
       },
       "additionalProperties": false
