@@ -4,10 +4,11 @@ from datetime import datetime
 from typing import Any
 
 from jarvis.provenance import sha256_payload
-from jarvis.event_layers import build_differentiation_audit
+from jarvis.event_layers import audit_case_collision, build_differentiation_audit
 
 MATCH_EVENT_VERSION = "MATCH_EVENT_V1"
 DIVINATION_CASE_BUNDLE_VERSION = "DIVINATION_CASE_BUNDLE_V2"
+FOOTBALL_COLLISION_GROUP_AUDIT_VERSION = "FOOTBALL_COLLISION_GROUP_AUDIT_V1"
 
 
 def _clean_team(value: str, field: str) -> str:
@@ -74,6 +75,176 @@ def verify_bundle_integrity(bundle: dict[str, Any]) -> dict[str, Any]:
         "expected": expected,
         "actual": actual,
     }
+
+
+def audit_case_collision_group(
+    bundles: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Audit a kickoff cohort for temporal collisions without interpretation."""
+
+    if not bundles:
+        raise ValueError("collision group 至少需要 1 份 Case Bundle")
+    if len(bundles) > 50:
+        raise ValueError("collision group 一次最多 50 份 Case Bundle")
+
+    rows: list[dict[str, Any]] = []
+    invalid: list[dict[str, Any]] = []
+    for index, bundle in enumerate(bundles):
+        integrity = verify_bundle_integrity(bundle)
+        row = {
+            "input_index": index,
+            "schema_version": bundle.get("schema_version"),
+            "bundle_sha256": bundle.get("bundle_sha256"),
+            "integrity": integrity,
+            "match_event": bundle.get("match_event"),
+            "differentiation_audit": bundle.get("differentiation_audit"),
+        }
+        rows.append(row)
+        if bundle.get("schema_version") != DIVINATION_CASE_BUNDLE_VERSION:
+            invalid.append(
+                {
+                    "input_index": index,
+                    "reason": "UNSUPPORTED_CASE_BUNDLE_VERSION",
+                    "schema_version": bundle.get("schema_version"),
+                }
+            )
+        if integrity["status"] != "PASS":
+            invalid.append(
+                {
+                    "input_index": index,
+                    "reason": integrity["reason"],
+                    "schema_version": bundle.get("schema_version"),
+                }
+            )
+
+    if invalid:
+        payload: dict[str, Any] = {
+            "schema_version": FOOTBALL_COLLISION_GROUP_AUDIT_VERSION,
+            "status": "FAIL_INVALID_BUNDLE",
+            "bundle_count": len(bundles),
+            "invalid": invalid,
+            "groups": [],
+            "rule": (
+                "批次 collision audit 只接受 SHA integrity PASS 的 DIVINATION_CASE_BUNDLE_V2。"
+            ),
+        }
+        payload["group_audit_sha256"] = sha256_payload(payload)
+        return payload
+
+    rows.sort(key=lambda row: str(row["bundle_sha256"]))
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    missing_temporal: list[str] = []
+    for row in rows:
+        audit = row["differentiation_audit"] or {}
+        temporal = (audit.get("temporal") or {}).get("temporal_signature_sha256")
+        if not temporal:
+            missing_temporal.append(str(row["bundle_sha256"]))
+            continue
+        grouped.setdefault(str(temporal), []).append(row)
+
+    if missing_temporal:
+        payload = {
+            "schema_version": FOOTBALL_COLLISION_GROUP_AUDIT_VERSION,
+            "status": "FAIL_TEMPORAL_SIGNATURE_MISSING",
+            "bundle_count": len(bundles),
+            "missing_temporal_bundle_sha256": sorted(missing_temporal),
+            "groups": [],
+            "rule": "缺少 temporal signature 的案件不得進入跨 fixture collision 判讀。",
+        }
+        payload["group_audit_sha256"] = sha256_payload(payload)
+        return payload
+
+    groups: list[dict[str, Any]] = []
+    unsafe_count = 0
+    collision_count = 0
+    cross_fixture_collision_count = 0
+    for temporal_signature in sorted(grouped):
+        group_rows = grouped[temporal_signature]
+        event_signatures = [
+            ((row["differentiation_audit"] or {}).get("event") or {}).get(
+                "event_signature_sha256"
+            )
+            for row in group_rows
+        ]
+        ready_event_signatures = [sig for sig in event_signatures if sig]
+        unique_event_signatures = sorted(set(ready_event_signatures))
+        same_temporal_collision = len(group_rows) > 1
+        if same_temporal_collision:
+            collision_count += 1
+
+        if not same_temporal_collision:
+            status = "NO_TEMPORAL_COLLISION"
+        elif len(ready_event_signatures) != len(group_rows):
+            status = "UNSAFE_TEMPORAL_COLLISION__EVENT_IDENTITY_MISSING"
+            unsafe_count += 1
+        elif len(unique_event_signatures) == 1:
+            status = "SAME_TEMPORAL_AND_EVENT_IDENTITY"
+        else:
+            status = "TEMPORAL_COLLISION__DISTINGUISHED_BY_EVENT_LAYER"
+            cross_fixture_collision_count += 1
+
+        pairwise: list[dict[str, Any]] = []
+        for left_index in range(len(group_rows)):
+            for right_index in range(left_index + 1, len(group_rows)):
+                left = group_rows[left_index]
+                right = group_rows[right_index]
+                pairwise.append(
+                    {
+                        "left_bundle_sha256": left["bundle_sha256"],
+                        "right_bundle_sha256": right["bundle_sha256"],
+                        "audit": audit_case_collision(
+                            bundles[left["input_index"]],
+                            bundles[right["input_index"]],
+                        ),
+                    }
+                )
+
+        groups.append(
+            {
+                "temporal_signature_sha256": temporal_signature,
+                "bundle_count": len(group_rows),
+                "status": status,
+                "event_signature_count": len(unique_event_signatures),
+                "missing_event_identity_count": len(group_rows)
+                - len(ready_event_signatures),
+                "bundles": [
+                    {
+                        "bundle_sha256": row["bundle_sha256"],
+                        "match_event": row["match_event"],
+                        "event_signature_sha256": (
+                            ((row["differentiation_audit"] or {}).get("event") or {}).get(
+                                "event_signature_sha256"
+                            )
+                        ),
+                        "participant_status": (
+                            ((row["differentiation_audit"] or {}).get("participant") or {}).get(
+                                "status"
+                            )
+                        ),
+                    }
+                    for row in group_rows
+                ],
+                "pairwise": pairwise,
+            }
+        )
+
+    status = "REVIEW_UNSAFE_COLLISION" if unsafe_count else "PASS"
+    payload = {
+        "schema_version": FOOTBALL_COLLISION_GROUP_AUDIT_VERSION,
+        "status": status,
+        "bundle_count": len(rows),
+        "temporal_group_count": len(groups),
+        "temporal_collision_group_count": collision_count,
+        "cross_fixture_collision_group_count": cross_fixture_collision_count,
+        "unsafe_collision_group_count": unsafe_count,
+        "groups": groups,
+        "rule": (
+            "相同 temporal signature 的案件必須以賽前固定 event identity 分辨；"
+            "若 event identity 缺失，批次 audit 只標 REVIEW，不允許靠 temporal interpretation 自行分叉。"
+        ),
+    }
+    payload["group_audit_sha256"] = sha256_payload(payload)
+    return payload
 
 
 def _football_fixture(packet: dict[str, Any]) -> tuple[str, str]:
