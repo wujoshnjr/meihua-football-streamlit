@@ -276,9 +276,12 @@ def empty_participant_layer() -> dict[str, Any]:
 def build_temporal_signature(
     qimen_packet: dict[str, Any],
     meihua_packet: dict[str, Any],
+    yuanling_packet: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     q_event = qimen_packet.get("event") or {}
     m_event = meihua_packet.get("event") or {}
+    y_event = (yuanling_packet or {}).get("event") or {}
+    y_review = (yuanling_packet or {}).get("qiyao_review") or {}
     temporal_payload = {
         "qimen_event": {
             "datetime": q_event.get("datetime"),
@@ -290,13 +293,26 @@ def build_temporal_signature(
         },
         "qimen_chart": qimen_packet.get("chart"),
         "meihua_temporal_hexagram": meihua_packet.get("hexagram"),
+        "yuanling_temporal": (
+            {
+                "event": {
+                    "datetime": y_event.get("datetime"),
+                    "timezone": y_event.get("timezone"),
+                },
+                "qiyao_event": y_review.get("event"),
+                "collateral_reconstruction": y_review.get("collateral_reconstruction"),
+                "star_role_resolution": y_review.get("star_role_resolution"),
+            }
+            if yuanling_packet is not None
+            else None
+        ),
     }
     return {
         "status": "READY",
         "temporal_signature_sha256": sha256_payload(temporal_payload),
         "rule": (
-            "此 signature 僅代表共同時間盤/年月日時卦；不同 fixture 可以相同，"
-            "因此不得單靠它製造不同賽果。"
+            "此 signature 僅代表共同時間盤／年月日時卦，以及有提供時的元靈 deterministic temporal reconstruction；"
+            "不同 fixture 可以相同，因此不得單靠它製造不同賽果。"
         ),
     }
 
@@ -304,8 +320,9 @@ def build_temporal_signature(
 def build_differentiation_audit(
     qimen_packet: dict[str, Any],
     meihua_packet: dict[str, Any],
+    yuanling_packet: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    temporal = build_temporal_signature(qimen_packet, meihua_packet)
+    temporal = build_temporal_signature(qimen_packet, meihua_packet, yuanling_packet)
     q_event = qimen_packet.get("event_identity_layer") or empty_event_identity_layer()
     m_event = meihua_packet.get("event_identity_layer") or empty_event_identity_layer()
 
