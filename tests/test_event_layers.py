@@ -159,6 +159,7 @@ def test_coach_year_life_layer_is_auditable_project_adaptation() -> None:
     assert participant["home"]["year_stem"] == "甲"
     assert participant["home"]["year_branch"] == "子"
     assert participant["home"]["placement_basis"] == "BIRTH_YEAR_STEM_ON_HEAVEN_PLATE__BRANCH_RETAINED_FOR_IDENTITY_ONLY"
+    assert participant["home"]["placement_source_status"].startswith("PROJECT_CONVENTION__HIDDEN_JIA")
     assert "不等同完整古法年命演算法" in participant["method_boundary"]
     assert participant["away"]["birth_year_ganzhi"] == "辛酉"
     assert participant["home"]["palace"] in range(1, 10)
