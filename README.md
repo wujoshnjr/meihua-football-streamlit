@@ -78,9 +78,9 @@ Runtime：`streamlit==1.61.0`、`lunar_python==1.4.8`、`tzdata==2026.3`。
 
 CI 逐宮核對地盤、天盤干、星、門、值符／值使與 source anchor。古籍例沒有完整西曆年份／IANA timezone，且八神名制存在流派差異，因此稱為 **`SOURCE_DERIVED_METHOD_GOLDEN`**，不冒充完整 calendar + timezone + deity 的 end-to-end external certification。
 
-## 《元靈經》演數七要 × 日奇門 — 10.3 alpha
+## 《元靈經》演數七要 × 日奇門 — 10.4 alpha
 
-10.3 不建立一張混合的「日奇門・演數七要盤」。卷一把 **演數七要、數主吉凶歌訣、日奇門**列成相鄰但獨立條目，因此工程上拆成：
+10.4 仍不建立一張混合的「日奇門・演數七要盤」。卷一把 **演數七要、數主吉凶歌訣、日奇門**列成相鄰但獨立條目，因此工程上拆成：
 
 - `yuanling.yanshu_qiyao`：七要 primary review。
 - `yuanling.riqimen`：日奇門 source-grounded base。
@@ -106,7 +106,7 @@ CI 逐宮核對地盤、天盤干、星、門、值符／值使與 source anchor
 
 ### 旁證 reconstruction 不寫回 primary
 
-10.3 另設 `COLLATERAL_QIMEN_TEXT_RECONSTRUCTION`：
+10.4 保留 `COLLATERAL_QIMEN_TEXT_RECONSTRUCTION`：
 
 - 《金函玉鏡》九星落局法可 deterministic 重建太乙→天乙日遁九星，並以甲子陽遁／陰遁完整盤作 golden anchors。
 - 《奇門寶鑑》洞庭老人捷徑占法提供從日干、時支求候選時宮／數宮，再布日遁九星與八門的旁證步驟。
