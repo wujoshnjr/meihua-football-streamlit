@@ -1,0 +1,355 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wujoshnjr/meihua-football-streamlit/schemas/liuyao_packet_v1.schema.json",
+  "title": "JARVIS LIUYAO_PACKET_V1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "packet_purpose",
+    "system",
+    "question",
+    "event",
+    "method",
+    "chart",
+    "review",
+    "knowledge_context",
+    "ai_interpretation_contract",
+    "forbidden_outputs",
+    "packet_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "LIUYAO_PACKET_V1"
+    },
+    "packet_purpose": {
+      "const": "SOURCE_AWARE_LIUYAO_CAST__CHATGPT_INTERPRETS"
+    },
+    "system": {
+      "const": "LIUYAO_WENWANGGUA"
+    },
+    "question": {
+      "type": "object",
+      "required": [
+        "text",
+        "category"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "datetime",
+        "timezone",
+        "normalization"
+      ],
+      "properties": {
+        "datetime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1
+        },
+        "normalization": {
+          "const": "ACTUAL_CAST_EVENT_LOCAL_TIME"
+        }
+      },
+      "additionalProperties": false
+    },
+    "method": {
+      "type": "object",
+      "required": [
+        "engine_version",
+        "cast_method",
+        "line_input_order",
+        "line_values",
+        "authority"
+      ],
+      "properties": {
+        "engine_version": {
+          "const": "JARVIS_LIUYAO_NAJIA_V1"
+        },
+        "cast_method": {
+          "const": "THREE_COIN_VALUES_OR_MANUAL_6789__SOURCE_GROUNDED"
+        },
+        "line_input_order": {
+          "const": "BOTTOM_TO_TOP__FIRST_CAST_IS_LINE_1"
+        },
+        "authority": {
+          "const": "SOURCE_GROUNDED_CORE__REVIEW_LAYERS_SEPARATED"
+        }
+      },
+      "additionalProperties": true
+    },
+    "chart": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "method_id",
+        "event_local_at",
+        "timezone_name",
+        "month_ganzhi",
+        "month_branch",
+        "day_ganzhi",
+        "day_stem",
+        "day_branch",
+        "day_xun",
+        "void_branches",
+        "original_hexagram",
+        "changed_hexagram",
+        "original_upper_trigram",
+        "original_lower_trigram",
+        "changed_upper_trigram",
+        "changed_lower_trigram",
+        "palace",
+        "palace_element",
+        "palace_stage",
+        "shi_line",
+        "ying_line",
+        "moving_lines",
+        "original_is_six_clash",
+        "original_is_six_harmony",
+        "changed_is_six_clash",
+        "changed_is_six_harmony",
+        "six_spirit_start",
+        "lines",
+        "source_boundary",
+        "warnings"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "JARVIS_LIUYAO_NAJIA_V1"
+        },
+        "method_id": {
+          "const": "THREE_COIN_VALUES_OR_MANUAL_6789__SOURCE_GROUNDED"
+        },
+        "event_local_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timezone_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shi_line": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6
+        },
+        "ying_line": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6
+        },
+        "moving_lines": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
+          "uniqueItems": true
+        },
+        "void_branches": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "lines": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "required": [
+              "position",
+              "raw_value",
+              "line_kind",
+              "yin_yang",
+              "moving",
+              "changed_yin_yang",
+              "stem",
+              "branch",
+              "element",
+              "relative",
+              "six_spirit",
+              "is_shi",
+              "is_ying",
+              "is_void",
+              "month_relation",
+              "day_relation",
+              "month_break",
+              "day_clash",
+              "notes"
+            ],
+            "properties": {
+              "position": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 6
+              },
+              "raw_value": {
+                "enum": [
+                  6,
+                  7,
+                  8,
+                  9
+                ]
+              },
+              "line_kind": {
+                "enum": [
+                  "老陰",
+                  "少陽",
+                  "少陰",
+                  "老陽"
+                ]
+              },
+              "yin_yang": {
+                "enum": [
+                  "陰",
+                  "陽"
+                ]
+              },
+              "moving": {
+                "type": "boolean"
+              },
+              "changed_yin_yang": {
+                "enum": [
+                  "陰",
+                  "陽"
+                ]
+              },
+              "relative": {
+                "enum": [
+                  "父母",
+                  "兄弟",
+                  "官鬼",
+                  "妻財",
+                  "子孫"
+                ]
+              },
+              "six_spirit": {
+                "enum": [
+                  "青龍",
+                  "朱雀",
+                  "勾陳",
+                  "螣蛇",
+                  "白虎",
+                  "玄武"
+                ]
+              },
+              "is_shi": {
+                "type": "boolean"
+              },
+              "is_ying": {
+                "type": "boolean"
+              },
+              "is_void": {
+                "type": "boolean"
+              },
+              "month_relation": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "day_relation": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "month_break": {
+                "type": "boolean"
+              },
+              "day_clash": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "review": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "status",
+        "question_role",
+        "strength_review",
+        "motion_review",
+        "source_audit",
+        "contradiction_register",
+        "uncertainty_register"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "JARVIS_LIUYAO_SOURCE_REVIEW_V1"
+        },
+        "status": {
+          "const": "READY_WITH_DECLARED_GAPS"
+        },
+        "question_role": {
+          "type": "object"
+        },
+        "strength_review": {
+          "type": "object"
+        },
+        "motion_review": {
+          "type": "object"
+        },
+        "source_audit": {
+          "type": "object"
+        },
+        "contradiction_register": {
+          "type": "array"
+        },
+        "uncertainty_register": {
+          "type": "array"
+        }
+      },
+      "additionalProperties": false
+    },
+    "knowledge_context": {
+      "type": "array"
+    },
+    "ai_interpretation_contract": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "forbidden_outputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "packet_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false
+}
