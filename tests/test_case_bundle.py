@@ -11,6 +11,7 @@ from jarvis.case_bundle import (
     verify_packet_integrity,
 )
 from jarvis.divination_packet import build_meihua_packet, build_qimen_packet
+from jarvis.yuanling_packet import build_yuanling_yanshu_packet
 
 
 def _event() -> datetime:
@@ -74,6 +75,8 @@ def test_case_bundle_aligns_same_event_while_allowing_different_questions():
     assert first["alignment_audit"]["packet_integrity"]["meihua"]["status"] == "PASS"
     assert first["interpretation_roles"]["qimen"]["role"] == "RESULT_ENGINE_INPUT"
     assert first["interpretation_roles"]["meihua"]["role"] == "STRUCTURE_STRESS_TEST"
+    assert first["interpretation_roles"]["yuanling"]["role"] == "TEMPORAL_NUMERIC_CONTEXT"
+    assert first["interpretation_roles"]["yuanling"]["status"] == "NOT_INCLUDED"
     assert first["interpretation_roles"]["final"]["role"] == "CHATGPT_FINAL_SYNTHESIS"
     assert first["qimen_packet_sha256"] == qimen["packet_sha256"]
     assert first["meihua_packet_sha256"] == meihua["packet_sha256"]
@@ -108,3 +111,41 @@ def test_case_bundle_rejects_tampered_packet_sha():
     assert verify_packet_integrity(tampered)["status"] == "FAIL"
     with pytest.raises(ValueError, match="QIMEN_PACKET_SHA_INVALID"):
         build_divination_case_bundle(tampered, meihua)
+
+
+def test_case_bundle_can_include_yuanling_as_temporal_sibling():
+    qimen = _qimen()
+    meihua = _meihua()
+    yuanling = build_yuanling_yanshu_packet(
+        question="整理共同時段的元靈七要數勢，不直接輸出比分。",
+        event_at=_event(),
+        timezone_name="America/New_York",
+        mode="QIYAO_RAW",
+    )
+
+    bundle = build_divination_case_bundle(
+        qimen,
+        meihua,
+        yuanling_packet=yuanling,
+    )
+
+    assert bundle["schema_version"] == "DIVINATION_CASE_BUNDLE_V2"
+    assert bundle["yuanling_packet_sha256"] == yuanling["packet_sha256"]
+    assert bundle["alignment_audit"]["packet_integrity"]["yuanling"]["status"] == "PASS"
+    assert bundle["alignment_audit"]["yuanling_temporal_alignment"]["datetime"]["match"] is True
+    assert bundle["alignment_audit"]["yuanling_temporal_alignment"]["timezone"]["match"] is True
+    assert bundle["interpretation_roles"]["yuanling"]["status"] == "INCLUDED"
+
+
+def test_case_bundle_rejects_yuanling_time_mismatch():
+    qimen = _qimen()
+    meihua = _meihua()
+    yuanling = build_yuanling_yanshu_packet(
+        question="整理共同時段數勢。",
+        event_at=_event() + timedelta(minutes=1),
+        timezone_name="America/New_York",
+        mode="QIYAO_RAW",
+    )
+
+    with pytest.raises(ValueError, match="YUANLING"):
+        build_divination_case_bundle(qimen, meihua, yuanling_packet=yuanling)
