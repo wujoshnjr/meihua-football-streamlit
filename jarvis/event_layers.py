@@ -5,7 +5,7 @@ from typing import Any
 import unicodedata
 
 from jarvis.provenance import canonical_json, sha256_payload
-from meihua.engine import TRIGRAM_BY_NUMBER, TRIGRAM_FROM_LINES, TRIGRAM_LINES
+from meihua.engine import CONTROLS, GENERATES, TRIGRAM_BY_NUMBER, TRIGRAM_ELEMENT, TRIGRAM_FROM_LINES, TRIGRAM_LINES
 from qimen.constants import BRANCHES, ELEMENT_CONTROLS, ELEMENT_GENERATES, STEMS
 from qimen.models import QimenBoard
 
@@ -44,6 +44,22 @@ def _aware_utc(value: Any) -> datetime:
     return instant.astimezone(timezone.utc).replace(microsecond=0)
 
 
+def _trigram_relation(other_trigram: str, body_trigram: str) -> str:
+    other = TRIGRAM_ELEMENT[other_trigram]
+    body = TRIGRAM_ELEMENT[body_trigram]
+    if other == body:
+        return "比和"
+    if GENERATES[other] == body:
+        return "生體"
+    if GENERATES[body] == other:
+        return "體生用"
+    if CONTROLS[other] == body:
+        return "克體"
+    if CONTROLS[body] == other:
+        return "體克用"
+    raise AssertionError("五行關係不完整")
+
+
 def _digest_cast(signature: str) -> dict[str, Any]:
     upper_number = int(signature[0:8], 16) % 8 + 1
     lower_number = int(signature[8:16], 16) % 8 + 1
@@ -52,6 +68,8 @@ def _digest_cast(signature: str) -> dict[str, Any]:
     upper = TRIGRAM_BY_NUMBER[upper_number]
     lower = TRIGRAM_BY_NUMBER[lower_number]
     lines = TRIGRAM_LINES[lower] + TRIGRAM_LINES[upper]
+    mutual_lower = TRIGRAM_FROM_LINES[lines[1:4]]
+    mutual_upper = TRIGRAM_FROM_LINES[lines[2:5]]
     changed = list(lines)
     changed[moving_line - 1] = 1 - changed[moving_line - 1]
     changed_lower = TRIGRAM_FROM_LINES[tuple(changed[:3])]
@@ -60,9 +78,11 @@ def _digest_cast(signature: str) -> dict[str, Any]:
     if moving_line <= 3:
         body = upper
         use = lower
+        changed_use = changed_lower
     else:
         body = lower
         use = upper
+        changed_use = changed_upper
 
     return {
         "upper_number": upper_number,
@@ -72,8 +92,16 @@ def _digest_cast(signature: str) -> dict[str, Any]:
         "moving_line": moving_line,
         "body_trigram": body,
         "use_trigram": use,
+        "body_use_relation": _trigram_relation(use, body),
+        "mutual_upper_trigram": mutual_upper,
+        "mutual_lower_trigram": mutual_lower,
+        "mutual_upper_relation_to_body": _trigram_relation(mutual_upper, body),
+        "mutual_lower_relation_to_body": _trigram_relation(mutual_lower, body),
         "changed_upper_trigram": changed_upper,
         "changed_lower_trigram": changed_lower,
+        "changed_use_trigram": changed_use,
+        "changed_use_relation_to_body": _trigram_relation(changed_use, body),
+        "season_state": "NOT_COMPUTED_IN_EVENT_IDENTITY_LAYER",
     }
 
 
