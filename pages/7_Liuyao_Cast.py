@@ -187,6 +187,8 @@ if packet and packet.get("system") == "LIUYAO_WENWANGGUA":
     for item in role["rationale"]:
         st.write(f"- {item}")
 
+    with st.expander("用神／元神／忌神／仇神候選", expanded=True):
+        st.json(review["use_god_review"])
     with st.expander("日月旺衰 direct relations", expanded=True):
         st.json(review["strength_review"])
     with st.expander("動變／伏神審查", expanded=True):
