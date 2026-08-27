@@ -1,39 +1,274 @@
 {
-  "schema_version": "stark-sources-v1.5.0",
+  "schema_version": "stark-sources-v1.6.0",
   "sources": [
-    {"id":"dunjia-yanyi","title":"遁甲演義（四庫全書本）","type":"primary_classic","url":"https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9","use":"時家奇門、陰陽遁、九宮、值符值使、星門及格局。"},
-    {"id":"dunjia-yanyi-2","title":"遁甲演義・格局條目","type":"primary_classic","url":"https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9","use":"奇儀格、伏吟反吟、刑格等結構交叉核對。"},
-    {"id":"dunjia-yanyi-volume-3","title":"遁甲演義卷三・九星旺相休囚","type":"primary_classic","url":"https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9_(%E5%9B%9B%E5%BA%AB%E5%85%A8%E6%9B%B8%E6%9C%AC)/%E5%8D%B73","use":"九星時令旺相休囚。"},
-    {"id":"qimen-daquan","title":"奇門遁甲秘笈大全","type":"primary_classic","url":"https://ctext.org/wiki.pl?chapter=828124&if=gb&remap=gb","use":"天地人神四層、三奇六儀與常用判讀術語。"},
-    {"id":"qimen-daquan-ten-stems","title":"奇門遁甲秘笈大全・十干剋應訣","type":"primary_classic","url":"https://ctext.org/wiki.pl?chapter=254334&if=gb","use":"天地盤十干組合及傳統格名。"},
-    {"id":"qimen-daquan-star-door","title":"諸葛武侯行兵遁甲金函玉鏡・八門遇九星斷例","type":"primary_classic","url":"https://ctext.org/wiki.pl?chapter=496054&if=gb","use":"門星合參傳統。"},
-    {"id":"qimen-daquan-host-guest","title":"奇門遁甲秘笈大全・論主客","type":"primary_classic","url":"https://ctext.org/wiki.pl?chapter=961040&if=gb&remap=gb","use":"主客、先後動靜與天地盤關係。"},
-    {"id":"qimen-daquan-door-pressure","title":"奇門遁甲秘笈大全・門迫宮迫","type":"primary_classic","url":"https://ctext.org/wiki.pl?chapter=799331&if=gb","use":"八門與九宮生剋、門迫宮迫。"},
-    {"id":"yuanling-wikisource","title":"奇門遁甲元靈經・維基文庫","type":"primary_classic_transcription","url":"https://zh.wikisource.org/zh-hant/%E5%A5%87%E9%96%80%E9%81%81%E7%94%B2%E5%85%83%E9%9D%88%E7%B6%93","use":"JARVIS 10.3 演數七要、數主吉凶歌訣、日奇門、卷三中宮值日九星與射覆數目關聯的主要公開文本核對。演數七要與日奇門維持獨立方法層。"},
-    {"id":"yuanling-ctext-vol1","title":"Chinese Text Project・奇門遁甲元靈經卷一","type":"primary_classic_crosscheck","url":"https://ctext.org/wiki.pl?chapter=118579&if=en","use":"交叉核對奇門起例、陰陽遁、三元局表、演數七要、數主落宮歌訣、日奇門六十日起休表及其法。"},
-    {"id":"yuanling-ctext-vol3","title":"Chinese Text Project・奇門遁甲元靈經卷三","type":"primary_classic_crosscheck","url":"https://ctext.org/wiki.pl?chapter=875731&if=en","use":"交叉核對中宮值日九星歌訣、一白至九紫別名與吉凶語義，以及卷三數術星系。"},
-    {"id":"yuanling-public-scan","title":"國圖藏本《奇門元靈經》公開掃描・Wikimedia Commons","type":"primary_scan_metadata_crosscheck","url":"https://commons.wikimedia.org/wiki/File:NLC416-12jh005343-45282_%E5%A5%87%E9%96%80%E5%85%83%E9%9D%88%E7%B6%93.pdf","use":"目錄、卷次與版面存在性 crosscheck；未經逐頁人工校勘的影像內容不以 OCR 自動改寫。"},
-    {"id":"jinhanyujing-ctext-day-nine-stars","title":"諸葛武侯行兵遁甲金函玉鏡卷一・九星落局法","type":"collateral_classic_reconstruction","url":"https://ctext.org/wiki.pl?chapter=496054&if=en","use":"旁證日遁太乙、攝提、軒轅、招搖、天符、青龍、咸池、太陰、天乙九星順逆與甲子完整落宮；只作 Yuanling 省略算法候選，不冒充《元靈經》本節明文。"},
-    {"id":"qimen-baojian-dongting-collateral","title":"奇門寶鑑卷之四・洞庭老人奇門捷徑占法／演數七要","type":"collateral_classic_reconstruction","url":"https://ichingtrilogy.com/post/qi-men-bao-jian-06/","use":"旁證從中宮起六甲日、依日干與時支順逆求時宮，再布日遁九星及八門的演數候選步驟；保留與《元靈經》入門/八門、乾宮/坤宮等跨文本差異。"},
-    {"id":"meihua-yishu-wikisource","title":"梅花易數","type":"primary_classic","url":"https://zh.wikisource.org/zh-hant/%E6%A2%85%E8%8A%B1%E6%98%93%E6%95%B8","use":"八卦數、五行生克、卦氣旺衰、年月日時起卦、互卦、體用與克應。"},
-    {"id":"zhouyi-wikisource","title":"周易","type":"primary_classic_crosscheck","url":"https://zh.wikisource.org/zh-hant/%E5%91%A8%E6%98%93","use":"六十四卦、卦辭、彖、象與爻辭交叉核對。"},
-    {"id":"zhouyi-kanripo-tls-transcription","title":"Kanripo KR1a0001 · 周易 · TLS 數位轉錄","type":"primary_edition_digital_transcription","url":"https://github.com/kanripo/KR1a0001","pinned_commit":"8284adbf9e3435d713180e24f05bf75f8b7d1d96","use":"JARVIS 10.1 周易原典審查底本：64 卦、384 標準爻、卦辭、彖、象與來源頁碼；固定來源數位轉錄，不宣稱完成所有版本校勘。"},
-    {"id":"ctext-book-of-changes","title":"Chinese Text Project · Book of Changes","type":"primary_classic_crosscheck","url":"https://ctext.org/book-of-changes","use":"六十四卦卦序與文本交叉核對。"},
-    {"id":"yilin-kanripo-wyg-transcription","title":"Kanripo KR3g0029 · 焦氏易林 · 文淵閣四庫全書數位轉錄","type":"primary_edition_digital_transcription","url":"https://github.com/kanripo/KR3g0029","pinned_commit":"764e995ce74aa249081918ca1b0c23bbca62bec8","use":"JARVIS 10 焦氏易林 4096/4096 本卦→之卦基礎林辭；四卷、64 本卦 block 全部 materialize。保留頁碼、原轉錄、校語、gaiji token 與 source-label anomaly。"},
-    {"id":"yilin-siku-wikisource","title":"易林（四庫全書本）· 維基文庫","type":"primary_classic_crosscheck","url":"https://zh.wikisource.org/zh-hant/%E6%98%93%E6%9E%97_(%E5%9B%9B%E5%BA%AB%E5%85%A8%E6%9B%B8%E6%9C%AC)","use":"與 WYG base 做人工／系統化交叉核對；不取代已釘選來源版本，也不宣稱多版本異文已全部校勘。"},
-    {"id":"jiaoshi-yilin-ctext","title":"Chinese Text Project · 焦氏易林","type":"primary_classic_crosscheck","url":"https://ctext.org/jiaoshi-yilin/zh","use":"焦氏易林結構、林辭與異文交叉核對；OCR/e-text 不作唯一文本權威。"},
-    {"id":"lunar-python","title":"6tail/lunar-python","type":"software_primary_source","url":"https://github.com/6tail/lunar-python","use":"事件時刻的干支、節氣與農曆資料；專案固定 lunar_python==1.4.8。"},
-    {"id":"iana-tzdb","title":"IANA Time Zone Database","type":"official_time_standard","url":"https://www.iana.org/time-zones","use":"事件所在地歷史時區與 DST 規則。"},
-    {"id":"python-zoneinfo","title":"Python zoneinfo","type":"software_primary_source","url":"https://docs.python.org/3/library/zoneinfo.html","use":"IANA 時區處理。"},
-    {"id":"hko-solar-terms","title":"香港天文台：二十四節氣","type":"official_astronomy","url":"https://www.hko.gov.hk/tc/gts/astronomy/Solar_Term.htm","use":"節氣時間與天文概念核對。"},
-    {"id":"statsbomb-open-data","title":"Hudl StatsBomb Open Data","type":"football_data_primary_source","url":"https://github.com/hudl/open-data","use":"足球可觀察事件分類語彙；不作術數結論來源。"},
-    {"id":"statsbomb-playing-style","title":"StatsBomb：Modelling Team Playing Style","type":"football_method_source","url":"https://blogarchive.statsbomb.com/articles/soccer/modelling-team-playing-style/","use":"控球、推進、施壓與轉換等現代足球語彙。"},
-    {"id":"fifa-football-language","title":"FIFA Football Language","type":"official_football_framework","url":"https://inside.fifa.com/innovation/football-data","use":"現代足球分析共同語彙。"},
-    {"id":"ifab-laws","title":"IFAB Laws of the Game","type":"official_rules","url":"https://www.theifab.com/laws-of-the-game-documents/","use":"犯規、重新開始與比賽狀態語境。"},
-    {"id":"ifab-law-12","title":"IFAB Law 12","type":"official_rules","url":"https://www.theifab.com/laws/latest/fouls-and-misconduct/","use":"犯規與紀律語境。"},
-    {"id":"ifab-var","title":"IFAB VAR Protocol","type":"official_rules","url":"https://www.theifab.com/laws/latest/video-assistant-referee-var-protocol/","use":"VAR 與可覆核事件語境。"},
-    {"id":"project-football-ontology","title":"Operation STARK 足球術數語義規約","type":"project_application_spec","url":"https://github.com/wujoshnjr/meihua-football-streamlit/blob/main/knowledge/football_ontology.json","use":"把術數象義映射成可觀察／可反證的足球情境；明確不是古籍足球公式。"},
-    {"id":"project-reading-protocol","title":"Operation STARK AI 解讀交接規約","type":"project_application_spec","url":"https://github.com/wujoshnjr/meihua-football-streamlit/blob/main/jarvis/divination_packet.py","use":"固定問題、盤象與知識上下文後交給 ChatGPT 做最終綜合判讀。"}
+    {
+      "id": "dunjia-yanyi",
+      "title": "遁甲演義（四庫全書本）",
+      "type": "primary_classic",
+      "url": "https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9",
+      "use": "時家奇門、陰陽遁、九宮、值符值使、星門及格局。"
+    },
+    {
+      "id": "dunjia-yanyi-2",
+      "title": "遁甲演義・格局條目",
+      "type": "primary_classic",
+      "url": "https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9",
+      "use": "奇儀格、伏吟反吟、刑格等結構交叉核對。"
+    },
+    {
+      "id": "dunjia-yanyi-volume-3",
+      "title": "遁甲演義卷三・九星旺相休囚",
+      "type": "primary_classic",
+      "url": "https://zh.wikisource.org/wiki/%E9%81%81%E7%94%B2%E6%BC%94%E7%BE%A9_(%E5%9B%9B%E5%BA%AB%E5%85%A8%E6%9B%B8%E6%9C%AC)/%E5%8D%B73",
+      "use": "九星時令旺相休囚。"
+    },
+    {
+      "id": "qimen-daquan",
+      "title": "奇門遁甲秘笈大全",
+      "type": "primary_classic",
+      "url": "https://ctext.org/wiki.pl?chapter=828124&if=gb&remap=gb",
+      "use": "天地人神四層、三奇六儀與常用判讀術語。"
+    },
+    {
+      "id": "qimen-daquan-ten-stems",
+      "title": "奇門遁甲秘笈大全・十干剋應訣",
+      "type": "primary_classic",
+      "url": "https://ctext.org/wiki.pl?chapter=254334&if=gb",
+      "use": "天地盤十干組合及傳統格名。"
+    },
+    {
+      "id": "qimen-daquan-star-door",
+      "title": "諸葛武侯行兵遁甲金函玉鏡・八門遇九星斷例",
+      "type": "primary_classic",
+      "url": "https://ctext.org/wiki.pl?chapter=496054&if=gb",
+      "use": "門星合參傳統。"
+    },
+    {
+      "id": "qimen-daquan-host-guest",
+      "title": "奇門遁甲秘笈大全・論主客",
+      "type": "primary_classic",
+      "url": "https://ctext.org/wiki.pl?chapter=961040&if=gb&remap=gb",
+      "use": "主客、先後動靜與天地盤關係。"
+    },
+    {
+      "id": "qimen-daquan-door-pressure",
+      "title": "奇門遁甲秘笈大全・門迫宮迫",
+      "type": "primary_classic",
+      "url": "https://ctext.org/wiki.pl?chapter=799331&if=gb",
+      "use": "八門與九宮生剋、門迫宮迫。"
+    },
+    {
+      "id": "yuanling-wikisource",
+      "title": "奇門遁甲元靈經・維基文庫",
+      "type": "primary_classic_transcription",
+      "url": "https://zh.wikisource.org/zh-hant/%E5%A5%87%E9%96%80%E9%81%81%E7%94%B2%E5%85%83%E9%9D%88%E7%B6%93",
+      "use": "JARVIS 10.3 演數七要、數主吉凶歌訣、日奇門、卷三中宮值日九星與射覆數目關聯的主要公開文本核對。演數七要與日奇門維持獨立方法層。"
+    },
+    {
+      "id": "yuanling-ctext-vol1",
+      "title": "Chinese Text Project・奇門遁甲元靈經卷一",
+      "type": "primary_classic_crosscheck",
+      "url": "https://ctext.org/wiki.pl?chapter=118579&if=en",
+      "use": "交叉核對奇門起例、陰陽遁、三元局表、演數七要、數主落宮歌訣、日奇門六十日起休表及其法。"
+    },
+    {
+      "id": "yuanling-ctext-vol3",
+      "title": "Chinese Text Project・奇門遁甲元靈經卷三",
+      "type": "primary_classic_crosscheck",
+      "url": "https://ctext.org/wiki.pl?chapter=875731&if=en",
+      "use": "交叉核對中宮值日九星歌訣、一白至九紫別名與吉凶語義，以及卷三數術星系。"
+    },
+    {
+      "id": "yuanling-public-scan",
+      "title": "國圖藏本《奇門元靈經》公開掃描・Wikimedia Commons",
+      "type": "primary_scan_metadata_crosscheck",
+      "url": "https://commons.wikimedia.org/wiki/File:NLC416-12jh005343-45282_%E5%A5%87%E9%96%80%E5%85%83%E9%9D%88%E7%B6%93.pdf",
+      "use": "目錄、卷次與版面存在性 crosscheck；未經逐頁人工校勘的影像內容不以 OCR 自動改寫。"
+    },
+    {
+      "id": "jinhanyujing-ctext-day-nine-stars",
+      "title": "諸葛武侯行兵遁甲金函玉鏡卷一・九星落局法",
+      "type": "collateral_classic_reconstruction",
+      "url": "https://ctext.org/wiki.pl?chapter=496054&if=en",
+      "use": "旁證日遁太乙、攝提、軒轅、招搖、天符、青龍、咸池、太陰、天乙九星順逆與甲子完整落宮；只作 Yuanling 省略算法候選，不冒充《元靈經》本節明文。"
+    },
+    {
+      "id": "qimen-baojian-dongting-collateral",
+      "title": "奇門寶鑑卷之四・洞庭老人奇門捷徑占法／演數七要",
+      "type": "collateral_classic_reconstruction",
+      "url": "https://ichingtrilogy.com/post/qi-men-bao-jian-06/",
+      "use": "旁證從中宮起六甲日、依日干與時支順逆求時宮，再布日遁九星及八門的演數候選步驟；保留與《元靈經》入門/八門、乾宮/坤宮等跨文本差異。"
+    },
+    {
+      "id": "meihua-yishu-wikisource",
+      "title": "梅花易數",
+      "type": "primary_classic",
+      "url": "https://zh.wikisource.org/zh-hant/%E6%A2%85%E8%8A%B1%E6%98%93%E6%95%B8",
+      "use": "八卦數、五行生克、卦氣旺衰、年月日時起卦、互卦、體用與克應。"
+    },
+    {
+      "id": "zhouyi-wikisource",
+      "title": "周易",
+      "type": "primary_classic_crosscheck",
+      "url": "https://zh.wikisource.org/zh-hant/%E5%91%A8%E6%98%93",
+      "use": "六十四卦、卦辭、彖、象與爻辭交叉核對。"
+    },
+    {
+      "id": "zhouyi-kanripo-tls-transcription",
+      "title": "Kanripo KR1a0001 · 周易 · TLS 數位轉錄",
+      "type": "primary_edition_digital_transcription",
+      "url": "https://github.com/kanripo/KR1a0001",
+      "pinned_commit": "8284adbf9e3435d713180e24f05bf75f8b7d1d96",
+      "use": "JARVIS 10.1 周易原典審查底本：64 卦、384 標準爻、卦辭、彖、象與來源頁碼；固定來源數位轉錄，不宣稱完成所有版本校勘。"
+    },
+    {
+      "id": "ctext-book-of-changes",
+      "title": "Chinese Text Project · Book of Changes",
+      "type": "primary_classic_crosscheck",
+      "url": "https://ctext.org/book-of-changes",
+      "use": "六十四卦卦序與文本交叉核對。"
+    },
+    {
+      "id": "yilin-kanripo-wyg-transcription",
+      "title": "Kanripo KR3g0029 · 焦氏易林 · 文淵閣四庫全書數位轉錄",
+      "type": "primary_edition_digital_transcription",
+      "url": "https://github.com/kanripo/KR3g0029",
+      "pinned_commit": "764e995ce74aa249081918ca1b0c23bbca62bec8",
+      "use": "JARVIS 10 焦氏易林 4096/4096 本卦→之卦基礎林辭；四卷、64 本卦 block 全部 materialize。保留頁碼、原轉錄、校語、gaiji token 與 source-label anomaly。"
+    },
+    {
+      "id": "yilin-siku-wikisource",
+      "title": "易林（四庫全書本）· 維基文庫",
+      "type": "primary_classic_crosscheck",
+      "url": "https://zh.wikisource.org/zh-hant/%E6%98%93%E6%9E%97_(%E5%9B%9B%E5%BA%AB%E5%85%A8%E6%9B%B8%E6%9C%AC)",
+      "use": "與 WYG base 做人工／系統化交叉核對；不取代已釘選來源版本，也不宣稱多版本異文已全部校勘。"
+    },
+    {
+      "id": "jiaoshi-yilin-ctext",
+      "title": "Chinese Text Project · 焦氏易林",
+      "type": "primary_classic_crosscheck",
+      "url": "https://ctext.org/jiaoshi-yilin/zh",
+      "use": "焦氏易林結構、林辭與異文交叉核對；OCR/e-text 不作唯一文本權威。"
+    },
+    {
+      "id": "lunar-python",
+      "title": "6tail/lunar-python",
+      "type": "software_primary_source",
+      "url": "https://github.com/6tail/lunar-python",
+      "use": "事件時刻的干支、節氣與農曆資料；專案固定 lunar_python==1.4.8。"
+    },
+    {
+      "id": "iana-tzdb",
+      "title": "IANA Time Zone Database",
+      "type": "official_time_standard",
+      "url": "https://www.iana.org/time-zones",
+      "use": "事件所在地歷史時區與 DST 規則。"
+    },
+    {
+      "id": "python-zoneinfo",
+      "title": "Python zoneinfo",
+      "type": "software_primary_source",
+      "url": "https://docs.python.org/3/library/zoneinfo.html",
+      "use": "IANA 時區處理。"
+    },
+    {
+      "id": "hko-solar-terms",
+      "title": "香港天文台：二十四節氣",
+      "type": "official_astronomy",
+      "url": "https://www.hko.gov.hk/tc/gts/astronomy/Solar_Term.htm",
+      "use": "節氣時間與天文概念核對。"
+    },
+    {
+      "id": "statsbomb-open-data",
+      "title": "Hudl StatsBomb Open Data",
+      "type": "football_data_primary_source",
+      "url": "https://github.com/hudl/open-data",
+      "use": "足球可觀察事件分類語彙；不作術數結論來源。"
+    },
+    {
+      "id": "statsbomb-playing-style",
+      "title": "StatsBomb：Modelling Team Playing Style",
+      "type": "football_method_source",
+      "url": "https://blogarchive.statsbomb.com/articles/soccer/modelling-team-playing-style/",
+      "use": "控球、推進、施壓與轉換等現代足球語彙。"
+    },
+    {
+      "id": "fifa-football-language",
+      "title": "FIFA Football Language",
+      "type": "official_football_framework",
+      "url": "https://inside.fifa.com/innovation/football-data",
+      "use": "現代足球分析共同語彙。"
+    },
+    {
+      "id": "ifab-laws",
+      "title": "IFAB Laws of the Game",
+      "type": "official_rules",
+      "url": "https://www.theifab.com/laws-of-the-game-documents/",
+      "use": "犯規、重新開始與比賽狀態語境。"
+    },
+    {
+      "id": "ifab-law-12",
+      "title": "IFAB Law 12",
+      "type": "official_rules",
+      "url": "https://www.theifab.com/laws/latest/fouls-and-misconduct/",
+      "use": "犯規與紀律語境。"
+    },
+    {
+      "id": "ifab-var",
+      "title": "IFAB VAR Protocol",
+      "type": "official_rules",
+      "url": "https://www.theifab.com/laws/latest/video-assistant-referee-var-protocol/",
+      "use": "VAR 與可覆核事件語境。"
+    },
+    {
+      "id": "project-football-ontology",
+      "title": "Operation STARK 足球術數語義規約",
+      "type": "project_application_spec",
+      "url": "https://github.com/wujoshnjr/meihua-football-streamlit/blob/main/knowledge/football_ontology.json",
+      "use": "把術數象義映射成可觀察／可反證的足球情境；明確不是古籍足球公式。"
+    },
+    {
+      "id": "project-reading-protocol",
+      "title": "Operation STARK AI 解讀交接規約",
+      "type": "project_application_spec",
+      "url": "https://github.com/wujoshnjr/meihua-football-streamlit/blob/main/jarvis/divination_packet.py",
+      "use": "固定問題、盤象與知識上下文後交給 ChatGPT 做最終綜合判讀。"
+    },
+    {
+      "id": "liuyao-zengshan-buyi",
+      "title": "增刪卜易",
+      "type": "primary_classic",
+      "url": "https://zh.wikisource.org/zh-hant/%E5%A2%9E%E5%88%AA%E5%8D%9C%E6%98%93",
+      "use": "六爻納甲、六親、用神/元神/忌神/仇神、月建日辰、空破暗動、動變、進退、伏神、六合六沖。"
+    },
+    {
+      "id": "liuyao-bosizhengzong",
+      "title": "卜筮正宗",
+      "type": "primary_classic_crosscheck",
+      "url": "https://ctext.org/wiki.pl?chapter=889452&if=gb",
+      "use": "六爻世應、六神起例、納甲與裝卦歌訣交叉核對。"
+    },
+    {
+      "id": "liuyao-huozhulin",
+      "title": "火珠林",
+      "type": "early_classic",
+      "url": "https://zh.wikisource.org/zh-hant/%E7%81%AB%E7%8F%A0%E6%9E%97",
+      "use": "六親根源、飛伏、征戰占與子孫/官鬼/世應的早期六爻脈絡。"
+    },
+    {
+      "id": "liuyao-huangjince",
+      "title": "黃金策",
+      "type": "primary_classic",
+      "url": "https://zh.wikisource.org/zh-hant/%E9%BB%83%E9%87%91%E7%AD%96",
+      "use": "月建日辰、世應、動變、用神等六爻綱領交叉核對。"
+    },
+    {
+      "id": "liuyao-user-video-pending",
+      "title": "使用者指定六爻影片 -qgDHCHaDpo",
+      "type": "user_provided_video_pending_transcript",
+      "url": "https://youtu.be/-qgDHCHaDpo",
+      "use": "待取得可核對字幕/逐字稿後才拆解其方法；目前不得把未知內容升格為六爻 core。"
+    }
   ],
   "source_policy": [
     "古籍原義、數位轉錄、後世注解、專案摘要與現代足球類比必須分層，不把任何後設內容冒充古文。",
@@ -49,6 +284,7 @@
     "多版本異文校勘與後世注解須另層版本化，未完成前明確標示 ongoing。",
     "天文曆法與時區優先使用一手標準或所採軟體的一手來源。",
     "足球來源只用來定義可觀察事件語彙，不能反向證成術數必然有效。",
-    "來源或方法改版不得回寫既有 packet；應提升 schema／method version。"
+    "來源或方法改版不得回寫既有 packet；應提升 schema／method version。",
+    "六爻納甲 core 優先由《增刪卜易》《卜筮正宗》《火珠林》《黃金策》交叉核對；現代影片只作候選方法 discovery，未取得逐字稿者不得升格。"
   ]
 }
