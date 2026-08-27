@@ -215,6 +215,21 @@ Authority 固定為 `PROJECT_REVIEW__NOT_CLASSICAL_COMMENTARY`；原文仍是第
 
 舊 artifact 遷移規則見 `docs/MIGRATION_10_4.md`；禁止用賽後資訊補造 prematch identity。
 
+## 起卦方式準確度研究
+
+專案的研究目標不是永久保存每一次完整起卦結果，而是找出**在固定足球任務上最準確的起卦／起局方式**。
+
+方法比較規格見 `docs/CASTING_METHOD_BENCHMARK.md`。核心原則：
+
+- 同一批 fixture、同一資訊截止點、同一評分規則比較不同 frozen method；
+- 方法規則一旦改動即視為新 method version；
+- 不要求永久保存完整卦包／盤局／逐場解讀；
+- 只需保存方法定義、benchmark dataset 定義與 aggregate metrics；
+- 梅花若契約只做 `STRUCTURE_STRESS_TEST`，就以結構／轉折任務評分，不強迫它輸出比分；
+- source authority 與 empirical accuracy 分開報告，不能因為較準就把 project adaptation 說成古法。
+
+目前可直接比較的梅花候選至少有 production 的年月日時先天數法，以及明確標記為 project adaptation 的 `MEIHUA_EVENT_IDENTITY_V1`。
+
 ## 驗證
 
 ```bash
