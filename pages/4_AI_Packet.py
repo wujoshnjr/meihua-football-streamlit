@@ -178,6 +178,8 @@ if packet["system"] == "LIUYAO_WENWANGGUA":
     with st.expander("六爻 source-aware review", expanded=True):
         st.markdown("**question role**")
         st.json(review.get("question_role", {}))
+        st.markdown("**use-god / source-enemy-rival review**")
+        st.json(review.get("use_god_review", {}))
         st.markdown("**strength / month-day direct relations**")
         st.json(review.get("strength_review", {}))
         st.markdown("**motion / change / hidden candidates**")
