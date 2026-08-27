@@ -76,17 +76,17 @@ def build_qiyao_review(
     entry_door: Any = None,
     daily_star_number: int | None = None,
 ) -> dict[str, Any]:
-    """Build seven-factor review while keeping unresolved classical rules visible.
+    """Build seven-factor review while keeping authority tiers explicit.
 
-    Raw research inputs can be supplied for fields whose Yuanling algorithm is not
-    yet fully reconstructed. A separate collateral block gives candidate mechanics
-    from related Qimen texts but does not silently populate the primary seven
-    factors or convert palace numbers into football scores.
+    Raw Yuanling slots remain researcher-controlled. A separate crosschecked
+    reconstruction now resolves the *relationship* among 數主 / 飛星 / 直日星
+    and computes candidate values from related day-Qimen texts. This does not
+    silently overwrite the primary slots because the transmitted Yuanling
+    "乾宮黑星" example conflicts with the coherent "坤宮黑星" collateral
+    variant.
 
-    Even in ``RIQIMEN_QIYAO_EXPERIMENT`` mode this function does not construct or
-    embed a Ri-Qimen chart. The packet layer owns that optional sibling object so
-    the two classical sections remain structurally independent and are computed
-    only once.
+    Even in ``RIQIMEN_QIYAO_EXPERIMENT`` mode this function does not construct
+    or embed a Ri-Qimen chart. The packet layer owns that optional sibling.
     """
 
     if mode not in ALLOWED_MODES:
@@ -105,13 +105,15 @@ def build_qiyao_review(
         calendar.hour_ganzhi,
         dun,
     )
+    role_resolution = collateral["star_role_resolution_candidate"]
+
     factors = [
         _factor(
             "數宮",
             number_palace,
             note=(
-                "《元靈經》本節完整取法仍待 reconstruction；旁證文本已有候選算法，"
-                "但不自動升格為 primary factor，更不得把宮數直接當球數。"
+                "《元靈經》本節未單獨寫出完整取法；洞庭老人旁證已有可重建算法，"
+                "raw slot 仍不自動升格，更不得把宮數直接當球數。"
             ),
         ),
         _factor(
@@ -124,24 +126,30 @@ def build_qiyao_review(
                 if number_chief_star_number is not None
                 else None
             ),
-            note="原典明示『遁至本時之星即為數主』，但完整飛遁算法尚未鎖定。",
+            note=(
+                "角色已重建為『數宮所主本位數術星，追蹤其當日落宮』；"
+                "但乾宮/坤宮異文未消失，所以 raw primary slot 不被旁證靜默覆寫。"
+            ),
         ),
         _factor(
             "飛星",
             flying_star,
-            note="旁證可重建數宮上的日遁九星候選，但尚不直接寫回《元靈經》飛星欄。",
+            note=(
+                "角色已重建為『當日日遁九星中臨到數宮之星』，與數主是不同查詢方向；"
+                "crosschecked candidate 另存於 star_role_resolution。"
+            ),
         ),
         _factor(
             "入門",
             entry_door,
-            note="《奇門寶鑑》旁證作『八門』；不得直接借用時家盤值使門作替代。",
+            note="《奇門寶鑑》旁證作『八門』；不得直接借用 production 時家值使門作替代。",
         ),
         _factor(
             "直日星",
             numeric_star(daily_star_number).__dict__ if daily_star_number is not None else None,
             note=(
-                "卷三有中宮值日九星歌訣；旁證日遁九星可得中宮星候選，"
-                "但尚未證成兩者必然等同。"
+                "卷三明列『中宮直日九星歌訣』；crosschecked reconstruction 以日遁盤中五占星"
+                "作直日星候選，但 raw primary slot 仍保留 authority boundary。"
             ),
         ),
         _factor(
@@ -186,6 +194,14 @@ def build_qiyao_review(
         "number_chief_landing_state": chief_state,
         "numeric_star_registry": star_registry_audit(),
         "collateral_reconstruction": collateral,
+        "star_role_resolution": {
+            **role_resolution,
+            "primary_slots_auto_filled": False,
+            "project_decision": (
+                "數主/飛星/直日星的角色關係視為已解；具體數值在 raw mode 仍以"
+                "crosschecked reconstruction 與 primary transcription 分層保存。"
+            ),
+        },
         "riqimen_bridge": {
             "status": (
                 "PACKET_LAYER_SIBLING_ENABLED"
@@ -205,13 +221,14 @@ def build_qiyao_review(
         "uncertainty": [
             {
                 "id": f"UNRESOLVED_{name}",
-                "severity": "BLOCKS_AUTOMATIC_CALCULATION",
+                "severity": "BLOCKS_PRIMARY_SLOT_AUTOFILL",
             }
             for name in unresolved
         ],
-        "authority": "YUANLING_SOURCE_REVIEW_WITH_EXPLICIT_PROJECT_NORMALIZATION",
+        "authority": "YUANLING_SOURCE_REVIEW_WITH_CROSSCHECKED_ROLE_RECONSTRUCTION",
         "boundary": (
-            "演數七要與日奇門保持獨立；旁證 reconstruction 也與 primary factors 分層。"
+            "演數七要與日奇門保持獨立；數主/飛星/直日星的角色關係已交叉重建，"
+            "但《元靈經》乾宮黑星與《奇門寶鑑》坤宮黑星的異文被保留。"
             "RIQIMEN_QIYAO_EXPERIMENT 只在 packet layer 並列兩個 sibling objects，"
             "不宣稱《元靈經》明文要求七要必須以日奇門盤為底。"
         ),

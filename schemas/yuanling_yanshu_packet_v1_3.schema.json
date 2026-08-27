@@ -1,0 +1,316 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jarvis.local/schemas/yuanling_yanshu_packet_v1_3.schema.json",
+  "title": "YUANLING_YANSHU_PACKET_V1_3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "packet_purpose",
+    "system",
+    "question",
+    "event",
+    "mode",
+    "qiyao_review",
+    "riqimen_base",
+    "knowledge_context",
+    "ai_interpretation_contract",
+    "forbidden_outputs",
+    "packet_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "YUANLING_YANSHU_PACKET_V1_3"
+    },
+    "packet_purpose": {
+      "const": "SOURCE_AWARE_NUMERIC_DIVINATION_FACTS__CHATGPT_INTERPRETS"
+    },
+    "system": {
+      "const": "YUANLING_YANSHU_QIYAO"
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "category"],
+      "properties": {
+        "text": {"type": "string", "minLength": 1},
+        "category": {"const": "numeric_divination"}
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["datetime", "timezone"],
+      "properties": {
+        "datetime": {"type": "string", "minLength": 1},
+        "timezone": {"type": "string", "minLength": 1}
+      }
+    },
+    "mode": {
+      "enum": ["QIYAO_RAW", "RIQIMEN_QIYAO_EXPERIMENT"]
+    },
+    "qiyao_review": {
+      "type": "object",
+      "required": [
+        "kind",
+        "mode",
+        "status",
+        "event",
+        "seven_factors",
+        "number_chief_landing_state",
+        "numeric_star_registry",
+        "collateral_reconstruction",
+        "star_role_resolution",
+        "riqimen_bridge",
+        "raw_numeric_candidates",
+        "uncertainty",
+        "authority",
+        "boundary"
+      ],
+      "properties": {
+        "kind": {"const": "YUANLING_YANSHU_QIYAO_REVIEW_V1_1"},
+        "mode": {"enum": ["QIYAO_RAW", "RIQIMEN_QIYAO_EXPERIMENT"]},
+        "status": {"const": "PARTIAL_SOURCE_GROUNDED"},
+        "event": {"type": "object"},
+        "seven_factors": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "object",
+            "required": ["name", "status", "value", "note"]
+          }
+        },
+        "number_chief_landing_state": {"type": ["object", "null"]},
+        "numeric_star_registry": {"type": "object"},
+        "collateral_reconstruction": {
+          "type": "object",
+          "required": [
+            "kind",
+            "authority",
+            "status",
+            "number_palace_candidate",
+            "daily_nine_star_chart_candidate",
+            "daily_star_at_number_palace_candidate",
+            "center_daily_star_candidate",
+            "star_role_resolution_candidate",
+            "non_equivalence_rules",
+            "source_ids"
+          ],
+          "properties": {
+            "kind": {"const": "YUANLING_COLLATERAL_QIYAO_RECONSTRUCTION_V2"},
+            "status": {"const": "CANDIDATES_ONLY__NOT_PRIMARY_YUANLING_FACTS"}
+          }
+        },
+        "star_role_resolution": {
+          "type": "object",
+          "required": [
+            "kind",
+            "status",
+            "authority",
+            "number_palace",
+            "number_chief",
+            "flying_star",
+            "value_day_star",
+            "relation",
+            "coincidence_flags",
+            "textual_variant_warning",
+            "source_ids",
+            "primary_slots_auto_filled",
+            "project_decision"
+          ],
+          "properties": {
+            "kind": {"const": "YUANLING_QIYAO_STAR_ROLE_RECONSTRUCTION_V1"},
+            "status": {"const": "ROLE_RELATIONSHIP_RESOLVED__IDENTITY_MAPPING_CROSSCHECKED"},
+            "primary_slots_auto_filled": {"const": false}
+          }
+        },
+        "riqimen_bridge": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "rule"],
+          "properties": {
+            "status": {"enum": ["NOT_REQUESTED", "PACKET_LAYER_SIBLING_ENABLED"]},
+            "rule": {"type": "string", "minLength": 1}
+          }
+        },
+        "raw_numeric_candidates": {
+          "type": "object",
+          "required": ["status", "values", "rule"],
+          "properties": {
+            "status": {"const": "DISABLED_UNTIL_ALGORITHM_SOURCE_LOCK"},
+            "values": {"type": "array", "maxItems": 0},
+            "rule": {"type": "string"}
+          }
+        },
+        "uncertainty": {"type": "array"},
+        "authority": {"type": "string"},
+        "boundary": {"type": "string"}
+      }
+    },
+    "riqimen_base": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "status",
+            "calendar",
+            "source_reconstructed",
+            "algorithm_resolution",
+            "unresolved",
+            "source_ids",
+            "authority",
+            "boundary"
+          ],
+          "properties": {
+            "kind": {"const": "YUANLING_RI_QIMEN_BASE_V2"},
+            "status": {"const": "SOURCE_CROSSCHECKED_RECONSTRUCTION_READY"},
+            "calendar": {
+              "type": "object",
+              "required": ["local_datetime", "timezone", "solar_term", "day_ganzhi", "hour_ganzhi", "dun", "yuan", "ju"]
+            },
+            "source_reconstructed": {
+              "type": "object",
+              "required": [
+                "earth_plate",
+                "heaven_stem_plate",
+                "three_wonder_palaces",
+                "rest_door_start_palace",
+                "door_plate",
+                "day_xun",
+                "day_xun_head_instrument",
+                "day_xun_offset",
+                "fu_head_day",
+                "chief_origin_palace",
+                "chief_origin_palace_name",
+                "chief_star",
+                "chief_star_target_palace",
+                "chief_star_target_palace_name",
+                "chuangong_star_plate",
+                "stem_shift_steps"
+              ]
+            },
+            "algorithm_resolution": {
+              "type": "object",
+              "required": ["day_xun_head_to_day_stem", "chuangong", "star_identity", "door_flight"],
+              "properties": {
+                "chuangong": {
+                  "type": "object",
+                  "required": ["status", "rule", "traversal", "uses_production_rotating_ring"],
+                  "properties": {
+                    "status": {"const": "RESOLVED_BY_PRIMARY_TEXT_PLUS_DAY_QIMEN_CROSSCHECK"},
+                    "traversal": {"const": [1, 2, 3, 4, 5, 6, 7, 8, 9]},
+                    "uses_production_rotating_ring": {"const": false}
+                  }
+                }
+              }
+            },
+            "unresolved": {"type": "array"},
+            "source_ids": {"type": "array", "minItems": 4},
+            "authority": {"type": "string", "minLength": 1},
+            "boundary": {"type": "string", "minLength": 1}
+          }
+        }
+      ]
+    },
+    "knowledge_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "method",
+        "qimen_casting_reference",
+        "source_sections",
+        "riqimen_method",
+        "source_catalog_schema",
+        "extended_source_catalog_schema",
+        "work_index_schema",
+        "casting_catalog_schema",
+        "work_coverage",
+        "boundary"
+      ],
+      "properties": {
+        "kind": {"const": "YUANLING_PACKET_KNOWLEDGE_CONTEXT_V2"},
+        "method": {
+          "type": "object",
+          "required": ["id", "system", "display_name", "status", "casting_steps", "primary_outputs", "boundary"]
+        },
+        "qimen_casting_reference": {
+          "type": "object",
+          "required": ["id", "system", "display_name", "status", "casting_steps", "primary_outputs", "boundary"]
+        },
+        "source_sections": {
+          "type": "array",
+          "minItems": 8,
+          "items": {
+            "type": "object",
+            "required": ["id", "volume", "name", "family", "source_locator", "authority"]
+          }
+        },
+        "riqimen_method": {"type": ["object", "null"]},
+        "source_catalog_schema": {"const": "stark-yuanling-source-catalog-v1.0.0"},
+        "extended_source_catalog_schema": {"const": "stark-yuanling-extended-source-catalog-v1.0.0"},
+        "work_index_schema": {"const": "stark-yuanling-work-index-v1.0.0"},
+        "casting_catalog_schema": {"const": "stark-casting-method-catalog-v1.1.0"},
+        "work_coverage": {
+          "type": "object",
+          "required": ["volumes_indexed", "full_rule_materialization_complete"]
+        },
+        "boundary": {"type": "string", "minLength": 1}
+      }
+    },
+    "ai_interpretation_contract": {
+      "type": "object",
+      "required": ["read_order", "rules", "score_synthesis"],
+      "properties": {
+        "read_order": {"type": "array", "minItems": 10},
+        "rules": {"type": "array", "minItems": 10},
+        "score_synthesis": {"const": "DEFERRED_UNTIL_BLIND_TEST_PROTOCOL"}
+      }
+    },
+    "forbidden_outputs": {
+      "type": "array",
+      "minItems": 8,
+      "allOf": [
+        {"contains": {"const": "AUTOMATIC_FOOTBALL_SCORE_FROM_PALACE_NUMBER"}},
+        {"contains": {"const": "TABLE_OF_CONTENTS_INDEX_PROMOTED_TO_RULE"}},
+        {"contains": {"const": "CHAPTER_PICKING_BY_POSTMATCH_RESULT"}},
+        {"contains": {"const": "TEXTUAL_VARIANT_SILENTLY_NORMALIZED"}},
+        {"contains": {"const": "RIQIMEN_PRODUCTION_RING_SUBSTITUTED_FOR_CHUANGONG"}}
+      ]
+    },
+    "packet_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"mode": {"const": "QIYAO_RAW"}}},
+      "then": {
+        "properties": {
+          "riqimen_base": {"type": "null"},
+          "knowledge_context": {"properties": {"riqimen_method": {"type": "null"}}},
+          "qiyao_review": {"properties": {"riqimen_bridge": {"properties": {"status": {"const": "NOT_REQUESTED"}}}}}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"mode": {"const": "RIQIMEN_QIYAO_EXPERIMENT"}}},
+      "then": {
+        "properties": {
+          "riqimen_base": {"type": "object"},
+          "knowledge_context": {
+            "properties": {
+              "riqimen_method": {"type": "object"},
+              "source_sections": {"minItems": 13}
+            }
+          },
+          "qiyao_review": {"properties": {"riqimen_bridge": {"properties": {"status": {"const": "PACKET_LAYER_SIBLING_ENABLED"}}}}}
+        }
+      }
+    }
+  ]
+}

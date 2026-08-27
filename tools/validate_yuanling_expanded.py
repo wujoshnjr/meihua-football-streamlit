@@ -67,7 +67,7 @@ def main() -> None:
     require(work_index["coverage"]["full_rule_materialization_complete"] is False, "TOC index must not claim full rule materialization")
 
     require(
-        reference.get("schema_version") == "stark-yuanling-casting-reference-v1.0.0",
+        reference.get("schema_version") == "stark-yuanling-casting-reference-v1.1.0",
         "casting reference schema drift",
     )
     methods = {row["id"]: row for row in reference.get("methods", [])}
@@ -76,7 +76,7 @@ def main() -> None:
         "casting reference must keep the three Yuanling method identities separate",
     )
     require(methods["YUANLING_QIMEN_CASTING_REFERENCE"]["status"] == "SOURCE_REFERENCE_NOT_SEPARATE_PRODUCTION_ENGINE", "source casting reference status drift")
-    require(methods["YUANLING_RI_QIMEN"]["status"] == "PARTIAL_RESEARCH_ALPHA", "Ri-Qimen must remain partial")
+    require(methods["YUANLING_RI_QIMEN"]["status"] == "SOURCE_CROSSCHECKED_RECONSTRUCTION_ALPHA", "Ri-Qimen crosschecked reconstruction status drift")
     require("數宮" in methods["YUANLING_YANSHU_QIYAO_RAW"]["seven_factors"], "Qiyao factors missing")
 
     stats = yuanling_catalog_stats()

@@ -1,11 +1,11 @@
 {
-  "schema_version": "stark-yuanling-casting-reference-v1.0.0",
+  "schema_version": "stark-yuanling-casting-reference-v1.1.0",
   "title": "《奇門遁甲元靈經》起局／演數方法參考",
-  "purpose": "把《元靈經》卷一一般奇門起例、演數七要與日奇門三個不同層次的方法放在同一參考表，但不把它們合併成一個 invented method。",
+  "purpose": "把《元靈經》卷一一般奇門起例、演數七要與日奇門三個不同層次的方法放在同一參考表；本版加入數主/飛星/直日星角色重建與日奇門穿宮 crosscheck，但不把三法合併成 invented method。",
   "terminology": {
     "YUANLING_QIMEN_CASTING_REFERENCE": "奇門起局／排盤參考",
     "YUANLING_YANSHU_QIYAO_RAW": "演數七要審查，不是六爻起卦",
-    "YUANLING_RI_QIMEN": "日奇門研究型起局"
+    "YUANLING_RI_QIMEN": "日奇門 source-crosschecked 研究型起局"
   },
   "methods": [
     {
@@ -25,41 +25,98 @@
         "形成原文所稱天盤"
       ],
       "source_examples": [
-        {"label":"芒種後癸亥日丙辰時","dun":"陽遁","yuan":"下元","ju":9,"anchor":"甲寅符頭；天禽移兌；借坤死門加兌"},
-        {"label":"霜降後甲寅日辛未時","dun":"陰遁","ju":8,"anchor":"甲子符頭；天任移中；艮生門加坎"}
+        {
+          "label": "芒種後癸亥日丙辰時",
+          "dun": "陽遁",
+          "yuan": "下元",
+          "ju": 9,
+          "anchor": "甲寅符頭；天禽移兌；借坤死門加兌"
+        },
+        {
+          "label": "霜降後甲寅日辛未時",
+          "dun": "陰遁",
+          "ju": 8,
+          "anchor": "甲子符頭；天任移中；艮生門加坎"
+        }
       ],
-      "outputs": ["陰陽遁","節氣三元局","地盤奇儀","值符星","值使門","天盤 source reference"],
+      "outputs": ["陰陽遁", "節氣三元局", "地盤奇儀", "值符星", "值使門", "天盤 source reference"],
       "boundary": "此段可用來校核 production 時家奇門，但不代表 production engine 的中五寄宮、八神、曆法 convention 等全部由此段明文規定。"
     },
     {
       "id": "YUANLING_YANSHU_QIYAO_RAW",
       "display_name": "《元靈經》演數七要・原始模式",
-      "status": "RESEARCH_ALPHA",
+      "status": "RESEARCH_ALPHA_ROLE_RELATIONSHIP_RESOLVED",
       "required_inputs": ["事件所在地 aware local datetime", "IANA timezone", "占問問題"],
-      "seven_factors": ["數宮","數主","飛星","入門","直日星","日干","時支"],
-      "source_priority": ["數主落宮","臨本宮之星","門宮吉凶","直日星","日干","時支"],
-      "deterministic_now": ["事件曆法","節氣","日干支","時干支","陰陽遁","日干","時支","數術九星 registry"],
-      "unresolved_primary": ["數宮完整原法","數主遁至本時之星的飛遁機械法","飛星與數主確切接口","入門完整機械法","直日星確切接口"],
-      "outputs": ["七要 primary slots","數主落宮狀態（資料足夠時）","source-aware context","collateral candidates（不升格）","uncertainty"],
-      "boundary": "演數不是起一個六爻卦；沒有 source-lock 的欄位必須保持 unresolved。"
+      "seven_factors": ["數宮", "數主", "飛星", "入門", "直日星", "日干", "時支"],
+      "source_priority": ["數主落宮", "臨本宮之星", "門宮吉凶", "直日星", "日干", "時支"],
+      "deterministic_now": [
+        "事件曆法",
+        "節氣",
+        "日干支",
+        "時干支",
+        "陰陽遁",
+        "日干",
+        "時支",
+        "數術九星 registry",
+        "旁證日遁九星盤",
+        "數主/飛星/直日星 role-resolution object"
+      ],
+      "role_resolution": {
+        "數主": "數宮本位數術星；追蹤該星在當日日遁盤的落宮",
+        "飛星": "當日日遁九星盤中臨到數宮之星",
+        "直日星": "當日日遁九星盤中五占星，作中宮直日星 crosschecked reconstruction"
+      },
+      "textual_variant": {
+        "yuanling": "假如數在乾宮，黑星為主",
+        "qimen_baojian": "假如數在坤宮，黑星為主",
+        "policy": "角色關係視為已解；具體旁證值不靜默覆寫 raw primary slots。"
+      },
+      "unresolved_primary": [
+        "數宮取法仍主要依洞庭老人旁證，尚未由《元靈經》七要段單獨寫全",
+        "入門完整演數機械法",
+        "raw primary slots 正式採用旁證值需另立 method-version"
+      ],
+      "outputs": [
+        "七要 primary slots",
+        "數主/飛星/直日星 role-resolution",
+        "數主落宮狀態（資料足夠時）",
+        "source-aware context",
+        "collateral candidates（不升格）",
+        "textual variant warning",
+        "uncertainty"
+      ],
+      "boundary": "演數不是起一個六爻卦；crosschecked reconstruction 與原典 raw slot 分層保存，不把宮數或星數直接換成足球比分。"
     },
     {
       "id": "YUANLING_RI_QIMEN",
-      "display_name": "《元靈經》日奇門・Source-grounded Base",
-      "status": "PARTIAL_RESEARCH_ALPHA",
+      "display_name": "《元靈經》日奇門・Source-crosschecked Reconstruction",
+      "status": "SOURCE_CROSSCHECKED_RECONSTRUCTION_ALPHA",
       "required_inputs": ["事件所在地 aware local datetime", "IANA timezone"],
       "steps": [
         "按節氣與三元定局作地盤",
-        "由本日干支取得本甲旬頭",
-        "依六十日表取得本日某宮起休",
-        "本甲旬頭作值符",
-        "保存陰遁奇直皆逆、星門皆順",
-        "截路空亡另作 source context",
-        "穿宮數去保持 unresolved"
+        "由本日干支取得本甲旬頭，旬頭所遁六儀承載值符",
+        "本甲旬頭加本日干，陰陽遁分順逆並視三奇方",
+        "取值符本宮之奇門九星加到本日干所到宮",
+        "九星按宮數順飛九宮：1→2→3→4→5→6→7→8→9→1，穿中五",
+        "依六十日表取得本日某宮起休；八門按八宮順布，不入中五",
+        "截路空亡另作 source context"
       ],
-      "outputs": ["節氣","三元","陰陽遁","局數","地盤奇儀","日旬頭","六十日起休宮","未決穿宮步驟"],
-      "boundary": "目前不是完整日奇門天盤；亦無文本證據要求演數七要必須使用此盤。"
+      "outputs": [
+        "節氣",
+        "三元",
+        "陰陽遁",
+        "局數",
+        "地盤奇儀",
+        "日干天盤/三奇方",
+        "日旬頭/值符星",
+        "穿宮九星全盤（含中五）",
+        "六十日起休宮",
+        "八門全盤（不入中五）",
+        "authority gap"
+      ],
+      "crosscheck": "《奇門遁甲統宗》日奇門明示甲子日天蓬起艮八、天芮在離九、順飛九宮，鎖定8→9→1…的穿宮語義；同段明示八門三日一宮且不入中五。",
+      "boundary": "穿宮 mechanics 已 crosscheck 解決，但《元靈經》本節缺一個完整 end-to-end worked example，故仍標 research-alpha authority；亦無文本證據要求演數七要必須使用此盤。"
     }
   ],
-  "relationship_rule": "三者可共享 source context，但必須保持方法 identity。QIYAO_RAW 與 RI_QIMEN 只有 project experiment 可 sibling 並列；不得描述成《元靈經》明文的一張合成盤。"
+  "relationship_rule": "三者可共享 source context，但必須保持方法 identity。QIYAO_RAW 與 RI_QIMEN 只有 project experiment 可 sibling 並列；日奇門天蓬九星與演數一白九星也必須保持不同 registry。"
 }

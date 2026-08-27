@@ -1,6 +1,18 @@
 {
-  "schema_version": "stark-casting-method-catalog-v1.0.0",
-  "purpose": "把目前 JARVIS 真正實作或研究中的起局/起卦/演數方法、必要輸入、運算順序、輸出與未完成邊界放在同一份 machine-readable catalog，供 UI、Packet 與 ChatGPT 查閱。",
+  "schema_version": "stark-casting-method-catalog-v1.1.0",
+  "purpose": "把 JARVIS 真正實作或正在 source-reconstruct 的起局、起卦、演數方法，以及原典起局參考法的必要輸入、運算順序、輸出與未完成邊界放在同一份 machine-readable catalog。",
+  "terminology": {
+    "QIMEN": "起局／排盤",
+    "MEIHUA": "起卦",
+    "YUANLING_YANSHU": "演數審查，不是六爻卦",
+    "YUANLING_RIQIMEN": "另起日奇門研究盤"
+  },
+  "method_relationships": [
+    "production 時家奇門與《元靈經》卷一奇門起例可互相校核，但不可因相似就聲稱所有細節完全同法。",
+    "演數七要與日奇門是相鄰但獨立方法；RIQIMEN_QIYAO_EXPERIMENT 只屬專案實驗橋接。",
+    "演數數術九星（一白至九紫/太乙至天乙）與日奇門九星（天蓬至天英）是兩個 registry，不得混名。",
+    "梅花年月日時先天數法獨立於奇門與元靈演數，不共享起卦公式。"
+  ],
   "methods": [
     {
       "id": "QIMEN_SHIJIA_ZHUANPAN_CHAIBU",
@@ -74,8 +86,30 @@
         "查真正動爻《周易》原文與本卦→變卦《焦氏易林》"
       ],
       "number_tables": {
-        "trigrams": {"乾": 1, "兌": 2, "離": 3, "震": 4, "巽": 5, "坎": 6, "艮": 7, "坤": 8},
-        "branches": {"子": 1, "丑": 2, "寅": 3, "卯": 4, "辰": 5, "巳": 6, "午": 7, "未": 8, "申": 9, "酉": 10, "戌": 11, "亥": 12}
+        "trigrams": {
+          "乾": 1,
+          "兌": 2,
+          "離": 3,
+          "震": 4,
+          "巽": 5,
+          "坎": 6,
+          "艮": 7,
+          "坤": 8
+        },
+        "branches": {
+          "子": 1,
+          "丑": 2,
+          "寅": 3,
+          "卯": 4,
+          "辰": 5,
+          "巳": 6,
+          "午": 7,
+          "未": 8,
+          "申": 9,
+          "酉": 10,
+          "戌": 11,
+          "亥": 12
+        }
       },
       "primary_outputs": [
         "本卦",
@@ -94,10 +128,57 @@
       "boundary": "目前只實作年月日時先天數法；後天物卦法與三要十應真實外應輸入尚未 productionize。"
     },
     {
+      "id": "YUANLING_QIMEN_CASTING_REFERENCE",
+      "system": "YUANLING_QIMEN_REFERENCE",
+      "display_name": "《元靈經》卷一・奇門起例 Source Reference",
+      "status": "SOURCE_REFERENCE_NOT_SEPARATE_PRODUCTION_ENGINE",
+      "required_inputs": [
+        "節氣/陰陽遁",
+        "三元符頭",
+        "用時干支"
+      ],
+      "source_basis": [
+        "卷一奇門起例",
+        "陰陽遁",
+        "陰陽各局",
+        "三元符頭",
+        "三奇",
+        "六儀",
+        "九星",
+        "奇儀順逆",
+        "值符",
+        "值使"
+      ],
+      "casting_steps": [
+        "先分陰陽遁",
+        "詳定節氣",
+        "察三元符頭",
+        "依陰陽順逆布六儀三奇成地盤",
+        "以符頭加用時干",
+        "察符頭所到宮並取該宮星為值符",
+        "依原文方向布星",
+        "自符頭宮數至用時，取本宮地盤門加所得宮為值使",
+        "形成原典所述天盤"
+      ],
+      "source_examples": [
+        "芒種後癸亥日丙辰時：陽遁九局",
+        "霜降後甲寅日辛未時：陰遁八局"
+      ],
+      "primary_outputs": [
+        "原典起局步驟",
+        "兩個原典例盤錨點",
+        "與 production 時家方法的可校核點",
+        "不一致/未證同之 convention"
+      ],
+      "interpretation_role": "SOURCE_METHOD_CROSSCHECK",
+      "boundary": "這是原典方法參考，不另開第二個 production 奇門 engine；也不代表 production 轉盤拆補的所有中五寄宮、八神等 convention 都可直接歸於此段原文。"
+    },
+    {
       "id": "YUANLING_YANSHU_QIYAO_RAW",
       "system": "YUANLING_YANSHU",
       "display_name": "《元靈經》演數七要・原始模式",
-      "status": "RESEARCH_ALPHA",
+      "status": "RESEARCH_ALPHA_ROLE_RELATIONSHIP_RESOLVED",
+      "engine_version": "yuanling-qiyao-role-reconstruction-v1.0.0",
       "required_inputs": [
         "事件所在地 aware local datetime",
         "IANA timezone",
@@ -115,55 +196,106 @@
         "由事件時刻取得節氣、日干支、時干支與陰陽遁",
         "建立七個 primary slots：數宮、數主、飛星、入門、直日星、日干、時支",
         "日干與時支由曆法直接填入",
-        "尚未 source-lock 的數宮/數主/飛星/入門/直日星不以猜測補值",
-        "若研究者已有原典重建結果，可作 raw research input",
-        "另計算《奇門寶鑑》《金函玉鏡》的 collateral candidate，但不寫回 primary slots",
-        "若數主與落宮均已知，依 source example + 洛書五行 project normalization 標記生/難/和/未分類"
+        "以洞庭老人捷徑占法重建候選數宮：日干由中宮起、再由日宮起子順/逆遁到本時；酉戌亥重子丑寅",
+        "以《金函玉鏡》日遁九星重建當日九星盤",
+        "角色關係：數主＝數宮本位數術星並追蹤其當日落宮；飛星＝當日臨到數宮之星；直日星＝當日中五占星",
+        "保留《元靈經》乾宮黑星與《奇門寶鑑》坤宮黑星異文，因此 crosschecked values 不靜默寫回 raw primary slots",
+        "若研究者已有原典校勘結果，可作 raw research input",
+        "若數主與落宮均已知，依 source example + 洛書五行 project normalization 標記生/難/和/未分類",
+        "讀取卷二八門/十干與卷三九星克應等 source context 作條件式補充，不將其轉成比分公式"
       ],
       "primary_outputs": [
         "七要 primary review",
         "數術九星 registry",
+        "數主/飛星/直日星 role-resolution object",
         "數主落宮狀態（若資料足夠）",
         "旁證候選數宮/日遁九星",
-        "未決算法清單",
+        "乾宮/坤宮 textual-variant warning",
+        "卷二/卷三條件式 source context",
         "source/authority boundary",
         "deterministic packet SHA"
       ],
       "interpretation_role": "NUMERIC_DIVINATION_RESEARCH_INPUT",
-      "boundary": "raw numeric candidates 維持 disabled；不把宮數或射覆數目直接轉足球總進球。"
+      "boundary": "角色關係視為已交叉重建，但 raw primary slots 不因旁證自動覆寫；raw numeric candidates 仍 disabled，不把宮數、星數或射覆數目直接轉足球總進球。"
     },
     {
       "id": "YUANLING_RI_QIMEN",
       "system": "YUANLING_RIQIMEN",
-      "display_name": "《元靈經》日奇門・Source-grounded Base",
-      "status": "PARTIAL_RESEARCH_ALPHA",
+      "display_name": "《元靈經》日奇門・Source-crosschecked Reconstruction",
+      "status": "SOURCE_CROSSCHECKED_RECONSTRUCTION_ALPHA",
+      "engine_version": "yuanling-riqimen-chuangong-v2.0.0",
       "required_inputs": [
         "事件所在地 aware local datetime",
         "IANA timezone"
       ],
       "casting_steps": [
         "依本節節氣與三元定局作地盤",
-        "由日干支取得日旬與本甲旬頭",
-        "依六十日表取得本日起休宮",
-        "保存本甲旬頭即值符的原典規則",
-        "保留『值符之上星加本日干穿宮數去』為 unresolved，不用時家轉盤算法補空白",
-        "保留陰遁奇直皆逆、星門皆順的方向規則"
+        "由日干支取得日旬與本甲旬頭，旬頭所遁六儀視為值符承載",
+        "以『本甲旬頭加本日干』重建日干天盤位，陰陽遁分順逆並標出三奇方",
+        "取值符本宮之九星加到本日干所到宮",
+        "九星依『星門皆順』按宮數順飛九宮，穿中五，9後回1；不使用 production 八宮轉盤 ring",
+        "依《元靈經》六十日表取得休門起宮",
+        "八門從休門起宮沿八宮順布，不入中五",
+        "日奇門九星固定為天蓬/天芮/天沖/天輔/天禽/天心/天柱/天任/天英，與演數一白至九紫分 registry",
+        "保留《元靈經》缺少完整 worked example 為 non-blocking authority gap"
       ],
       "primary_outputs": [
         "節氣、三元、陰陽遁、局數",
         "日干支/時干支",
         "地盤奇儀",
-        "日旬頭",
+        "日干天盤/三奇方",
+        "日旬頭與值符星",
+        "穿宮九星全盤（含中五）",
         "60日起休宮",
-        "unresolved 穿宮步驟"
+        "八門全盤（不入中五）",
+        "source/authority metadata",
+        "non-blocking golden-case gap"
       ],
       "interpretation_role": "INDEPENDENT_RI_QIMEN_RESEARCH_OBJECT",
-      "boundary": "目前不是完整日奇門天盤；演數七要也不被預設必須以此盤為底。"
+      "boundary": "穿宮的『九星按宮數順飛、穿中五』mechanics 已由原文 + 同系日奇門文獻交叉鎖定；整盤仍以 research-alpha authority 提供，不等同 production 時家轉盤，也不與演數數術九星合併。"
     }
   ],
   "football_question_templates": {
     "qimen": "［主隊］對［客隊］，在正規時間90分鐘及傷停補時結束後，最終勝負為主勝、和局或客勝？請依奇門主客用神及全局綜合判斷最可能的比分候選，並列支持與反證盤象。",
     "meihua": "以［主隊］為體、［客隊］為用，不判比分與進球，請判體方在比賽初段、中段、末段分別是得助、耗力、受制還是制用；體旺衰能否承受生克；是否存在明顯轉勢；最後形成的是控制、受壓、守成、失守或僵持，並列出對奇門結果的支持與反證。",
-    "yuanling": "依《元靈經》演數七要整理此場足球事件的數術原始資料；只輸出數宮、數主、飛星、入門、直日星、日干、時支及 source/uncertainty，不直接將宮數或星數換算為比分。"
+    "yuanling": "依《元靈經》演數七要整理此場足球事件的數術原始資料；只輸出數宮、數主、飛星、入門、直日星、日干、時支及卷二/卷三 source context、source/uncertainty，不直接將宮數或星數換算為比分。"
+  },
+  "football_event_differentiation_policy": {
+    "version": "JARVIS_FOOTBALL_EVENT_DIFFERENTIATION_V1",
+    "status": "IMPLEMENTED_IN_PACKET_AND_CASE_LAYER",
+    "principle": "時間盤描述共同時勢；賽前固定的事件 identity 與 participant identity 才能區分同時不同 fixture。",
+    "temporal_layers": [
+      "QIMEN_SHIJIA_ZHUANPAN_CHAIBU",
+      "YUANLING_YANSHU_QIYAO_RAW",
+      "MEIHUA_YEAR_MONTH_DAY_HOUR"
+    ],
+    "event_layer": {
+      "id": "MEIHUA_EVENT_IDENTITY_V1",
+      "authority": "PROJECT_ADAPTATION__DETERMINISTIC_EVENT_HASH__NOT_CLASSICAL_FORMULA",
+      "canonical_fields": [
+        "competition",
+        "season",
+        "home_official_name",
+        "away_official_name",
+        "scheduled_kickoff_utc"
+      ],
+      "rule": "canonical fields -> SHA-256 -> fixed upper/lower/moving-line windows; no query-order or result input"
+    },
+    "participant_layer": {
+      "id": "QIMEN_PARTICIPANT_LAYER_V1",
+      "authority": "PROJECT_ADAPTATION__COACH_AS_MATCH_ACTOR",
+      "input": [
+        "home_birth_ganzhi",
+        "away_birth_ganzhi"
+      ],
+      "rule": "以主教練出生年干在正時盤定位承盤宮；年命概念有古法依據，但教練映射是足球現代移植。"
+    },
+    "collision_gate": "temporal_signature 相同而 event_signature 不同時，不同結論必須由 event/participant layer 提供可稽核差異；禁止事後挑象。",
+    "forbidden": [
+      "QUERY_ORDER_AS_DIVINATION_INPUT",
+      "RANDOM_OFFSET_TO_BREAK_COLLISION",
+      "POSTMATCH_EVENT_IDENTITY_CHANGE",
+      "TEMPORAL_ONLY_DIFFERENT_OUTCOMES_FOR_IDENTICAL_TEMPORAL_INPUT"
+    ]
   }
 }

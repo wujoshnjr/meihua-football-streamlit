@@ -9,7 +9,7 @@ from yuanling.riqimen import build_riqimen_base
 from yuanling.yanshu_qiyao import build_qiyao_review
 
 
-YUANLING_PACKET_VERSION = "YUANLING_YANSHU_PACKET_V1_2"
+YUANLING_PACKET_VERSION = "YUANLING_YANSHU_PACKET_V1_3"
 
 
 def _packet_hash(payload: dict[str, Any]) -> str:
@@ -69,24 +69,34 @@ def build_yuanling_yanshu_packet(
         "knowledge_context": knowledge_context,
         "ai_interpretation_contract": {
             "read_order": [
-                "knowledge_context.method and source/method boundary",
+                "knowledge_context method separation and source authority",
                 "seven qiyao primary factors",
+                "source-crosschecked number-chief/flying-star/value-day-star role resolution",
                 "number-chief landing state",
-                "source sections: qiyao / number-chief song / daily-nine-stars",
-                "collateral candidate reconstruction",
-                "riqimen sibling and riqimen source sections only when experiment mode is active",
-                "uncertainty and unresolved algorithms",
+                "volume-2 door/stem source context",
+                "volume-3 numeric-star shortcut/response/value-day context",
+                "collateral candidate reconstruction and textual-variant warning",
+                "riqimen sibling plus chuangong algorithm-resolution only when experiment mode is active",
+                "work-index coverage versus materialized-source distinction",
+                "remaining uncertainty and authority gaps",
                 "final human/ChatGPT interpretation",
             ],
             "rules": [
                 "Do not merge QIYAO_RAW and RI-QIMEN into one classical method claim.",
+                "For football, treat deterministic Qiyao time-derived facts as a shared temporal environment; never use identical temporal input alone to manufacture different fixture outcomes.",
                 "Qiyao review and Ri-Qimen are sibling objects; neither is silently nested into the other.",
                 "Do not infer missing Yuanling algorithms from the existing Shijia engine.",
+                "Treat star_role_resolution as source-crosschecked relationship evidence, not as permission to overwrite raw primary slots.",
+                "Preserve the Yuanling 乾宮黑星 versus Qimen-Baojian 坤宮黑星 textual variant explicitly.",
+                "Ri-Qimen chuangong uses its own numeric nine-palace forward traversal including center; never substitute the production eight-palace rotating ring.",
+                "Keep Ri-Qimen 天蓬/天芮... and Yanshu 一白/二黑... in separate star registries.",
                 "Classical source sections are evidence context, not automatic football outputs.",
+                "Do not collapse conflicting chapter-specific numeric-star meanings into one fixed good/bad label.",
                 "Do not convert a palace number, daily-star number, or Shefu number association directly into goals or a scoreline.",
-                "Do not use post-match results to select or mutate numeric candidates.",
+                "Do not use post-match results to select chapters, rules, or numeric candidates.",
                 "Collateral candidates may not be promoted into primary Yuanling facts without an explicit method-version change.",
-                "Unresolved fields remain unresolved; uncertainty is evidence, not a defect to hide.",
+                "Indexed table-of-contents coverage is not equivalent to full rule materialization.",
+                "Unresolved fields remain visible; uncertainty is evidence, not a defect to hide.",
             ],
             "score_synthesis": "DEFERRED_UNTIL_BLIND_TEST_PROTOCOL",
         },
@@ -97,6 +107,10 @@ def build_yuanling_yanshu_packet(
             "SILENT_SHIJIA_STAR_SUBSTITUTION",
             "COLLATERAL_CANDIDATE_PROMOTED_TO_PRIMARY_FACT",
             "SHEFU_NUMBER_ASSOCIATION_TO_FOOTBALL_GOALS",
+            "TABLE_OF_CONTENTS_INDEX_PROMOTED_TO_RULE",
+            "CHAPTER_PICKING_BY_POSTMATCH_RESULT",
+            "TEXTUAL_VARIANT_SILENTLY_NORMALIZED",
+            "RIQIMEN_PRODUCTION_RING_SUBSTITUTED_FOR_CHUANGONG",
         ],
     }
     payload["packet_sha256"] = _packet_hash(payload)
