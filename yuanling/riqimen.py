@@ -207,6 +207,7 @@ def build_riqimen_base(
             "dun": dun,
             "yuan": yuan,
             "ju": ju,
+            "ju_label": f"{dun}{ju}局",
         },
         "source_reconstructed": {
             "earth_plate": earth_plate,
