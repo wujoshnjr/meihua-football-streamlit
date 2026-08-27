@@ -6,12 +6,12 @@ from datetime import date, datetime, time
 import streamlit as st
 
 from jarvis.divination_packet import build_qimen_packet
-from qimen.calendar import LocalTimeError, aware_local_datetime
+from jarvis.time import EventLocalTimeError, aware_event_local_datetime, inspect_local_civil_time
 
 
 st.set_page_config(page_title="奇門起局 · JARVIS", page_icon="🧭", layout="wide")
 st.title("🧭 奇門遁甲起局")
-st.caption("JARVIS 只負責固定方法起局、深層盤象整理與知識檢索；最後解局交給 ChatGPT。")
+st.caption("JARVIS 只負責固定方法起局、深層盤象整理與知識檢索；最後解局交給 ChatGPT。足球若要處理同時開賽 collision，請優先使用「足球多層案件」。")
 
 with st.form("qimen_stark_form"):
     question = st.text_area("占問問題", placeholder="例如：西班牙對維德角，這場比賽整體走勢如何？")
@@ -29,15 +29,31 @@ with st.form("qimen_stark_form"):
     with c1:
         event_date = st.date_input("事件日期", value=date.today())
     with c2:
-        event_time = st.time_input("事件時間", value=time(20, 0), step=300)
+        event_time = st.time_input("事件時間", value=time(20, 0), step=1, format="24h")
     with c3:
         timezone_name = st.text_input("事件所在地 IANA 時區", value="Asia/Taipei")
+    fold_mode = st.selectbox(
+        "DST 重複時間",
+        ["AUTO_REJECT_AMBIGUOUS", "FIRST_FOLD_0", "SECOND_FOLD_1"],
+        help="一般時間維持 AUTO；DST 回撥造成同一 local time 出現兩次時必須明確選 fold。",
+    )
 
     submitted = st.form_submit_button("起奇門局並建立 AI 解局包", type="primary", use_container_width=True)
 
 if submitted:
     try:
-        event_at = aware_local_datetime(datetime.combine(event_date, event_time), timezone_name.strip())
+        wall = datetime.combine(event_date, event_time)
+        audit = inspect_local_civil_time(wall, timezone_name.strip())
+        if audit["nonexistent"]:
+            raise EventLocalTimeError(
+                f"{wall.isoformat()} 在 {timezone_name.strip()} 是 DST 跳時造成的不存在時間。"
+            )
+        if audit["ambiguous"] and fold_mode == "AUTO_REJECT_AMBIGUOUS":
+            raise EventLocalTimeError(
+                "此 local time 在 DST 回撥日出現兩次；請依官方 UTC offset 明確選 fold。"
+            )
+        fold = 1 if fold_mode == "SECOND_FOLD_1" else 0
+        event_at = aware_event_local_datetime(wall, timezone_name.strip(), fold=fold)
         packet = build_qimen_packet(
             question=question,
             event_at=event_at,
@@ -48,7 +64,7 @@ if submitted:
         )
         st.session_state["stark_packet"] = packet
         st.session_state["stark_packet_system"] = "QIMEN_DUNJIA"
-    except (ValueError, LocalTimeError, RuntimeError) as exc:
+    except (ValueError, EventLocalTimeError, RuntimeError) as exc:
         st.error(str(exc))
 
 packet = st.session_state.get("stark_packet")
