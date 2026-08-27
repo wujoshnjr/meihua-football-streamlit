@@ -84,6 +84,11 @@ if packet["system"] == "QIMEN_DUNJIA":
     c2.metric("深層宮位解析", kinds.count("qimen_palace_deep_profile"))
     c3.metric("關係條目", kinds.count("qimen_relation"))
     c4.metric("周易／易林", "不適用")
+elif packet["system"] == "LIUYAO_WENWANGGUA":
+    chart = packet.get("chart", {})
+    c2.metric("本卦", chart.get("original_hexagram", "—"))
+    c3.metric("變卦", chart.get("changed_hexagram", "—"))
+    c4.metric("動爻", len(chart.get("moving_lines", [])))
 else:
     c2.metric("本／互／變", 3 if "meihua_deep_profile" in kinds else 0)
     zhouyi = packet.get("zhouyi_review", {})
@@ -106,6 +111,19 @@ if packet["system"] == "QIMEN_DUNJIA":
         "遇到相互矛盾的宮位或格局要保留矛盾，不可為了給單一答案而刪除反證。\n"
         "最後才做綜合判讀，並說明關鍵轉折與不確定性。"
     )
+elif packet["system"] == "LIUYAO_WENWANGGUA":
+    instruction = (
+        f"請依這份 JARVIS {packet['schema_version']} 解六爻。\n"
+        "不要重新起卦，也不要修改六次 6/7/8/9、本卦、變卦、納甲、八宮、世應、六親、六神、旬空或日月資料。\n"
+        "先確認 question_role；用神必須由題意與 source rule 選，不得看結果後換用神。\n"
+        "解讀順序至少包含：用神／世應 → 月建日辰 → 動靜空破 → 元神忌神仇神 → 動爻變爻／回頭生克 → 伏神 → 六合六沖與其他已 source-reviewed 條件。\n"
+        "日沖靜爻不可一律判暗動；旺相有氣與休囚無氣必須區分。\n"
+        "六神只作附合象意，不得凌駕五行、旺衰、動變與用神。\n"
+        "變爻六親依正卦卦宮五行，不用變卦卦宮重算。\n"
+        "若題目是足球，世應／子孫官鬼只是 candidate protocols，不得逐場挑最像賽果的一套。\n"
+        "指定影片若 source_audit 仍標 PENDING_TRANSCRIPT，就不可假稱影片支持某條規則。\n"
+        "最後保留 contradiction_register / uncertainty_register，再做整體判讀。"
+    )
 else:
     instruction = (
         f"請依這份 JARVIS {packet['schema_version']} 解梅花卦。\n"
@@ -121,6 +139,58 @@ else:
         "最後才給出整體劇本、可能轉折、支持與反證，以及不確定性。"
     )
 st.code(instruction, language=None)
+
+if packet["system"] == "LIUYAO_WENWANGGUA":
+    chart = packet.get("chart", {})
+    review = packet.get("review", {})
+    with st.expander("六爻排盤核心", expanded=True):
+        st.write(
+            f"**本卦**：{chart.get('original_hexagram', '—')} → "
+            f"**變卦**：{chart.get('changed_hexagram', '—')}｜"
+            f"**卦宮**：{chart.get('palace', '—')}｜"
+            f"**世/應**：{chart.get('shi_line', '—')}/{chart.get('ying_line', '—')}｜"
+            f"**月建**：{chart.get('month_ganzhi', '—')}｜**日辰**：{chart.get('day_ganzhi', '—')}"
+        )
+        rows = []
+        for line in reversed(chart.get("lines", [])):
+            rows.append(
+                {
+                    "爻": line["position"],
+                    "六神": line["six_spirit"],
+                    "六親": line["relative"],
+                    "納甲": f"{line['stem']}{line['branch']}{line['element']}",
+                    "動": line["moving"],
+                    "世": line["is_shi"],
+                    "應": line["is_ying"],
+                    "空": line["is_void"],
+                    "月": line["month_relation"] or "—",
+                    "日": line["day_relation"] or "—",
+                    "變": (
+                        f"{line['changed_relative']}{line['changed_stem']}{line['changed_branch']}"
+                        if line["moving"]
+                        else "—"
+                    ),
+                    "回頭": line["changed_relation_to_original"] or "—",
+                }
+            )
+        st.dataframe(rows, hide_index=True, use_container_width=True)
+
+    with st.expander("六爻 source-aware review", expanded=True):
+        st.markdown("**question role**")
+        st.json(review.get("question_role", {}))
+        st.markdown("**strength / month-day direct relations**")
+        st.json(review.get("strength_review", {}))
+        st.markdown("**motion / change / hidden candidates**")
+        st.json(review.get("motion_review", {}))
+
+    with st.expander("六爻來源、矛盾與不確定性"):
+        st.json(
+            {
+                "source_audit": review.get("source_audit", {}),
+                "contradictions": review.get("contradiction_register", []),
+                "uncertainties": review.get("uncertainty_register", []),
+            }
+        )
 
 if packet["system"] == "MEIHUA_YISHU":
     method_audit = packet.get("meihua_method_audit", {})
@@ -275,4 +345,4 @@ with a:
 with b:
     with st.container(border=True):
         st.markdown("**ChatGPT**")
-        st.write("不重排盤；按方法權重閱讀梅花結構、周易原典、易林情境、支持／反證與 modern application，完成最後合參。")
+        st.write("不重排盤；依系統 contract 閱讀奇門、梅花或六爻的 deterministic facts、來源層、支持／反證與不確定性，再完成最後合參。")
