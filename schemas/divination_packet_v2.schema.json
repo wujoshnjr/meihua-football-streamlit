@@ -462,7 +462,15 @@
                 "body_trigram",
                 "use_trigram",
                 "changed_upper_trigram",
-                "changed_lower_trigram"
+                "changed_lower_trigram",
+                "body_use_relation",
+                "mutual_upper_trigram",
+                "mutual_lower_trigram",
+                "mutual_upper_relation_to_body",
+                "mutual_lower_relation_to_body",
+                "changed_use_trigram",
+                "changed_use_relation_to_body",
+                "season_state"
               ]
             }
           },
