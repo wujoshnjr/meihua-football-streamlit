@@ -31,23 +31,43 @@
     "question": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["text", "category"],
+      "required": [
+        "text",
+        "category"
+      ],
       "properties": {
-        "text": {"type": "string", "minLength": 1},
-        "category": {"const": "numeric_divination"}
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "const": "numeric_divination"
+        }
       }
     },
     "event": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["datetime", "timezone"],
+      "required": [
+        "datetime",
+        "timezone"
+      ],
       "properties": {
-        "datetime": {"type": "string", "minLength": 1},
-        "timezone": {"type": "string", "minLength": 1}
+        "datetime": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "mode": {
-      "enum": ["QIYAO_RAW", "RIQIMEN_QIYAO_EXPERIMENT"]
+      "enum": [
+        "QIYAO_RAW",
+        "RIQIMEN_QIYAO_EXPERIMENT"
+      ]
     },
     "qiyao_review": {
       "type": "object",
@@ -68,21 +88,44 @@
         "boundary"
       ],
       "properties": {
-        "kind": {"const": "YUANLING_YANSHU_QIYAO_REVIEW_V1_1"},
-        "mode": {"enum": ["QIYAO_RAW", "RIQIMEN_QIYAO_EXPERIMENT"]},
-        "status": {"const": "PARTIAL_SOURCE_GROUNDED"},
-        "event": {"type": "object"},
+        "kind": {
+          "const": "YUANLING_YANSHU_QIYAO_REVIEW_V1_1"
+        },
+        "mode": {
+          "enum": [
+            "QIYAO_RAW",
+            "RIQIMEN_QIYAO_EXPERIMENT"
+          ]
+        },
+        "status": {
+          "const": "PARTIAL_SOURCE_GROUNDED"
+        },
+        "event": {
+          "type": "object"
+        },
         "seven_factors": {
           "type": "array",
           "minItems": 7,
           "maxItems": 7,
           "items": {
             "type": "object",
-            "required": ["name", "status", "value", "note"]
+            "required": [
+              "name",
+              "status",
+              "value",
+              "note"
+            ]
           }
         },
-        "number_chief_landing_state": {"type": ["object", "null"]},
-        "numeric_star_registry": {"type": "object"},
+        "number_chief_landing_state": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "numeric_star_registry": {
+          "type": "object"
+        },
         "collateral_reconstruction": {
           "type": "object",
           "required": [
@@ -98,8 +141,12 @@
             "source_ids"
           ],
           "properties": {
-            "kind": {"const": "YUANLING_COLLATERAL_QIYAO_RECONSTRUCTION_V2"},
-            "status": {"const": "CANDIDATES_ONLY__NOT_PRIMARY_YUANLING_FACTS"}
+            "kind": {
+              "const": "YUANLING_COLLATERAL_QIYAO_RECONSTRUCTION_V2"
+            },
+            "status": {
+              "const": "CANDIDATES_ONLY__NOT_PRIMARY_YUANLING_FACTS"
+            }
           }
         },
         "star_role_resolution": {
@@ -120,37 +167,73 @@
             "project_decision"
           ],
           "properties": {
-            "kind": {"const": "YUANLING_QIYAO_STAR_ROLE_RECONSTRUCTION_V1"},
-            "status": {"const": "ROLE_RELATIONSHIP_RESOLVED__IDENTITY_MAPPING_CROSSCHECKED"},
-            "primary_slots_auto_filled": {"const": false}
+            "kind": {
+              "const": "YUANLING_QIYAO_STAR_ROLE_RECONSTRUCTION_V1"
+            },
+            "status": {
+              "const": "ROLE_RELATIONSHIP_RESOLVED__IDENTITY_MAPPING_CROSSCHECKED"
+            },
+            "primary_slots_auto_filled": {
+              "const": false
+            }
           }
         },
         "riqimen_bridge": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["status", "rule"],
+          "required": [
+            "status",
+            "rule"
+          ],
           "properties": {
-            "status": {"enum": ["NOT_REQUESTED", "PACKET_LAYER_SIBLING_ENABLED"]},
-            "rule": {"type": "string", "minLength": 1}
+            "status": {
+              "enum": [
+                "NOT_REQUESTED",
+                "PACKET_LAYER_SIBLING_ENABLED"
+              ]
+            },
+            "rule": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         },
         "raw_numeric_candidates": {
           "type": "object",
-          "required": ["status", "values", "rule"],
+          "required": [
+            "status",
+            "values",
+            "rule"
+          ],
           "properties": {
-            "status": {"const": "DISABLED_UNTIL_ALGORITHM_SOURCE_LOCK"},
-            "values": {"type": "array", "maxItems": 0},
-            "rule": {"type": "string"}
+            "status": {
+              "const": "DISABLED_UNTIL_ALGORITHM_SOURCE_LOCK"
+            },
+            "values": {
+              "type": "array",
+              "maxItems": 0
+            },
+            "rule": {
+              "type": "string"
+            }
           }
         },
-        "uncertainty": {"type": "array"},
-        "authority": {"type": "string"},
-        "boundary": {"type": "string"}
+        "uncertainty": {
+          "type": "array"
+        },
+        "authority": {
+          "type": "string"
+        },
+        "boundary": {
+          "type": "string"
+        }
       }
     },
     "riqimen_base": {
       "oneOf": [
-        {"type": "null"},
+        {
+          "type": "null"
+        },
         {
           "type": "object",
           "required": [
@@ -165,11 +248,31 @@
             "boundary"
           ],
           "properties": {
-            "kind": {"const": "YUANLING_RI_QIMEN_BASE_V2"},
-            "status": {"const": "SOURCE_CROSSCHECKED_RECONSTRUCTION_READY"},
+            "kind": {
+              "const": "YUANLING_RI_QIMEN_BASE_V2"
+            },
+            "status": {
+              "const": "SOURCE_CROSSCHECKED_RECONSTRUCTION_READY"
+            },
             "calendar": {
               "type": "object",
-              "required": ["local_datetime", "timezone", "solar_term", "day_ganzhi", "hour_ganzhi", "dun", "yuan", "ju"]
+              "required": [
+                "local_datetime",
+                "timezone",
+                "solar_term",
+                "day_ganzhi",
+                "hour_ganzhi",
+                "dun",
+                "yuan",
+                "ju",
+                "ju_label"
+              ],
+              "properties": {
+                "ju_label": {
+                  "type": "string",
+                  "minLength": 3
+                }
+              }
             },
             "source_reconstructed": {
               "type": "object",
@@ -194,23 +297,60 @@
             },
             "algorithm_resolution": {
               "type": "object",
-              "required": ["day_xun_head_to_day_stem", "chuangong", "star_identity", "door_flight"],
+              "required": [
+                "day_xun_head_to_day_stem",
+                "chuangong",
+                "star_identity",
+                "door_flight"
+              ],
               "properties": {
                 "chuangong": {
                   "type": "object",
-                  "required": ["status", "rule", "traversal", "uses_production_rotating_ring"],
+                  "required": [
+                    "status",
+                    "rule",
+                    "traversal",
+                    "uses_production_rotating_ring"
+                  ],
                   "properties": {
-                    "status": {"const": "RESOLVED_BY_PRIMARY_TEXT_PLUS_DAY_QIMEN_CROSSCHECK"},
-                    "traversal": {"const": [1, 2, 3, 4, 5, 6, 7, 8, 9]},
-                    "uses_production_rotating_ring": {"const": false}
+                    "status": {
+                      "const": "RESOLVED_BY_PRIMARY_TEXT_PLUS_DAY_QIMEN_CROSSCHECK"
+                    },
+                    "traversal": {
+                      "const": [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9
+                      ]
+                    },
+                    "uses_production_rotating_ring": {
+                      "const": false
+                    }
                   }
                 }
               }
             },
-            "unresolved": {"type": "array"},
-            "source_ids": {"type": "array", "minItems": 4},
-            "authority": {"type": "string", "minLength": 1},
-            "boundary": {"type": "string", "minLength": 1}
+            "unresolved": {
+              "type": "array"
+            },
+            "source_ids": {
+              "type": "array",
+              "minItems": 4
+            },
+            "authority": {
+              "type": "string",
+              "minLength": 1
+            },
+            "boundary": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         }
       ]
@@ -232,53 +372,129 @@
         "boundary"
       ],
       "properties": {
-        "kind": {"const": "YUANLING_PACKET_KNOWLEDGE_CONTEXT_V2"},
+        "kind": {
+          "const": "YUANLING_PACKET_KNOWLEDGE_CONTEXT_V2"
+        },
         "method": {
           "type": "object",
-          "required": ["id", "system", "display_name", "status", "casting_steps", "primary_outputs", "boundary"]
+          "required": [
+            "id",
+            "system",
+            "display_name",
+            "status",
+            "casting_steps",
+            "primary_outputs",
+            "boundary"
+          ]
         },
         "qimen_casting_reference": {
           "type": "object",
-          "required": ["id", "system", "display_name", "status", "casting_steps", "primary_outputs", "boundary"]
+          "required": [
+            "id",
+            "system",
+            "display_name",
+            "status",
+            "casting_steps",
+            "primary_outputs",
+            "boundary"
+          ]
         },
         "source_sections": {
           "type": "array",
           "minItems": 8,
           "items": {
             "type": "object",
-            "required": ["id", "volume", "name", "family", "source_locator", "authority"]
+            "required": [
+              "id",
+              "volume",
+              "name",
+              "family",
+              "source_locator",
+              "authority"
+            ]
           }
         },
-        "riqimen_method": {"type": ["object", "null"]},
-        "source_catalog_schema": {"const": "stark-yuanling-source-catalog-v1.0.0"},
-        "extended_source_catalog_schema": {"const": "stark-yuanling-extended-source-catalog-v1.0.0"},
-        "work_index_schema": {"const": "stark-yuanling-work-index-v1.0.0"},
-        "casting_catalog_schema": {"const": "stark-casting-method-catalog-v1.1.0"},
+        "riqimen_method": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "source_catalog_schema": {
+          "const": "stark-yuanling-source-catalog-v1.0.0"
+        },
+        "extended_source_catalog_schema": {
+          "const": "stark-yuanling-extended-source-catalog-v1.0.0"
+        },
+        "work_index_schema": {
+          "const": "stark-yuanling-work-index-v1.0.0"
+        },
+        "casting_catalog_schema": {
+          "const": "stark-casting-method-catalog-v1.1.0"
+        },
         "work_coverage": {
           "type": "object",
-          "required": ["volumes_indexed", "full_rule_materialization_complete"]
+          "required": [
+            "volumes_indexed",
+            "full_rule_materialization_complete"
+          ]
         },
-        "boundary": {"type": "string", "minLength": 1}
+        "boundary": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "ai_interpretation_contract": {
       "type": "object",
-      "required": ["read_order", "rules", "score_synthesis"],
+      "required": [
+        "read_order",
+        "rules",
+        "score_synthesis"
+      ],
       "properties": {
-        "read_order": {"type": "array", "minItems": 10},
-        "rules": {"type": "array", "minItems": 10},
-        "score_synthesis": {"const": "DEFERRED_UNTIL_BLIND_TEST_PROTOCOL"}
+        "read_order": {
+          "type": "array",
+          "minItems": 10
+        },
+        "rules": {
+          "type": "array",
+          "minItems": 10
+        },
+        "score_synthesis": {
+          "const": "DEFERRED_UNTIL_BLIND_TEST_PROTOCOL"
+        }
       }
     },
     "forbidden_outputs": {
       "type": "array",
       "minItems": 8,
       "allOf": [
-        {"contains": {"const": "AUTOMATIC_FOOTBALL_SCORE_FROM_PALACE_NUMBER"}},
-        {"contains": {"const": "TABLE_OF_CONTENTS_INDEX_PROMOTED_TO_RULE"}},
-        {"contains": {"const": "CHAPTER_PICKING_BY_POSTMATCH_RESULT"}},
-        {"contains": {"const": "TEXTUAL_VARIANT_SILENTLY_NORMALIZED"}},
-        {"contains": {"const": "RIQIMEN_PRODUCTION_RING_SUBSTITUTED_FOR_CHUANGONG"}}
+        {
+          "contains": {
+            "const": "AUTOMATIC_FOOTBALL_SCORE_FROM_PALACE_NUMBER"
+          }
+        },
+        {
+          "contains": {
+            "const": "TABLE_OF_CONTENTS_INDEX_PROMOTED_TO_RULE"
+          }
+        },
+        {
+          "contains": {
+            "const": "CHAPTER_PICKING_BY_POSTMATCH_RESULT"
+          }
+        },
+        {
+          "contains": {
+            "const": "TEXTUAL_VARIANT_SILENTLY_NORMALIZED"
+          }
+        },
+        {
+          "contains": {
+            "const": "RIQIMEN_PRODUCTION_RING_SUBSTITUTED_FOR_CHUANGONG"
+          }
+        }
       ]
     },
     "packet_sha256": {
@@ -288,27 +504,73 @@
   },
   "allOf": [
     {
-      "if": {"properties": {"mode": {"const": "QIYAO_RAW"}}},
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "QIYAO_RAW"
+          }
+        }
+      },
       "then": {
         "properties": {
-          "riqimen_base": {"type": "null"},
-          "knowledge_context": {"properties": {"riqimen_method": {"type": "null"}}},
-          "qiyao_review": {"properties": {"riqimen_bridge": {"properties": {"status": {"const": "NOT_REQUESTED"}}}}}
+          "riqimen_base": {
+            "type": "null"
+          },
+          "knowledge_context": {
+            "properties": {
+              "riqimen_method": {
+                "type": "null"
+              }
+            }
+          },
+          "qiyao_review": {
+            "properties": {
+              "riqimen_bridge": {
+                "properties": {
+                  "status": {
+                    "const": "NOT_REQUESTED"
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
     {
-      "if": {"properties": {"mode": {"const": "RIQIMEN_QIYAO_EXPERIMENT"}}},
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "RIQIMEN_QIYAO_EXPERIMENT"
+          }
+        }
+      },
       "then": {
         "properties": {
-          "riqimen_base": {"type": "object"},
+          "riqimen_base": {
+            "type": "object"
+          },
           "knowledge_context": {
             "properties": {
-              "riqimen_method": {"type": "object"},
-              "source_sections": {"minItems": 13}
+              "riqimen_method": {
+                "type": "object"
+              },
+              "source_sections": {
+                "minItems": 13
+              }
             }
           },
-          "qiyao_review": {"properties": {"riqimen_bridge": {"properties": {"status": {"const": "PACKET_LAYER_SIBLING_ENABLED"}}}}}
+          "qiyao_review": {
+            "properties": {
+              "riqimen_bridge": {
+                "properties": {
+                  "status": {
+                    "const": "PACKET_LAYER_SIBLING_ENABLED"
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
