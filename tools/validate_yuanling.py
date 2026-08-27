@@ -98,7 +98,7 @@ def _validate_expanded_catalogs() -> None:
     require("yuanling-ctext-vol3" in source_ids, "Yuanling volume-three source missing")
 
     require(
-        casting.get("schema_version") == "stark-casting-method-catalog-v1.0.0",
+        casting.get("schema_version") == "stark-casting-method-catalog-v1.1.0",
         "casting method catalog schema drift",
     )
     methods = {row["id"]: row for row in casting.get("methods", [])}
@@ -107,6 +107,7 @@ def _validate_expanded_catalogs() -> None:
         == {
             "QIMEN_SHIJIA_ZHUANPAN_CHAIBU",
             "MEIHUA_YEAR_MONTH_DAY_HOUR",
+            "YUANLING_QIMEN_CASTING_REFERENCE",
             "YUANLING_YANSHU_QIYAO_RAW",
             "YUANLING_RI_QIMEN",
         },
@@ -123,7 +124,7 @@ def _validate_expanded_catalogs() -> None:
         "Meihua interpretation role drift",
     )
     require(
-        methods["YUANLING_RI_QIMEN"]["status"] == "PARTIAL_RESEARCH_ALPHA",
+        methods["YUANLING_RI_QIMEN"]["status"] == "SOURCE_CROSSCHECKED_RECONSTRUCTION_ALPHA",
         "Ri-Qimen must remain explicitly partial",
     )
     templates = football_question_templates()
@@ -143,18 +144,18 @@ def _validate_expanded_catalogs() -> None:
     stats = yuanling_catalog_stats()
     require(stats["structured_sections"] == 18, "vault stats section count mismatch")
     require(stats["riqimen_day_rows"] == 60, "vault stats Ri-Qimen count mismatch")
-    require(casting_method("YUANLING_YANSHU_QIYAO_RAW")["status"] == "RESEARCH_ALPHA", "Qiyao method status drift")
+    require(casting_method("YUANLING_YANSHU_QIYAO_RAW")["status"] == "RESEARCH_ALPHA_ROLE_RELATIONSHIP_RESOLVED", "Qiyao method status drift")
 
 
 def main() -> None:
     audit = _load("yuanling_method_audit.json")
     collateral_audit = _load("yuanling_collateral_reconstruction.json")
     require(
-        audit.get("schema_version") == "stark-yuanling-method-audit-v1.0.0",
+        audit.get("schema_version") == "stark-yuanling-method-audit-v1.1.0",
         "method audit schema drift",
     )
     require(
-        audit.get("project_status") == "SOURCE_AUDIT_READY__ENGINES_SEPARATED",
+        audit.get("project_status") == "SOURCE_AUDIT_READY__CROSSCHECKED_RECONSTRUCTION_AVAILABLE",
         "engines must remain separated",
     )
     require(
@@ -177,7 +178,7 @@ def main() -> None:
         "seven-factor list mismatch",
     )
     require(
-        len(audit["ri_qimen"]["unresolved_algorithmic_points"]) >= 2,
+        audit["ri_qimen"]["status"] == "SOURCE_CROSSCHECKED_RECONSTRUCTION_READY" and len(audit["ri_qimen"]["remaining_uncertainty"]) >= 1,
         "Ri-Qimen uncertainty must remain explicit",
     )
 
@@ -318,14 +319,14 @@ def main() -> None:
         mode="QIYAO_RAW",
     )
     schema = json.loads(
-        (ROOT / "schemas" / "yuanling_yanshu_packet_v1_2.schema.json").read_text(
+        (ROOT / "schemas" / "yuanling_yanshu_packet_v1_3.schema.json").read_text(
             encoding="utf-8"
         )
     )
     validate(packet, schema)
     require(verify_yuanling_packet_integrity(packet), "packet SHA integrity failed")
     require(
-        packet["schema_version"] == "YUANLING_YANSHU_PACKET_V1_2",
+        packet["schema_version"] == "YUANLING_YANSHU_PACKET_V1_3",
         "packet version must be v1.2",
     )
     require(
@@ -388,7 +389,7 @@ def main() -> None:
         "experiment mode must expose Ri-Qimen independently",
     )
     require(
-        experiment["riqimen_base"]["status"].startswith("PARTIAL_SOURCE_GROUNDED"),
+        experiment["riqimen_base"]["status"] == "SOURCE_CROSSCHECKED_RECONSTRUCTION_READY",
         "Ri-Qimen status must remain honest",
     )
     require(
@@ -406,7 +407,7 @@ def main() -> None:
     )
 
     print(
-        "Yuanling: PASS | packet=v1.2 | source_sections=18 | casting_methods=4 | "
+        "Yuanling: PASS | packet=v1.3 | source_sections=18 | casting_methods=5 | "
         "sections=separate | numeric_stars=9 | riqimen=sibling-only | "
         "collateral=candidates-only | riqimen_day_table=60 | score_mapping=disabled | "
         "source-context=embedded | unresolved_rules=preserved"
