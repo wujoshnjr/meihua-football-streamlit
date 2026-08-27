@@ -70,12 +70,12 @@ jobs:
         run: python tools/validate_liuyao.py
       - name: Ruff
         run: ruff check .
-      - name: Pytest
-        run: python -m pytest -q
       - name: Validate knowledge catalog
         run: python tools/validate_knowledge.py
       - name: Validate Yilin runtime catalog
         run: python tools/validate_yilin.py
+      - name: Pytest
+        run: python -m pytest -q
 
   release-gate:
     if: always()
