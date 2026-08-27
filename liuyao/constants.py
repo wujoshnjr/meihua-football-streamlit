@@ -133,6 +133,12 @@ TRINE_BY_BRANCH = {
     **{branch: ("巳", "酉", "丑", "金") for branch in ("巳", "酉", "丑")},
 }
 
+PROGRESS_BRANCH = {
+    "亥": "子", "寅": "卯", "巳": "午", "申": "酉",
+    "丑": "辰", "辰": "未", "未": "戌",
+}
+RETREAT_BRANCH = {target: source for source, target in PROGRESS_BRANCH.items()}
+
 LINE_VALUE_LABEL = {
     6: ("老陰", "陰", True, "陽"),
     7: ("少陽", "陽", False, "陽"),
