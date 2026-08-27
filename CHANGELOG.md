@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — FOOTBALL CAST-METHOD EVALUATION DIRECTION
+
+- Clarify that JARVIS will not build a persistent per-match cast / blind-test registry.
+- Set the football research objective to finding the most accurate and stable reproducible casting / charting method.
+- Add `docs/FOOTBALL_CAST_METHOD_EVALUATION.md` with a non-persistent, same-cohort comparison protocol.
+- Keep individual cast outputs transient; preserve method definitions and aggregate metrics only when persistence is useful.
+- Define 1X2 accuracy as the primary metric for result-engine methods, with score metrics only where the method contract emits score candidates.
+- Preserve strict no-post-result-retuning and failure-layer analysis.
+
 ## 10.4.0-alpha.2 — COLLISION COHORT + QA HARDENING
 
 ### Batch collision audit

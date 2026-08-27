@@ -6,6 +6,15 @@
 
 JARVIS 不自動把任何單一門、星、神、卦、爻、林辭、數宮或數主換成勝率、固定比分或必然賽果。足球欄位屬 `modern application`，必須保留 source basis、observable 與 counter-signal。
 
+## 足球研究目標
+
+足球模組的研究目標是：**比較可重現的起卦／起局方法，找出對足球比賽預測最準確且跨批次穩定的方法。**
+
+JARVIS **不建立永久的單場起卦結果資料庫**。方法比較時，單場卦、packet、解讀與賽果只作當次評估的 transient data；專案主要保留方法定義、來源層級、演算法版本、validators，以及需要時的彙總評估指標。既有 Packet / Case Bundle 下載仍是使用者主動匯出的 handoff artifact，不代表伺服器長期保存。
+
+評估規則見 `docs/FOOTBALL_CAST_METHOD_EVALUATION.md`。核心原則是同一批賽事、同一 prematch input boundary、不同 candidate method 平行比較；不得看完賽果後改起法、挑象或排除失敗場次。
+
+
 ## 足球多層 Case 工作流
 
 ```text

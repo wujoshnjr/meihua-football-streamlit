@@ -5,7 +5,7 @@ Branch: `agent/jarvis-10-4-project-audit`
 
 ## Scope
 
-This audit reviews the repository as a reproducible divination / source-review / AI-handoff system, not as a statistical football predictor. It checks runtime contracts, schemas, Streamlit workflows, time handling, source authority boundaries, football event differentiation, Yuanling reconstruction, test coverage and stale documentation.
+This audit reviews the repository as a reproducible divination / source-review / AI-handoff system. For football, the research objective is to compare reproducible casting / charting methods and identify which method is most accurate and stable for prediction; it is not to build a permanent archive of per-match casts. The audit checks runtime contracts, schemas, Streamlit workflows, time handling, source authority boundaries, football event differentiation, Yuanling reconstruction, test coverage and stale documentation.
 
 ## High-priority defects found and corrected
 
@@ -100,17 +100,26 @@ Completed in 10.4.0-alpha.2:
 - submitted-state Streamlit regressions for Yuanling experiment and football Case Bundle construction;
 - migration guide for legacy Packet / Case Bundle / Yuanling artifacts.
 
+Direction clarified after 10.4.0-alpha.2:
+- Do **not** add a persistent per-match cast / blind-test registry.
+- Individual casts, packets, interpretations and outcomes are transient evaluation material only.
+- Preserve deterministic method definitions and aggregate evaluation metrics, not a permanent football case archive.
+
 Still open:
-1. Add a persistent blind-test case registry with immutable `input_frozen_at`, source URLs/IDs, method versions and final pre-match interpretation.
-2. Normalize repository/product metadata that still describes the project as an “automatic predictor”.
+1. Build a non-persistent batch method evaluator that runs multiple frozen candidate methods on the same fixture cohort and reports aggregate performance.
+2. Define explicit candidate-method IDs / versions and comparable output contracts before ranking accuracy.
+3. Add aggregate method metrics: 1X2 accuracy as the primary result-engine measure, with score metrics only for methods whose contract actually emits score candidates.
+4. Normalize repository/product metadata that still describes the project as an “automatic predictor”.
 
 ### P2 — validation / research program
 
-1. Build blind collision cohorts: same kickoff / same temporal signature / different fixtures.
-2. Freeze event-identity canonicalization and coach identity before outcome access.
-3. Report failures by layer: source data, calendar/cast, identity, mapping, interpretation, final call.
-4. Never retune hash slices, coach rules, time offsets or method selection after seeing outcomes.
-5. Separate accuracy claims by version; do not pool results across changed method contracts.
+1. Build evaluation cohorts, including same-kickoff / same-temporal-signature / different-fixture subsets.
+2. Run every candidate method on the same normalized prematch inputs.
+3. Freeze method definitions before outcome comparison; completed matches may be used for research, but no post-result rule changes are allowed within a batch.
+4. Report failures by layer: event data, cast, method mapping, interpretation, final call and collision handling.
+5. Never retune hash slices, coach rules, time offsets or method selection after seeing outcomes.
+6. Rank methods from aggregate results across sufficiently large cohorts, not from isolated wins.
+7. Do not persist individual cast rows; discard transient per-match evaluation state after aggregate metrics are produced.
 
 ## Explicit non-claims
 
@@ -135,3 +144,18 @@ After PR #71 was merged, the production `main` workflow passed again. The follow
 - The audit artifact has its own JSON Schema.
 - Streamlit tests now execute submitted result branches instead of checking page startup only.
 - Legacy artifact migration is documented with a strict non-backfill rule.
+
+
+## Football research direction clarification
+
+The project does not need a permanent prediction/cast registry. The target is **method selection**.
+
+Future football research should therefore invest in:
+- deterministic candidate-method definitions;
+- an ephemeral batch evaluator;
+- fair same-cohort comparisons;
+- aggregate accuracy / stability metrics;
+- collision-subset evaluation;
+- failure-layer diagnosis.
+
+See `docs/FOOTBALL_CAST_METHOD_EVALUATION.md`.
