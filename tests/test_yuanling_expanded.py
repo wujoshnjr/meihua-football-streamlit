@@ -35,7 +35,7 @@ def test_yuanling_casting_reference_keeps_methods_separate() -> None:
     riqimen = casting_reference("YUANLING_RI_QIMEN")
 
     assert qimen_ref["status"] == "SOURCE_REFERENCE_NOT_SEPARATE_PRODUCTION_ENGINE"
-    assert qiyao["status"] == "RESEARCH_ALPHA"
+    assert qiyao["status"] == "RESEARCH_ALPHA_ROLE_RELATIONSHIP_RESOLVED"
     assert qiyao["seven_factors"] == ["數宮", "數主", "飛星", "入門", "直日星", "日干", "時支"]
-    assert riqimen["status"] == "PARTIAL_RESEARCH_ALPHA"
-    assert "穿宮數去" in "".join(riqimen["steps"])
+    assert riqimen["status"] == "SOURCE_CROSSCHECKED_RECONSTRUCTION_ALPHA"
+    assert "穿中五" in "".join(riqimen["steps"])
