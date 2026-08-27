@@ -17,6 +17,8 @@ from .constants import (
     LINE_VALUE_LABEL,
     NAJIA,
     PALACE_ELEMENT,
+    PROGRESS_BRANCH,
+    RETREAT_BRANCH,
     SIX_CLASH_HEXAGRAMS,
     SIX_HARMONY_HEXAGRAMS,
     SIX_SPIRITS,
@@ -122,6 +124,10 @@ def _return_relation(original_branch: str, changed_branch: str) -> str:
         relation += "＋化合"
     if _is_pair(original_branch, changed_branch, LIUCHONG_PAIRS):
         relation += "＋回頭沖"
+    if PROGRESS_BRANCH.get(original_branch) == changed_branch:
+        relation += "＋化進神"
+    if RETREAT_BRANCH.get(original_branch) == changed_branch:
+        relation += "＋化退神"
     return relation
 
 
