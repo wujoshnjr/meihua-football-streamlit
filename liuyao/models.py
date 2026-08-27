@@ -94,6 +94,7 @@ class LiuyaoReview:
     status: str
     chart: dict[str, Any]
     question_role: dict[str, Any] | None
+    use_god_review: dict[str, Any]
     strength_review: dict[str, Any]
     motion_review: dict[str, Any]
     source_audit: dict[str, Any]
