@@ -8,6 +8,7 @@
     "packet_purpose",
     "match_event",
     "event_metadata",
+    "differentiation_audit",
     "alignment_audit",
     "interpretation_roles",
     "qimen_packet_sha256",
@@ -18,51 +19,141 @@
     "bundle_sha256"
   ],
   "properties": {
-    "schema_version": {"const": "DIVINATION_CASE_BUNDLE_V1"},
-    "packet_purpose": {"const": "SAME_EVENT_QIMEN_MEIHUA_HANDOFF__CHATGPT_INTERPRETS"},
+    "schema_version": {
+      "const": "DIVINATION_CASE_BUNDLE_V1"
+    },
+    "packet_purpose": {
+      "const": "SAME_EVENT_QIMEN_MEIHUA_HANDOFF__CHATGPT_INTERPRETS"
+    },
     "match_event": {
       "type": "object",
-      "required": ["schema_version", "category", "home_team", "away_team", "event_datetime", "timezone", "identity_rule", "match_event_sha256"],
+      "required": [
+        "schema_version",
+        "category",
+        "home_team",
+        "away_team",
+        "event_datetime",
+        "timezone",
+        "identity_rule",
+        "match_event_sha256"
+      ],
       "properties": {
-        "schema_version": {"const": "MATCH_EVENT_V1"},
-        "category": {"const": "football_match"},
-        "home_team": {"type": "string", "minLength": 1},
-        "away_team": {"type": "string", "minLength": 1},
-        "event_datetime": {"type": "string", "format": "date-time"},
-        "timezone": {"type": "string", "minLength": 1},
-        "identity_rule": {"const": "HOME_AWAY_EVENT_LOCAL_DATETIME_TIMEZONE"},
-        "match_event_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        "schema_version": {
+          "const": "MATCH_EVENT_V1"
+        },
+        "category": {
+          "const": "football_match"
+        },
+        "home_team": {
+          "type": "string",
+          "minLength": 1
+        },
+        "away_team": {
+          "type": "string",
+          "minLength": 1
+        },
+        "event_datetime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1
+        },
+        "identity_rule": {
+          "const": "HOME_AWAY_EVENT_LOCAL_DATETIME_TIMEZONE"
+        },
+        "match_event_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
       },
       "additionalProperties": false
     },
     "event_metadata": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "properties": {
-        "competition": {"type": "string"},
-        "stage": {"type": "string"},
-        "stadium": {"type": "string"},
-        "city": {"type": "string"},
-        "country": {"type": "string"},
-        "kickoff_basis": {"type": "string"},
-        "time_verification_status": {"type": "string"},
-        "time_source": {"type": "string"},
-        "mode": {"enum": ["PREMATCH", "LIVE", "HISTORICAL_BACKTEST"]}
+        "competition": {
+          "type": "string"
+        },
+        "stage": {
+          "type": "string"
+        },
+        "stadium": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "kickoff_basis": {
+          "type": "string"
+        },
+        "time_verification_status": {
+          "type": "string"
+        },
+        "time_source": {
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "PREMATCH",
+            "LIVE",
+            "HISTORICAL_BACKTEST"
+          ]
+        }
       },
       "additionalProperties": false
     },
     "alignment_audit": {
       "type": "object",
-      "required": ["status", "checked_fields", "fields", "packet_integrity"],
+      "required": [
+        "status",
+        "checked_fields",
+        "fields",
+        "packet_integrity"
+      ],
       "properties": {
-        "status": {"const": "PASS"},
-        "checked_fields": {"type": "array", "minItems": 5},
-        "fields": {"type": "object"},
+        "status": {
+          "const": "PASS"
+        },
+        "checked_fields": {
+          "type": "array",
+          "minItems": 5
+        },
+        "fields": {
+          "type": "object"
+        },
         "packet_integrity": {
           "type": "object",
-          "required": ["qimen", "meihua"],
+          "required": [
+            "qimen",
+            "meihua"
+          ],
           "properties": {
-            "qimen": {"type": "object", "required": ["status", "reason", "expected", "actual"]},
-            "meihua": {"type": "object", "required": ["status", "reason", "expected", "actual"]}
+            "qimen": {
+              "type": "object",
+              "required": [
+                "status",
+                "reason",
+                "expected",
+                "actual"
+              ]
+            },
+            "meihua": {
+              "type": "object",
+              "required": [
+                "status",
+                "reason",
+                "expected",
+                "actual"
+              ]
+            }
           },
           "additionalProperties": false
         }
@@ -71,30 +162,215 @@
     },
     "interpretation_roles": {
       "type": "object",
-      "required": ["qimen", "meihua", "final"],
+      "required": [
+        "qimen",
+        "meihua",
+        "final"
+      ],
       "properties": {
-        "qimen": {"type": "object", "required": ["role", "rule"], "properties": {"role": {"const": "RESULT_ENGINE_INPUT"}}},
-        "meihua": {"type": "object", "required": ["role", "rule"], "properties": {"role": {"const": "STRUCTURE_STRESS_TEST"}}},
-        "final": {"type": "object", "required": ["role", "rule"], "properties": {"role": {"const": "CHATGPT_FINAL_SYNTHESIS"}}}
+        "qimen": {
+          "type": "object",
+          "required": [
+            "role",
+            "rule"
+          ],
+          "properties": {
+            "role": {
+              "const": "RESULT_ENGINE_INPUT"
+            }
+          }
+        },
+        "meihua": {
+          "type": "object",
+          "required": [
+            "role",
+            "rule"
+          ],
+          "properties": {
+            "role": {
+              "const": "STRUCTURE_STRESS_TEST"
+            }
+          }
+        },
+        "final": {
+          "type": "object",
+          "required": [
+            "role",
+            "rule"
+          ],
+          "properties": {
+            "role": {
+              "const": "CHATGPT_FINAL_SYNTHESIS"
+            }
+          }
+        }
       },
       "additionalProperties": false
     },
-    "qimen_packet_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "meihua_packet_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "qimen_packet_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "meihua_packet_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
     "qimen_packet": {
       "type": "object",
-      "required": ["schema_version", "system", "packet_sha256"],
-      "properties": {"schema_version": {"const": "DIVINATION_PACKET_V2"}, "system": {"const": "QIMEN_DUNJIA"}},
+      "required": [
+        "schema_version",
+        "system",
+        "packet_sha256"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "DIVINATION_PACKET_V2"
+        },
+        "system": {
+          "const": "QIMEN_DUNJIA"
+        }
+      },
       "additionalProperties": true
     },
     "meihua_packet": {
       "type": "object",
-      "required": ["schema_version", "system", "packet_sha256"],
-      "properties": {"schema_version": {"const": "DIVINATION_PACKET_V2"}, "system": {"const": "MEIHUA_YISHU"}},
+      "required": [
+        "schema_version",
+        "system",
+        "packet_sha256"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "DIVINATION_PACKET_V2"
+        },
+        "system": {
+          "const": "MEIHUA_YISHU"
+        }
+      },
       "additionalProperties": true
     },
-    "ai_handoff_contract": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
-    "bundle_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+    "ai_handoff_contract": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "bundle_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "differentiation_audit": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "status",
+        "temporal",
+        "event",
+        "participant",
+        "collision_gate_rule"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "FOOTBALL_DIFFERENTIATION_AUDIT_V1"
+        },
+        "status": {
+          "enum": [
+            "EVENT_AND_PARTICIPANT_READY",
+            "EVENT_READY__PARTICIPANT_MISSING",
+            "TEMPORAL_ONLY__UNSAFE_FOR_CROSS_FIXTURE_DIFFERENTIATION"
+          ]
+        },
+        "temporal": {
+          "type": "object",
+          "required": [
+            "status",
+            "temporal_signature_sha256",
+            "rule"
+          ],
+          "properties": {
+            "status": {
+              "const": "READY"
+            },
+            "temporal_signature_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "rule": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": true
+        },
+        "event": {
+          "type": "object",
+          "required": [
+            "status",
+            "event_signature_sha256",
+            "method"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "READY",
+                "NOT_PROVIDED"
+              ]
+            },
+            "event_signature_sha256": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "method": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": true
+        },
+        "participant": {
+          "type": "object",
+          "required": [
+            "status",
+            "participant_signature_sha256",
+            "authority"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "READY",
+                "NOT_PROVIDED"
+              ]
+            },
+            "participant_signature_sha256": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "authority": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": true
+        },
+        "collision_gate_rule": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    }
   },
   "additionalProperties": false
 }
