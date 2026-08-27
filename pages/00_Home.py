@@ -70,7 +70,7 @@ with l_col:
         st.write(
             "六次 6/7/8/9 排文王卦：納甲、八宮、世應、六親、六神、日月空破、動變與伏神候選；斷法分層審查。"
         )
-        st.page_link("pages/7_Liuyao_Cast.py", label="六爻起卦", icon="☷", use_container_width=True)
+        st.page_link("pages/7_Liuyao_Cast.py", label="六爻起卦", icon="🪙", width="stretch")
 with y_col:
     with st.container(border=True):
         st.markdown("## 🔢 元靈演數 × 日奇門")

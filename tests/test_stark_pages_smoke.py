@@ -74,8 +74,10 @@ def test_liuyao_submit_executes_chart_branch():
     assert metric_values["本卦"] == "坤為地"
     assert metric_values["卦宮"].startswith("坤宮")
     markdown_text = " ".join(item.value for item in app.markdown)
+    info_text = " ".join(item.value for item in app.info)
     assert "六爻排盤" in markdown_text
     assert "用神／題型入口" in markdown_text
+    assert "AI 解卦包" in info_text
 
 
 def test_yuanling_research_page_starts_with_casting_guide():

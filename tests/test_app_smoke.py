@@ -23,3 +23,13 @@ def test_operation_stark_home_opens_without_obsolete_research_product():
     assert "4096/4096" in all_visible_text
     assert "M0–M3" not in all_visible_text
     assert "Dynamic Football" not in all_visible_text
+
+
+def test_liuyao_navigation_uses_streamlit_compatible_emoji():
+    source = (ROOT / "app.py").read_text(encoding="utf-8")
+    home_source = (ROOT / "pages" / "00_Home.py").read_text(encoding="utf-8")
+
+    assert 'icon="☷"' not in source
+    assert 'icon="☷"' not in home_source
+    assert 'icon="🪙"' in source
+    assert 'icon="🪙"' in home_source

@@ -1,5 +1,16 @@
 # Changelog
 
+## 10.5.0-alpha.2 — UI REGRESSION + RELEASE-GATE HARDENING
+
+- Fix Streamlit 1.61 startup failure caused by using the trigram glyph `☷` as a navigation icon; Liuyao navigation now uses a valid emoji.
+- Remove the Liuyao post-submit `st.page_link` path that fails in direct-page/AppTest navigation context; the packet remains in session and the top navigation is the canonical AI handoff route.
+- Replace newly added Liuyao `use_container_width=True` calls with Streamlit 1.61 `width="stretch"`.
+- Add regression coverage for Liuyao navigation icon compatibility and submitted-state handoff.
+- Run knowledge/Yilin catalog validators before Pytest so a UI regression no longer hides later catalog-validation results.
+- Document that `release-gate` must be a required status check before merging to `main`.
+
+**Root cause:** PR #75 was merged while its CI was failing because `main` had no required-status-check branch protection. This release fixes the code regressions and documents the repository-level guard that must be enabled in GitHub settings.
+
 ## 10.5.0-alpha.1 — LIUYAO SOURCE-AWARE CORE
 
 ### Dedicated Liuyao subsystem
