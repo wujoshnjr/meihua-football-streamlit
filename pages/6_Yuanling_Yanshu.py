@@ -11,6 +11,7 @@ from jarvis.time import (
     inspect_local_civil_time,
 )
 from jarvis.yuanling_packet import (
+    YUANLING_PACKET_VERSION,
     build_yuanling_yanshu_packet,
     verify_yuanling_packet_integrity,
 )
@@ -53,10 +54,11 @@ with st.expander("📖 目前起法、資料庫內容與完成度", expanded=Tru
     st.caption(riqimen_method["boundary"])
 
 st.warning(
-    "原典已能確定奇門起例、三元局表、伏身、七要項目、數主落宮的重要性、"
-    "日奇門60日『某宮起休』表、卷三值日九星與射覆數目關聯；"
-    "但『遁至本時之星』與日奇門『穿宮數去』仍未完全 source-lock。"
-    "相關旁證只以候選 reconstruction 顯示，不會自動寫回原典七要欄。"
+    "七要的數主／飛星／直日星角色關係已完成 crosschecked reconstruction；"
+    "日奇門『穿宮』也已鎖定為九宮數序順飛、穿中五。"
+    "仍保留的研究缺口是：數宮完整原典取法、入門完整演數步驟、"
+    "以及《元靈經》本節缺少一個完整 end-to-end worked example。"
+    "旁證值仍不會靜默覆寫 raw primary slots。"
 )
 
 with st.form("yuanling_yanshu_form"):
@@ -120,7 +122,7 @@ with st.form("yuanling_yanshu_form"):
             daily_star = st.selectbox("直日星號", options)
 
     submitted = st.form_submit_button(
-        "建立 YUANLING_YANSHU_PACKET_V1_2",
+        f"建立 {YUANLING_PACKET_VERSION}",
         type="primary",
         use_container_width=True,
     )
@@ -227,8 +229,12 @@ if packet:
     )
     st.info(
         "這三項來自《奇門寶鑑》洞庭老人法與《金函玉鏡》日遁九星旁證。"
-        "候選數宮仍不是球數；數宮上的星也尚不能自動等同『數主』。"
+        "角色關係已分開：數主＝數宮本位數術星並追蹤其落宮；"
+        "飛星＝當日日遁盤臨到數宮之星；直日星＝中五當日占星。"
+        "但候選數宮仍不是球數，旁證值也不自動升格為 raw primary fact。"
     )
+    with st.expander("查看數主 / 飛星 / 直日星角色重建", expanded=True):
+        st.json(qiyao["star_role_resolution"])
     with st.expander("查看旁證九星盤 / source tier / non-equivalence rules"):
         st.json(collateral)
 
