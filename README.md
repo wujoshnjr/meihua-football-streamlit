@@ -1,8 +1,8 @@
 # JARVIS 術數 AI — Operation STARK
 
-**JARVIS 10.4 alpha · Multi-layer Football Case + Project Audit**：JARVIS 負責事件時間、奇門起局、梅花起卦、《元靈經》原典／旁證重建、古籍／知識檢索、來源審查、矛盾與不確定性整理；最後術數綜合判讀交給 ChatGPT。
+**JARVIS 10.5 alpha · Liuyao Source-aware Core**：JARVIS 負責事件時間、奇門起局、梅花起卦、六爻納甲、《元靈經》原典／旁證重建、古籍／知識檢索、來源審查、矛盾與不確定性整理；最後術數綜合判讀交給 ChatGPT。
 
-> **奇門多層合參 × 梅花定結構 × 周易依方法決定權重 × 易林補轉變情境 × 元靈演數保持原始資料 × ChatGPT 最終解讀**
+> **奇門多層合參 × 梅花定結構 × 六爻納甲獨立判盤 × 周易依方法決定權重 × 易林補轉變情境 × 元靈演數保持原始資料 × ChatGPT 最終解讀**
 
 JARVIS 不自動把任何單一門、星、神、卦、爻、林辭、數宮或數主換成勝率、固定比分或必然賽果。足球欄位屬 `modern application`，必須保留 source basis、observable 與 counter-signal。
 
@@ -86,6 +86,49 @@ Runtime：`streamlit==1.61.0`、`lunar_python==1.4.8`、`tzdata==2026.3`。
 4. 陰遁九局・夏至丙寅時・地遁例
 
 CI 逐宮核對地盤、天盤干、星、門、值符／值使與 source anchor。古籍例沒有完整西曆年份／IANA timezone，且八神名制存在流派差異，因此稱為 **`SOURCE_DERIVED_METHOD_GOLDEN`**，不冒充完整 calendar + timezone + deity 的 end-to-end external certification。
+
+## 六爻納甲／文王卦 — 10.5 alpha
+
+JARVIS 新增獨立 `liuyao/` 子系統，不借用梅花體用，也不把六爻簡化成卦名吉凶。
+
+Source anchors：
+
+- 《增刪卜易》
+- 《卜筮正宗》
+- 《火珠林》
+- 《黃金策》
+
+已實作 deterministic core：
+
+- 六次 6/7/8/9，初爻→上爻；
+- 本卦／變卦；
+- 64 卦八宮歸屬；
+- 世應；
+- 納甲；
+- 六親；
+- 六神；
+- 月建／日辰直接沖合生克；
+- 旬空；
+- 動爻／變爻；
+- 回頭生克；
+- 化進／化退；
+- 伏神候選；
+- 六沖／六合卦 flags。
+
+Source-aware review 另處理：
+
+- 題型→用神候選；
+- 多重用神不事後挑選；
+- 元神／忌神／仇神；
+- 旺衰 direct relations；
+- 日沖靜爻的暗動／日破 firewall；
+- 空、破、動、沖的 contradiction register。
+
+硬性規則：**變爻六親仍照正卦卦宮五行推，不依變卦自身卦宮重算。**
+
+六爻 UI：`/liuyao`。完整設計：`docs/LIUYAO_SYSTEM_DESIGN.md`。
+
+使用者指定影片 `-qgDHCHaDpo` 已登錄來源，但目前搜尋介面未取得可核對字幕／逐字稿，因此狀態維持 `PENDING_TRANSCRIPT__NOT_SOURCE_LOCKED`；未知影片內容不寫入 core。
 
 ## 《元靈經》演數七要 × 日奇門 — 10.4 alpha
 
@@ -241,6 +284,7 @@ python tools/validate_qimen_source_golden.py
 python tools/validate_qimen_extended_review.py
 python tools/validate_qimen_review_gates.py
 python tools/validate_yuanling.py
+python tools/validate_liuyao.py
 ruff check .
 python -m pytest -q
 python tools/validate_knowledge.py
@@ -251,7 +295,7 @@ python tools/validate_yilin.py
 
 JARVIS 10.2 完成 pinned Zhouyi/Yilin source review、384 爻條件式 review、Meihua method-aware/temporal review、Qimen Core 306 + Extended 378、source-derived Qimen method golden tests，以及 deterministic Case Bundle handoff。
 
-JARVIS 10.4 alpha 將《元靈經》角色重建與日奇門穿宮納入 crosschecked contract，並把 Yuanling 接入足球 temporal layer；仍不宣稱數宮完整古法、入門完整 mechanics、完整年命干支落宮或 Yuanling end-to-end worked example 已 source-lock。
+JARVIS 10.4 alpha 將《元靈經》角色重建與日奇門穿宮納入 crosschecked contract；10.5 alpha 新增獨立六爻納甲 core 與 source-aware review。仍不宣稱所有六爻流派、所有應期／神煞／反伏／三合細則已完成，也不把未取得 transcript 的影片內容冒充古法。
 
 本專案**不宣稱**所有歷代版本已校勘、所有奇門流派已統一、所有古法起卦／演數法都已實作、Qimen 已完成跨 timezone 的 end-to-end 外部盤認證，或足球預測準確率有所提升。
 
