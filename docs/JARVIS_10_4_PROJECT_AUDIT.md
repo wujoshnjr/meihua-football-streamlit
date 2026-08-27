@@ -101,16 +101,17 @@ Completed in 10.4.0-alpha.2:
 - migration guide for legacy Packet / Case Bundle / Yuanling artifacts.
 
 Still open:
-1. Add a persistent blind-test case registry with immutable `input_frozen_at`, source URLs/IDs, method versions and final pre-match interpretation.
+1. Build a **stateless casting-method benchmark** whose goal is to identify the most accurate frozen casting method. Do not require permanent storage of full cast results; persist only method definitions/versions, benchmark dataset definitions and aggregate metrics. See `docs/CASTING_METHOD_BENCHMARK.md`.
 2. Normalize repository/product metadata that still describes the project as an “automatic predictor”.
 
 ### P2 — validation / research program
 
-1. Build blind collision cohorts: same kickoff / same temporal signature / different fixtures.
-2. Freeze event-identity canonicalization and coach identity before outcome access.
-3. Report failures by layer: source data, calendar/cast, identity, mapping, interpretation, final call.
-4. Never retune hash slices, coach rules, time offsets or method selection after seeing outcomes.
-5. Separate accuracy claims by version; do not pool results across changed method contracts.
+1. Compare frozen casting-method contracts on the same fixture set and select methods by out-of-sample accuracy, not by anecdotal wins.
+2. Build blind collision cohorts: same kickoff / same temporal signature / different fixtures.
+3. Freeze event-identity canonicalization and coach identity before outcome access.
+4. Report failures by layer: source data, calendar/cast, identity, mapping, interpretation, final call.
+5. Never retune hash slices, coach rules, time offsets or method selection after seeing outcomes.
+6. Separate accuracy claims by method/version; do not pool results across changed contracts.
 
 ## Explicit non-claims
 
