@@ -7,7 +7,7 @@ from jarvis.provenance import sha256_payload
 from jarvis.event_layers import build_differentiation_audit
 
 MATCH_EVENT_VERSION = "MATCH_EVENT_V1"
-DIVINATION_CASE_BUNDLE_VERSION = "DIVINATION_CASE_BUNDLE_V1"
+DIVINATION_CASE_BUNDLE_VERSION = "DIVINATION_CASE_BUNDLE_V2"
 
 
 def _clean_team(value: str, field: str) -> str:
@@ -109,6 +109,7 @@ def _clean_event_metadata(event_metadata: dict[str, Any] | None) -> dict[str, An
         return None
     allowed = (
         "competition",
+        "season",
         "stage",
         "stadium",
         "city",
@@ -129,21 +130,27 @@ def build_divination_case_bundle(
     qimen_packet: dict[str, Any],
     meihua_packet: dict[str, Any],
     *,
+    yuanling_packet: dict[str, Any] | None = None,
     event_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Join Qimen and Meihua packets only when they describe the same match."""
+    """Join Qimen/Meihua and an optional Yuanling temporal sibling for one match."""
 
     if qimen_packet.get("system") != "QIMEN_DUNJIA":
         raise ValueError("CASE_ALIGNMENT_FAIL: qimen_packet.system 必須是 QIMEN_DUNJIA")
     if meihua_packet.get("system") != "MEIHUA_YISHU":
         raise ValueError("CASE_ALIGNMENT_FAIL: meihua_packet.system 必須是 MEIHUA_YISHU")
+    if yuanling_packet is not None and yuanling_packet.get("system") != "YUANLING_YANSHU_QIYAO":
+        raise ValueError("CASE_ALIGNMENT_FAIL: yuanling_packet.system 必須是 YUANLING_YANSHU_QIYAO")
 
     qimen_integrity = verify_packet_integrity(qimen_packet)
     meihua_integrity = verify_packet_integrity(meihua_packet)
+    yuanling_integrity = verify_packet_integrity(yuanling_packet) if yuanling_packet is not None else None
     if qimen_integrity["status"] != "PASS":
         raise ValueError("CASE_ALIGNMENT_FAIL: QIMEN_PACKET_SHA_INVALID")
     if meihua_integrity["status"] != "PASS":
         raise ValueError("CASE_ALIGNMENT_FAIL: MEIHUA_PACKET_SHA_INVALID")
+    if yuanling_integrity is not None and yuanling_integrity["status"] != "PASS":
+        raise ValueError("CASE_ALIGNMENT_FAIL: YUANLING_PACKET_SHA_INVALID")
 
     qimen_event = qimen_packet.get("match_event") or _derive_match_event(qimen_packet)
     meihua_event = meihua_packet.get("match_event") or _derive_match_event(meihua_packet)
@@ -160,11 +167,32 @@ def build_divination_case_bundle(
     if mismatches:
         raise ValueError("CASE_ALIGNMENT_FAIL: " + ", ".join(mismatches))
 
-    differentiation_audit = build_differentiation_audit(qimen_packet, meihua_packet)
+    yuanling_alignment = None
+    if yuanling_packet is not None:
+        y_event = yuanling_packet.get("event") or {}
+        yuanling_alignment = {
+            "datetime": {
+                "qimen": qimen_packet.get("event", {}).get("datetime"),
+                "yuanling": y_event.get("datetime"),
+                "match": qimen_packet.get("event", {}).get("datetime") == y_event.get("datetime"),
+            },
+            "timezone": {
+                "qimen": qimen_packet.get("event", {}).get("timezone"),
+                "yuanling": y_event.get("timezone"),
+                "match": qimen_packet.get("event", {}).get("timezone") == y_event.get("timezone"),
+            },
+        }
+        y_mismatches = [field for field, row in yuanling_alignment.items() if not row["match"]]
+        if y_mismatches:
+            raise ValueError("CASE_ALIGNMENT_FAIL: YUANLING_" + ", ".join(y_mismatches).upper())
+
+    differentiation_audit = build_differentiation_audit(
+        qimen_packet, meihua_packet, yuanling_packet
+    )
 
     payload: dict[str, Any] = {
         "schema_version": DIVINATION_CASE_BUNDLE_VERSION,
-        "packet_purpose": "SAME_EVENT_QIMEN_MEIHUA_HANDOFF__CHATGPT_INTERPRETS",
+        "packet_purpose": "FOOTBALL_MULTI_LAYER_HANDOFF__CHATGPT_INTERPRETS",
         "match_event": qimen_event,
         "event_metadata": _clean_event_metadata(event_metadata),
         "differentiation_audit": differentiation_audit,
@@ -175,7 +203,9 @@ def build_divination_case_bundle(
             "packet_integrity": {
                 "qimen": qimen_integrity,
                 "meihua": meihua_integrity,
+                "yuanling": yuanling_integrity,
             },
+            "yuanling_temporal_alignment": yuanling_alignment,
         },
         "interpretation_roles": {
             "qimen": {
@@ -186,6 +216,11 @@ def build_divination_case_bundle(
                 "role": "STRUCTURE_STRESS_TEST",
                 "rule": "梅花負責開局／中段／後段結構、轉折條件、支持與反證；不得再獨立產生第二套勝負或比分與奇門投票。",
             },
+            "yuanling": {
+                "role": "TEMPORAL_NUMERIC_CONTEXT",
+                "status": "INCLUDED" if yuanling_packet is not None else "NOT_INCLUDED",
+                "rule": "元靈七要只作共同時段數勢／source-aware numeric context；不得直接把宮數、星數或射覆數換成比分。",
+            },
             "final": {
                 "role": "CHATGPT_FINAL_SYNTHESIS",
                 "rule": "ChatGPT 保留矛盾與不確定性後做最終合參；不可重新起局或起卦。",
@@ -193,12 +228,16 @@ def build_divination_case_bundle(
         },
         "qimen_packet_sha256": qimen_packet.get("packet_sha256"),
         "meihua_packet_sha256": meihua_packet.get("packet_sha256"),
+        "yuanling_packet_sha256": (
+            yuanling_packet.get("packet_sha256") if yuanling_packet is not None else None
+        ),
         "qimen_packet": qimen_packet,
         "meihua_packet": meihua_packet,
+        "yuanling_packet": yuanling_packet,
         "ai_handoff_contract": [
             "先做 alignment_audit 與 packet_integrity；若不是 PASS，停止合參。",
-            "奇門作 RESULT_ENGINE_INPUT；梅花作 STRUCTURE_STRESS_TEST，不做兩套術數投票。",
-            "兩份 packet 皆不可重新起局／起卦、改時間、換主客或更改 deterministic chart facts。",
+            "奇門作 RESULT_ENGINE_INPUT；梅花作 STRUCTURE_STRESS_TEST；元靈若提供則只作 TEMPORAL_NUMERIC_CONTEXT，不做三套術數投票。",
+            "所有 packet 皆不可重新起局／起卦／演數、改時間、換主客或更改 deterministic facts。",
             "event_metadata 是來源／賽事描述層，不可反向改寫 match_event 的起局時間。",
             "若 differentiation_audit 顯示 TEMPORAL_ONLY__UNSAFE_FOR_CROSS_FIXTURE_DIFFERENTIATION，同時不同賽事不得只靠共同時間盤輸出不同結論。",
             "若 temporal signature 相同而 event signature 不同，差異判讀必須指向 event/participant layer，不得以事後挑象冒充分辨能力。",
