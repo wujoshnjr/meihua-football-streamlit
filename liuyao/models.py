@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+import json
 from datetime import datetime
 from typing import Any
 
@@ -73,7 +74,7 @@ class LiuyaoChart:
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
         payload["event_local_at"] = self.event_local_at.isoformat()
-        return payload
+        return json.loads(json.dumps(payload, ensure_ascii=False))
 
 
 @dataclass(frozen=True)
