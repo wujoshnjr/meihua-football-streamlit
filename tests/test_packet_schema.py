@@ -7,11 +7,12 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 from jarvis.case_bundle import build_divination_case_bundle
 from jarvis.divination_packet import build_meihua_packet, build_qimen_packet
+from jarvis.yuanling_packet import build_yuanling_yanshu_packet
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKET_SCHEMA = json.loads((ROOT / "schemas" / "divination_packet_v2.schema.json").read_text(encoding="utf-8"))
-CASE_SCHEMA = json.loads((ROOT / "schemas" / "divination_case_bundle_v1.schema.json").read_text(encoding="utf-8"))
+CASE_SCHEMA = json.loads((ROOT / "schemas" / "divination_case_bundle_v2.schema.json").read_text(encoding="utf-8"))
 PACKET_VALIDATOR = Draft202012Validator(PACKET_SCHEMA, format_checker=FormatChecker())
 CASE_VALIDATOR = Draft202012Validator(CASE_SCHEMA, format_checker=FormatChecker())
 
@@ -43,7 +44,7 @@ def test_meihua_packet_matches_v2_schema():
     _assert_valid(PACKET_VALIDATOR, packet)
 
 
-def test_same_event_case_bundle_matches_v1_schema():
+def test_same_event_case_bundle_matches_v2_schema():
     qimen = build_qimen_packet(
         question="正規時間勝負如何？",
         event_at=_event(),
@@ -61,4 +62,31 @@ def test_same_event_case_bundle_matches_v1_schema():
         away_team="維德角",
     )
     bundle = build_divination_case_bundle(qimen, meihua)
+    _assert_valid(CASE_VALIDATOR, bundle)
+
+
+def test_multi_layer_case_bundle_with_yuanling_matches_v2_schema():
+    qimen = build_qimen_packet(
+        question="正規時間勝負如何？",
+        event_at=_event(),
+        timezone_name="America/New_York",
+        category="football_match",
+        home_team="西班牙",
+        away_team="維德角",
+    )
+    meihua = build_meihua_packet(
+        question="結構、轉折與反證如何？",
+        event_at=_event(),
+        timezone_name="America/New_York",
+        category="football_match",
+        home_team="西班牙",
+        away_team="維德角",
+    )
+    yuanling = build_yuanling_yanshu_packet(
+        question="整理共同時段數勢，不直接輸出比分。",
+        event_at=_event(),
+        timezone_name="America/New_York",
+        mode="QIYAO_RAW",
+    )
+    bundle = build_divination_case_bundle(qimen, meihua, yuanling_packet=yuanling)
     _assert_valid(CASE_VALIDATOR, bundle)

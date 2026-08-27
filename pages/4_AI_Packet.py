@@ -4,14 +4,74 @@ import json
 
 import streamlit as st
 
+from jarvis.case_bundle import verify_bundle_integrity
+
 
 st.set_page_config(page_title="AI 解卦包 · JARVIS", page_icon="🤖", layout="wide")
 st.title("🤖 AI 解卦包")
 st.caption("JARVIS 到這裡為止：方法身份、盤／卦、原典來源、易林、矛盾與不確定性已固定。接下來把完整 packet 交給 ChatGPT 解讀。")
 
+case_bundle = st.session_state.get("stark_case_bundle")
+if case_bundle:
+    integrity = verify_bundle_integrity(case_bundle)
+    st.success(
+        f"{case_bundle['schema_version']}｜Bundle SHA "
+        f"{'PASS' if integrity['status'] == 'PASS' else 'FAIL'}｜"
+        f"{case_bundle['bundle_sha256']}"
+    )
+    event = case_bundle["match_event"]
+    differentiation = case_bundle["differentiation_audit"]
+    st.markdown("### 足球多層 AI Handoff")
+    st.write(
+        f"**{event['home_team']} vs {event['away_team']}**｜"
+        f"{event['event_datetime']}｜{event['timezone']}"
+    )
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Alignment", case_bundle["alignment_audit"]["status"])
+    c2.metric("Differentiation", differentiation["status"])
+    c3.metric("Qimen", case_bundle["interpretation_roles"]["qimen"]["role"])
+    c4.metric("Yuanling", case_bundle["interpretation_roles"]["yuanling"]["status"])
+
+    if differentiation["status"] == "TEMPORAL_ONLY__UNSAFE_FOR_CROSS_FIXTURE_DIFFERENTIATION":
+        st.warning(
+            "此案件缺少 event identity；若存在相同 temporal signature 的其他 fixture，"
+            "不得僅靠共同時間盤給出不同賽果。"
+        )
+
+    instruction = (
+        f"請依這份 JARVIS {case_bundle['schema_version']} 做足球最終合參。\n"
+        "先驗 alignment_audit、packet integrity、differentiation_audit 與 signatures。\n"
+        "奇門 = RESULT_ENGINE_INPUT：主判正規時間勝負與有限候選比分。\n"
+        "梅花 = STRUCTURE_STRESS_TEST：時勢卦／事件卦只判結構、轉折、支持與反證，不另報第二套比分。\n"
+        "元靈（若 INCLUDED）= TEMPORAL_NUMERIC_CONTEXT：只描述共同時段數勢，不把宮數、星數、射覆數直接換成比分。\n"
+        "Event / participant layers 是同時開賽跨 fixture differentiation 的可稽核來源；"
+        "若 temporal signature 相同，不得靠事後挑象製造差異。\n"
+        "所有古籍原文、source reconstruction、project adaptation、football modern application 必須分層。\n"
+        "不要重新起局、起卦、演數、改時間、換主客或用賽後資訊回填。"
+    )
+    st.markdown("### 交給 ChatGPT 時的固定指令")
+    st.code(instruction, language=None)
+
+    with st.expander("Differentiation audit", expanded=True):
+        st.json(differentiation)
+    with st.expander("Multi-layer alignment / SHA audit"):
+        st.json(case_bundle["alignment_audit"])
+
+    bundle_json = json.dumps(case_bundle, ensure_ascii=False, indent=2)
+    st.markdown("### 完整 Case Bundle")
+    st.code(bundle_json, language="json")
+    st.download_button(
+        f"下載 {case_bundle['schema_version']}.json",
+        data=bundle_json,
+        file_name=f"case-{case_bundle['bundle_sha256'][:12]}.json",
+        mime="application/json",
+        use_container_width=True,
+    )
+    st.stop()
+
 packet = st.session_state.get("stark_packet")
 if not packet:
-    st.info("目前工作階段還沒有 AI 解卦包。請從上方導覽前往「奇門起局」或「梅花起卦」建立一份。")
+    st.info("目前工作階段還沒有 AI 解卦包。足球請從「足球多層案件」建立 Case Bundle；一般問題可從「奇門起局」或「梅花起卦」建立單術數 packet。")
     st.stop()
 
 context = packet.get("knowledge_context", [])

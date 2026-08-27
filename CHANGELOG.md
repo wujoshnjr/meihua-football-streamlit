@@ -1,5 +1,39 @@
 # Changelog
 
+## 10.4.0-alpha.1 — MULTI-LAYER FOOTBALL CASE + PROJECT AUDIT
+
+### Football event differentiation
+- Wire `FOOTBALL_EVENT_IDENTITY_V1` into the primary football UI.
+- Freeze canonical fixture identity from competition, season, official English home/away names and scheduled kickoff UTC.
+- Expose deterministic `MEIHUA_EVENT_IDENTITY_V1` as a project adaptation, not a transmitted classical formula.
+- Expose optional `QIMEN_PARTICIPANT_LAYER_V1`; V1 placement uses the coach birth-year **stem only**, while the branch is retained for identity audit.
+- Display temporal / event / participant signatures and block unsupported cross-fixture differentiation when event identity is missing.
+
+### Case Bundle V2
+- Upgrade football handoff to `DIVINATION_CASE_BUNDLE_V2`.
+- Add optional `YUANLING_YANSHU_PACKET_V1_3` as `TEMPORAL_NUMERIC_CONTEXT`.
+- Verify Yuanling SHA and datetime/timezone alignment.
+- Include deterministic Yuanling reconstruction in the temporal signature when present.
+- Keep Qimen=RESULT_ENGINE_INPUT, Meihua=STRUCTURE_STRESS_TEST, Yuanling=TEMPORAL_NUMERIC_CONTEXT; no three-system voting.
+
+### Yuanling corrections
+- Align UI text with the crosschecked 數主 / 飛星 / 直日星 role reconstruction.
+- Align UI text with resolved Ri-Qimen through-palace mechanics: Qimen nine stars fly numeric 1→…→9 with center included; doors remain on the eight-palace ring.
+- Fix experiment-mode `ju_label` runtime contract and require it in the V1.3 schema.
+- Remove stale V1.2 UI labels.
+
+### Time correctness
+- Unify standalone Qimen / Meihua pages with the second-level, DST-aware event-time contract.
+- Ambiguous DST wall times now require explicit fold selection instead of silently defaulting to fold=0.
+
+### Schema / audit
+- Formally validate event-identity and participant-layer objects in `DIVINATION_PACKET_V2`.
+- Add `schemas/divination_case_bundle_v2.schema.json`.
+- Add project-wide audit at `docs/JARVIS_10_4_PROJECT_AUDIT.md`.
+- Preserve unresolved source gaps rather than promoting collateral reconstruction to primary facts.
+
+**No accuracy claim:** this release improves reproducibility, collision handling, source honesty and engineering consistency. It does not claim improved football predictive accuracy.
+
 ## 10.3.0-alpha.1 — YUANLING SOURCE RECONSTRUCTION
 
 JARVIS 10.3 begins a source-first 《奇門遁甲元靈經》 layer. The alpha deliberately prioritizes reconstructable classical facts and explicit uncertainty over producing numeric football answers.

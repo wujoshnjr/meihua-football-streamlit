@@ -339,3 +339,14 @@ def test_riqimen_experiment_uses_single_packet_layer_sibling() -> None:
     source_ids = {row["id"] for row in packet["knowledge_context"]["source_sections"]}
     assert "yuanling.vol1.riqimen" in source_ids
     assert "yuanling.vol1.solar_term_ju" in source_ids
+
+
+def test_riqimen_base_exposes_ui_safe_ju_label():
+    event = datetime(2026, 8, 23, 20, 53, tzinfo=ZoneInfo("Asia/Taipei"))
+    packet = build_yuanling_yanshu_packet(
+        question="測試日奇門局標籤。",
+        event_at=event,
+        timezone_name="Asia/Taipei",
+        mode="RIQIMEN_QIYAO_EXPERIMENT",
+    )
+    assert packet["riqimen_base"]["calendar"]["ju_label"].endswith("局")

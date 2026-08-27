@@ -82,6 +82,12 @@ def test_event_identity_is_normalized_deterministic_and_prematch_only() -> None:
     assert cast["upper_number"] in range(1, 9)
     assert cast["lower_number"] in range(1, 9)
     assert cast["moving_line"] in range(1, 7)
+    assert cast["body_use_relation"] in {"比和", "生體", "體生用", "克體", "體克用"}
+    assert cast["mutual_upper_trigram"]
+    assert cast["mutual_lower_trigram"]
+    assert cast["changed_use_trigram"]
+    assert cast["changed_use_relation_to_body"] in {"比和", "生體", "體生用", "克體", "體克用"}
+    assert cast["season_state"] == "NOT_COMPUTED_IN_EVENT_IDENTITY_LAYER"
     assert first["meihua_event_cast"]["authority"].startswith("PROJECT_ADAPTATION")
     serialized = str(first).lower()
     assert "score" not in serialized
@@ -156,6 +162,11 @@ def test_coach_year_life_layer_is_auditable_project_adaptation() -> None:
     assert participant["status"] == "READY"
     assert participant["authority"] == "PROJECT_ADAPTATION__COACH_AS_MATCH_ACTOR"
     assert participant["home"]["birth_year_ganzhi"] == "甲子"
+    assert participant["home"]["year_stem"] == "甲"
+    assert participant["home"]["year_branch"] == "子"
+    assert participant["home"]["placement_basis"] == "BIRTH_YEAR_STEM_ON_HEAVEN_PLATE__BRANCH_RETAINED_FOR_IDENTITY_ONLY"
+    assert participant["home"]["placement_source_status"].startswith("PROJECT_CONVENTION__HIDDEN_JIA")
+    assert "不等同完整古法年命演算法" in participant["method_boundary"]
     assert participant["away"]["birth_year_ganzhi"] == "辛酉"
     assert participant["home"]["palace"] in range(1, 10)
     assert participant["away"]["palace"] in range(1, 10)

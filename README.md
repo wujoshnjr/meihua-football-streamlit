@@ -1,29 +1,30 @@
 # JARVIS 術數 AI — Operation STARK
 
-**JARVIS 10.3 alpha · Yuanling Source Reconstruction**：JARVIS 負責事件時間、奇門起局、梅花起卦、《元靈經》原典／旁證重建、古籍／知識檢索、來源審查、矛盾與不確定性整理；最後術數綜合判讀交給 ChatGPT。
+**JARVIS 10.4 alpha · Multi-layer Football Case + Project Audit**：JARVIS 負責事件時間、奇門起局、梅花起卦、《元靈經》原典／旁證重建、古籍／知識檢索、來源審查、矛盾與不確定性整理；最後術數綜合判讀交給 ChatGPT。
 
 > **奇門多層合參 × 梅花定結構 × 周易依方法決定權重 × 易林補轉變情境 × 元靈演數保持原始資料 × ChatGPT 最終解讀**
 
 JARVIS 不自動把任何單一門、星、神、卦、爻、林辭、數宮或數主換成勝率、固定比分或必然賽果。足球欄位屬 `modern application`，必須保留 source basis、observable 與 counter-signal。
 
-## 足球 Case 工作流
+## 足球多層 Case 工作流
 
 ```text
-MATCH_EVENT_V1
-同一事件所在地 aware local datetime + IANA timezone
+Temporal input: aware local datetime + IANA timezone
         ↓
-┌───────────────────────┬────────────────────────┐
-│ Qimen Packet          │ Meihua Packet          │
-│ RESULT_ENGINE_INPUT   │ STRUCTURE_STRESS_TEST  │
-└───────────────────────┴────────────────────────┘
+┌───────────────────────┬────────────────────────┬────────────────────────┐
+│ Qimen Packet          │ Meihua Packet          │ Yuanling Packet(opt.) │
+│ RESULT_ENGINE_INPUT   │ STRUCTURE_STRESS_TEST  │ TEMPORAL_NUMERIC_CTX  │
+└───────────────────────┴────────────────────────┴────────────────────────┘
         ↓
-DIVINATION_CASE_BUNDLE_V1
-same-event alignment + packet SHA audit
+Canonical fixture identity + optional coach year-stem participant layer
+        ↓
+DIVINATION_CASE_BUNDLE_V2
+alignment + SHA + temporal/event/participant signatures + collision gate
         ↓
 ChatGPT FINAL_SYNTHESIS
 ```
 
-`pages/5_Football_Case.py` 可一次輸入主客隊、賽事／階段／球場、事件時間與 IANA timezone，同時建立奇門與梅花 packet；兩份 packet 只有在主客、事件時間與 timezone 完全一致時才能組成 Case Bundle。
+`pages/5_Football_Case.py` 可一次建立奇門、梅花與可選 Yuanling temporal sibling；canonical fixture identity 另以賽事、賽季、官方英文主客隊名、官方原定開球 UTC 固定，主教練出生年干可選作 participant layer。所有 packet 必須通過 SHA 與時間對齊。
 
 - **奇門 = `RESULT_ENGINE_INPUT`**：提供主客用神與完整盤局，交由 ChatGPT 判斷正規時間勝負及有限比分候選；JARVIS 本身不下結果。
 - **梅花 = `STRUCTURE_STRESS_TEST`**：讀開局／中段／終局、體用、旺衰、體互／用互、變卦、動爻、周易、易林與時間交界；不另產生第二套比分和奇門投票。
@@ -77,9 +78,9 @@ Runtime：`streamlit==1.61.0`、`lunar_python==1.4.8`、`tzdata==2026.3`。
 
 CI 逐宮核對地盤、天盤干、星、門、值符／值使與 source anchor。古籍例沒有完整西曆年份／IANA timezone，且八神名制存在流派差異，因此稱為 **`SOURCE_DERIVED_METHOD_GOLDEN`**，不冒充完整 calendar + timezone + deity 的 end-to-end external certification。
 
-## 《元靈經》演數七要 × 日奇門 — 10.3 alpha
+## 《元靈經》演數七要 × 日奇門 — 10.4 alpha
 
-10.3 不建立一張混合的「日奇門・演數七要盤」。卷一把 **演數七要、數主吉凶歌訣、日奇門**列成相鄰但獨立條目，因此工程上拆成：
+10.4 仍不建立一張混合的「日奇門・演數七要盤」。卷一把 **演數七要、數主吉凶歌訣、日奇門**列成相鄰但獨立條目，因此工程上拆成：
 
 - `yuanling.yanshu_qiyao`：七要 primary review。
 - `yuanling.riqimen`：日奇門 source-grounded base。
@@ -91,7 +92,7 @@ CI 逐宮核對地盤、天盤干、星、門、值符／值使與 source anchor
 
 `數宮 → 數主 → 飛星 → 入門 → 直日星 → 日干 → 時支`
 
-目前能由曆法直接確定的 `日干 / 時支` 會寫入；其餘若《元靈經》本法尚未完成 algorithm reconstruction，就保留 `UNRESOLVED_BY_SOURCE_AUDIT`，而不是借用現有時家盤硬補。
+`日干 / 時支` 由曆法直接確定；`數主 / 飛星 / 直日星` 的角色關係已由原文與旁證交叉重建，但 raw primary slot 仍不因旁證自動覆寫。數宮完整原典取法與入門完整演數 mechanics 仍保留 source-tiered gap。
 
 ### 元靈數術九星與時家九星分離
 
@@ -105,7 +106,7 @@ CI 逐宮核對地盤、天盤干、星、門、值符／值使與 source anchor
 
 ### 旁證 reconstruction 不寫回 primary
 
-10.3 另設 `COLLATERAL_QIMEN_TEXT_RECONSTRUCTION`：
+10.4 保留 `COLLATERAL_QIMEN_TEXT_RECONSTRUCTION`：
 
 - 《金函玉鏡》九星落局法可 deterministic 重建太乙→天乙日遁九星，並以甲子陽遁／陰遁完整盤作 golden anchors。
 - 《奇門寶鑑》洞庭老人捷徑占法提供從日干、時支求候選時宮／數宮，再布日遁九星與八門的旁證步驟。
@@ -120,8 +121,10 @@ CI 逐宮核對地盤、天盤干、星、門、值符／值使與 source anchor
 但這些只屬 **candidate**，不會自動填入七要 primary slots。尤其：
 
 - 候選數宮 ≠ 球數；
-- 數宮上的日遁星 ≠ 已證成的數主；
-- 中宮日遁星 ≠ 已證成的直日星。
+- 數主＝數宮本位數術星，另追蹤其當日日遁落宮；
+- 飛星＝當日日遁九星盤臨到數宮之星；
+- 直日星＝中五當日占星，屬 crosschecked reconstruction；
+- 上述角色已解，但旁證具體值仍不靜默升格為 raw primary fact。
 
 ### 異文／跨文本差異
 
@@ -141,13 +144,11 @@ JARVIS 明確保留：
 - 地盤奇儀；
 - 日旬頭。
 
-`值符之上星加本日干穿宮數去` 的完整天盤機械步驟仍標為 unresolved，因此 status 是：
-
-`PARTIAL_SOURCE_GROUNDED__HEAVEN_PLATE_PENDING`
+`值符之上星加本日干穿宮數去` 已重建為日奇門九星沿九宮數序 `1→2→…→9→1` 順飛、穿中五；八門仍沿八宮環順布、不入中五。狀態為 `SOURCE_CROSSCHECKED_RECONSTRUCTION_READY`，但《元靈經》本節缺完整 end-to-end worked example，因此仍保留 authority gap。
 
 ### Yuanling Packet
 
-`YUANLING_YANSHU_PACKET_V1` 保存 source tier、七要 slots、numeric-star registry、旁證 reconstruction、optional Ri-Qimen base、uncertainty 與 deterministic SHA。
+`YUANLING_YANSHU_PACKET_V1_3` 保存 source tier、七要 slots、numeric-star registry、旁證 reconstruction、optional Ri-Qimen base、uncertainty 與 deterministic SHA。
 
 硬性邊界：
 
@@ -203,11 +204,11 @@ Authority 固定為 `PROJECT_REVIEW__NOT_CLASSICAL_COMMENTARY`；原文仍是第
 ### `DIVINATION_PACKET_V2`
 保存 deterministic chart/hexagram facts、來源審查、method audit、temporal audit、meaning review、Yilin bridge、contradiction register、uncertainty register 與 deterministic SHA-256。
 
-### `DIVINATION_CASE_BUNDLE_V1`
-保存同一場足球的 Qimen + Meihua packets，強制驗證 same home/away、same aware event datetime、same IANA timezone、packet SHA integrity 與 deterministic match-event identity。任何不一致都停止合參。
+### `DIVINATION_CASE_BUNDLE_V2`
+保存同一場足球的 Qimen + Meihua + optional Yuanling temporal sibling，強制驗證 packet SHA、事件時間／時區與 deterministic match identity；另保存 temporal / event / participant signatures 與 collision gate。相同 temporal input 不得靠事後挑象製造不同 fixture 結論。
 
-### `YUANLING_YANSHU_PACKET_V1`
-保存元靈演數研究資料；目前獨立於 football Case Bundle，不參與自動比分 synthesis。
+### `YUANLING_YANSHU_PACKET_V1_3`
+保存元靈演數研究資料；可作 `DIVINATION_CASE_BUNDLE_V2` 的 `TEMPORAL_NUMERIC_CONTEXT` sibling，但仍不參與自動比分 synthesis。
 
 ## 驗證
 
@@ -236,7 +237,7 @@ python tools/validate_yilin.py
 
 JARVIS 10.2 完成 pinned Zhouyi/Yilin source review、384 爻條件式 review、Meihua method-aware/temporal review、Qimen Core 306 + Extended 378、source-derived Qimen method golden tests，以及 deterministic Case Bundle handoff。
 
-JARVIS 10.3 alpha 進一步建立《元靈經》演數七要／日奇門的**獨立、可稽核研究層**，並加入旁證 reconstruction；但它尚未宣稱數主／飛星／直日星之間的完整關係或日奇門 `穿宮數去` 已 source-lock。
+JARVIS 10.4 alpha 將《元靈經》角色重建與日奇門穿宮納入 crosschecked contract，並把 Yuanling 接入足球 temporal layer；仍不宣稱數宮完整古法、入門完整 mechanics、完整年命干支落宮或 Yuanling end-to-end worked example 已 source-lock。
 
 本專案**不宣稱**所有歷代版本已校勘、所有奇門流派已統一、所有古法起卦／演數法都已實作、Qimen 已完成跨 timezone 的 end-to-end 外部盤認證，或足球預測準確率有所提升。
 

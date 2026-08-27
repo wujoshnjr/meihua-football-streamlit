@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/wujoshnjr/meihua-football-streamlit/schemas/divination-packet.schema.json",
-  "title": "JARVIS DIVINATION_PACKET_V1",
+  "title": "LEGACY JARVIS DIVINATION_PACKET_V1",
   "type": "object",
   "required": [
     "schema_version",
@@ -15,47 +15,128 @@
     "packet_sha256"
   ],
   "properties": {
-    "schema_version": {"const": "DIVINATION_PACKET_V1"},
-    "packet_purpose": {"const": "JARVIS_CAST_AND_RETRIEVE__CHATGPT_INTERPRETS"},
-    "system": {"enum": ["QIMEN_DUNJIA", "MEIHUA_YISHU"]},
+    "schema_version": {
+      "const": "DIVINATION_PACKET_V1"
+    },
+    "packet_purpose": {
+      "const": "JARVIS_CAST_AND_RETRIEVE__CHATGPT_INTERPRETS"
+    },
+    "system": {
+      "enum": [
+        "QIMEN_DUNJIA",
+        "MEIHUA_YISHU"
+      ]
+    },
     "question": {
       "type": "object",
-      "required": ["text", "category"],
+      "required": [
+        "text",
+        "category"
+      ],
       "properties": {
-        "text": {"type": "string", "minLength": 1},
-        "category": {"enum": ["general", "football_match"]}
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "enum": [
+            "general",
+            "football_match"
+          ]
+        }
       }
     },
     "event": {
       "type": "object",
-      "required": ["datetime", "timezone"],
+      "required": [
+        "datetime",
+        "timezone"
+      ],
       "properties": {
-        "datetime": {"type": "string", "minLength": 1},
-        "timezone": {"type": "string", "minLength": 1}
+        "datetime": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
-    "method": {"type": "object"},
-    "host_guest": {"type": ["object", "null"]},
-    "football_fixture": {"type": ["object", "null"]},
-    "chart": {"type": "object"},
-    "hexagram": {"type": "object"},
-    "knowledge_context": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "method": {
+      "type": "object"
+    },
+    "host_guest": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "football_fixture": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "chart": {
+      "type": "object"
+    },
+    "hexagram": {
+      "type": "object"
+    },
+    "knowledge_context": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object"
+      }
+    },
     "ai_interpretation_contract": {
       "type": "array",
       "minItems": 3,
-      "items": {"type": "string", "minLength": 1}
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
-    "packet_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+    "packet_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
   },
   "allOf": [
     {
-      "if": {"properties": {"system": {"const": "QIMEN_DUNJIA"}}},
-      "then": {"required": ["chart", "host_guest"]}
+      "if": {
+        "properties": {
+          "system": {
+            "const": "QIMEN_DUNJIA"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "chart",
+          "host_guest"
+        ]
+      }
     },
     {
-      "if": {"properties": {"system": {"const": "MEIHUA_YISHU"}}},
-      "then": {"required": ["hexagram", "football_fixture"]}
+      "if": {
+        "properties": {
+          "system": {
+            "const": "MEIHUA_YISHU"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "hexagram",
+          "football_fixture"
+        ]
+      }
     }
   ],
-  "additionalProperties": true
+  "additionalProperties": true,
+  "description": "Deprecated compatibility schema. New artifacts use schemas/divination_packet_v2.schema.json; do not use this V1 schema for event-identity or participant-layer validation.",
+  "deprecated": true
 }

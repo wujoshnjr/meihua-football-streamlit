@@ -1,20 +1,23 @@
 from __future__ import annotations
 
 import json
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timezone
 
 import streamlit as st
 
 from jarvis.case_bundle import build_divination_case_bundle, verify_bundle_integrity
 from jarvis.divination_packet import build_meihua_packet, build_qimen_packet
+from jarvis.yuanling_packet import build_yuanling_yanshu_packet
+from jarvis.yuanling_vault import football_question_templates
 from jarvis.time import EventLocalTimeError, aware_event_local_datetime, inspect_local_civil_time
 
 
-st.set_page_config(page_title="足球雙術數案件 · JARVIS", page_icon="⚽", layout="wide")
-st.title("⚽ 足球雙術數案件")
+st.set_page_config(page_title="足球多層術數案件 · JARVIS", page_icon="⚽", layout="wide")
+st.title("⚽ 足球多層術數案件")
 st.caption(
-    "同一個事件時間一次建立奇門 RESULT_ENGINE_INPUT + 梅花 STRUCTURE_STRESS_TEST，"
-    "先做 same-event alignment，再下載 DIVINATION_CASE_BUNDLE_V1 交給 ChatGPT。"
+    "同一個事件時間建立奇門 RESULT_ENGINE_INPUT + 梅花 STRUCTURE_STRESS_TEST，"
+    "可選加入元靈 TEMPORAL_NUMERIC_CONTEXT，並用賽前固定 event / participant identity 解決同時開賽 collision；"
+    "最後下載 DIVINATION_CASE_BUNDLE_V2 交給 ChatGPT。"
 )
 
 cast_tab, import_tab = st.tabs(["同時起局／起卦", "匯入既有 Packets"])
@@ -46,11 +49,55 @@ with cast_tab:
 
         m1, m2, m3 = st.columns(3)
         with m1:
-            competition = st.text_input("賽事名稱（選填）")
+            competition = st.text_input("賽事名稱（事件身份啟用時必填）")
         with m2:
             stage = st.text_input("比賽階段（選填）")
         with m3:
             mode = st.selectbox("案件模式", ["PREMATCH", "LIVE", "HISTORICAL_BACKTEST"])
+
+        use_event_identity = st.checkbox(
+            "建立賽前唯一 Event Identity（建議）",
+            value=True,
+            help="用賽事、賽季、官方英文主客隊名、官方原定開球 UTC 建立 deterministic event signature 與梅花事件卦。",
+        )
+        i1, i2, i3 = st.columns(3)
+        with i1:
+            season = st.text_input("賽季（例如 2026-27）")
+        with i2:
+            home_official_name = st.text_input("主隊官方英文全名")
+        with i3:
+            away_official_name = st.text_input("客隊官方英文全名")
+        scheduled_kickoff_utc = st.text_input(
+            "官方原定開球 UTC（ISO-8601；若起局基準就是 SCHEDULED_KICKOFF 可留空自動換算）",
+            placeholder="2026-08-22T14:00:00Z",
+        )
+
+        layer1, layer2 = st.columns(2)
+        with layer1:
+            include_yuanling = st.checkbox(
+                "加入《元靈經》七要共同時段層",
+                value=True,
+                help="只作 TEMPORAL_NUMERIC_CONTEXT，不直接輸出比分。",
+            )
+        with layer2:
+            use_coach_identity = st.checkbox(
+                "加入 A/B 主教練出生年干支承盤層",
+                value=False,
+                help="年命概念有古法依據；把主教練視為足球 actor 是 JARVIS project adaptation。",
+            )
+        coach1, coach2 = st.columns(2)
+        with coach1:
+            home_coach_ganzhi = st.text_input(
+                "A 主教練出生年干支",
+                placeholder="例如 甲子",
+                disabled=not use_coach_identity,
+            )
+        with coach2:
+            away_coach_ganzhi = st.text_input(
+                "B 主教練出生年干支",
+                placeholder="例如 辛酉",
+                disabled=not use_coach_identity,
+            )
 
         v1, v2, v3, v4 = st.columns(4)
         with v1:
@@ -74,7 +121,7 @@ with cast_tab:
                 value=time(20, 0),
                 step=1,
                 format="24h",
-                help="JARVIS 10.2 使用秒級 local civil time；足球官方資料只有分鐘時可把秒留 00。",
+                help="JARVIS 使用秒級 local civil time；足球官方資料只有分鐘時可把秒留 00。",
             )
         with c3:
             timezone_name = st.text_input("IANA timezone", value="Asia/Taipei")
@@ -111,7 +158,7 @@ with cast_tab:
             ),
         )
 
-        submitted = st.form_submit_button("建立奇門＋梅花 Case Bundle", type="primary", use_container_width=True)
+        submitted = st.form_submit_button("建立 JARVIS 多層 Case Bundle V2", type="primary", use_container_width=True)
 
     if submitted:
         try:
@@ -128,6 +175,30 @@ with cast_tab:
             fold = 1 if fold_mode == "SECOND_FOLD_1" else 0
             event_at = aware_event_local_datetime(wall, timezone_name.strip(), fold=fold)
 
+            fixture_identity = None
+            if use_event_identity:
+                scheduled_value = scheduled_kickoff_utc.strip()
+                if not scheduled_value and kickoff_basis == "SCHEDULED_KICKOFF":
+                    scheduled_value = event_at.astimezone(timezone.utc)
+                elif not scheduled_value:
+                    raise ValueError(
+                        "起局基準不是 SCHEDULED_KICKOFF 時，Event Identity 必須另填官方原定開球 UTC。"
+                    )
+                fixture_identity = {
+                    "competition": competition,
+                    "season": season,
+                    "home_official_name": home_official_name,
+                    "away_official_name": away_official_name,
+                    "scheduled_kickoff_utc": scheduled_value,
+                }
+
+            coach_identity = None
+            if use_coach_identity:
+                coach_identity = {
+                    "home_birth_ganzhi": home_coach_ganzhi,
+                    "away_birth_ganzhi": away_coach_ganzhi,
+                }
+
             match_clock_events = None
             if match_clock_events_text.strip():
                 if mode != "LIVE":
@@ -143,6 +214,8 @@ with cast_tab:
                 category="football_match",
                 home_team=home_team,
                 away_team=away_team,
+                fixture_identity=fixture_identity,
+                coach_identity=coach_identity,
             )
             meihua_packet = build_meihua_packet(
                 question=meihua_question,
@@ -153,9 +226,21 @@ with cast_tab:
                 away_team=away_team,
                 timeline_horizon_minutes=int(horizon),
                 match_clock_events=match_clock_events,
+                fixture_identity=fixture_identity,
+            )
+            yuanling_packet = (
+                build_yuanling_yanshu_packet(
+                    question=football_question_templates()["yuanling"],
+                    event_at=event_at,
+                    timezone_name=timezone_name.strip(),
+                    mode="QIYAO_RAW",
+                )
+                if include_yuanling
+                else None
             )
             metadata = {
                 "competition": competition,
+                "season": season,
                 "stage": stage,
                 "stadium": stadium,
                 "city": city,
@@ -165,19 +250,26 @@ with cast_tab:
                 "time_source": time_source,
                 "mode": mode,
             }
-            bundle = build_divination_case_bundle(qimen_packet, meihua_packet, event_metadata=metadata)
+            bundle = build_divination_case_bundle(
+                qimen_packet,
+                meihua_packet,
+                yuanling_packet=yuanling_packet,
+                event_metadata=metadata,
+            )
             st.session_state["stark_qimen_packet"] = qimen_packet
             st.session_state["stark_meihua_packet"] = meihua_packet
             st.session_state["stark_case_bundle"] = bundle
+            st.session_state["stark_yuanling_packet"] = yuanling_packet
             st.session_state["stark_packet"] = meihua_packet
-            st.success("雙術數案件建立完成：event alignment + packet SHA integrity = PASS")
+            st.success("多層案件建立完成：alignment + differentiation audit + packet SHA integrity = PASS")
         except (ValueError, EventLocalTimeError, RuntimeError, json.JSONDecodeError) as exc:
             st.error(str(exc))
 
 with import_tab:
-    st.write("可重新匯入先前下載的兩份 `DIVINATION_PACKET_V2`；JARVIS 會先驗 SHA，再做 same-event alignment。")
+    st.write("可重新匯入 Qimen + Meihua，並可選附加 Yuanling V1.3；JARVIS 會先驗 SHA，再做 same-event / temporal alignment。")
     q_upload = st.file_uploader("Qimen packet JSON", type=["json"], key="qimen_import")
     m_upload = st.file_uploader("Meihua packet JSON", type=["json"], key="meihua_import")
+    y_upload = st.file_uploader("Yuanling packet JSON（選填）", type=["json"], key="yuanling_import")
     if st.button("驗證並建立 Case Bundle", use_container_width=True):
         if not q_upload or not m_upload:
             st.error("請同時提供 Qimen 與 Meihua packet。")
@@ -185,11 +277,19 @@ with import_tab:
             try:
                 qimen_packet = json.loads(q_upload.getvalue().decode("utf-8"))
                 meihua_packet = json.loads(m_upload.getvalue().decode("utf-8"))
-                bundle = build_divination_case_bundle(qimen_packet, meihua_packet)
+                yuanling_packet = (
+                    json.loads(y_upload.getvalue().decode("utf-8")) if y_upload else None
+                )
+                bundle = build_divination_case_bundle(
+                    qimen_packet,
+                    meihua_packet,
+                    yuanling_packet=yuanling_packet,
+                )
                 st.session_state["stark_qimen_packet"] = qimen_packet
                 st.session_state["stark_meihua_packet"] = meihua_packet
                 st.session_state["stark_case_bundle"] = bundle
-                st.success("匯入成功：packet integrity + same-event alignment = PASS")
+                st.session_state["stark_yuanling_packet"] = yuanling_packet
+                st.success("匯入成功：packet integrity + multi-layer alignment = PASS")
             except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
                 st.error(str(exc))
 
@@ -201,13 +301,15 @@ if bundle:
     metadata = bundle.get("event_metadata") or {}
     qimen_packet = bundle["qimen_packet"]
     meihua_packet = bundle["meihua_packet"]
+    yuanling_packet = bundle.get("yuanling_packet")
     integrity = verify_bundle_integrity(bundle)
 
-    s1, s2, s3, s4 = st.columns(4)
+    s1, s2, s3, s4, s5 = st.columns(5)
     s1.metric("Alignment", bundle["alignment_audit"]["status"])
     s2.metric("Bundle SHA", "PASS" if integrity["status"] == "PASS" else "FAIL")
-    s3.metric("Qimen Role", bundle["interpretation_roles"]["qimen"]["role"])
-    s4.metric("Meihua Role", bundle["interpretation_roles"]["meihua"]["role"])
+    s3.metric("Differentiation", bundle["differentiation_audit"]["status"])
+    s4.metric("Qimen", bundle["interpretation_roles"]["qimen"]["role"])
+    s5.metric("Yuanling", bundle["interpretation_roles"]["yuanling"]["status"])
 
     st.info(
         f"{event['home_team']} vs {event['away_team']}｜{event['event_datetime']}｜{event['timezone']}｜"
@@ -216,8 +318,36 @@ if bundle:
     if metadata:
         st.caption("｜".join(f"{key}={value}" for key, value in metadata.items()))
 
-    with st.expander("Same-event alignment / SHA audit", expanded=True):
+    with st.expander("Same-event / temporal alignment / SHA audit", expanded=True):
         st.json(bundle["alignment_audit"])
+
+    differentiation = bundle["differentiation_audit"]
+    st.markdown("## 🧬 Event / Participant Differentiation")
+    d1, d2, d3 = st.columns(3)
+    d1.metric("Temporal signature", differentiation["temporal"]["temporal_signature_sha256"][:12] + "…")
+    d2.metric(
+        "Event signature",
+        (differentiation["event"].get("event_signature_sha256") or "NOT_PROVIDED")[:12] + (
+            "…" if differentiation["event"].get("event_signature_sha256") else ""
+        ),
+    )
+    d3.metric(
+        "Participant",
+        differentiation["participant"]["status"],
+    )
+    if differentiation["status"] == "TEMPORAL_ONLY__UNSAFE_FOR_CROSS_FIXTURE_DIFFERENTIATION":
+        st.warning(
+            "目前只有時間層：若另一場比賽 temporal signature 相同，禁止僅靠共同時間盤硬解出不同賽果。"
+        )
+    else:
+        event_layer = qimen_packet.get("event_identity_layer") or {}
+        if event_layer.get("status") == "CANONICAL_PREMATCH_IDENTITY_READY":
+            with st.expander("查看 canonical event identity / 梅花事件卦", expanded=True):
+                st.json(event_layer)
+        participant_layer = qimen_packet.get("participant_layer") or {}
+        if participant_layer.get("status") == "READY":
+            with st.expander("查看主教練年命干承盤層"):
+                st.json(participant_layer)
 
     temporal = meihua_packet.get("temporal_precision_audit") or {}
     if temporal:
@@ -283,7 +413,9 @@ if bundle:
     bundle_json = json.dumps(bundle, ensure_ascii=False, indent=2)
     qimen_json = json.dumps(qimen_packet, ensure_ascii=False, indent=2)
     meihua_json = json.dumps(meihua_packet, ensure_ascii=False, indent=2)
-    d1, d2, d3 = st.columns(3)
+    yuanling_json = json.dumps(yuanling_packet, ensure_ascii=False, indent=2) if yuanling_packet else None
+    download_cols = st.columns(4 if yuanling_packet else 3)
+    d1, d2, d3 = download_cols[:3]
     with d1:
         st.download_button(
             "下載 Case Bundle",
@@ -308,11 +440,22 @@ if bundle:
             mime="application/json",
             use_container_width=True,
         )
+    if yuanling_packet:
+        with download_cols[3]:
+            st.download_button(
+                "下載 Yuanling Packet",
+                yuanling_json,
+                file_name=f"yuanling-{yuanling_packet['packet_sha256'][:12]}.json",
+                mime="application/json",
+                use_container_width=True,
+            )
 
     st.markdown("## 給 ChatGPT 的角色契約")
     st.code(
         "奇門 = RESULT_ENGINE_INPUT：主判正規時間勝負＋有限比分候選。\n"
-        "梅花 = STRUCTURE_STRESS_TEST：只分析開局／中段／終局、轉折、支持與反證，不另報第二套比分。\n"
-        "ChatGPT = FINAL_SYNTHESIS：先驗 alignment / SHA，不重起局、不重起卦、不修改事件時間。",
+        "梅花 = STRUCTURE_STRESS_TEST：時勢卦＋事件卦只分析結構、轉折、支持與反證，不另報第二套比分。\n"
+        "元靈 = TEMPORAL_NUMERIC_CONTEXT：只描述共同時段數勢，不把宮數／星數直譯比分。\n"
+        "Event / Participant layer = 同時開賽 differentiation 的唯一可稽核來源。\n"
+        "ChatGPT = FINAL_SYNTHESIS：先驗 alignment / signatures / SHA，不重起局、不重起卦、不修改事件時間。",
         language=None,
     )

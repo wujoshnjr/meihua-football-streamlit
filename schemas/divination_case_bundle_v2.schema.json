@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/wujoshnjr/meihua-football-streamlit/schemas/divination_case_bundle_v1.schema.json",
-  "title": "LEGACY JARVIS DIVINATION_CASE_BUNDLE_V1",
+  "$id": "https://github.com/wujoshnjr/meihua-football-streamlit/schemas/divination_case_bundle_v2.schema.json",
+  "title": "JARVIS DIVINATION_CASE_BUNDLE_V2",
   "type": "object",
   "required": [
     "schema_version",
@@ -15,15 +15,17 @@
     "meihua_packet_sha256",
     "qimen_packet",
     "meihua_packet",
+    "yuanling_packet_sha256",
+    "yuanling_packet",
     "ai_handoff_contract",
     "bundle_sha256"
   ],
   "properties": {
     "schema_version": {
-      "const": "DIVINATION_CASE_BUNDLE_V1"
+      "const": "DIVINATION_CASE_BUNDLE_V2"
     },
     "packet_purpose": {
-      "const": "SAME_EVENT_QIMEN_MEIHUA_HANDOFF__CHATGPT_INTERPRETS"
+      "const": "FOOTBALL_MULTI_LAYER_HANDOFF__CHATGPT_INTERPRETS"
     },
     "match_event": {
       "type": "object",
@@ -106,6 +108,9 @@
             "LIVE",
             "HISTORICAL_BACKTEST"
           ]
+        },
+        "season": {
+          "type": "string"
         }
       },
       "additionalProperties": false
@@ -116,7 +121,8 @@
         "status",
         "checked_fields",
         "fields",
-        "packet_integrity"
+        "packet_integrity",
+        "yuanling_temporal_alignment"
       ],
       "properties": {
         "status": {
@@ -133,7 +139,8 @@
           "type": "object",
           "required": [
             "qimen",
-            "meihua"
+            "meihua",
+            "yuanling"
           ],
           "properties": {
             "qimen": {
@@ -153,6 +160,37 @@
                 "expected",
                 "actual"
               ]
+            },
+            "yuanling": {
+              "type": [
+                "object",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "yuanling_temporal_alignment": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "datetime": {
+              "type": "object",
+              "required": [
+                "qimen",
+                "yuanling",
+                "match"
+              ]
+            },
+            "timezone": {
+              "type": "object",
+              "required": [
+                "qimen",
+                "yuanling",
+                "match"
+              ]
             }
           },
           "additionalProperties": false
@@ -165,6 +203,7 @@
       "required": [
         "qimen",
         "meihua",
+        "yuanling",
         "final"
       ],
       "properties": {
@@ -203,6 +242,30 @@
               "const": "CHATGPT_FINAL_SYNTHESIS"
             }
           }
+        },
+        "yuanling": {
+          "type": "object",
+          "required": [
+            "role",
+            "status",
+            "rule"
+          ],
+          "properties": {
+            "role": {
+              "const": "TEMPORAL_NUMERIC_CONTEXT"
+            },
+            "status": {
+              "enum": [
+                "INCLUDED",
+                "NOT_INCLUDED"
+              ]
+            },
+            "rule": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -370,9 +433,42 @@
         }
       },
       "additionalProperties": true
+    },
+    "yuanling_packet_sha256": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "yuanling_packet": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "schema_version",
+            "system",
+            "packet_sha256"
+          ],
+          "properties": {
+            "schema_version": {
+              "const": "YUANLING_YANSHU_PACKET_V1_3"
+            },
+            "system": {
+              "const": "YUANLING_YANSHU_QIYAO"
+            },
+            "packet_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
     }
   },
-  "additionalProperties": false,
-  "description": "Deprecated compatibility schema. New football artifacts use DIVINATION_CASE_BUNDLE_V2 with optional Yuanling temporal context and differentiation audit.",
-  "deprecated": true
+  "additionalProperties": false
 }

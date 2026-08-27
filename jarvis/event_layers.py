@@ -5,7 +5,7 @@ from typing import Any
 import unicodedata
 
 from jarvis.provenance import canonical_json, sha256_payload
-from meihua.engine import TRIGRAM_BY_NUMBER, TRIGRAM_FROM_LINES, TRIGRAM_LINES
+from meihua.engine import CONTROLS, GENERATES, TRIGRAM_BY_NUMBER, TRIGRAM_ELEMENT, TRIGRAM_FROM_LINES, TRIGRAM_LINES
 from qimen.constants import BRANCHES, ELEMENT_CONTROLS, ELEMENT_GENERATES, STEMS
 from qimen.models import QimenBoard
 
@@ -44,6 +44,22 @@ def _aware_utc(value: Any) -> datetime:
     return instant.astimezone(timezone.utc).replace(microsecond=0)
 
 
+def _trigram_relation(other_trigram: str, body_trigram: str) -> str:
+    other = TRIGRAM_ELEMENT[other_trigram]
+    body = TRIGRAM_ELEMENT[body_trigram]
+    if other == body:
+        return "比和"
+    if GENERATES[other] == body:
+        return "生體"
+    if GENERATES[body] == other:
+        return "體生用"
+    if CONTROLS[other] == body:
+        return "克體"
+    if CONTROLS[body] == other:
+        return "體克用"
+    raise AssertionError("五行關係不完整")
+
+
 def _digest_cast(signature: str) -> dict[str, Any]:
     upper_number = int(signature[0:8], 16) % 8 + 1
     lower_number = int(signature[8:16], 16) % 8 + 1
@@ -52,6 +68,8 @@ def _digest_cast(signature: str) -> dict[str, Any]:
     upper = TRIGRAM_BY_NUMBER[upper_number]
     lower = TRIGRAM_BY_NUMBER[lower_number]
     lines = TRIGRAM_LINES[lower] + TRIGRAM_LINES[upper]
+    mutual_lower = TRIGRAM_FROM_LINES[lines[1:4]]
+    mutual_upper = TRIGRAM_FROM_LINES[lines[2:5]]
     changed = list(lines)
     changed[moving_line - 1] = 1 - changed[moving_line - 1]
     changed_lower = TRIGRAM_FROM_LINES[tuple(changed[:3])]
@@ -60,9 +78,11 @@ def _digest_cast(signature: str) -> dict[str, Any]:
     if moving_line <= 3:
         body = upper
         use = lower
+        changed_use = changed_lower
     else:
         body = lower
         use = upper
+        changed_use = changed_upper
 
     return {
         "upper_number": upper_number,
@@ -72,8 +92,16 @@ def _digest_cast(signature: str) -> dict[str, Any]:
         "moving_line": moving_line,
         "body_trigram": body,
         "use_trigram": use,
+        "body_use_relation": _trigram_relation(use, body),
+        "mutual_upper_trigram": mutual_upper,
+        "mutual_lower_trigram": mutual_lower,
+        "mutual_upper_relation_to_body": _trigram_relation(mutual_upper, body),
+        "mutual_lower_relation_to_body": _trigram_relation(mutual_lower, body),
         "changed_upper_trigram": changed_upper,
         "changed_lower_trigram": changed_lower,
+        "changed_use_trigram": changed_use,
+        "changed_use_relation_to_body": _trigram_relation(changed_use, body),
+        "season_state": "NOT_COMPUTED_IN_EVENT_IDENTITY_LAYER",
     }
 
 
@@ -161,23 +189,30 @@ def _validate_ganzhi(value: Any, field: str) -> str:
     return ganzhi
 
 
-def _visible_stem_palace(board: QimenBoard, stem: str) -> int:
+def _visible_stem_palace(board: QimenBoard, stem: str) -> tuple[int, str]:
     if stem == "甲":
-        return board.chief_star_palace
+        return (
+            board.chief_star_palace,
+            "PROJECT_CONVENTION__HIDDEN_JIA_USES_CURRENT_CHIEF_STAR_PALACE__NOT_SOURCE_LOCKED_FOR_YEAR_LIFE",
+        )
     for number, state in board.palaces.items():
         if stem in state.heaven_stems:
-            return number
+            return number, "VISIBLE_BIRTH_YEAR_STEM_ON_CURRENT_HEAVEN_PLATE"
     raise ValueError(f"天盤找不到年命干：{stem}")
 
 
 def _participant_snapshot(board: QimenBoard, label: str, birth_ganzhi: str) -> dict[str, Any]:
     year_stem = birth_ganzhi[0]
-    palace_number = _visible_stem_palace(board, year_stem)
+    year_branch = birth_ganzhi[1]
+    palace_number, placement_source_status = _visible_stem_palace(board, year_stem)
     palace = board.palaces[palace_number]
     return {
         "label": label,
         "birth_year_ganzhi": birth_ganzhi,
         "year_stem": year_stem,
+        "year_branch": year_branch,
+        "placement_basis": "BIRTH_YEAR_STEM_ON_HEAVEN_PLATE__BRANCH_RETAINED_FOR_IDENTITY_ONLY",
+        "placement_source_status": placement_source_status,
         "palace": palace_number,
         "palace_name": palace.name,
         "palace_element": palace.element,
@@ -244,8 +279,13 @@ def build_qimen_coach_participant_layer(
         "status": "READY",
         "authority": "PROJECT_ADAPTATION__COACH_AS_MATCH_ACTOR",
         "classical_basis": (
-            "奇門古法可將本人年命／年干落宮與正時盤、旺衰、空亡、門星格局合參；"
-            "把主教練視為足球賽事 actor 是 JARVIS 現代移植，不是古籍足球條文。"
+            "奇門古法可將本人年命／年干與正時盤合參；本 V1 實作只使用出生年干定位天盤宮。"
+            "出生年支保留於 identity 供稽核，尚未參與落宮；把主教練視為足球賽事 actor 是 JARVIS 現代移植。"
+        ),
+        "method_boundary": (
+            "QIMEN_PARTICIPANT_LAYER_V1 不等同完整古法年命演算法：目前 placement 只取出生年干，"
+            "年支未用於宮位計算；若年干為甲，暫沿用 current chief-star palace 作隱甲 project convention，"
+            "此甲處理尚未 source-lock，因此不得宣稱 full Ganzhi year-life palace 已完成。"
         ),
         "identity": identity,
         "participant_signature_sha256": participant_signature,
@@ -258,6 +298,7 @@ def build_qimen_coach_participant_layer(
             "教練身份與出生年干支必須在賽前凍結。",
             "換帥時 participant identity 應改變，但不得回看結果後選用前任或代理教練。",
             "年命層只描述雙方承盤差異，不直接轉成固定比分或勝率。",
+            "V1 只以出生年干定位；不得把保存的年支描述成已參與落宮。",
         ],
     }
     payload["resolved_layer_sha256"] = sha256_payload(payload)
@@ -276,9 +317,12 @@ def empty_participant_layer() -> dict[str, Any]:
 def build_temporal_signature(
     qimen_packet: dict[str, Any],
     meihua_packet: dict[str, Any],
+    yuanling_packet: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     q_event = qimen_packet.get("event") or {}
     m_event = meihua_packet.get("event") or {}
+    y_event = (yuanling_packet or {}).get("event") or {}
+    y_review = (yuanling_packet or {}).get("qiyao_review") or {}
     temporal_payload = {
         "qimen_event": {
             "datetime": q_event.get("datetime"),
@@ -290,13 +334,26 @@ def build_temporal_signature(
         },
         "qimen_chart": qimen_packet.get("chart"),
         "meihua_temporal_hexagram": meihua_packet.get("hexagram"),
+        "yuanling_temporal": (
+            {
+                "event": {
+                    "datetime": y_event.get("datetime"),
+                    "timezone": y_event.get("timezone"),
+                },
+                "qiyao_event": y_review.get("event"),
+                "collateral_reconstruction": y_review.get("collateral_reconstruction"),
+                "star_role_resolution": y_review.get("star_role_resolution"),
+            }
+            if yuanling_packet is not None
+            else None
+        ),
     }
     return {
         "status": "READY",
         "temporal_signature_sha256": sha256_payload(temporal_payload),
         "rule": (
-            "此 signature 僅代表共同時間盤/年月日時卦；不同 fixture 可以相同，"
-            "因此不得單靠它製造不同賽果。"
+            "此 signature 僅代表共同時間盤／年月日時卦，以及有提供時的元靈 deterministic temporal reconstruction；"
+            "不同 fixture 可以相同，因此不得單靠它製造不同賽果。"
         ),
     }
 
@@ -304,8 +361,9 @@ def build_temporal_signature(
 def build_differentiation_audit(
     qimen_packet: dict[str, Any],
     meihua_packet: dict[str, Any],
+    yuanling_packet: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    temporal = build_temporal_signature(qimen_packet, meihua_packet)
+    temporal = build_temporal_signature(qimen_packet, meihua_packet, yuanling_packet)
     q_event = qimen_packet.get("event_identity_layer") or empty_event_identity_layer()
     m_event = meihua_packet.get("event_identity_layer") or empty_event_identity_layer()
 

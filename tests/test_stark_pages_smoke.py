@@ -39,7 +39,7 @@ def test_ai_packet_page_starts_without_packet():
 def test_football_case_workspace_starts():
     app = run_page("pages/5_Football_Case.py")
     assert not app.exception
-    assert any("足球雙術數案件" in item.value for item in app.title)
+    assert any("足球多層術數案件" in item.value for item in app.title)
 
 
 def test_yuanling_research_page_starts_with_casting_guide():
@@ -49,3 +49,4 @@ def test_yuanling_research_page_starts_with_casting_guide():
     markdown_text = " ".join(item.value for item in app.markdown)
     assert "演數七要" in markdown_text
     assert "日奇門" in markdown_text
+    assert "V1_2" not in markdown_text

@@ -21,15 +21,15 @@ st.success(
 st.info(
     "《周易》已建立固定 Kanripo 數位底本的 64/64 卦與 384/384 標準爻來源層；"
     "《焦氏易林》完成 WYG base transcription 64×64＝4096/4096。"
-    "《元靈經》則把演數七要與日奇門拆成獨立研究元件，未完成的飛遁/穿宮算法保留 unresolved，不用專案猜測補文。"
+    "《元靈經》把演數七要與日奇門拆成獨立研究元件；數主／飛星／直日星角色關係與日奇門穿宮 mechanics 已 crosschecked reconstruction，仍保留數宮、入門與完整 worked-example 等 authority gaps。"
 )
 
 with st.container(border=True):
-    st.markdown("## ⚽ 推薦：足球雙術數案件")
+    st.markdown("## ⚽ 推薦：足球多層術數案件")
     st.write(
-        "同一個 event-local datetime / IANA timezone 一次建立兩份 packet，先做 SHA 與 same-event alignment："
-        "**奇門 = RESULT_ENGINE_INPUT**，**梅花 = STRUCTURE_STRESS_TEST**，最後才交給 ChatGPT 合參。"
-        "元靈演數目前另作數術研究輸入，不自動加入比分合成。"
+        "同一個 event-local datetime / IANA timezone 建立奇門、梅花，並可選加入元靈七要 temporal sibling；再用賽前固定 event / participant identity 做同時開賽 differentiation："
+        "**奇門 = RESULT_ENGINE_INPUT**，**梅花 = STRUCTURE_STRESS_TEST**，**元靈 = TEMPORAL_NUMERIC_CONTEXT**，最後才交給 ChatGPT 合參。"
+        "元靈不直接加入比分合成，只提供共同時段數勢。"
     )
     st.page_link("pages/5_Football_Case.py", label="建立足球 Case Bundle", icon="⚽", use_container_width=True)
 
@@ -37,15 +37,15 @@ st.markdown(
     """
 ### 使用方式
 
-1. 足球優先使用 **足球雙術數案件**：同一事件一次建立奇門與梅花，避免兩份 packet 時間／主客不一致。
+1. 足球優先使用 **足球多層術數案件**：同一事件建立奇門、梅花與可選元靈 temporal sibling，並保存 event / participant signatures，處理同時開賽 collision。
 2. **奇門起局**：輸入事件所在地 local datetime、IANA timezone、主客隊與問題；JARVIS 依時家轉盤拆補法排完整九宮盤。
 3. **梅花起卦**：輸入同一事件時間；目前固定採年月日時先天數法，由年支＋農曆月日＋時支定本卦、動爻、體用、互變與旺衰。
-4. **元靈演數**：輸入事件時間後建立七要 slots；日干/時支可由曆法確定，其餘未 source-lock 項保持 unresolved。若選實驗模式，另建立日奇門 sibling，不把兩法混成一法。
+4. **元靈演數**：七要 raw slots 與 crosschecked reconstruction 分層；數主／飛星／直日星角色已解，數宮完整古法與入門完整 mechanics 仍保持 source-tiered。若選實驗模式，另建立日奇門 sibling。
 5. 《周易》真正動爻附 source-grounded conditional review；《焦氏易林》只查唯一「本卦→最終變卦」作 transformation lens。
 6. 元靈卷三值日九星與射覆數目已入庫，但只作古典數術資料，禁止「宮數/星數/射覆數目 → 足球進球」直譯。
 7. 產生 packet 後交給 ChatGPT；AI 不得重新起局／起卦或修改 deterministic 盤象。
 
-**原則：同一事件 → 奇門主結果證據 × 梅花定結構／驗結果 × 元靈保持數術原始資料 × ChatGPT 最終合參。**
+**原則：同一時間 → 共同 temporal layers；不同 fixture → 賽前固定 event / participant identity；奇門主結果證據 × 梅花定結構 × 元靈共同數勢 × ChatGPT 最終合參。**
 """
 )
 
@@ -68,7 +68,7 @@ with y_col:
     with st.container(border=True):
         st.markdown("## 🔢 元靈演數 × 日奇門")
         st.write(
-            "演數七要與日奇門獨立保存；primary、旁證、project normalization 分層。未解算法保持 unresolved，不直接產生比分。"
+            "演數七要與日奇門獨立保存；角色關係與穿宮已 crosschecked，primary、旁證、project normalization 仍分層，不直接產生比分。"
         )
         st.page_link("pages/6_Yuanling_Yanshu.py", label="元靈演數研究", icon="🔢", use_container_width=True)
 
