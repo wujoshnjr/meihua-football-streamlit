@@ -83,6 +83,7 @@ def build_yuanling_yanshu_packet(
             ],
             "rules": [
                 "Do not merge QIYAO_RAW and RI-QIMEN into one classical method claim.",
+                "For football, treat deterministic Qiyao time-derived facts as a shared temporal environment; never use identical temporal input alone to manufacture different fixture outcomes.",
                 "Qiyao review and Ri-Qimen are sibling objects; neither is silently nested into the other.",
                 "Do not infer missing Yuanling algorithms from the existing Shijia engine.",
                 "Treat star_role_resolution as source-crosschecked relationship evidence, not as permission to overwrite raw primary slots.",
