@@ -108,6 +108,9 @@
             "LIVE",
             "HISTORICAL_BACKTEST"
           ]
+        },
+        "season": {
+          "type": "string"
         }
       },
       "additionalProperties": false
