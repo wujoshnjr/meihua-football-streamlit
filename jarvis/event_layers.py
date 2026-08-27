@@ -172,12 +172,15 @@ def _visible_stem_palace(board: QimenBoard, stem: str) -> int:
 
 def _participant_snapshot(board: QimenBoard, label: str, birth_ganzhi: str) -> dict[str, Any]:
     year_stem = birth_ganzhi[0]
+    year_branch = birth_ganzhi[1]
     palace_number = _visible_stem_palace(board, year_stem)
     palace = board.palaces[palace_number]
     return {
         "label": label,
         "birth_year_ganzhi": birth_ganzhi,
         "year_stem": year_stem,
+        "year_branch": year_branch,
+        "placement_basis": "BIRTH_YEAR_STEM_ON_HEAVEN_PLATE__BRANCH_RETAINED_FOR_IDENTITY_ONLY",
         "palace": palace_number,
         "palace_name": palace.name,
         "palace_element": palace.element,
@@ -244,8 +247,12 @@ def build_qimen_coach_participant_layer(
         "status": "READY",
         "authority": "PROJECT_ADAPTATION__COACH_AS_MATCH_ACTOR",
         "classical_basis": (
-            "奇門古法可將本人年命／年干落宮與正時盤、旺衰、空亡、門星格局合參；"
-            "把主教練視為足球賽事 actor 是 JARVIS 現代移植，不是古籍足球條文。"
+            "奇門古法可將本人年命／年干與正時盤合參；本 V1 實作只使用出生年干定位天盤宮。"
+            "出生年支保留於 identity 供稽核，尚未參與落宮；把主教練視為足球賽事 actor 是 JARVIS 現代移植。"
+        ),
+        "method_boundary": (
+            "QIMEN_PARTICIPANT_LAYER_V1 不等同完整古法年命演算法：目前 placement 只取出生年干，"
+            "年支未用於宮位計算，因此不得宣稱 full Ganzhi year-life palace 已 source-locked。"
         ),
         "identity": identity,
         "participant_signature_sha256": participant_signature,
@@ -258,6 +265,7 @@ def build_qimen_coach_participant_layer(
             "教練身份與出生年干支必須在賽前凍結。",
             "換帥時 participant identity 應改變，但不得回看結果後選用前任或代理教練。",
             "年命層只描述雙方承盤差異，不直接轉成固定比分或勝率。",
+            "V1 只以出生年干定位；不得把保存的年支描述成已參與落宮。",
         ],
     }
     payload["resolved_layer_sha256"] = sha256_payload(payload)
