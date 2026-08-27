@@ -13,6 +13,14 @@
 9. 賽後資料不得回灌至賽前占測 packet。
 10. `DIVINATION_PACKET_V2` schema 改動必須提升 packet schema，並保留 deterministic SHA 與舊 packet 不被回寫的原則。
 
+
+## 合併與 release gate
+
+- `main` 只接受已通過 GitHub Actions `release-gate` 的 PR。
+- GitHub repository settings 應對 `main` 啟用 branch protection / ruleset，並把 `release-gate` 設為 required status check。
+- 不得在 `test`、`source-reproducibility` 或 `release-gate` 為 pending / failure / cancelled 時手動合併。
+- 若 main 因誤合併進入紅燈狀態，先以最小修復 PR 恢復全綠，再繼續新增術數規則或功能。
+
 ## 開發檢查
 
 ```bash
@@ -20,6 +28,8 @@ pip install -r requirements-dev.txt
 python tools/import_zhouyi_kanripo.py --check
 python tools/validate_zhouyi.py
 python tools/import_yilin_kanripo.py
+python tools/validate_yuanling.py
+python tools/validate_liuyao.py
 ruff check .
 python -m pytest -q
 python tools/validate_knowledge.py
