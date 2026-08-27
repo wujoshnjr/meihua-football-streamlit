@@ -161,19 +161,22 @@ def _validate_ganzhi(value: Any, field: str) -> str:
     return ganzhi
 
 
-def _visible_stem_palace(board: QimenBoard, stem: str) -> int:
+def _visible_stem_palace(board: QimenBoard, stem: str) -> tuple[int, str]:
     if stem == "甲":
-        return board.chief_star_palace
+        return (
+            board.chief_star_palace,
+            "PROJECT_CONVENTION__HIDDEN_JIA_USES_CURRENT_CHIEF_STAR_PALACE__NOT_SOURCE_LOCKED_FOR_YEAR_LIFE",
+        )
     for number, state in board.palaces.items():
         if stem in state.heaven_stems:
-            return number
+            return number, "VISIBLE_BIRTH_YEAR_STEM_ON_CURRENT_HEAVEN_PLATE"
     raise ValueError(f"天盤找不到年命干：{stem}")
 
 
 def _participant_snapshot(board: QimenBoard, label: str, birth_ganzhi: str) -> dict[str, Any]:
     year_stem = birth_ganzhi[0]
     year_branch = birth_ganzhi[1]
-    palace_number = _visible_stem_palace(board, year_stem)
+    palace_number, placement_source_status = _visible_stem_palace(board, year_stem)
     palace = board.palaces[palace_number]
     return {
         "label": label,
@@ -181,6 +184,7 @@ def _participant_snapshot(board: QimenBoard, label: str, birth_ganzhi: str) -> d
         "year_stem": year_stem,
         "year_branch": year_branch,
         "placement_basis": "BIRTH_YEAR_STEM_ON_HEAVEN_PLATE__BRANCH_RETAINED_FOR_IDENTITY_ONLY",
+        "placement_source_status": placement_source_status,
         "palace": palace_number,
         "palace_name": palace.name,
         "palace_element": palace.element,
@@ -252,7 +256,8 @@ def build_qimen_coach_participant_layer(
         ),
         "method_boundary": (
             "QIMEN_PARTICIPANT_LAYER_V1 不等同完整古法年命演算法：目前 placement 只取出生年干，"
-            "年支未用於宮位計算，因此不得宣稱 full Ganzhi year-life palace 已 source-locked。"
+            "年支未用於宮位計算；若年干為甲，暫沿用 current chief-star palace 作隱甲 project convention，"
+            "此甲處理尚未 source-lock，因此不得宣稱 full Ganzhi year-life palace 已完成。"
         ),
         "identity": identity,
         "participant_signature_sha256": participant_signature,
