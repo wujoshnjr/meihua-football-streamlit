@@ -103,11 +103,6 @@ def build_qimen_packet(
     chart = board.to_dict()
     chart.pop("generated_at", None)
 
-    event_identity_layer = (
-        build_football_event_identity(fixture_identity)
-        if category == "football_match" and fixture_identity is not None
-        else (empty_event_identity_layer() if category == "football_match" else None)
-    )
     interpretation_role = (
         {
             "role": "RESULT_ENGINE_INPUT",
@@ -242,6 +237,11 @@ def build_meihua_packet(
         )
         if category == "football_match"
         else None
+    )
+    event_identity_layer = (
+        build_football_event_identity(fixture_identity)
+        if category == "football_match" and fixture_identity is not None
+        else (empty_event_identity_layer() if category == "football_match" else None)
     )
     interpretation_role = (
         {
