@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from importlib import metadata
-from pathlib import Path
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from zoneinfo import ZoneInfo
+
+from jarvis.time import EventLocalTimeError, aware_event_local_datetime, event_zone, tzdb_version
 
 from .constants import BRANCHES, STEMS, TERM_NORMALIZATION, XUN_HEADS
 from .models import CalendarContext
@@ -13,8 +13,7 @@ class CalendarDependencyError(RuntimeError):
     pass
 
 
-class LocalTimeError(ValueError):
-    pass
+LocalTimeError = EventLocalTimeError
 
 
 def normalize_term(name: str) -> str:
@@ -22,30 +21,8 @@ def normalize_term(name: str) -> str:
 
 
 def detect_tzdb_version() -> str:
-    """Record the timezone ruleset actually available to Python.
-
-    Python may use the ``tzdata`` wheel or the operating system database. We
-    report what is installed and never claim the latest IANA release merely
-    because it exists upstream.
-    """
-
-    try:
-        return f"tzdata-wheel-{metadata.version('tzdata')}"
-    except metadata.PackageNotFoundError:
-        pass
-
-    for candidate in (
-        Path("/usr/share/zoneinfo/tzdata.zi"),
-        Path("/usr/share/lib/zoneinfo/tzdata.zi"),
-    ):
-        try:
-            first_line = candidate.read_text(encoding="utf-8").splitlines()[0]
-        except (OSError, IndexError):
-            continue
-        marker = "# version "
-        if first_line.startswith(marker):
-            return f"system-{first_line.removeprefix(marker).strip()}"
-    return "system-unpinned"
+    """Report the wheel and IANA release actually read by event_zone."""
+    return tzdb_version()
 
 
 def sexagenary_cycle() -> tuple[str, ...]:
@@ -82,19 +59,7 @@ def aware_local_datetime(
     moving the event to a different hour.
     """
 
-    try:
-        zone = ZoneInfo(timezone_name)
-    except ZoneInfoNotFoundError as exc:
-        raise LocalTimeError(f"找不到 IANA 時區：{timezone_name}") from exc
-
-    if value.tzinfo is not None:
-        return value.astimezone(zone)
-
-    candidate = value.replace(tzinfo=zone, fold=fold)
-    roundtrip = candidate.astimezone(ZoneInfo("UTC")).astimezone(zone)
-    if roundtrip.replace(tzinfo=None) != value:
-        raise LocalTimeError(f"{value.isoformat()} 在 {timezone_name} 是不存在的夏令時間")
-    return candidate
+    return aware_event_local_datetime(value, timezone_name, fold=fold)
 
 
 def _solar_to_datetime(solar, zone: ZoneInfo) -> datetime:
@@ -121,7 +86,7 @@ def build_calendar_context(local_datetime: datetime, timezone_name: str) -> Cale
         ) from exc
 
     local = aware_local_datetime(local_datetime, timezone_name)
-    shanghai_zone = ZoneInfo("Asia/Shanghai")
+    shanghai_zone = event_zone("Asia/Shanghai")
     shanghai = local.astimezone(shanghai_zone)
 
     local_lunar = Solar.fromYmdHms(

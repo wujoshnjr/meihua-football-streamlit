@@ -6,18 +6,21 @@ import unicodedata
 
 from jarvis.provenance import canonical_json, sha256_payload
 from meihua.engine import CONTROLS, GENERATES, TRIGRAM_BY_NUMBER, TRIGRAM_ELEMENT, TRIGRAM_FROM_LINES, TRIGRAM_LINES
-from qimen.constants import BRANCHES, ELEMENT_CONTROLS, ELEMENT_GENERATES, STEMS
+from qimen.constants import ELEMENT_CONTROLS, ELEMENT_GENERATES
 from qimen.models import QimenBoard
+from qimen.calendar import SEXAGENARY
 
 
 FOOTBALL_EVENT_IDENTITY_VERSION = "FOOTBALL_EVENT_IDENTITY_V1"
 MEIHUA_EVENT_IDENTITY_VERSION = "MEIHUA_EVENT_IDENTITY_V1"
 QIMEN_PARTICIPANT_LAYER_VERSION = "QIMEN_PARTICIPANT_LAYER_V1"
-FOOTBALL_DIFFERENTIATION_AUDIT_VERSION = "FOOTBALL_DIFFERENTIATION_AUDIT_V1"
+FOOTBALL_DIFFERENTIATION_AUDIT_VERSION = "FOOTBALL_DIFFERENTIATION_AUDIT_V2"
 FOOTBALL_COLLISION_AUDIT_VERSION = "FOOTBALL_COLLISION_AUDIT_V1"
 
 
 def _clean_text(value: Any, field: str) -> str:
+    if not isinstance(value, str):
+        raise ValueError(f"{field} 必須是文字")
     cleaned = " ".join(unicodedata.normalize("NFKC", str(value)).strip().split())
     if not cleaned:
         raise ValueError(f"{field} 不可空白")
@@ -184,7 +187,7 @@ def empty_event_identity_layer() -> dict[str, Any]:
 
 def _validate_ganzhi(value: Any, field: str) -> str:
     ganzhi = _clean_text(value, field)
-    if len(ganzhi) != 2 or ganzhi[0] not in STEMS or ganzhi[1] not in BRANCHES:
+    if ganzhi not in SEXAGENARY:
         raise ValueError(f"{field} 必須是有效出生年干支，例如甲子")
     return ganzhi
 
@@ -314,7 +317,7 @@ def empty_participant_layer() -> dict[str, Any]:
     }
 
 
-def build_temporal_signature(
+def _legacy_temporal_signature(
     qimen_packet: dict[str, Any],
     meihua_packet: dict[str, Any],
     yuanling_packet: dict[str, Any] | None = None,
@@ -358,12 +361,64 @@ def build_temporal_signature(
     }
 
 
-def build_differentiation_audit(
+def build_temporal_signature(
     qimen_packet: dict[str, Any],
     meihua_packet: dict[str, Any],
     yuanling_packet: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    temporal = build_temporal_signature(qimen_packet, meihua_packet, yuanling_packet)
+    """Fingerprint each casting layer independently of names, notes and options."""
+    chart = qimen_packet["chart"]
+    calendar = chart["calendar"]
+    q_core = {
+        "method": qimen_packet["method"],
+        "calendar": {key: calendar[key] for key in (
+            "solar_term", "year_ganzhi", "month_ganzhi", "day_ganzhi", "hour_ganzhi"
+        )},
+        "plate": {key: chart[key] for key in (
+            "dun", "yuan", "ju", "hour_xun", "chief_star", "chief_door",
+            "chief_star_palace", "chief_door_palace", "void_branches", "horse_branch"
+        )},
+        "palaces": {key: {field: value[field] for field in (
+            "number", "element", "earth_stem", "earth_hidden_stems", "heaven_stems",
+            "stars", "door", "deity", "is_void", "is_horse"
+        )} for key, value in chart["palaces"].items()},
+    }
+    m_core = {key: value for key, value in meihua_packet["hexagram"].items()
+              if key not in {"event_local_at", "timezone_name"}}
+    layer_signatures = {
+        "qimen": sha256_payload(q_core),
+        "meihua": sha256_payload(m_core),
+        "yuanling": None,
+    }
+    if yuanling_packet is not None:
+        review = yuanling_packet["qiyao_review"]
+        layer_signatures["yuanling"] = sha256_payload({
+            key: review.get(key) for key in ("event", "collateral_reconstruction", "star_role_resolution")
+        })
+    cohort = {
+        "qimen_instant": datetime.fromisoformat(qimen_packet["event"]["datetime"]).astimezone(timezone.utc).isoformat(),
+        "meihua_instant": datetime.fromisoformat(meihua_packet["event"]["datetime"]).astimezone(timezone.utc).isoformat(),
+        "qimen": layer_signatures["qimen"],
+        "meihua": layer_signatures["meihua"],
+    }
+    return {
+        "status": "READY",
+        "signature_policy": "INDEPENDENT_CAST_LAYERS_V2",
+        "temporal_signature_sha256": sha256_payload(cohort),
+        "layer_signatures": layer_signatures,
+        "rule": "共同開球與奇門／梅花盤固定分組；選配元靈另存指紋。各層重複盤另外檢查，不以資料包內容多寡區分賽事。",
+    }
+
+
+def build_differentiation_audit(
+    qimen_packet: dict[str, Any],
+    meihua_packet: dict[str, Any],
+    yuanling_packet: dict[str, Any] | None = None,
+    *,
+    legacy: bool = False,
+) -> dict[str, Any]:
+    signature_builder = _legacy_temporal_signature if legacy else build_temporal_signature
+    temporal = signature_builder(qimen_packet, meihua_packet, yuanling_packet)
     q_event = qimen_packet.get("event_identity_layer") or empty_event_identity_layer()
     m_event = meihua_packet.get("event_identity_layer") or empty_event_identity_layer()
 
@@ -389,7 +444,7 @@ def build_differentiation_audit(
         status = "TEMPORAL_ONLY__UNSAFE_FOR_CROSS_FIXTURE_DIFFERENTIATION"
 
     return {
-        "schema_version": FOOTBALL_DIFFERENTIATION_AUDIT_VERSION,
+        "schema_version": "FOOTBALL_DIFFERENTIATION_AUDIT_V1" if legacy else FOOTBALL_DIFFERENTIATION_AUDIT_VERSION,
         "status": status,
         "temporal": temporal,
         "event": {
@@ -415,9 +470,16 @@ def build_differentiation_audit(
 def audit_case_collision(
     left_bundle: dict[str, Any],
     right_bundle: dict[str, Any],
+    *,
+    _validated: bool = False,
 ) -> dict[str, Any]:
-    left = left_bundle.get("differentiation_audit") or {}
-    right = right_bundle.get("differentiation_audit") or {}
+    if not _validated:
+        from jarvis.validation import validate_bundle
+        validate_bundle(left_bundle)
+        validate_bundle(right_bundle)
+    left, right = [build_differentiation_audit(
+        b["qimen_packet"], b["meihua_packet"], b.get("yuanling_packet")
+    ) for b in (left_bundle, right_bundle)]
     left_temporal = (left.get("temporal") or {}).get("temporal_signature_sha256")
     right_temporal = (right.get("temporal") or {}).get("temporal_signature_sha256")
     left_event = (left.get("event") or {}).get("event_signature_sha256")

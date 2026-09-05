@@ -5,6 +5,8 @@ from datetime import date, datetime, time
 
 import streamlit as st
 
+from jarvis.workspace_state import activate_packet
+
 from jarvis.time import (
     EventLocalTimeError,
     aware_event_local_datetime,
@@ -164,7 +166,7 @@ if submitted:
                 None if daily_star == "未提供" else int(daily_star)
             ),
         )
-        st.session_state["stark_yuanling_packet"] = packet
+        activate_packet(st.session_state, packet)
         st.success(
             "Yuanling packet 已建立；七要與日奇門保持 sibling separation，"
             "原典知識 context 已一併打包，比分映射保持 disabled。"

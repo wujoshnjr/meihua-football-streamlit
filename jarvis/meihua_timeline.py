@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
-from zoneinfo import ZoneInfo
+from jarvis.time import event_zone
 
 from meihua.engine import MeihuaSnapshot, build_meihua_snapshot
 
@@ -26,7 +26,7 @@ def meihua_temporal_precision_policy() -> dict[str, Any]:
 
 
 def _lunar_context(instant_utc: datetime, timezone_name: str) -> dict[str, Any]:
-    local = instant_utc.astimezone(ZoneInfo(timezone_name))
+    local = instant_utc.astimezone(event_zone(timezone_name))
     try:
         from lunar_python import Solar
     except ImportError as exc:
@@ -125,9 +125,11 @@ def _normalize_match_clock_events(
 
     policy = _policy()["match_clock_event_policy"]
     allowed = set(policy["allowed_event_types"])
-    zone = ZoneInfo(timezone_name)
+    zone = event_zone(timezone_name)
     normalized: list[dict[str, Any]] = []
     for index, raw in enumerate(events):
+        if not isinstance(raw, dict):
+            raise ValueError(f"match_clock_events[{index}] 必須是 object")
         event_type = str(raw.get("type", "")).strip()
         if event_type not in allowed:
             raise ValueError(f"match_clock_events[{index}].type 無效：{event_type}")
@@ -357,7 +359,7 @@ def build_football_temporal_audit(
         "analysis_window": {
             "horizon_minutes": horizon_minutes,
             "start_local": anchor_local.isoformat(),
-            "end_local": end_utc.astimezone(ZoneInfo(timezone_name)).isoformat(),
+            "end_local": end_utc.astimezone(event_zone(timezone_name)).isoformat(),
             "meaning": policy["football_window_policy"]["meaning"],
             "clock_rule": policy["football_window_policy"]["clock_rule"],
         },

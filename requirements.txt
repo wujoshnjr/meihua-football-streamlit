@@ -1,3 +1,4 @@
 streamlit==1.61.0
 lunar_python==1.4.8
 tzdata==2026.3
+jsonschema[format-nongpl]==4.26.0

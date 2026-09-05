@@ -1,18 +1,39 @@
 from __future__ import annotations
 
-from datetime import datetime
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from datetime import datetime, timezone
+from functools import lru_cache
+from importlib import resources
+from zoneinfo import ZoneInfo
+
+EVENT_TIME_POLICY_VERSION = "PINNED_TZDATA_V1"
 
 
 class EventLocalTimeError(ValueError):
     pass
 
 
-def _zone(timezone_name: str) -> ZoneInfo:
+@lru_cache(maxsize=256)
+def event_zone(timezone_name: str) -> ZoneInfo:
+    """Read the pinned wheel directly, independently of OS TZPATH and caches."""
+    if not isinstance(timezone_name, str) or not timezone_name or any(
+        part in {"", ".", ".."} for part in timezone_name.split("/")
+    ) or "\\" in timezone_name:
+        raise EventLocalTimeError("請提供有效 IANA 時區")
     try:
-        return ZoneInfo(timezone_name)
-    except ZoneInfoNotFoundError as exc:
+        source = resources.files("tzdata.zoneinfo").joinpath(*timezone_name.split("/"))
+        with source.open("rb") as handle:
+            return ZoneInfo.from_file(handle, key=timezone_name)
+    except (OSError, ValueError, ModuleNotFoundError) as exc:
         raise EventLocalTimeError(f"找不到 IANA 時區：{timezone_name}") from exc
+
+
+def tzdb_version() -> str:
+    import tzdata
+
+    return f"tzdata-wheel-{tzdata.__version__};iana-{tzdata.IANA_VERSION}"
+
+
+_zone = event_zone
 
 
 def inspect_local_civil_time(value: datetime, timezone_name: str) -> dict[str, object]:
@@ -27,7 +48,7 @@ def inspect_local_civil_time(value: datetime, timezone_name: str) -> dict[str, o
         raise EventLocalTimeError("inspect_local_civil_time 只接受 naive local datetime")
 
     zone = _zone(timezone_name)
-    utc = ZoneInfo("UTC")
+    utc = timezone.utc
     candidates: list[dict[str, object]] = []
     for fold in (0, 1):
         candidate = value.replace(tzinfo=zone, fold=fold)
@@ -80,7 +101,13 @@ def aware_event_local_datetime(
 
     zone = _zone(timezone_name)
     if value.tzinfo is not None:
-        return value.astimezone(zone)
+        # A ZoneInfo-aware datetime can still have been constructed in a gap.
+        roundtrip = value.astimezone(timezone.utc).astimezone(value.tzinfo)
+        if (roundtrip.replace(tzinfo=None), roundtrip.utcoffset()) != (
+            value.replace(tzinfo=None), value.utcoffset()
+        ):
+            raise EventLocalTimeError(f"{value.isoformat()} 是不存在或不一致的事件時間")
+        return value.astimezone(timezone.utc).astimezone(zone)
     if fold not in (0, 1):
         raise EventLocalTimeError("fold 必須是 0 或 1")
 
@@ -93,7 +120,7 @@ def aware_event_local_datetime(
         )
 
     candidate = value.replace(tzinfo=zone, fold=fold)
-    roundtrip = candidate.astimezone(ZoneInfo("UTC")).astimezone(zone)
+    roundtrip = candidate.astimezone(timezone.utc).astimezone(zone)
     if roundtrip.replace(tzinfo=None) != value:
         raise EventLocalTimeError(f"{value.isoformat()} 在 {timezone_name} 是不存在的夏令時間")
     return candidate

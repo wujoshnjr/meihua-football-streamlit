@@ -5,13 +5,19 @@ import json
 import streamlit as st
 
 from jarvis.case_bundle import verify_bundle_integrity
+from jarvis.workspace_state import active_artifact
 
 
 st.set_page_config(page_title="AI 解卦包 · JARVIS", page_icon="🤖", layout="wide")
 st.title("🤖 AI 解卦包")
 st.caption("JARVIS 到這裡為止：方法身份、盤／卦、原典來源、易林、矛盾與不確定性已固定。接下來把完整 packet 交給 ChatGPT 解讀。")
 
-case_bundle = st.session_state.get("stark_case_bundle")
+try:
+    active = active_artifact(st.session_state)
+except ValueError as exc:
+    st.error(f"交付驗證未通過：{exc}")
+    st.stop()
+case_bundle = active[1] if active and active[0] == "bundle" else None
 if case_bundle:
     integrity = verify_bundle_integrity(case_bundle)
     st.success(
@@ -69,9 +75,20 @@ if case_bundle:
     )
     st.stop()
 
-packet = st.session_state.get("stark_packet")
+packet = active[1] if active and active[0] == "packet" else None
 if not packet:
     st.info("目前工作階段還沒有 AI 解卦包。足球請從「足球多層案件」建立 Case Bundle；一般問題可從「奇門起局」或「梅花起卦」建立單術數 packet。")
+    st.stop()
+
+if packet["system"] == "YUANLING_YANSHU_QIYAO":
+    st.success(f"目前交付：元靈演數｜{packet['schema_version']}｜{packet['packet_sha256']}")
+    st.code("\n".join(packet["ai_interpretation_contract"]["rules"]), language=None)
+    st.json(packet["qiyao_review"])
+    content = json.dumps(packet, ensure_ascii=False, indent=2)
+    with st.expander("完整元靈 packet"):
+        st.code(content, language="json")
+    st.download_button("下載目前元靈解卦包", data=content,
+                       file_name=f"yuanling-{packet['packet_sha256'][:12]}.json", mime="application/json")
     st.stop()
 
 context = packet.get("knowledge_context", [])

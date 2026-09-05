@@ -114,7 +114,7 @@ def test_football_form_submit_builds_full_case_bundle():
     _widget_by_label(app.text_input, "賽季（例如 2026-27）").set_value("2026-27")
     _widget_by_label(app.text_input, "主隊官方英文全名").set_value("Team A")
     _widget_by_label(app.text_input, "客隊官方英文全名").set_value("Team B")
-    _button_by_label(app, "建立 JARVIS 多層 Case Bundle V2").click()
+    _button_by_label(app, "建立 JARVIS 多層 Case Bundle V3").click()
     app.run()
 
     assert not app.exception

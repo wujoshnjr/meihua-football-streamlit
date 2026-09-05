@@ -5,6 +5,8 @@ from datetime import date, datetime, time
 
 import streamlit as st
 
+from jarvis.workspace_state import activate_packet
+
 from jarvis.liuyao_packet import (
     LIUYAO_PACKET_VERSION,
     build_liuyao_packet,
@@ -105,7 +107,7 @@ if submitted:
             timezone_name=timezone_name.strip(),
             question_category=category,
         )
-        st.session_state["stark_packet"] = packet
+        activate_packet(st.session_state, packet)
         st.success(
             f"六爻 packet 已建立｜SHA {'PASS' if verify_liuyao_packet_integrity(packet) else 'FAIL'}"
         )

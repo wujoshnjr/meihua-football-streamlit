@@ -5,10 +5,11 @@ from typing import Any
 
 from jarvis.provenance import sha256_payload
 from jarvis.event_layers import audit_case_collision, build_differentiation_audit
+from jarvis.validation import validate_bundle, validate_packet
 
 MATCH_EVENT_VERSION = "MATCH_EVENT_V1"
-DIVINATION_CASE_BUNDLE_VERSION = "DIVINATION_CASE_BUNDLE_V2"
-FOOTBALL_COLLISION_GROUP_AUDIT_VERSION = "FOOTBALL_COLLISION_GROUP_AUDIT_V1"
+DIVINATION_CASE_BUNDLE_VERSION = "DIVINATION_CASE_BUNDLE_V3"
+FOOTBALL_COLLISION_GROUP_AUDIT_VERSION = "FOOTBALL_COLLISION_GROUP_AUDIT_V2"
 
 
 def _clean_team(value: str, field: str) -> str:
@@ -48,6 +49,8 @@ def build_match_event_identity(
 def verify_packet_integrity(packet: dict[str, Any]) -> dict[str, Any]:
     """Verify the deterministic packet SHA before import or cross-system join."""
 
+    if not isinstance(packet, dict):
+        return {"status": "FAIL", "reason": "PACKET_OBJECT_REQUIRED", "expected": None, "actual": None}
     expected = str(packet.get("packet_sha256", ""))
     if not expected:
         return {"status": "FAIL", "reason": "PACKET_SHA_MISSING", "expected": None, "actual": None}
@@ -63,6 +66,8 @@ def verify_packet_integrity(packet: dict[str, Any]) -> dict[str, Any]:
 
 
 def verify_bundle_integrity(bundle: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(bundle, dict):
+        return {"status": "FAIL", "reason": "BUNDLE_OBJECT_REQUIRED", "expected": None, "actual": None}
     expected = str(bundle.get("bundle_sha256", ""))
     if not expected:
         return {"status": "FAIL", "reason": "BUNDLE_SHA_MISSING", "expected": None, "actual": None}
@@ -90,17 +95,29 @@ def audit_case_collision_group(
     rows: list[dict[str, Any]] = []
     invalid: list[dict[str, Any]] = []
     for index, bundle in enumerate(bundles):
+        if not isinstance(bundle, dict):
+            invalid.append({"input_index": index, "reason": "BUNDLE_OBJECT_REQUIRED", "schema_version": None})
+            continue
         integrity = verify_bundle_integrity(bundle)
+        normalized_audit = None
+        if integrity["status"] == "PASS":
+            try:
+                validate_bundle(bundle)
+                normalized_audit = build_differentiation_audit(
+                    bundle["qimen_packet"], bundle["meihua_packet"], bundle.get("yuanling_packet")
+                )
+            except (ValueError, KeyError, TypeError, AttributeError) as exc:
+                invalid.append({"input_index": index, "reason": str(exc), "schema_version": bundle.get("schema_version")})
         row = {
             "input_index": index,
             "schema_version": bundle.get("schema_version"),
             "bundle_sha256": bundle.get("bundle_sha256"),
             "integrity": integrity,
             "match_event": bundle.get("match_event"),
-            "differentiation_audit": bundle.get("differentiation_audit"),
+            "differentiation_audit": normalized_audit,
         }
         rows.append(row)
-        if bundle.get("schema_version") != DIVINATION_CASE_BUNDLE_VERSION:
+        if bundle.get("schema_version") not in {"DIVINATION_CASE_BUNDLE_V2", DIVINATION_CASE_BUNDLE_VERSION}:
             invalid.append(
                 {
                     "input_index": index,
@@ -195,6 +212,7 @@ def audit_case_collision_group(
                         "audit": audit_case_collision(
                             bundles[left["input_index"]],
                             bundles[right["input_index"]],
+                            _validated=True,
                         ),
                     }
                 )
@@ -228,7 +246,28 @@ def audit_case_collision_group(
             }
         )
 
-    status = "REVIEW_UNSAFE_COLLISION" if unsafe_count else "PASS"
+    layer_groups = []
+    for system in ("qimen", "meihua", "yuanling"):
+        layers: dict[str, list[dict[str, Any]]] = {}
+        for row in rows:
+            signature = row["differentiation_audit"]["temporal"]["layer_signatures"].get(system)
+            if signature:
+                layers.setdefault(signature, []).append(row)
+        for signature, members in sorted(layers.items()):
+            if len(members) < 2:
+                continue
+            events = [r["differentiation_audit"]["event"]["event_signature_sha256"] for r in members]
+            if any(not event for event in events):
+                layer_status = "UNSAFE_TEMPORAL_COLLISION__EVENT_IDENTITY_MISSING"
+            elif len(set(events)) == 1:
+                layer_status = "SAME_TEMPORAL_AND_EVENT_IDENTITY"
+            else:
+                layer_status = "TEMPORAL_COLLISION__DISTINGUISHED_BY_EVENT_LAYER"
+            layer_groups.append({"system": system, "signature_sha256": signature,
+                                 "bundle_count": len(members), "status": layer_status,
+                                 "bundle_sha256s": [r["bundle_sha256"] for r in members]})
+    layer_unsafe = sum(g["status"].startswith("UNSAFE_") for g in layer_groups)
+    status = "REVIEW_UNSAFE_COLLISION" if unsafe_count or layer_unsafe else "PASS"
     payload = {
         "schema_version": FOOTBALL_COLLISION_GROUP_AUDIT_VERSION,
         "status": status,
@@ -238,6 +277,8 @@ def audit_case_collision_group(
         "cross_fixture_collision_group_count": cross_fixture_collision_count,
         "unsafe_collision_group_count": unsafe_count,
         "groups": groups,
+        "layer_groups": layer_groups,
+        "unsafe_layer_group_count": layer_unsafe,
         "rule": (
             "相同 temporal signature 的案件必須以賽前固定 event identity 分辨；"
             "若 event identity 缺失，批次 audit 只標 REVIEW，不允許靠 temporal interpretation 自行分叉。"
@@ -306,6 +347,10 @@ def build_divination_case_bundle(
 ) -> dict[str, Any]:
     """Join Qimen/Meihua and an optional Yuanling temporal sibling for one match."""
 
+    if not isinstance(qimen_packet, dict) or not isinstance(meihua_packet, dict):
+        raise ValueError("CASE_ALIGNMENT_FAIL: packet 必須是 JSON object")
+    if yuanling_packet is not None and not isinstance(yuanling_packet, dict):
+        raise ValueError("CASE_ALIGNMENT_FAIL: Yuanling packet 必須是 JSON object")
     if qimen_packet.get("system") != "QIMEN_DUNJIA":
         raise ValueError("CASE_ALIGNMENT_FAIL: qimen_packet.system 必須是 QIMEN_DUNJIA")
     if meihua_packet.get("system") != "MEIHUA_YISHU":
@@ -322,6 +367,13 @@ def build_divination_case_bundle(
         raise ValueError("CASE_ALIGNMENT_FAIL: MEIHUA_PACKET_SHA_INVALID")
     if yuanling_integrity is not None and yuanling_integrity["status"] != "PASS":
         raise ValueError("CASE_ALIGNMENT_FAIL: YUANLING_PACKET_SHA_INVALID")
+
+    for packet in (qimen_packet, meihua_packet, yuanling_packet):
+        if packet is not None:
+            try:
+                validate_packet(packet)
+            except ValueError as exc:
+                raise ValueError(f"CASE_ALIGNMENT_FAIL: {exc}") from exc
 
     qimen_event = qimen_packet.get("match_event") or _derive_match_event(qimen_packet)
     meihua_event = meihua_packet.get("match_event") or _derive_match_event(meihua_packet)

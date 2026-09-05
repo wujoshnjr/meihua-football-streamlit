@@ -129,7 +129,7 @@ def test_case_bundle_can_include_yuanling_as_temporal_sibling():
         yuanling_packet=yuanling,
     )
 
-    assert bundle["schema_version"] == "DIVINATION_CASE_BUNDLE_V2"
+    assert bundle["schema_version"] == "DIVINATION_CASE_BUNDLE_V3"
     assert bundle["yuanling_packet_sha256"] == yuanling["packet_sha256"]
     assert bundle["alignment_audit"]["packet_integrity"]["yuanling"]["status"] == "PASS"
     assert bundle["alignment_audit"]["yuanling_temporal_alignment"]["datetime"]["match"] is True

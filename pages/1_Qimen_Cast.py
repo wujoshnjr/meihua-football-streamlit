@@ -5,6 +5,8 @@ from datetime import date, datetime, time
 
 import streamlit as st
 
+from jarvis.workspace_state import activate_packet
+
 from jarvis.divination_packet import build_qimen_packet
 from jarvis.time import EventLocalTimeError, aware_event_local_datetime, inspect_local_civil_time
 
@@ -62,7 +64,7 @@ if submitted:
             home_team=home_team,
             away_team=away_team,
         )
-        st.session_state["stark_packet"] = packet
+        activate_packet(st.session_state, packet)
         st.session_state["stark_packet_system"] = "QIMEN_DUNJIA"
     except (ValueError, EventLocalTimeError, RuntimeError) as exc:
         st.error(str(exc))

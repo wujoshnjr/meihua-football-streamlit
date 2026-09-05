@@ -5,6 +5,9 @@ from datetime import date, datetime, time, timezone
 
 import streamlit as st
 
+from jarvis.workspace_state import activate_bundle
+from jarvis.validation import load_json_object
+
 from jarvis.case_bundle import (
     audit_case_collision_group,
     build_divination_case_bundle,
@@ -21,7 +24,7 @@ st.title("⚽ 足球多層術數案件")
 st.caption(
     "同一個事件時間建立奇門 RESULT_ENGINE_INPUT + 梅花 STRUCTURE_STRESS_TEST，"
     "可選加入元靈 TEMPORAL_NUMERIC_CONTEXT，並用賽前固定 event / participant identity 解決同時開賽 collision；"
-    "最後下載 DIVINATION_CASE_BUNDLE_V2 交給 ChatGPT。"
+    "最後下載 DIVINATION_CASE_BUNDLE_V3 交給 ChatGPT。"
 )
 
 cast_tab, import_tab, collision_tab = st.tabs(["同時起局／起卦", "匯入既有 Packets", "批次 Collision Audit"])
@@ -162,7 +165,7 @@ with cast_tab:
             ),
         )
 
-        submitted = st.form_submit_button("建立 JARVIS 多層 Case Bundle V2", type="primary", use_container_width=True)
+        submitted = st.form_submit_button("建立 JARVIS 多層 Case Bundle V3", type="primary", use_container_width=True)
 
     if submitted:
         try:
@@ -262,7 +265,7 @@ with cast_tab:
             )
             st.session_state["stark_qimen_packet"] = qimen_packet
             st.session_state["stark_meihua_packet"] = meihua_packet
-            st.session_state["stark_case_bundle"] = bundle
+            activate_bundle(st.session_state, bundle)
             st.session_state["stark_yuanling_packet"] = yuanling_packet
             st.session_state["stark_packet"] = meihua_packet
             st.success("多層案件建立完成：alignment + differentiation audit + packet SHA integrity = PASS")
@@ -279,10 +282,10 @@ with import_tab:
             st.error("請同時提供 Qimen 與 Meihua packet。")
         else:
             try:
-                qimen_packet = json.loads(q_upload.getvalue().decode("utf-8"))
-                meihua_packet = json.loads(m_upload.getvalue().decode("utf-8"))
+                qimen_packet = load_json_object(q_upload.getvalue())
+                meihua_packet = load_json_object(m_upload.getvalue())
                 yuanling_packet = (
-                    json.loads(y_upload.getvalue().decode("utf-8")) if y_upload else None
+                    load_json_object(y_upload.getvalue()) if y_upload else None
                 )
                 bundle = build_divination_case_bundle(
                     qimen_packet,
@@ -291,7 +294,7 @@ with import_tab:
                 )
                 st.session_state["stark_qimen_packet"] = qimen_packet
                 st.session_state["stark_meihua_packet"] = meihua_packet
-                st.session_state["stark_case_bundle"] = bundle
+                activate_bundle(st.session_state, bundle)
                 st.session_state["stark_yuanling_packet"] = yuanling_packet
                 st.success("匯入成功：packet integrity + multi-layer alignment = PASS")
             except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
@@ -299,7 +302,7 @@ with import_tab:
 
 with collision_tab:
     st.write(
-        "一次匯入同一輪開球的多份 DIVINATION_CASE_BUNDLE_V2。"
+        "一次匯入同一輪開球的多份 Case Bundle V2 / V3。"
         "JARVIS 只比較 SHA / temporal / event identity；不做勝負解讀，也不會修改原案件。"
     )
     collision_uploads = st.file_uploader(
@@ -314,7 +317,7 @@ with collision_tab:
         else:
             try:
                 collision_bundles = [
-                    json.loads(upload.getvalue().decode("utf-8"))
+                    load_json_object(upload.getvalue())
                     for upload in collision_uploads
                 ]
                 collision_audit = audit_case_collision_group(collision_bundles)

@@ -12,8 +12,8 @@ from jarvis.yuanling_packet import build_yuanling_yanshu_packet
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKET_SCHEMA = json.loads((ROOT / "schemas" / "divination_packet_v2.schema.json").read_text(encoding="utf-8"))
-CASE_SCHEMA = json.loads((ROOT / "schemas" / "divination_case_bundle_v2.schema.json").read_text(encoding="utf-8"))
-COLLISION_SCHEMA = json.loads((ROOT / "schemas" / "football_collision_group_audit_v1.schema.json").read_text(encoding="utf-8"))
+CASE_SCHEMA = json.loads((ROOT / "schemas" / "divination_case_bundle_v3.schema.json").read_text(encoding="utf-8"))
+COLLISION_SCHEMA = json.loads((ROOT / "schemas" / "football_collision_group_audit_v2.schema.json").read_text(encoding="utf-8"))
 PACKET_VALIDATOR = Draft202012Validator(PACKET_SCHEMA, format_checker=FormatChecker())
 CASE_VALIDATOR = Draft202012Validator(CASE_SCHEMA, format_checker=FormatChecker())
 COLLISION_VALIDATOR = Draft202012Validator(COLLISION_SCHEMA, format_checker=FormatChecker())
